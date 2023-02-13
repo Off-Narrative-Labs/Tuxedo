@@ -20,7 +20,7 @@ use sp_runtime::{
 	ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
-#[cfg(feature = "std")]
+
 use sp_storage::well_known_keys;
 
 #[cfg(any(feature = "std", test))]
