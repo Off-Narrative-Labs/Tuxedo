@@ -29,6 +29,12 @@ use log::info;
 // For now hardcoded
 pub type OutputRef = H256;
 pub type Address = H256;
+pub type Value = Vec<u8>;
+pub type Sig = Vec<u8>;
+
+// pub type DispatchResult = Result<(), sp_runtime::DispatchError>;
+// Temporary should probably move to something like this above ^^
+pub type DispatchResult = Result<(), ()>;
 
 /// A single input references the output to be consumed or peeked at and provides some witness data, possibly a signature.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
@@ -37,7 +43,7 @@ pub struct Input {
     /// A previously created output that will be consumed by the transaction containing this input.
     output: OutputRef,
     /// A witness proving that the output can be consumed by this input. In many cases including that of a basic cryptocurrency, this will be a digital signature.
-    redeemer: Vec<u8>,
+    redeemer: Sig,
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
@@ -46,7 +52,7 @@ pub struct Output {
     /// The address that owns this output. Based on either a public key or a Tuxedo Piece
     pub owner: Address,
     /// The data associated with this output. In the simplest case, this will be a token balance, but could be arbitrarily rich state.
-    pub data: Vec<u8>,
+    pub data: Value,
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
@@ -81,10 +87,6 @@ pub trait UtxoSet {
     ///
     fn nullify(utxo_ref: UtxoRef) -> Option<Utxo>;
 }
-
-// Value to represent a fungible value of a UTXO
-pub type Value = Vec<u8>;
-pub type DispatchResult = Result<(), sp_runtime::DispatchError>;
 
 /// The API of a Tuxedo Piece
 pub trait TuxedoPiece {
