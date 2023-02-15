@@ -10,7 +10,8 @@ use sp_core::H256;
 use crate::redeemer::{SigCheck, UpForGrabs};
 
 /// A reference to a output that is expected to exist in the state.
-struct OutputRef {
+#[derive(Encode, Decode, Debug)]
+pub struct OutputRef {
     /// A hash of the transaction that created this output
     tx_hash: H256,
     /// The index of this output among all outputs created by the same transaction
@@ -18,31 +19,34 @@ struct OutputRef {
 }
 
 /// A UTXO Transaction
-struct Transaction {
-    inputs: BTreeSet<Input>,
+#[derive(Encode, Decode, Debug)]
+pub struct Transaction {
+    pub inputs: BTreeSet<Input>,
     //Todo peeks: BTreeMap<Input>,
-    outputs: Vec<Output>,
-    verifier: OuterVerifier,
+    pub outputs: Vec<Output>,
+    pub verifier: OuterVerifier,
 }
 
-struct Input {
+#[derive(Encode, Decode, Debug)]
+pub struct Input {
     /// a reference to the output being consumed
-    output_ref: OutputRef,
+    pub output_ref: OutputRef,
     // Eg the signature
-    witness: Vec<u8>,
+    pub witness: Vec<u8>,
 }
 
 /// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
 /// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-struct Output {
-    data: Vec<u8>,
-    type_id: [u8; 4],
-    redeemer: AvailableRedeemers,
+#[derive(Encode, Decode, Debug)]
+pub struct Output {
+    pub data: Vec<u8>,
+    pub type_id: [u8; 4],
+    pub redeemer: AvailableRedeemers,
 }
 
-trait UtxoData: Encode + Decode {
+pub trait UtxoData: Encode + Decode {
     //TODO this is ugly. But at least I'm not stuck anymore.
     /// A unique identifier for this type. For now choosing this value and making sure it
     /// really is unique is the problem of the developer. Ideally this would be better.
@@ -75,7 +79,8 @@ impl Output {
 /// A verifier is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such verifiers.
 /// For example, this may check that input token values exceed output token values.
-enum OuterVerifier {
+#[derive(Encode, Decode, Debug)]
+pub enum OuterVerifier {
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis,
     /// Verifies that a single amoeba is simply removed from the state
@@ -86,7 +91,7 @@ enum OuterVerifier {
     PoeRevoke,
 }
 
-trait Verifier {
+pub trait Verifier {
 
     //TODO see if this is even necessary. I keep having moments where I think it will be, but
     // don't yet have a very clear usecase.
@@ -101,9 +106,21 @@ trait Verifier {
 // move into the main runtime lib.rs file
 /// A redeemer checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
-enum AvailableRedeemers {
+#[derive(Encode, Decode, Debug)]
+pub enum AvailableRedeemers {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
+}
+
+use crate::redeemer::Redeemer;
+//TODO this should also be implemented by the aggregation macro I guess
+impl Redeemer for AvailableRedeemers {
+    fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool {
+        match self {
+            Self::SigCheck(sig_check) => sig_check.redeem(simplified_tx, witness),
+            Self::UpForGrabs(up_for_grabs) => up_for_grabs.redeem(simplified_tx, witness),
+        }
+    }
 }
 
 // I think with the TypeId thing I created, this won't be necessary
@@ -117,7 +134,8 @@ enum AvailableRedeemers {
 // }
 
 /// An amoeba tracked by our simple Amoeba APP
-struct AmoebaDetails {
+#[derive(Encode, Decode, Debug)]
+pub struct AmoebaDetails {
     /// How many generations after the original Eve Amoeba this one is.
     /// When going through mitosis, this number must increase by 1 each time.
     generation: u32,

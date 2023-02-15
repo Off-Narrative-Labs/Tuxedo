@@ -7,16 +7,18 @@
 use sp_std::vec::Vec;
 use sp_core::H256;
 use sp_application_crypto::sr25519::{Public, Signature};
+use parity_scale_codec::{Encode, Decode};
 
 /// A means of checking that an output can be redeemed (aka spent). This check is made on a
 /// per-output basis and neither knows nor cares anything about the verification logic that will
 /// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
 /// we take the entire stripped and serialized transaction as a parameter.
-trait Redeemer {
+pub trait Redeemer {
     fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool;
 }
 
 /// A typical redeemer that checks an sr25519 signature
+#[derive(Encode, Decode, Debug)]
 pub struct SigCheck{
     owner_pubkey: H256,
 }
@@ -34,6 +36,7 @@ impl Redeemer for SigCheck {
 }
 
 /// A simple redeemer that allows anyone to consume an output at any time
+#[derive(Encode, Decode, Debug)]
 pub struct UpForGrabs;
 
 impl Redeemer for UpForGrabs {

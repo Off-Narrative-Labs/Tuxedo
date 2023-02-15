@@ -20,6 +20,7 @@ use sp_runtime::{
 	ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
+use sp_std::{vec::Vec, collections::btree_set::BTreeSet};
 
 use sp_storage::well_known_keys;
 
@@ -37,6 +38,10 @@ use serde::{Deserialize, Serialize};
 
 mod tuxedo_types;
 mod redeemer;
+mod support_macros;
+use tuxedo_types::*;
+use redeemer::*;
+use support_macros::*;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -107,6 +112,9 @@ impl BuildStorage for GenesisConfig {
 		);
 		Ok(())
 	}
+
+	//TODO I guess we'll need some genesis config aggregation for each tuxedo piece
+	// just like we have in FRAME
 }
 
 pub type BlockNumber = u32;
@@ -116,8 +124,7 @@ pub type Block = sp_runtime::generic::Block<Header, BasicExtrinsic>;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
-	SetValue(u32),
-	Transfer([u8; 32], [u8; 32], u128),
+	Transact(tuxedo_types::Transaction),
 	Upgrade(Vec<u8>),
 }
 
@@ -155,7 +162,7 @@ const BLOCK_TIME: u64 = 3000;
 
 const HEADER_KEY: &[u8] = b"header"; // 686561646572
 const EXTRINSIC_KEY: &[u8] = b"extrinsics";
-const VALUE_KEY: &[u8] = b"VALUE_KEY";
+// const VALUE_KEY: &[u8] = b"VALUE_KEY";
 
 
 // just FYI:
@@ -164,7 +171,19 @@ const VALUE_KEY: &[u8] = b"VALUE_KEY";
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
 
-type DispatchResult = Result<(), ()>;
+enum UtxoError {
+	/// This transaction defines the same output multiple times
+	DuplicateOutput,
+	/// This transaction defines an output that already existed in the UTXO set
+	PreExistingOutput,
+	/// The verifier errored.
+	/// TODO find a way to pass internal error information from the verifier to here
+	VerifierError,
+	/// The Redeemer errored.
+	/// TODO find a way to pass internal error information from the redeemer to here
+	RedeemerError,
+}
+type DispatchResult = Result<(), UtxoError>;
 
 impl Runtime {
 	fn print_state() {
@@ -181,15 +200,34 @@ impl Runtime {
 		}
 	}
 
-	fn get_state<T: Decode>(key: &[u8]) -> Option<T> {
-		sp_io::storage::get(key).and_then(|d| T::decode(&mut &*d).ok())
+	// These next few functions comprize what I sketched out in the UtxoSet trait in element the other day
+	// For now, this is complicated enough, so I'll just leave them here. In the future it may be wise to
+	// abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
+
+	/// Fetch a utxo from the set.
+	fn peek_utxo(output_ref: OutputRef) -> Option<Output> {
+		sp_io::storage::get(output_ref).and_then(|d| T::decode(&mut &*d).ok())
 	}
 
-	fn mutate_state<T: Decode + Encode + Default>(key: &[u8], update: impl FnOnce(&mut T)) {
-		let mut value = Self::get_state(key).unwrap_or_default();
-		update(&mut value);
-		sp_io::storage::set(key, &value.encode());
+	/// Consume a Utxo from the set.
+	fn consume_utxo(output_ref: OutputRef) -> Option<Output> {
+		let result = peek_utxo(output_ref);
+		sp_io::storage::clear(output_ref);
+		result
 	}
+
+	/// Add a utxo into the set.
+	/// This will overwrite any utxo that already exists at this OutputRef. It should never be the
+	/// case that there are collisions though. Right??
+	fn store_utxo(output_ref: OutputRef, output: Output) {
+		sp_io::storage::set(output_ref, output);
+	}
+
+	// fn mutate_state<T: Decode + Encode + Default>(key: &[u8], update: impl FnOnce(&mut T)) {
+	// 	let mut value = Self::get_state(key).unwrap_or_default();
+	// 	update(&mut value);
+	// 	sp_io::storage::set(key, &value.encode());
+	// }
 
 	fn dispatch_extrinsic(ext: BasicExtrinsic) -> DispatchResult {
 		log::debug!(target: LOG_TARGET, "dispatching {:?}", ext);
@@ -198,10 +236,16 @@ impl Runtime {
 
 		// execute it
 		match ext.0 {
-			Call::SetValue(v) => {
-				sp_io::storage::set(VALUE_KEY, &v.encode());
-			},
-			Call::Transfer(_, _, _) => {},
+			Call::Transact(transaction) => {
+				let valid_transaction = validate_tuxedo_transaction(&transaction)?;
+				// There are still missing inputs, so we cannot execute this,
+				// although it would be valid in the pool
+				if !valid_transaction.requires.is_empty() {
+					return Err(());
+				}
+
+				update_storage(transaction)
+			}
 			Call::Upgrade(new_wasm_code) => {
 				// NOTE: make sure to upgrade your spec-version!
 				sp_io::storage::set(well_known_keys::CODE, &new_wasm_code);
@@ -209,6 +253,49 @@ impl Runtime {
 		}
 
 		Ok(())
+	}
+
+	fn validate_tuxedo_transaction(transaction: &tuxedo_types::Transaction) -> Result<ValidTransaction, UtxoError> {
+		// There should be no duplicate inputs because we used a BTreeSet
+		// TODO verify that this assumption is true. What if I encode a Vec and then decode it into a BTreeSet
+		// Perhaps it is safer to just use a Vec for inputs here too like we did in the old utxo workshop
+		
+		// Make sure there are no duplicate outputs
+		{
+			let output_set: BTreeSet<_> = transaction.outputs.iter().collect();
+			ensure!(output_set.len() == transaction.outputs.len(), UtxoError::DuplicateOutput);
+		}
+
+		// Build the stripped transaction (with the witnesses stripped) and encode it
+		// This will be passed to the redeemers
+		let mut stripped = transaction.clone();
+		for input in stripped.inputs.iter_mut() {
+			input.witness = Vec::new();
+		}
+		let stripped_encoded = stripped.encode();
+
+		// Check that the redeemers of all inputs are satisfied
+		// Keep track of any missing inputs for use in the tagged transaction pool
+		let mut missing_inputs = Vec::new();
+		for input in transaction.inputs.iter() {
+			if let Some(input_utxo) = Self::peek_utxo(&input.output_ref) {
+				if !input_utxo.redeemer.redeem(stripped_encoded, input.witness) {
+					return Err(UtxoError::RedeemerError);
+				}
+			} else {
+				missing_inputs.push(input.outpoint.clone().as_fixed_bytes().to_vec());
+			}
+		}
+
+		// Make sure no outputs already exist in storage
+		// TODO Actually I don't think we need to do this. It _does_ appear in the original utxo workshop,
+		// but I don't see how we could ever have an output collision.
+
+		// Extract the contained data from each input and output
+
+		// Call the verifier
+
+		// Update storage
 	}
 
 	fn do_initialize_block(header: &<Block as BlockT>::Header) {
