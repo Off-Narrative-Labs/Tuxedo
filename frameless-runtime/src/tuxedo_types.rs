@@ -1,10 +1,13 @@
 //! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
+// My IDE added this at some point. I'll leave it here as a reminder that maybe I don't need to
+// re-invent the type-id wheel;
+// use core::any::TypeId;
 
-use core::any::TypeId;
-
-use sp_std::collections::BTreeMap;
+use sp_std::{vec::Vec, collections::btree_set::BTreeSet};
 use parity_scale_codec::{Encode, Decode};
+use sp_core::H256;
+use crate::redeemer::{SigCheck, UpForGrabs};
 
 /// A reference to a output that is expected to exist in the state.
 struct OutputRef {
@@ -18,9 +21,9 @@ struct OutputRef {
 
 /// A UTXO Transaction
 struct Transaction {
-    inputs: BTreeMap<Input>,
+    inputs: BTreeSet<Input>,
     //Todo peeks: BTreeMap<Input>,
-    output: Vec<Output>,
+    output: Vec<OpaqueOutput>,
     verifier: OuterVerifier,
 }
 
@@ -36,14 +39,18 @@ struct Input {
 /// data stored is generic.
 struct OpaqueOutput {
     data: Vec<u8>,
-    redeemer: Redeemer,
+    redeemer: AvailableRedeemers,
 }
 
+//TODO Do we really need to pass the entire Outputs to the verifier, or is just the encapsulated data sufficient?
+// If we need to pass the entire thing, then each verifier will need access to the runtime's aggregated redeemer enum.
+// Which is actually a clue. The only reason we would need to pass the entire output to the verifier is if we expect the
+// verifier to enforce contraints about the redeemers.
 /// An single strongly-typed output. In a cryptocurrency, this represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
 struct TypedOutput<T: UtxoData> {
     data: T,
-    redeemer: Redeemer,
+    redeemer: AvailableRedeemers,
 }
 
 impl OpaqueOutput {
@@ -64,6 +71,8 @@ trait UtxoData: Encode + Decode {
     const TypeId: [u8; 4];
 }
 
+// Ah shit, this isn't quite right. It is a foreign trait on possibly foreign types.
+// Maybe a better way to go would be to have some kind of `fn extract_data` on the output types.
 impl<T: UtxoData> Decode for T {
     fn decode<I: parity_scale_codec::Input>(input: &mut I) -> Result<Self, parity_scale_codec::Error> {
         
@@ -108,7 +117,7 @@ trait Verifier {
     /// This information does not come from existing UTXOs, nor is it stored in new UTXOs.
     type AdditionalInformation;
 
-    fn verify(&self, inputs: BTreeMap<Input>, outputs: Vec<OutputRef>);
+    fn verify(&self, inputs: BTreeSet<Input>, outputs: Vec<OutputRef>);
 }
 
 // Like above, this will probably be aggregates separately for each runtime and maybe should
