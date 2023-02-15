@@ -19,6 +19,7 @@ sp-block-builder = { git = 'https://github.com/paritytech/substrate', tag = "mon
 sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
 sp-inherents = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
 sp-io = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false, features = ["with-tracing"] }
+sp-keystore = { optional = true, git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false }
 sp-offchain = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
 sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
 sp-session = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
@@ -63,6 +64,7 @@ std = [
 	"sp-consensus-aura/std",
 	"sp-application-crypto/std",
 	"sp-finality-grandpa/std",
+	"sp-keystore",
 
 	"frame-metadata/std"
 ]

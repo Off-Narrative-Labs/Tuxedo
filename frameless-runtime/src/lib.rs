@@ -3,6 +3,9 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod utxo;
+use utxo::{TuxedoPiece, UtxoSet};
+
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
@@ -90,9 +93,33 @@ pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
 }
 
-/// The type that provides the genesis storage values for a new chain
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, Default))]
-pub struct GenesisConfig;
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct GenesisConfig {
+	pub genesis_utxos: Vec<utxo::Output>,
+}
+
+impl Default for GenesisConfig {
+	fn default() -> Self {
+		use hex_literal::hex;
+
+		const ALICE_PUB_KEY_BYTES: [u8; 32] =
+			hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
+
+		// Initial Config just for a Money UTXO
+		GenesisConfig {
+			genesis_utxos: vec![
+				utxo::Output {
+					owner: ALICE_PUB_KEY_BYTES.into(),
+					data: 100u128.encode()
+				}
+			]
+		}
+
+		// TODO: Initial UTXO for Kitties
+
+		// TODO: Initial UTXO for Existence
+	}
+}
 
 #[cfg(feature = "std")]
 impl BuildStorage for GenesisConfig {
@@ -102,6 +129,11 @@ impl BuildStorage for GenesisConfig {
 			well_known_keys::CODE.into(),
 			WASM_BINARY.unwrap().to_vec()
 		);
+
+		self.genesis_utxos.iter().for_each(|utxo| {
+			storage.top.insert(BlakeTwo256::hash_of(&utxo).encode(), utxo.encode());
+		});
+
 		Ok(())
 	}
 }
@@ -113,8 +145,9 @@ pub type Block = sp_runtime::generic::Block<Header, BasicExtrinsic>;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
-	SetValue(u32),
-	Transfer([u8; 32], [u8; 32], u128),
+	Kitties(utxo::Transaction),
+	Money(utxo::Transaction),
+	Existence(utxo::Transaction),
 	Upgrade(Vec<u8>),
 }
 
@@ -195,17 +228,21 @@ impl Runtime {
 
 		// execute it
 		match ext.0 {
-			Call::SetValue(v) => {
-				sp_io::storage::set(VALUE_KEY, &v.encode());
+			Call::Money(tx) => {
+				utxo::MoneyPiece::validate(tx).then_some(()).ok_or(())
 			},
-			Call::Transfer(_, _, _) => {},
+			Call::Kitties(tx) => {
+				utxo::KittiesPiece::validate(tx).then_some(()).ok_or(())
+			},
+			Call::Existence(tx) => {
+				utxo::ExistencePiece::validate(tx).then_some(()).ok_or(())
+			},
 			Call::Upgrade(new_wasm_code) => {
 				// NOTE: make sure to upgrade your spec-version!
 				sp_io::storage::set(well_known_keys::CODE, &new_wasm_code);
+				Ok(())
 			}
 		}
-
-		Ok(())
 	}
 
 	fn do_initialize_block(header: &<Block as BlockT>::Header) {
@@ -433,6 +470,31 @@ mod tests {
 	use super::*;
 	use parity_scale_codec::Encode;
 	use sp_core::hexdisplay::HexDisplay;
+	use sp_core::{H512, testing::SR25519};
+	use sp_keystore::testing::KeyStore;
+	use sp_keystore::{KeystoreExt, SyncCryptoStore};
+	use hex_literal::hex;
+
+	use std::sync::Arc;
+
+	// other random account generated with subkey
+	const ALICE_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
+
+	fn new_test_ext() -> sp_io::TestExternalities {
+
+		let keystore = KeyStore::new();
+		let alice_pub_key =
+			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+
+		let mut t = GenesisConfig::default()
+			.build_storage()
+			.expect("Frameless system builds valid default genesis config");
+
+		let mut ext = sp_io::TestExternalities::from(t);
+		ext.register_extension(KeystoreExt(Arc::new(keystore)));
+		ext
+	}
 
 	#[test]
 	fn host_function_call_works() {
@@ -441,11 +503,24 @@ mod tests {
 		})
 	}
 
+
+	#[test]
+	fn utxo_money_test_genesis() {
+		new_test_ext().execute_with(|| {
+			let keystore = KeyStore::new();
+			let alice_pub_key =
+				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+			todo!()
+		})
+	}
+
+	// TODO: More Tests for Money Kitties ETC
+
 	#[test]
 	fn encode_examples() {
 		// run with `cargo test -p frameless-runtime -- --nocapture`
-		let extrinsic = BasicExtrinsic::new_unsigned(Call::SetValue(42));
-		println!("ext {:?}", HexDisplay::from(&extrinsic.encode()));
-		println!("key {:?}", HexDisplay::from(&VALUE_KEY));
+		// let extrinsic = BasicExtrinsic::new_unsigned(Call::SetValue(42));
+		// println!("ext {:?}", HexDisplay::from(&extrinsic.encode()));
+		// println!("key {:?}", HexDisplay::from(&VALUE_KEY));
 	}
 }
