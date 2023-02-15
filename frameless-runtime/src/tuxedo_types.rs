@@ -15,15 +15,13 @@ struct OutputRef {
     tx_hash: H256,
     /// The index of this output among all outputs created by the same transaction
     index: u32,
-    /// The type identifier of the type stored in this output
-    type_id: [u8; 4],
 }
 
 /// A UTXO Transaction
 struct Transaction {
     inputs: BTreeSet<Input>,
     //Todo peeks: BTreeMap<Input>,
-    output: Vec<OpaqueOutput>,
+    outputs: Vec<Output>,
     verifier: OuterVerifier,
 }
 
@@ -34,33 +32,14 @@ struct Input {
     witness: Vec<u8>,
 }
 
-/// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. It will
-/// later be decoded at the piece level into proper strongly typed data.
-/// data stored is generic.
-struct OpaqueOutput {
-    data: Vec<u8>,
-    redeemer: AvailableRedeemers,
-}
-
-//TODO Do we really need to pass the entire Outputs to the verifier, or is just the encapsulated data sufficient?
-// If we need to pass the entire thing, then each verifier will need access to the runtime's aggregated redeemer enum.
-// Which is actually a clue. The only reason we would need to pass the entire output to the verifier is if we expect the
-// verifier to enforce contraints about the redeemers.
-/// An single strongly-typed output. In a cryptocurrency, this represents a single coin. In Tuxedo, the type of
+/// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
+/// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
+/// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-struct TypedOutput<T: UtxoData> {
-    data: T,
+struct Output {
+    data: Vec<u8>,
+    type_id: [u8; 4],
     redeemer: AvailableRedeemers,
-}
-
-impl OpaqueOutput {
-    /// Takes an opaque output and converts it to a typed output
-    pub(crate) fn into_typed<T: UtxoData>(self) -> TypedOutput<T> {
-        TypedOutput {
-            data: self.data.decode::<T>().ok(),
-            redeemer: self.redeemer,
-        }
-    }
 }
 
 trait UtxoData: Encode + Decode {
@@ -68,23 +47,21 @@ trait UtxoData: Encode + Decode {
     /// A unique identifier for this type. For now choosing this value and making sure it
     /// really is unique is the problem of the developer. Ideally this would be better.
     /// Maybe macros... Doesn't frame somehow pass info about the string in construct runtime to the pallet-level storage items?
-    const TypeId: [u8; 4];
+    const TYPE_ID: [u8; 4];
 }
 
-// Ah shit, this isn't quite right. It is a foreign trait on possibly foreign types.
-// Maybe a better way to go would be to have some kind of `fn extract_data` on the output types.
-impl<T: UtxoData> Decode for T {
-    fn decode<I: parity_scale_codec::Input>(input: &mut I) -> Result<Self, parity_scale_codec::Error> {
+impl Output {
+    /// Extracts strongly typed data from an Output, iff the output contains the type of data
+    /// specified. If the contained data is not the specified type, or decoding fails, this errors.
+    fn extract_typed_data<T: UtxoData>(&self) -> Result<T, ()> {
         
         // The first four bytes represent the type id that that was encoded. If they match the type
         // we are trying to decode into, we continue, otherwise we error out.
-        match input[0..4] {
-            <T as UtxoData>::TypeId => (),
-            _ => return parity_scale_codec::Error::default(),
+        if self.type_id == <T as UtxoData>::TYPE_ID {
+            T::decode(&mut &self.data[..]).map_err(|_| ())
+        } else {
+            Err(())
         }
-
-        let remaining_input = input[4..];
-        remaining_input.decode()
     }
 }
 
@@ -117,7 +94,7 @@ trait Verifier {
     /// This information does not come from existing UTXOs, nor is it stored in new UTXOs.
     type AdditionalInformation;
 
-    fn verify(&self, inputs: BTreeSet<Input>, outputs: Vec<OutputRef>);
+    fn verify(&self, inputs: BTreeSet<OutputRef>, outputs: Vec<OutputRef>);
 }
 
 // Like above, this will probably be aggregates separately for each runtime and maybe should

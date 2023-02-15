@@ -6,7 +6,7 @@
 
 use sp_std::vec::Vec;
 use sp_core::H256;
-use sp_application_crypto::sr25519::Signature;
+use sp_application_crypto::sr25519::{Public, Signature};
 
 /// A means of checking that an output can be redeemed (aka spent). This check is made on a
 /// per-output basis and neither knows nor cares anything about the verification logic that will
@@ -23,13 +23,13 @@ pub struct SigCheck{
 
 impl Redeemer for SigCheck {
     fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool {
-        // Check that the sig is 64 bytes to begin with.
-        if witness.len() != 64 {
-            return false;
-        }
+        
+        let sig = match Signature::try_from(&witness[..]) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
 
-        let sig = Signature(witness[..64]);
-        sp_io::crypto::sr25519_verify(&sig, &simplified_tx, self.owner_pubkey)
+        sp_io::crypto::sr25519_verify(&sig, &simplified_tx, &Public::from_h256(self.owner_pubkey))
     }
 }
 
