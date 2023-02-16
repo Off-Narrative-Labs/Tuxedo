@@ -1,4 +1,4 @@
-//! A redeemer is a piece of logic that determines whether an input ca nbe consumed in a given context.
+//! A redeemer is a piece of logic that determines whether an input can be consumed in a given context.
 //! Because there are multiple reasonable ways to make this decision, we expose a trait to encapsulate
 //! the various options. Each runtime will choose to make one or more redeemers available to its users
 //! and they will be aggregated into an enum. The most common and useful redeemers are included here

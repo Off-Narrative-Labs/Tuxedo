@@ -7,7 +7,6 @@
 use sp_std::vec::Vec;
 use parity_scale_codec::{Encode, Decode};
 use sp_core::H256;
-use crate::redeemer::{SigCheck, UpForGrabs};
 
 /// A reference to a output that is expected to exist in the state.
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
@@ -20,11 +19,11 @@ pub struct OutputRef {
 
 /// A UTXO Transaction
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct Transaction {
+pub struct Transaction<R, V> {
     pub inputs: Vec<Input>,
     //Todo peeks: Vec<Input>,
-    pub outputs: Vec<Output>,
-    pub verifier: OuterVerifier,
+    pub outputs: Vec<Output<R>>,
+    pub verifier: V,
 }
 
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
@@ -40,10 +39,17 @@ pub struct Input {
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct Output {
+pub struct Output<R> {
+    pub payload: TypedData,
+    pub redeemer: R,
+}
+
+/// A piece of encoded data with a type id associated
+/// Strongly typed data can be extracted
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct TypedData {
     pub data: Vec<u8>,
     pub type_id: [u8; 4],
-    pub redeemer: AvailableRedeemers,
 }
 
 pub trait UtxoData: Encode + Decode {
@@ -54,10 +60,10 @@ pub trait UtxoData: Encode + Decode {
     const TYPE_ID: [u8; 4];
 }
 
-impl Output {
+impl TypedData {
     /// Extracts strongly typed data from an Output, iff the output contains the type of data
     /// specified. If the contained data is not the specified type, or decoding fails, this errors.
-    fn extract_typed_data<T: UtxoData>(&self) -> Result<T, ()> {
+    fn extract<T: UtxoData>(&self) -> Result<T, ()> {
         
         // The first four bytes represent the type id that that was encoded. If they match the type
         // we are trying to decode into, we continue, otherwise we error out.
@@ -68,70 +74,6 @@ impl Output {
         }
     }
 }
-
-//Idea: Maybe we don't need either AmoebaDeath or PoeRevoke? Should there be a single verifier that
-// comes with Tuxedo that allows simply deleting UTXOs from the state.
-// Thinking more about it, I guess not, because for some applications, it may be invalid to simply delete
-// a UTXO without any further processing.
-
-// This will have to be re-written for each runtime, thus it should probably move to the main lib.rs file.
-// Perhaps we should consider a macro to aggregate this type for us.
-/// A verifier is a piece of logic that can be used to check a transaction.
-/// For any given Tuxedo runtime there is a finite set of such verifiers.
-/// For example, this may check that input token values exceed output token values.
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum OuterVerifier {
-    /// Verifies that an amoeba can split into two new amoebas
-    AmoebaMitosis,
-    /// Verifies that a single amoeba is simply removed from the state
-    AmoebaDeath,
-    /// Verifies that a new valid proof of existence claim is made
-    PoeClaim,
-    /// Verifies that a single PoE is revoked.
-    PoeRevoke,
-}
-
-pub trait Verifier {
-
-    //TODO see if this is even necessary. I keep having moments where I think it will be, but
-    // don't yet have a very clear usecase.
-    /// Additional transient information that is passed to the verifier from the transaction.
-    /// This information does not come from existing UTXOs, nor is it stored in new UTXOs.
-    type AdditionalInformation;
-
-    fn verify(&self, inputs: Vec<OutputRef>, outputs: Vec<OutputRef>);
-}
-
-// Like above, this will probably be aggregates separately for each runtime and maybe should
-// move into the main runtime lib.rs file
-/// A redeemer checks that an individual input can be consumed. For example that it is signed properly
-/// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum AvailableRedeemers {
-    SigCheck(SigCheck),
-    UpForGrabs(UpForGrabs),
-}
-
-use crate::redeemer::Redeemer;
-//TODO this should also be implemented by the aggregation macro I guess
-impl Redeemer for AvailableRedeemers {
-    fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool {
-        match self {
-            Self::SigCheck(sig_check) => sig_check.redeem(simplified_tx, witness),
-            Self::UpForGrabs(up_for_grabs) => up_for_grabs.redeem(simplified_tx, witness),
-        }
-    }
-}
-
-// I think with the TypeId thing I created, this won't be necessary
-/// All the possible types that can be stored in a UTXO in this runtime
-/// It is recommended to Piece developers that they use the new type pattern
-/// often rather than just storing plain primitive types to ensure that data
-/// that was stored as one type is not decoded to another type when the UTXO is consumed
-// enum StorableData {
-//     Amoeba(AmoebaDetails),
-//     PoeClaim(H256),
-// }
 
 /// An amoeba tracked by our simple Amoeba APP
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]

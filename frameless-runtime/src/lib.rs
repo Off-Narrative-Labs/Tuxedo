@@ -15,7 +15,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Block as BlockT, Extrinsic},
 	transaction_validity::{
 		InvalidTransaction, TransactionSource, TransactionValidity, TransactionValidityError,
-		ValidTransaction,
+		ValidTransaction, TransactionLongevity,
 	},
 	ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
@@ -38,9 +38,11 @@ use serde::{Deserialize, Serialize};
 
 mod tuxedo_types;
 mod redeemer;
+mod verifier;
 mod support_macros;
 use tuxedo_types::*;
 use redeemer::*;
+use verifier::*;
 use support_macros::*;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -124,7 +126,7 @@ pub type Block = sp_runtime::generic::Block<Header, BasicExtrinsic>;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
-	Transact(tuxedo_types::Transaction),
+	Transact(Transaction<OuterRedeemer, OuterVerifier>),
 	Upgrade(Vec<u8>),
 }
 
@@ -167,6 +169,56 @@ const EXTRINSIC_KEY: &[u8] = b"extrinsics";
 
 // just FYI:
 // :code => 3a636f6465
+
+//TODO this should be implemented by the aggregation macro I guess
+/// A redeemer checks that an individual input can be consumed. For example that it is signed properly
+/// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub enum OuterRedeemer {
+    SigCheck(SigCheck),
+    UpForGrabs(UpForGrabs),
+}
+
+//TODO this should be implemented by the aggregation macro I guess
+impl Redeemer for OuterRedeemer {
+    fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool {
+        match self {
+            Self::SigCheck(sig_check) => sig_check.redeem(simplified_tx, witness),
+            Self::UpForGrabs(up_for_grabs) => up_for_grabs.redeem(simplified_tx, witness),
+        }
+    }
+}
+
+// Observation: For some applications, it will be invalid to simply delete
+// a UTXO without any further processing. Therefore, we explicitly include
+// AmoebaDeath and PoeRevoke on an application-specific basis
+
+//TODO this should be implemented by the aggregation macro I guess
+/// A verifier is a piece of logic that can be used to check a transaction.
+/// For any given Tuxedo runtime there is a finite set of such verifiers.
+/// For example, this may check that input token values exceed output token values.
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub enum OuterVerifier {
+    /// Verifies that an amoeba can split into two new amoebas
+    AmoebaMitosis,
+    /// Verifies that a single amoeba is simply removed from the state
+    AmoebaDeath,
+    /// Verifies that a new valid proof of existence claim is made
+    PoeClaim,
+    /// Verifies that a single PoE is revoked.
+    PoeRevoke,
+}
+
+impl Verifier for OuterVerifier {
+    type AdditionalInformation = ();
+
+    fn verify(&self, input_data: Vec<TypedData>, output_data: Vec<TypedData>) -> bool {
+        //TODO Make sure that each variant actually contains a valid verifier, and
+		// dispatch to the appropriate one as we did for the redeemers. For now, this
+		// should be enough to make things compile
+		true
+    }
+}
 
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
@@ -220,12 +272,12 @@ impl Runtime {
 	// abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
 
 	/// Fetch a utxo from the set.
-	fn peek_utxo(output_ref: &OutputRef) -> Option<Output> {
+	fn peek_utxo(output_ref: &OutputRef) -> Option<Output<OuterRedeemer>> {
 		sp_io::storage::get(&output_ref.encode()).and_then(|d| Output::decode(&mut &*d).ok())
 	}
 
 	/// Consume a Utxo from the set.
-	fn consume_utxo(output_ref: &OutputRef) -> Option<Output> {
+	fn consume_utxo(output_ref: &OutputRef) -> Option<Output<OuterRedeemer>> {
 		let result = Self::peek_utxo(output_ref);
 		sp_io::storage::clear(&output_ref.encode());
 		result
@@ -234,7 +286,7 @@ impl Runtime {
 	/// Add a utxo into the set.
 	/// This will overwrite any utxo that already exists at this OutputRef. It should never be the
 	/// case that there are collisions though. Right??
-	fn store_utxo(output_ref: OutputRef, output: Output) {
+	fn store_utxo(output_ref: OutputRef, output: Output<OuterRedeemer>) {
 		sp_io::storage::set(&output_ref.encode(), &output.encode());
 	}
 
@@ -268,13 +320,12 @@ impl Runtime {
 		Ok(())
 	}
 
-	fn validate_tuxedo_transaction(transaction: &tuxedo_types::Transaction) -> Result<ValidTransaction, UtxoError> {
+	fn validate_tuxedo_transaction(transaction: &Transaction<OuterRedeemer, OuterVerifier>) -> Result<ValidTransaction, UtxoError> {
 		// Make sure there are no duplicate inputs
 		{
 			let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
 			ensure!(input_set.len() == transaction.inputs.len(), UtxoError::DuplicateInput);
 		}
-
 
 		// Make sure there are no duplicate outputs
 		{
@@ -307,11 +358,39 @@ impl Runtime {
 		// TODO Actually I don't think we need to do this. It _does_ appear in the original utxo workshop,
 		// but I don't see how we could ever have an output collision.
 
+		// If any the inputs are missing, we cannot make any more progress
+		// If they are all present, we may proceed to call the verifier
+		if !missing_inputs.is_empty() {
+			return Ok(ValidTransaction {
+				requires: missing_inputs,
+				provides: transaction.outputs.iter().map(|o| o.encode()).collect(),
+				priority: 0,
+				longevity: TransactionLongevity::max_value(),
+				propagate: true,
+			})
+		}
+
 		// Extract the contained data from each input and output
+		let input_data: Vec<TypedData> = transaction.inputs.iter().map(|i| {
+			Self::peek_utxo(&i.output_ref).expect("We just checked that all inputs were present.").payload
+		})
+		.collect();
+		let output_data: Vec<TypedData> = transaction.outputs.iter().map(|o| o.payload).collect();
 
 		// Call the verifier
+		ensure!(transaction.verifier.verify(input_data, output_data), UtxoError::VerifierError);
 
-		// Update storage
+		// Return the valid transaction
+		// TODO in the future we need to prioritize somehow. Perhaps the best strategy
+		// is to have the verifier return a priority
+		Ok(ValidTransaction {
+			requires: Vec::new(),
+			provides: transaction.outputs.iter().map(|o| o.encode()).collect(),
+			priority: 0,
+			longevity: TransactionLongevity::max_value(),
+			propagate: true,
+		})
+
 	}
 
 	/// Helper function to update the utxo set according to the given transaction.
