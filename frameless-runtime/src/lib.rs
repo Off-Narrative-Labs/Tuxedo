@@ -181,7 +181,7 @@ pub enum OuterRedeemer {
 
 //TODO this should be implemented by the aggregation macro I guess
 impl Redeemer for OuterRedeemer {
-    fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool {
+    fn redeem(&self, simplified_tx: &[u8], witness: &[u8]) -> bool {
         match self {
             Self::SigCheck(sig_check) => sig_check.redeem(simplified_tx, witness),
             Self::UpForGrabs(up_for_grabs) => up_for_grabs.redeem(simplified_tx, witness),
@@ -346,9 +346,7 @@ impl Runtime {
 		let mut missing_inputs = Vec::new();
 		for input in transaction.inputs.iter() {
 			if let Some(input_utxo) = Self::peek_utxo(&input.output_ref) {
-				if !input_utxo.redeemer.redeem(stripped_encoded, input.witness) {
-					return Err(UtxoError::RedeemerError);
-				}
+				ensure!(input_utxo.redeemer.redeem(&stripped_encoded, &input.witness), UtxoError::RedeemerError);
 			} else {
 				missing_inputs.push(input.output_ref.clone().encode());
 			}

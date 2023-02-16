@@ -4,7 +4,6 @@
 //! and they will be aggregated into an enum. The most common and useful redeemers are included here
 //! with Tuxedo core, but downstream developers are expected to create their own as well.
 
-use sp_std::vec::Vec;
 use sp_core::H256;
 use sp_application_crypto::sr25519::{Public, Signature};
 use parity_scale_codec::{Encode, Decode};
@@ -14,7 +13,7 @@ use parity_scale_codec::{Encode, Decode};
 /// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
 /// we take the entire stripped and serialized transaction as a parameter.
 pub trait Redeemer {
-    fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool;
+    fn redeem(&self, simplified_tx: &[u8], witness: &[u8]) -> bool;
 }
 
 /// A typical redeemer that checks an sr25519 signature
@@ -24,7 +23,7 @@ pub struct SigCheck{
 }
 
 impl Redeemer for SigCheck {
-    fn redeem(&self, simplified_tx: Vec<u8>, witness: Vec<u8>) -> bool {
+    fn redeem(&self, simplified_tx: &[u8], witness: &[u8]) -> bool {
         
         let sig = match Signature::try_from(&witness[..]) {
             Ok(s) => s,
@@ -40,7 +39,7 @@ impl Redeemer for SigCheck {
 pub struct UpForGrabs;
 
 impl Redeemer for UpForGrabs {
-    fn redeem(&self, _simplified_tx: Vec<u8>, _witness: Vec<u8>) -> bool {
+    fn redeem(&self, _simplified_tx: &[u8], _witness: &[u8]) -> bool {
         true
     }
 }
