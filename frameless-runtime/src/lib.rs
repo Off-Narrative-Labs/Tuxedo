@@ -185,6 +185,8 @@ enum UtxoError {
 	/// The Redeemer errored.
 	/// TODO find a way to pass internal error information from the redeemer to here
 	RedeemerError,
+	/// One or more of the inputs required by this transaction is not present in the UTXO set
+	MissingInput,
 }
 type DispatchResult = Result<(), UtxoError>;
 
@@ -203,19 +205,29 @@ impl Runtime {
 		}
 	}
 
+	fn get_state<T: Decode>(key: &[u8]) -> Option<T> {
+		sp_io::storage::get(key).and_then(|d| T::decode(&mut &*d).ok())
+	}
+
+	fn mutate_state<T: Decode + Encode + Default>(key: &[u8], update: impl FnOnce(&mut T)) {
+		let mut value = Self::get_state(key).unwrap_or_default();
+		update(&mut value);
+		sp_io::storage::set(key, &value.encode());
+	}
+
 	// These next few functions comprize what I sketched out in the UtxoSet trait in element the other day
 	// For now, this is complicated enough, so I'll just leave them here. In the future it may be wise to
 	// abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
 
 	/// Fetch a utxo from the set.
-	fn peek_utxo(output_ref: OutputRef) -> Option<Output> {
-		sp_io::storage::get(&output_ref.encode()).and_then(|d| T::decode(&mut &*d).ok())
+	fn peek_utxo(output_ref: &OutputRef) -> Option<Output> {
+		sp_io::storage::get(&output_ref.encode()).and_then(|d| Output::decode(&mut &*d).ok())
 	}
 
 	/// Consume a Utxo from the set.
-	fn consume_utxo(output_ref: OutputRef) -> Option<Output> {
-		let result = peek_utxo(output_ref);
-		sp_io::storage::clear(output_ref);
+	fn consume_utxo(output_ref: &OutputRef) -> Option<Output> {
+		let result = Self::peek_utxo(output_ref);
+		sp_io::storage::clear(&output_ref.encode());
 		result
 	}
 
@@ -223,7 +235,7 @@ impl Runtime {
 	/// This will overwrite any utxo that already exists at this OutputRef. It should never be the
 	/// case that there are collisions though. Right??
 	fn store_utxo(output_ref: OutputRef, output: Output) {
-		sp_io::storage::set(output_ref, output);
+		sp_io::storage::set(&output_ref.encode(), &output.encode());
 	}
 
 	// fn mutate_state<T: Decode + Encode + Default>(key: &[u8], update: impl FnOnce(&mut T)) {
@@ -240,12 +252,10 @@ impl Runtime {
 		// execute it
 		match ext.0 {
 			Call::Transact(transaction) => {
-				let valid_transaction = validate_tuxedo_transaction(&transaction)?;
+				let valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
 				// There are still missing inputs, so we cannot execute this,
 				// although it would be valid in the pool
-				if !valid_transaction.requires.is_empty() {
-					return Err(());
-				}
+				ensure!(valid_transaction.requires.is_empty(), UtxoError::MissingInput);
 
 				update_storage(transaction)
 			}
@@ -261,14 +271,14 @@ impl Runtime {
 	fn validate_tuxedo_transaction(transaction: &tuxedo_types::Transaction) -> Result<ValidTransaction, UtxoError> {
 		// Make sure there are no duplicate inputs
 		{
-			let input_set: BTreeSet<_> = transaction.outputs.iter().collect();
+			let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
 			ensure!(input_set.len() == transaction.inputs.len(), UtxoError::DuplicateInput);
 		}
 
 
 		// Make sure there are no duplicate outputs
 		{
-			let output_set: BTreeSet<_> = transaction.outputs.iter().collect();
+			let output_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
 			ensure!(output_set.len() == transaction.outputs.len(), UtxoError::DuplicateOutput);
 		}
 
@@ -289,7 +299,7 @@ impl Runtime {
 					return Err(UtxoError::RedeemerError);
 				}
 			} else {
-				missing_inputs.push(input.outpoint.clone().as_fixed_bytes().to_vec());
+				missing_inputs.push(input.output_ref.clone().encode());
 			}
 		}
 
