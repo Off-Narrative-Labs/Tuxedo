@@ -7,6 +7,8 @@
 use sp_core::H256;
 use sp_application_crypto::sr25519::{Public, Signature};
 use parity_scale_codec::{Encode, Decode};
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 /// A means of checking that an output can be redeemed (aka spent). This check is made on a
 /// per-output basis and neither knows nor cares anything about the verification logic that will
@@ -17,6 +19,7 @@ pub trait Redeemer {
 }
 
 /// A typical redeemer that checks an sr25519 signature
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct SigCheck{
     owner_pubkey: H256,
@@ -35,6 +38,7 @@ impl Redeemer for SigCheck {
 }
 
 /// A simple redeemer that allows anyone to consume an output at any time
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct UpForGrabs;
 

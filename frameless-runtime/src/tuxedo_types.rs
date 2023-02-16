@@ -7,8 +7,11 @@
 use sp_std::vec::Vec;
 use parity_scale_codec::{Encode, Decode};
 use sp_core::H256;
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 /// A reference to a output that is expected to exist in the state.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
@@ -18,6 +21,7 @@ pub struct OutputRef {
 }
 
 /// A UTXO Transaction
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<R, V> {
     pub inputs: Vec<Input>,
@@ -26,6 +30,9 @@ pub struct Transaction<R, V> {
     pub verifier: V,
 }
 
+
+/// A reference the a utxo that will be consumed along with proof that it may be consumed
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Input {
     /// a reference to the output being consumed
@@ -38,6 +45,7 @@ pub struct Input {
 /// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Output<R> {
     pub payload: TypedData,
@@ -46,6 +54,7 @@ pub struct Output<R> {
 
 /// A piece of encoded data with a type id associated
 /// Strongly typed data can be extracted
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct TypedData {
     pub data: Vec<u8>,

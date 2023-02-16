@@ -173,6 +173,7 @@ const EXTRINSIC_KEY: &[u8] = b"extrinsics";
 //TODO this should be implemented by the aggregation macro I guess
 /// A redeemer checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum OuterRedeemer {
     SigCheck(SigCheck),
@@ -197,6 +198,7 @@ impl Redeemer for OuterRedeemer {
 /// A verifier is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such verifiers.
 /// For example, this may check that input token values exceed output token values.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum OuterVerifier {
     /// Verifies that an amoeba can split into two new amoebas
@@ -212,7 +214,7 @@ pub enum OuterVerifier {
 impl Verifier for OuterVerifier {
     type AdditionalInformation = ();
 
-    fn verify(&self, input_data: Vec<TypedData>, output_data: Vec<TypedData>) -> bool {
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool {
         //TODO Make sure that each variant actually contains a valid verifier, and
 		// dispatch to the appropriate one as we did for the redeemers. For now, this
 		// should be enough to make things compile
@@ -373,10 +375,10 @@ impl Runtime {
 			Self::peek_utxo(&i.output_ref).expect("We just checked that all inputs were present.").payload
 		})
 		.collect();
-		let output_data: Vec<TypedData> = transaction.outputs.iter().map(|o| o.payload).collect();
+		let output_data: Vec<TypedData> = transaction.outputs.iter().map(|o| o.payload.clone()).collect();
 
 		// Call the verifier
-		ensure!(transaction.verifier.verify(input_data, output_data), UtxoError::VerifierError);
+		ensure!(transaction.verifier.verify(&input_data, &output_data), UtxoError::VerifierError);
 
 		// Return the valid transaction
 		// TODO in the future we need to prioritize somehow. Perhaps the best strategy

@@ -4,7 +4,6 @@
 //! proposed final state (as specified by the output set) meets the necessary constraints.
 //! They are loosely analogous to frame pallet calls.
 
-use sp_std::vec::Vec;
 use crate::TypedData;
 
 /// A single verifier that a transaction can choose to call. Verifies whether the input
@@ -19,7 +18,7 @@ pub trait Verifier {
 
     /// The actual verification logic
     /// TODO Maybe this should return Option<Priority> rather than a simple bool
-    fn verify(&self, input_data: Vec<TypedData>, output_data: Vec<TypedData>) -> bool;
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool;
 }
 
 // A trivial verifier that verifies everything. Not practical. More for testing
@@ -28,7 +27,7 @@ pub trait Verifier {
 impl Verifier for () {
     type AdditionalInformation = ();
 
-    fn verify(&self, _input_data: Vec<TypedData>, _output_data: Vec<TypedData>) -> bool {
+    fn verify(&self, _input_data: &[TypedData], _output_data: &[TypedData]) -> bool {
         true
     }
 }
