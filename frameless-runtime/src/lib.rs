@@ -257,7 +257,7 @@ impl Runtime {
 				// although it would be valid in the pool
 				ensure!(valid_transaction.requires.is_empty(), UtxoError::MissingInput);
 
-				update_storage(transaction)
+				Self::update_storage(transaction)
 			}
 			Call::Upgrade(new_wasm_code) => {
 				// NOTE: make sure to upgrade your spec-version!
@@ -312,6 +312,14 @@ impl Runtime {
 		// Call the verifier
 
 		// Update storage
+	}
+
+	/// Helper function to update the utxo set according to the given transaction.
+	/// This function does absolutely no validation. It assumes that the transaction
+	/// has already passed validation. Changes proposed by the transaction are written
+	/// blindly to storage.
+	fn update_storage(transaction: Transaction<OuterRedeemer, OuterVerifier>) {
+		todo!()
 	}
 
 	fn do_initialize_block(header: &<Block as BlockT>::Header) {
