@@ -4,13 +4,13 @@
 // re-invent the type-id wheel;
 // use core::any::TypeId;
 
-use sp_std::{vec::Vec, collections::btree_set::BTreeSet};
+use sp_std::vec::Vec;
 use parity_scale_codec::{Encode, Decode};
 use sp_core::H256;
 use crate::redeemer::{SigCheck, UpForGrabs};
 
 /// A reference to a output that is expected to exist in the state.
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
     tx_hash: H256,
@@ -19,15 +19,15 @@ pub struct OutputRef {
 }
 
 /// A UTXO Transaction
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction {
-    pub inputs: BTreeSet<Input>,
-    //Todo peeks: BTreeMap<Input>,
+    pub inputs: Vec<Input>,
+    //Todo peeks: Vec<Input>,
     pub outputs: Vec<Output>,
     pub verifier: OuterVerifier,
 }
 
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Input {
     /// a reference to the output being consumed
     pub output_ref: OutputRef,
@@ -39,7 +39,7 @@ pub struct Input {
 /// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Output {
     pub data: Vec<u8>,
     pub type_id: [u8; 4],
@@ -79,7 +79,7 @@ impl Output {
 /// A verifier is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such verifiers.
 /// For example, this may check that input token values exceed output token values.
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum OuterVerifier {
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis,
@@ -99,14 +99,14 @@ pub trait Verifier {
     /// This information does not come from existing UTXOs, nor is it stored in new UTXOs.
     type AdditionalInformation;
 
-    fn verify(&self, inputs: BTreeSet<OutputRef>, outputs: Vec<OutputRef>);
+    fn verify(&self, inputs: Vec<OutputRef>, outputs: Vec<OutputRef>);
 }
 
 // Like above, this will probably be aggregates separately for each runtime and maybe should
 // move into the main runtime lib.rs file
 /// A redeemer checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum AvailableRedeemers {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
@@ -134,7 +134,7 @@ impl Redeemer for AvailableRedeemers {
 // }
 
 /// An amoeba tracked by our simple Amoeba APP
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaDetails {
     /// How many generations after the original Eve Amoeba this one is.
     /// When going through mitosis, this number must increase by 1 each time.

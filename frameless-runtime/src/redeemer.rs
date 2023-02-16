@@ -18,7 +18,7 @@ pub trait Redeemer {
 }
 
 /// A typical redeemer that checks an sr25519 signature
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct SigCheck{
     owner_pubkey: H256,
 }
@@ -36,7 +36,7 @@ impl Redeemer for SigCheck {
 }
 
 /// A simple redeemer that allows anyone to consume an output at any time
-#[derive(Encode, Decode, Debug)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct UpForGrabs;
 
 impl Redeemer for UpForGrabs {

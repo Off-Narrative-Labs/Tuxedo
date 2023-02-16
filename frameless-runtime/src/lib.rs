@@ -171,7 +171,10 @@ const EXTRINSIC_KEY: &[u8] = b"extrinsics";
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
 
+#[derive(Debug)]
 enum UtxoError {
+	/// This transaction defines the same input multiple times
+	DuplicateInput,
 	/// This transaction defines the same output multiple times
 	DuplicateOutput,
 	/// This transaction defines an output that already existed in the UTXO set
@@ -206,7 +209,7 @@ impl Runtime {
 
 	/// Fetch a utxo from the set.
 	fn peek_utxo(output_ref: OutputRef) -> Option<Output> {
-		sp_io::storage::get(output_ref).and_then(|d| T::decode(&mut &*d).ok())
+		sp_io::storage::get(&output_ref.encode()).and_then(|d| T::decode(&mut &*d).ok())
 	}
 
 	/// Consume a Utxo from the set.
@@ -256,10 +259,13 @@ impl Runtime {
 	}
 
 	fn validate_tuxedo_transaction(transaction: &tuxedo_types::Transaction) -> Result<ValidTransaction, UtxoError> {
-		// There should be no duplicate inputs because we used a BTreeSet
-		// TODO verify that this assumption is true. What if I encode a Vec and then decode it into a BTreeSet
-		// Perhaps it is safer to just use a Vec for inputs here too like we did in the old utxo workshop
-		
+		// Make sure there are no duplicate inputs
+		{
+			let input_set: BTreeSet<_> = transaction.outputs.iter().collect();
+			ensure!(input_set.len() == transaction.inputs.len(), UtxoError::DuplicateInput);
+		}
+
+
 		// Make sure there are no duplicate outputs
 		{
 			let output_set: BTreeSet<_> = transaction.outputs.iter().collect();
