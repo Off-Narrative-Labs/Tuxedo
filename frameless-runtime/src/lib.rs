@@ -48,7 +48,7 @@ use support_macros::*;
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
-/// to even the core datas-tructures.
+/// to even the core data structures.
 pub mod opaque {
 	use super::*;
 	// TODO: eventually you will have to change this.
@@ -94,7 +94,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	state_version: 0,
 };
 
-/// The version infromation used to identify this runtime when compiled natively.
+/// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
 pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
@@ -130,7 +130,11 @@ pub enum Call {
 	Upgrade(Vec<u8>),
 }
 
-// this extrinsic type does nothing other than fulfill the compiler.
+// TODO it would be awesome to use tuxedo_types::transaction here directly. But that would
+// mean that we need to allow for runtime upgrades through the normal means of
+// consuming and creating UTXOs. I believe this can be done with the AdditionalInformation
+// type I sketched out, but if this is the _only_ usecase we think of, we should re-evaluate
+// whether it is worth the complexity.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Debug, Encode, Decode, PartialEq, Eq, Clone)]
 pub struct BasicExtrinsic(Call);
