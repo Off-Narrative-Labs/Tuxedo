@@ -40,6 +40,7 @@ mod tuxedo_types;
 mod redeemer;
 mod verifier;
 mod support_macros;
+mod amoeba;
 use tuxedo_types::*;
 use redeemer::*;
 use verifier::*;
@@ -206,23 +207,25 @@ impl Redeemer for OuterRedeemer {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum OuterVerifier {
     /// Verifies that an amoeba can split into two new amoebas
-    AmoebaMitosis,
+    AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
-    AmoebaDeath,
+    AmoebaDeath(()),
     /// Verifies that a new valid proof of existence claim is made
-    PoeClaim,
+    PoeClaim(()),
     /// Verifies that a single PoE is revoked.
-    PoeRevoke,
+    PoeRevoke(()),
 }
 
 impl Verifier for OuterVerifier {
     type AdditionalInformation = ();
 
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool {
-        //TODO Make sure that each variant actually contains a valid verifier, and
-		// dispatch to the appropriate one as we did for the redeemers. For now, this
-		// should be enough to make things compile
-		true
+        match self {
+			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data),
+			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data),
+			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data),
+			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data),
+		}
     }
 }
 

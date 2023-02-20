@@ -72,7 +72,7 @@ pub trait UtxoData: Encode + Decode {
 impl TypedData {
     /// Extracts strongly typed data from an Output, iff the output contains the type of data
     /// specified. If the contained data is not the specified type, or decoding fails, this errors.
-    fn extract<T: UtxoData>(&self) -> Result<T, ()> {
+    pub fn extract<T: UtxoData>(&self) -> Result<T, ()> {
         
         // The first four bytes represent the type id that that was encoded. If they match the type
         // we are trying to decode into, we continue, otherwise we error out.
@@ -82,15 +82,4 @@ impl TypedData {
             Err(())
         }
     }
-}
-
-/// An amoeba tracked by our simple Amoeba APP
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct AmoebaDetails {
-    /// How many generations after the original Eve Amoeba this one is.
-    /// When going through mitosis, this number must increase by 1 each time.
-    generation: u32,
-    /// Four totally arbitrary bytes that each amoeba has. There is literally no
-    /// validation on this field whatsoever. I just had an instinct to include a second field.
-    four_bytes: [u8; 4],
 }
