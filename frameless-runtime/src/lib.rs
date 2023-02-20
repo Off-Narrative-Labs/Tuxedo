@@ -95,7 +95,7 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-	pub genesis_utxos: Vec<utxo::Output>,
+	pub genesis_utxos: Vec<utxo::Utxo>,
 }
 
 impl Default for GenesisConfig {
@@ -108,9 +108,10 @@ impl Default for GenesisConfig {
 		// Initial Config just for a Money UTXO
 		GenesisConfig {
 			genesis_utxos: vec![
-				utxo::Output {
-					owner: ALICE_PUB_KEY_BYTES.into(),
-					data: 100u128.encode()
+				utxo::Utxo {
+					redeemer: ALICE_PUB_KEY_BYTES.into(),
+					data: 100u128.encode(),
+					data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
 				}
 			]
 		}
@@ -503,14 +504,44 @@ mod tests {
 		})
 	}
 
-
 	#[test]
 	fn utxo_money_test_genesis() {
 		new_test_ext().execute_with(|| {
 			let keystore = KeyStore::new();
 			let alice_pub_key =
 				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
-			todo!()
+
+			// Grab genesis value from storage and assert it is correct
+			let genesis_utxo = utxo::Utxo {
+				redeemer: alice_pub_key.into(),
+				data: 100u128.encode(),
+				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
+			};
+			let encoded_utxo =
+				sp_io::storage::get(&BlakeTwo256::hash_of(&genesis_utxo).encode()).expect("Retrieve Genesis UTXO");
+			let utxo = utxo::Utxo::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
+			assert_eq!(utxo, genesis_utxo);
+		})
+	}
+
+	#[test]
+	fn utxo_money_test_extracter() {
+		new_test_ext().execute_with(|| {
+			let keystore = KeyStore::new();
+			let alice_pub_key =
+				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+
+			let genesis_utxo = utxo::Utxo {
+				redeemer: alice_pub_key.into(),
+				data: 100u128.encode(),
+				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
+			};
+
+			let expected_data = 100u128;
+			let extracted_data =
+				utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
+				.expect("Can extract Genesis Data");
+			assert_eq!(extracted_data, expected_data);
 		})
 	}
 
