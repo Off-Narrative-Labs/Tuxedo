@@ -61,6 +61,11 @@ pub struct TypedData {
     pub type_id: [u8; 4],
 }
 
+/// A trait that must be implemented for any data that can be contained in a UTXO.
+/// It is not recommended to implement this trait directly for primitive types, but rather to
+/// use the newtype pattern: https://doc.rust-lang.org/book/ch19-04-advanced-types.html.
+/// Using a new type allows strong type disambiguation between bespoke use-cases in which
+/// the same primitive may be stored.
 pub trait UtxoData: Encode + Decode {
     //TODO this is ugly. But at least I'm not stuck anymore.
     /// A unique identifier for this type. For now choosing this value and making sure it
