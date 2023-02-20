@@ -15,7 +15,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Block as BlockT, Extrinsic},
 	transaction_validity::{
 		InvalidTransaction, TransactionSource, TransactionValidity, TransactionValidityError,
-		ValidTransaction, TransactionLongevity,
+		ValidTransaction, TransactionLongevity, TransactionPriority,
 	},
 	ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
@@ -217,9 +217,15 @@ pub enum OuterVerifier {
 }
 
 impl Verifier for OuterVerifier {
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool {
+
+	//TODO we need some way of forwarding error information from the inner verifier.
+	// In frame it is required that ever inner error implements Into<OuterError> (or maybe From)
+	// For now we just drop the error information at this point.
+	type Error = ();
+
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, ()> {
         match self {
-			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data),
+			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data).map_err(|_| ()),
 			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data),
 			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data),
 			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data),
@@ -383,7 +389,7 @@ impl Runtime {
 		let output_data: Vec<TypedData> = transaction.outputs.iter().map(|o| o.payload.clone()).collect();
 
 		// Call the verifier
-		ensure!(transaction.verifier.verify(&input_data, &output_data), UtxoError::VerifierError);
+		ensure!(transaction.verifier.verify(&input_data, &output_data).is_ok(), UtxoError::VerifierError);
 
 		// Return the valid transaction
 		// TODO in the future we need to prioritize somehow. Perhaps the best strategy

@@ -9,10 +9,12 @@
 //!    mother amoeba and creates, in its place two new daughter amoebas.
 
 use crate::Verifier;
+use crate::{ensure, fail};
 use crate::tuxedo_types::{TypedData, UtxoData};
 use parity_scale_codec::{Encode, Decode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use sp_runtime::transaction_validity::TransactionPriority;
 
 /// An amoeba tracked by our simple Amoeba APP
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
@@ -32,14 +34,24 @@ impl UtxoData for AmoebaDetails {
 
 /// Things that can go wrong in the amoeba lifecycle
 pub enum AmoebaError {
-    /// No mother provided to mitosis process.
-    NoMother,
-    /// Too many inputs were provided to the verifier.
-    ExtraInputs,
+
+    // TODO In the current design, this will need to be repeated in every piece. This is not nice.
+    // Well, actually, no. Some pieces will be flexible about how many inputs and outputs they can take.
+    // For example, the money piece can take as many input or output coins as it wants.
+    // Similarly, in kitties, we may allow breeding via cat orgies with arbitrarily many parents providing genetic source material.
+
+    /// Wrong number of inputs were provided to the verifier.
+    WrongNumberInputs,
+    /// Wrong number of outputs were provided to the verifier.
+    WrongNumberOutputs,
+    /// An input data has the wrong type.
+    BadlyTypedInput,
+    /// An output data has the wrong type.
+    BadlyTypedOutput,
+
+    // Now we get on to the actual amoeba-specific errors
     /// The daughters did not have to right generation based on the mother.
     WrongGeneration,
-    /// Too many outputs were provided to the verifier.
-    ExtraOutputs,
 }
 
 /// A verifier for the process of amoeba mitosis
@@ -53,44 +65,28 @@ pub struct AmoebaMitosis;
 
 impl Verifier for AmoebaMitosis {
 
-    //TODO consider associated error type here.
+    type Error = AmoebaError;
 
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool {
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, AmoebaError> {
         // Make sure there is exactly one mother.
-        // assert!(input_data.len() == 1, )
-        if input_data.is_empty() {
-            return false;
-        }
-        if input_data.len() > 2 {
-            return false;
-        }
-        let mother = match input_data[0].extract::<AmoebaDetails>() {
-            Ok(a) => a,
-            Err(_) => return false,
-        };
+        ensure!(input_data.len() == 1, AmoebaError::WrongNumberInputs);
+        let mother = input_data[0].extract::<AmoebaDetails>().map_err(|_| AmoebaError::BadlyTypedInput)?;
 
         // Make sure there are exactly two daughters.
-        if output_data.len() != 2 {
-            return false;
-        }
-        let first_daughter = match output_data[0].extract::<AmoebaDetails>() {
-            Ok(a) => a,
-            Err(_) => return false,
-        };
-        let second_daughter = match output_data[1].extract::<AmoebaDetails>() {
-            Ok(a) => a,
-            Err(_) => return false,
-        };
+        ensure!(output_data.len() == 2, AmoebaError::WrongNumberOutputs);
+        let first_daughter = output_data[0].extract::<AmoebaDetails>().map_err(|_| AmoebaError::BadlyTypedOutput)?;
+        let second_daughter = output_data[1].extract::<AmoebaDetails>().map_err(|_| AmoebaError::BadlyTypedOutput)?;
 
         // Make sure the generations are correct
-        if first_daughter.generation != mother.generation + 1 {
-            false
-        }
-        else if second_daughter.generation != mother.generation + 1 {
-            false
-        }
-        else {
-            true
-        }
+        ensure!(first_daughter.generation == mother.generation + 1, AmoebaError::WrongGeneration);
+        ensure!(second_daughter.generation == mother.generation + 1, AmoebaError::WrongGeneration);
+        
+        //TODO Figure out how to calculate priority.
+        // Best priority idea so far. We have a verifier, PriorityVerifierWrapper<Inner: Verifier>(u8)
+        // where you pass it the a number of inputs. It will take those first n inputs for itself, and assume
+        // they are coins in some native currency. Then it will call the inner verifier with the remaining input
+        // and if the inner verifier succeeds, it will prioritize based on the tip given in the first few inputs.
+        // Such a wrapper should live with the money piece, and thus returning 0 here is fine.
+        Ok(0)
     }
 }
