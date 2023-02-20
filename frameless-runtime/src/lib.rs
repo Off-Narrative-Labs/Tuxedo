@@ -41,6 +41,7 @@ mod redeemer;
 mod verifier;
 mod support_macros;
 mod amoeba;
+mod poe;
 use tuxedo_types::*;
 use redeemer::*;
 use verifier::*;
@@ -212,10 +213,13 @@ pub enum OuterVerifier {
     AmoebaDeath(amoeba::AmoebaDeath),
 	/// Verifies that a single amoeba is simply created from the void... and it is good
     AmoebaCreation(amoeba::AmoebaCreation),
-    /// Verifies that a new valid proof of existence claim is made
-    PoeClaim(()),
-    /// Verifies that a single PoE is revoked.
-    PoeRevoke(()),
+    /// Verifies that new valid proofs of existence are claimed
+    PoeClaim(poe::PoeClaim),
+    /// Verifies that proofs of existence are revoked.
+    PoeRevoke(poe::PoeRevoke),
+	/// Verifies that one winning claim came earlier than all the other claims, and thus
+	/// the losing claims can be removed from storage.
+	PoeDispute(poe::PoeDispute),
 }
 
 impl Verifier for OuterVerifier {
@@ -230,8 +234,9 @@ impl Verifier for OuterVerifier {
 			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data).map_err(|_| ()),
 			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data).map_err(|_| ()),
 			Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(input_data, output_data).map_err(|_| ()),
-			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data),
-			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data),
+			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data).map_err(|_| ()),
+			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data).map_err(|_| ()),
+			Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data).map_err(|_| ()),
 		}
     }
 }

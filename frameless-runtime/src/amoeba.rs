@@ -19,7 +19,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// An amoeba tracked by our simple Amoeba APP
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct AmoebaDetails {
+struct AmoebaDetails {
     /// How many generations after the original Eve Amoeba this one is.
     /// When going through mitosis, this number must increase by 1 each time.
     generation: u32,
