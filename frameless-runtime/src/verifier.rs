@@ -8,16 +8,14 @@ use crate::TypedData;
 
 /// A single verifier that a transaction can choose to call. Verifies whether the input
 /// and output data from a transaction meets the codified constraints.
+/// 
+/// Additional transient information may be passed to the verifier by including it in the fields
+/// of the verifier struct itself. Information passed in this way does not come from state, nor
+/// is it stored in state.
 pub trait Verifier {
 
-    //TODO see if this is even necessary. I keep having moments where I think it will be, but
-    // don't yet have a very clear usecase.
-    /// Additional transient information that is passed to the verifier from the transaction.
-    /// This information does not come from existing UTXOs, nor is it stored in new UTXOs.
-    type AdditionalInformation;
-
     /// The actual verification logic
-    /// TODO Maybe this should return Option<Priority> rather than a simple bool
+    /// TODO This should return Result<Priority, Error> rather than a simple bool
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool;
 }
 
@@ -25,7 +23,6 @@ pub trait Verifier {
 // and for the sake of making things compile before I get around to writing the
 // amoeba nd PoE verifiers
 impl Verifier for () {
-    type AdditionalInformation = ();
 
     fn verify(&self, _input_data: &[TypedData], _output_data: &[TypedData]) -> bool {
         true

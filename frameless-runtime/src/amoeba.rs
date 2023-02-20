@@ -52,7 +52,6 @@ pub enum AmoebaError {
 pub struct AmoebaMitosis;
 
 impl Verifier for AmoebaMitosis {
-    type AdditionalInformation = ();
 
     //TODO consider associated error type here.
 

@@ -217,8 +217,6 @@ pub enum OuterVerifier {
 }
 
 impl Verifier for OuterVerifier {
-    type AdditionalInformation = ();
-
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> bool {
         match self {
 			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data),
