@@ -209,7 +209,9 @@ pub enum OuterVerifier {
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
-    AmoebaDeath(()),
+    AmoebaDeath(amoeba::AmoebaDeath),
+	/// Verifies that a single amoeba is simply created from the void... and it is good
+    AmoebaCreation(amoeba::AmoebaCreation),
     /// Verifies that a new valid proof of existence claim is made
     PoeClaim(()),
     /// Verifies that a single PoE is revoked.
@@ -226,7 +228,8 @@ impl Verifier for OuterVerifier {
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, ()> {
         match self {
 			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data).map_err(|_| ()),
-			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data),
+			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data).map_err(|_| ()),
+			Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(input_data, output_data).map_err(|_| ()),
 			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data),
 			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data),
 		}

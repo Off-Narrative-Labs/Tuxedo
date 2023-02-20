@@ -90,3 +90,54 @@ impl Verifier for AmoebaMitosis {
         Ok(0)
     }
 }
+
+/// A verifier for simple death of an amoeba.
+/// 
+/// Any amoeba can be killed by providing it as the sole input to this verifier. No
+/// new outputs are ever created.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct AmoebaDeath;
+
+impl Verifier for AmoebaDeath {
+    type Error = AmoebaError;
+
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
+        // Make sure there is a single victim
+        // Another valid design choice would be to allow killing many amoebas at once
+        // but that is not the choice I've made here.
+        ensure!(input_data.len() == 1, AmoebaError::WrongNumberInputs);
+        let victim = input_data[0].extract::<AmoebaDetails>().map_err(|_| AmoebaError::BadlyTypedInput)?;
+
+        // Make sure there are no outputs
+        ensure!(output_data.is_empty(), AmoebaError::WrongNumberOutputs);
+
+        Ok(0)
+    }
+}
+
+/// A verifier for simple creation of an amoeba.
+/// 
+/// A new amoeba can be created by providing it as the sole output to this verifier. No
+/// inputs are ever consumed.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct AmoebaCreation;
+
+impl Verifier for AmoebaCreation {
+    type Error = AmoebaError;
+
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
+        // Make sure there is a single created amoeba
+        ensure!(output_data.len() == 1, AmoebaError::WrongNumberOutputs);
+        let eve = output_data[0].extract::<AmoebaDetails>().map_err(|_| AmoebaError::BadlyTypedInput)?;
+
+        // Make sure the newly created amoeba has generation 0
+        ensure!(eve.generation == 0, AmoebaError::WrongGeneration);
+
+        // Make sure there are no inputs
+        ensure!(input_data.is_empty(), AmoebaError::WrongNumberInputs);
+
+        Ok(0)
+    }
+}
