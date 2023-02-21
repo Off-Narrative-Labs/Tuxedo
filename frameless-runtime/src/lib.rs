@@ -42,7 +42,7 @@ mod verifier;
 mod support_macros;
 mod amoeba;
 mod poe;
-// mod runtime_upgrade;
+mod runtime_upgrade;
 use tuxedo_types::{TypedData, OutputRef, Input, Output};
 use redeemer::*;
 use verifier::*;
@@ -192,16 +192,20 @@ pub enum OuterVerifier {
 	/// Verifies that one winning claim came earlier than all the other claims, and thus
 	/// the losing claims can be removed from storage.
 	PoeDispute(poe::PoeDispute),
+	/// Upgrade the Wasm Runtime
+	RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
 
 /// An aggregated error type with a variant for each tuxedo piece
 /// TODO This should probably be macro generated
 #[derive(Debug)]
 pub enum OuterVerifierError {
-	/// Error from the amoeba piece
+	/// Error from the Amoeba piece
 	Amoeba(amoeba::VerifierError),
-	/// Error from the PoE Piece
+	/// Error from the PoE piece
 	Poe(poe::VerifierError),
+	/// Error from the Runtime Upgrade piece
+	RuntimeUpgrade(runtime_upgrade::VerifierError),
 }
 
 // We impl conversions from each of the inner error types to the outer error type.
@@ -219,6 +223,12 @@ impl From<poe::VerifierError> for OuterVerifierError {
     }
 }
 
+impl From<runtime_upgrade::VerifierError> for OuterVerifierError {
+    fn from(e: runtime_upgrade::VerifierError) -> Self {
+        Self::RuntimeUpgrade(e)
+    }
+}
+
 impl Verifier for OuterVerifier {
 
 	type Error = OuterVerifierError;
@@ -231,6 +241,7 @@ impl Verifier for OuterVerifier {
 			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data)?,
 			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data)?,
 			Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data)?,
+			Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.verify(input_data, output_data)?,
 		})
     }
 }
