@@ -45,7 +45,6 @@ mod poe;
 use tuxedo_types::*;
 use redeemer::*;
 use verifier::*;
-use support_macros::*;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -148,7 +147,7 @@ impl BasicExtrinsic {
 	}
 }
 
-impl sp_runtime::traits::Extrinsic for BasicExtrinsic {
+impl Extrinsic for BasicExtrinsic {
 	type Call = Call;
 	type SignaturePayload = ();
 
