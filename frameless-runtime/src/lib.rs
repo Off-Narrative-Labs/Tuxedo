@@ -12,7 +12,7 @@ use sp_api::{impl_runtime_apis, HashT};
 use sp_runtime::{
 	create_runtime_str,
 	impl_opaque_keys,
-	traits::{BlakeTwo256, Block as BlockT, Extrinsic},
+	traits::{BlakeTwo256, Block as BlockT},
 	transaction_validity::{
 		InvalidTransaction, TransactionSource, TransactionValidity, TransactionValidityError,
 		ValidTransaction, TransactionLongevity, TransactionPriority,
@@ -43,7 +43,7 @@ mod support_macros;
 mod amoeba;
 mod poe;
 mod runtime_upgrade;
-use tuxedo_types::{TypedData, OutputRef, Input, Output};
+use tuxedo_types::{TypedData, OutputRef, Output};
 use redeemer::*;
 use verifier::*;
 
