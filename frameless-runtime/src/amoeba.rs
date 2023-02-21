@@ -8,13 +8,20 @@
 //! 3. An existing amoeba can undergo mitosis. Mitosis is a process that consumes the
 //!    mother amoeba and creates, in its place two new daughter amoebas.
 
-use crate::Verifier;
+use crate::verifier::TuxedoPiece;
 use crate::{ensure, fail};
-use crate::tuxedo_types::{TypedData, UtxoData};
+use crate::tuxedo_types::{TypedData};
 use parity_scale_codec::{Encode, Decode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+
+/// The main type for this piece. Analogous to a combination of `struct Pallet` and `enum Call`.
+pub enum Piece {
+    Mitosis,
+    Creation,
+    Death,
+}
 
 /// An amoeba tracked by our simple Amoeba APP
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
@@ -28,8 +35,23 @@ struct AmoebaDetails {
     four_bytes: [u8; 4],
 }
 
-impl UtxoData for AmoebaDetails {
+impl TuxedoPiece for Piece {
     const TYPE_ID: [u8; 4] = *b"amoe";
+
+    type Data = AmoebaDetails;
+
+    //TODO maybe rename the VerifierError type to just Error
+    type Error = VerifierError;
+
+
+
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
+        match self {
+            Piece::Mitosis => verify_mitosis(input_data, output_data),
+            Piece::Creation => verify_creation(input_data, output_data),
+            Piece::Death => verify_death(input_data, output_data),
+        }
+    }
 }
 
 /// Reasons that the amoeba verifiers may fail
@@ -60,88 +82,63 @@ pub enum VerifierError {
 /// 1. There is exactly one mother amoeba.
 /// 2. There are exactly two daughter amoebas
 /// 3. Each Daughter amoeba has a generation one higher than its mother.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct AmoebaMitosis;
+fn verify_mitosis(input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, VerifierError> {
+    // Make sure there is exactly one mother.
+    ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
+    let mother = input_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
 
-impl Verifier for AmoebaMitosis {
+    // Make sure there are exactly two daughters.
+    ensure!(output_data.len() == 2, VerifierError::WrongNumberOutputs);
+    let first_daughter = output_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedOutput)?;
+    let second_daughter = output_data[1].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedOutput)?;
 
-    type Error = VerifierError;
-
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, VerifierError> {
-        // Make sure there is exactly one mother.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
-        let mother = input_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
-
-        // Make sure there are exactly two daughters.
-        ensure!(output_data.len() == 2, VerifierError::WrongNumberOutputs);
-        let first_daughter = output_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedOutput)?;
-        let second_daughter = output_data[1].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedOutput)?;
-
-        // Make sure the generations are correct
-        ensure!(first_daughter.generation == mother.generation + 1, VerifierError::WrongGeneration);
-        ensure!(second_daughter.generation == mother.generation + 1, VerifierError::WrongGeneration);
-        
-        //TODO Figure out how to calculate priority.
-        // Best priority idea so far. We have a verifier, PriorityVerifierWrapper<Inner: Verifier>(u8)
-        // where you pass it the a number of inputs. It will take those first n inputs for itself, and assume
-        // they are coins in some native currency. Then it will call the inner verifier with the remaining input
-        // and if the inner verifier succeeds, it will prioritize based on the tip given in the first few inputs.
-        // Such a wrapper should live with the money piece, and thus returning 0 here is fine.
-        Ok(0)
-    }
+    // Make sure the generations are correct
+    ensure!(first_daughter.generation == mother.generation + 1, VerifierError::WrongGeneration);
+    ensure!(second_daughter.generation == mother.generation + 1, VerifierError::WrongGeneration);
+    
+    //TODO Figure out how to calculate priority.
+    // Best priority idea so far. We have a verifier, PriorityVerifierWrapper<Inner: Verifier>(u8)
+    // where you pass it the a number of inputs. It will take those first n inputs for itself, and assume
+    // they are coins in some native currency. Then it will call the inner verifier with the remaining input
+    // and if the inner verifier succeeds, it will prioritize based on the tip given in the first few inputs.
+    // Such a wrapper should live with the money piece, and thus returning 0 here is fine.
+    Ok(0)
 }
 
 /// A verifier for simple death of an amoeba.
 /// 
 /// Any amoeba can be killed by providing it as the sole input to this verifier. No
 /// new outputs are ever created.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct AmoebaDeath;
+fn verify_death(input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, VerifierError> {
+    // Make sure there is a single victim
+    // Another valid design choice would be to allow killing many amoebas at once
+    // but that is not the choice I've made here.
+    ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
 
-impl Verifier for AmoebaDeath {
-    type Error = VerifierError;
+    // We don't actually need to check any details of the victim, but we do need to make sure
+    // we have the correct type.
+    let _victim = input_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
 
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
-        // Make sure there is a single victim
-        // Another valid design choice would be to allow killing many amoebas at once
-        // but that is not the choice I've made here.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
+    // Make sure there are no outputs
+    ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
 
-        // We don't actually need to check any details of the victim, but we do need to make sure
-        // we have the correct type.
-        let _victim = input_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
-
-        // Make sure there are no outputs
-        ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
-
-        Ok(0)
-    }
+    Ok(0)
 }
 
 /// A verifier for simple creation of an amoeba.
 /// 
 /// A new amoeba can be created by providing it as the sole output to this verifier. No
 /// inputs are ever consumed.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct AmoebaCreation;
+fn verify_creation(input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, VerifierError> {
+    // Make sure there is a single created amoeba
+    ensure!(output_data.len() == 1, VerifierError::WrongNumberOutputs);
+    let eve = output_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
 
-impl Verifier for AmoebaCreation {
-    type Error = VerifierError;
+    // Make sure the newly created amoeba has generation 0
+    ensure!(eve.generation == 0, VerifierError::WrongGeneration);
 
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
-        // Make sure there is a single created amoeba
-        ensure!(output_data.len() == 1, VerifierError::WrongNumberOutputs);
-        let eve = output_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
+    // Make sure there are no inputs
+    ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
 
-        // Make sure the newly created amoeba has generation 0
-        ensure!(eve.generation == 0, VerifierError::WrongGeneration);
-
-        // Make sure there are no inputs
-        ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
-
-        Ok(0)
-    }
+    Ok(0)
 }

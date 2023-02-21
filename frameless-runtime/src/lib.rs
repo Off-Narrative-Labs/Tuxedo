@@ -41,7 +41,7 @@ mod redeemer;
 mod verifier;
 mod support_macros;
 mod amoeba;
-mod poe;
+// mod poe;
 use tuxedo_types::*;
 use redeemer::*;
 use verifier::*;
@@ -127,7 +127,7 @@ pub type Block = sp_runtime::generic::Block<Header, BasicExtrinsic>;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
-	Transact(Transaction<OuterRedeemer, OuterVerifier>),
+	Transact(Transaction<OuterRedeemer, AllPieces>),
 	Upgrade(Vec<u8>),
 }
 
@@ -205,20 +205,22 @@ impl Redeemer for OuterRedeemer {
 /// For example, this may check that input token values exceed output token values.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum OuterVerifier {
-    /// Verifies that an amoeba can split into two new amoebas
-    AmoebaMitosis(amoeba::AmoebaMitosis),
-    /// Verifies that a single amoeba is simply removed from the state
-    AmoebaDeath(amoeba::AmoebaDeath),
-	/// Verifies that a single amoeba is simply created from the void... and it is good
-    AmoebaCreation(amoeba::AmoebaCreation),
-    /// Verifies that new valid proofs of existence are claimed
-    PoeClaim(poe::PoeClaim),
-    /// Verifies that proofs of existence are revoked.
-    PoeRevoke(poe::PoeRevoke),
-	/// Verifies that one winning claim came earlier than all the other claims, and thus
-	/// the losing claims can be removed from storage.
-	PoeDispute(poe::PoeDispute),
+pub enum AllPieces {
+	Amoeba(amoeba::Piece),
+
+    // /// Verifies that an amoeba can split into two new amoebas
+    // AmoebaMitosis(amoeba::AmoebaMitosis),
+    // /// Verifies that a single amoeba is simply removed from the state
+    // AmoebaDeath(amoeba::AmoebaDeath),
+	// /// Verifies that a single amoeba is simply created from the void... and it is good
+    // AmoebaCreation(amoeba::AmoebaCreation),
+    // /// Verifies that new valid proofs of existence are claimed
+    // PoeClaim(poe::PoeClaim),
+    // /// Verifies that proofs of existence are revoked.
+    // PoeRevoke(poe::PoeRevoke),
+	// /// Verifies that one winning claim came earlier than all the other claims, and thus
+	// /// the losing claims can be removed from storage.
+	// PoeDispute(poe::PoeDispute),
 }
 
 /// An aggregated error type with a variant for each tuxedo piece
@@ -227,8 +229,8 @@ pub enum OuterVerifier {
 pub enum OuterVerifierError {
 	/// Error from the amoeba piece
 	Amoeba(amoeba::VerifierError),
-	/// Error from the PoE Piece
-	Poe(poe::VerifierError),
+	// /// Error from the PoE Piece
+	// Poe(poe::VerifierError),
 }
 
 // We impl conversions from each of the inner error types to the outer error type.
@@ -240,24 +242,23 @@ impl From<amoeba::VerifierError> for OuterVerifierError {
     }
 }
 
-impl From<poe::VerifierError> for OuterVerifierError {
-    fn from(e: poe::VerifierError) -> Self {
-        Self::Poe(e)
-    }
-}
+// impl From<poe::VerifierError> for OuterVerifierError {
+//     fn from(e: poe::VerifierError) -> Self {
+//         Self::Poe(e)
+//     }
+// }
 
-impl Verifier for OuterVerifier {
-
-	type Error = OuterVerifierError;
-
+impl AllPieces {
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
-			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data)?,
-			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data)?,
-			Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(input_data, output_data)?,
-			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data)?,
-			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data)?,
-			Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data)?,
+            AllPieces::Amoeba(amoeba) => amoeba.verify(input_data, output_data),
+			
+			// Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data)?,
+			// Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data)?,
+			// Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(input_data, output_data)?,
+			// Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data)?,
+			// Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data)?,
+			// Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data)?,
 		})
     }
 }
