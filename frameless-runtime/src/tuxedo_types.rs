@@ -4,6 +4,7 @@
 // re-invent the type-id wheel;
 // use core::any::TypeId;
 
+use sp_runtime::traits::Extrinsic;
 use sp_std::vec::Vec;
 use parity_scale_codec::{Encode, Decode};
 use sp_core::H256;
@@ -28,6 +29,28 @@ pub struct Transaction<R, V> {
     //Todo peeks: Vec<Input>,
     pub outputs: Vec<Output<R>>,
     pub verifier: V,
+}
+
+
+// We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
+// See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
+//
+// This trait's design has a preference for transactions that will have a single signature over the
+// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound
+// , so we do a minimal implementation.
+impl<R, V> Extrinsic for Transaction<R, V> {
+	type Call = Self;
+	type SignaturePayload = ();
+
+	fn new(data: Self, _: Option<Self::SignaturePayload>) -> Option<Self> {
+		Some(data)
+	}
+
+    // This function has a default implementation that returns None.
+    // TODO what are the consequences of returning Some(false) vs None?
+    fn is_signed(&self) -> Option<bool> {
+		Some(false)
+	}
 }
 
 
