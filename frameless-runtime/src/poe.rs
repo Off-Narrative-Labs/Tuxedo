@@ -118,3 +118,23 @@ impl Verifier for PoeDispute {
         //TODO what to do about the redeemers on those losing claims.
     }
 }
+
+/// One workable solution to the problem above is modifying the core transaction structure to something like this
+struct Transaction {
+    /// A classic input that is consumed from the utxo set. Its redeemer must be satisfied for the tx to be valid
+    redemptions: Vec<InputRef>,
+    /// Similar to a redemption, this is an input that is consumed from the utxo set, but its redeemer need not be satisfied
+    /// In the Poe case above, the losing claims that came later would be evictions.
+    evictions: Vec<InputRef>,
+    /// Similar to an input, but it is not consumed. This is a way to read pre-existing state without removing it from the utxo set
+    /// this also indicates when transaction are not competing for state despite reading the same state, and thus commute.
+    /// TBD whether it makes sense to have a redeemer check. My gut instinct is no redeemer check, but it needs more careful thought.
+    peeks: Vec<InputRef>,
+    /// Newly created pieces of state to be added to the utxo set.
+    outputs: Vec<Output>,
+}
+
+// Aliases so my sketch above compiles
+type InputRef = ();
+type Output = ();
+use sp_std::vec::Vec;
