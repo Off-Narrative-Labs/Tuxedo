@@ -6,7 +6,7 @@
 //! transaction. Thus, the blockchain network acts as a decentralized notary service. Claims are
 //! stored in the state, and can be "revoked" from the state later, although the witness to the original
 //! claim will always remain in the history of the blockchain.
-//! 
+//!
 //! The main design deviation from the FRAME PoE pallet is the means by which redundant claims are settled.
 //! In FRAME, the exact storage location of each claim is known globally, whereas in the UTXO model, all state
 //! is local. This means that when a new claim is registered, it is not possible to efficiently check that the
@@ -14,17 +14,20 @@
 //! when they are discovered. This difference is analogous to the difference between recorded and registered
 //! land https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
 
-use crate::{Verifier, tuxedo_types};
-use crate::{ensure, fail};
 use crate::tuxedo_types::{TypedData, UtxoData};
-use parity_scale_codec::{Encode, Decode};
+use crate::{ensure, fail};
+use crate::{tuxedo_types, Verifier};
+use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
 
 // Notice this type doesn't have to be public. Cool.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 struct ClaimData {
     /// The hash of the data whose existence is being proven.
@@ -38,11 +41,13 @@ impl UtxoData for ClaimData {
 }
 
 /// Errors that can occur when verifying PoE Transactions
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum VerifierError {
     // Ughhh again with these common errors.
-
     /// Wrong number of inputs were provided to the verifier.
     WrongNumberInputs,
     /// Wrong number of outputs were provided to the verifier.
@@ -53,25 +58,31 @@ pub enum VerifierError {
     BadlyTypedOutput,
 
     // Now we get on to the actual amoeba-specific errors
-
     /// The effective height of this claim is in the past,
     /// So the claim cannot be created.
     EffectiveHeightInPast,
 }
 
 /// A verifier to create claims.
-/// 
+///
 /// This verifier allows the creation of many claims in a single operation
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeClaim;
 
 impl Verifier for PoeClaim {
     type Error = VerifierError;
 
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
+    fn verify(
+        &self,
+        input_data: &[TypedData],
+        output_data: &[TypedData],
+    ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no inputs
         ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
 
@@ -81,8 +92,13 @@ impl Verifier for PoeClaim {
         // requirement allows the caller to make a somewhat weaker claim with the advantage that they have a longer
         // period of time during which their transaction is valid.
         for untyped_output in output_data {
-            let output = untyped_output.extract::<ClaimData>().map_err(|_| VerifierError::BadlyTypedOutput)?;
-            ensure!(output.effective_height >= tuxedo_types::block_height(), VerifierError::EffectiveHeightInPast);
+            let output = untyped_output
+                .extract::<ClaimData>()
+                .map_err(|_| VerifierError::BadlyTypedOutput)?;
+            ensure!(
+                output.effective_height >= tuxedo_types::block_height(),
+                VerifierError::EffectiveHeightInPast
+            );
         }
 
         Ok(0)
@@ -90,22 +106,31 @@ impl Verifier for PoeClaim {
 }
 
 /// A verifier to revoke claims.
-/// 
+///
 /// Like the creation verifier, this allows batch revocation.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeRevoke;
 
 impl Verifier for PoeRevoke {
     type Error = VerifierError;
 
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
+    fn verify(
+        &self,
+        input_data: &[TypedData],
+        output_data: &[TypedData],
+    ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no outputs
         ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
 
         // Make sure the inputs are properly typed. We don't need to verify anything else about them.
         for untyped_input in input_data {
-            let _ = untyped_input.extract::<ClaimData>().map_err(|_| VerifierError::BadlyTypedInput);
+            let _ = untyped_input
+                .extract::<ClaimData>()
+                .map_err(|_| VerifierError::BadlyTypedInput);
         }
 
         Ok(0)
@@ -113,23 +138,30 @@ impl Verifier for PoeRevoke {
 }
 
 /// A verifier that resolves claim disputes by keeping whichever claim came first.
-/// 
+///
 /// TODO this will work much more elegantly once peek is implemented. We only need to peek at the
 /// older winning claim because it will remain in state afterwards.
-/// 
+///
 /// TODO what shall we do about the redeemer? Each claimer may have given their claim a redeemer
 /// such that their own private signature. Perhaps there should be a way for a verifier to override
 /// the redeemer logic? This is a concrete case where the verifier redeemer separation is not ideal.
 /// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
 /// but we want to authorized signer to come from the a different part of state.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeDispute;
 
 impl Verifier for PoeDispute {
     type Error = VerifierError;
 
-    fn verify(&self, _input_data: &[TypedData], _output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
+    fn verify(
+        &self,
+        _input_data: &[TypedData],
+        _output_data: &[TypedData],
+    ) -> Result<TransactionPriority, Self::Error> {
         todo!("implement this once we have at least peeks and maybe evictions")
 
         // Make sure there is at least one input (once peek is ready, it will become a peek)
@@ -142,7 +174,6 @@ impl Verifier for PoeDispute {
         //TODO what to do about the redeemers on those losing claims.
     }
 }
-
 
 #[allow(dead_code)]
 mod brainstorm {

@@ -7,16 +7,16 @@
 /// Used as `fail!(expression)`.
 #[macro_export]
 macro_rules! fail {
-	( $y:expr ) => {{
-		return Err($y.into())
-	}};
+    ( $y:expr ) => {{
+        return Err($y.into());
+    }};
 }
 
 #[macro_export]
 macro_rules! ensure {
-	( $x:expr, $y:expr $(,)? ) => {{
-		if !$x {
-			fail!($y);
-		}
-	}};
+    ( $x:expr, $y:expr $(,)? ) => {{
+        if !$x {
+            fail!($y);
+        }
+    }};
 }

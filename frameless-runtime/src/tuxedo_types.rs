@@ -4,15 +4,18 @@
 // re-invent the type-id wheel;
 // use core::any::TypeId;
 
-use sp_runtime::traits::Extrinsic;
-use sp_std::vec::Vec;
-use parity_scale_codec::{Encode, Decode};
-use sp_core::H256;
+use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use sp_core::H256;
+use sp_runtime::traits::Extrinsic;
+use sp_std::vec::Vec;
 
 /// A reference to a output that is expected to exist in the state.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
@@ -22,9 +25,9 @@ pub struct OutputRef {
 }
 
 /// A UTXO Transaction
-/// 
+///
 /// Each transaction consumes some UTXOs (the inputs) and creates some new ones (the outputs).
-/// 
+///
 /// The Transaction type is generic over two orthogonal pieces of validation logic:
 /// 1. Redeemers - A redeemer checks that an individual input may be consumed. A typical example
 ///    of a redeemer is checking that there is a signature by the proper owner. Other examples
@@ -32,10 +35,13 @@ pub struct OutputRef {
 /// 2. Verifiers - A verifier checks that the transaction as a whole meets a set of requirements.
 ///    For example, that the total output value of a cryptocurrency transaction does not exceed its
 ///    input value. Or that a cryptokitty was created with the correct genetic material from its parents.
-/// 
+///
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<R, V> {
     pub inputs: Vec<Input>,
@@ -51,22 +57,25 @@ pub struct Transaction<R, V> {
 // entire block, so it is not very useful for us. We still need to implement it to satisfy the bound
 // , so we do a minimal implementation.
 impl<R, V> Extrinsic for Transaction<R, V> {
-	type Call = Self;
-	type SignaturePayload = ();
+    type Call = Self;
+    type SignaturePayload = ();
 
-	fn new(data: Self, _: Option<Self::SignaturePayload>) -> Option<Self> {
-		Some(data)
-	}
+    fn new(data: Self, _: Option<Self::SignaturePayload>) -> Option<Self> {
+        Some(data)
+    }
 
     // This function has a default implementation that returns None.
     // TODO what are the consequences of returning Some(false) vs None?
     fn is_signed(&self) -> Option<bool> {
-		Some(false)
-	}
+        Some(false)
+    }
 }
 
 /// A reference the a utxo that will be consumed along with proof that it may be consumed
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Input {
     /// a reference to the output being consumed
@@ -79,7 +88,10 @@ pub struct Input {
 /// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Output<R> {
     pub payload: TypedData,
@@ -88,7 +100,10 @@ pub struct Output<R> {
 
 /// A piece of encoded data with a type id associated
 /// Strongly typed data can be extracted
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct TypedData {
     pub data: Vec<u8>,
@@ -112,7 +127,6 @@ impl TypedData {
     /// Extracts strongly typed data from an Output, iff the output contains the type of data
     /// specified. If the contained data is not the specified type, or decoding fails, this errors.
     pub fn extract<T: UtxoData>(&self) -> Result<T, ()> {
-        
         // The first four bytes represent the type id that that was encoded. If they match the type
         // we are trying to decode into, we continue, otherwise we error out.
         if self.type_id == <T as UtxoData>::TYPE_ID {
