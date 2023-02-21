@@ -40,7 +40,7 @@ impl UtxoData for PoeClaim {
 /// Errors that can occur when verifying PoE Transactions
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum PoeError {
+pub enum VerifierError {
 
 }
 
@@ -54,7 +54,7 @@ pub enum PoeError {
 pub struct PoeClaim;
 
 impl Verifier for PoeClaim {
-    type Error = PoeError;
+    type Error = VerifierError;
 
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
         todo!()
@@ -77,7 +77,7 @@ impl Verifier for PoeClaim {
 pub struct PoeRevoke;
 
 impl Verifier for PoeRevoke {
-    type Error = PoeError;
+    type Error = VerifierError;
 
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
         todo!()
@@ -103,7 +103,7 @@ impl Verifier for PoeRevoke {
 pub struct PoeDispute;
 
 impl Verifier for PoeDispute {
-    type Error = PoeError;
+    type Error = VerifierError;
 
     fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, Self::Error> {
         todo!()

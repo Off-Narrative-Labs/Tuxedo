@@ -222,22 +222,44 @@ pub enum OuterVerifier {
 	PoeDispute(poe::PoeDispute),
 }
 
+/// An aggregated error type with a variant for each tuxedo piece
+/// TODO This should probably be macro generated
+#[derive(Debug)]
+pub enum OuterVerifierError {
+	/// Error from the amoeba piece
+	Amoeba(amoeba::VerifierError),
+	/// Error from the PoE Piece
+	Poe(poe::VerifierError),
+}
+
+// We impl conversions from each of the inner error types to the outer error type.
+// This should also be done by a macro
+
+impl From<amoeba::VerifierError> for OuterVerifierError {
+    fn from(e: amoeba::VerifierError) -> Self {
+        Self::Amoeba(e)
+    }
+}
+
+impl From<poe::VerifierError> for OuterVerifierError {
+    fn from(e: poe::VerifierError) -> Self {
+        Self::Poe(e)
+    }
+}
+
 impl Verifier for OuterVerifier {
 
-	//TODO we need some way of forwarding error information from the inner verifier.
-	// In frame it is required that ever inner error implements Into<OuterError> (or maybe From)
-	// For now we just drop the error information at this point.
-	type Error = ();
+	type Error = OuterVerifierError;
 
-    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, ()> {
-        match self {
-			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data).map_err(|_| ()),
-			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data).map_err(|_| ()),
-			Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(input_data, output_data).map_err(|_| ()),
-			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data).map_err(|_| ()),
-			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data).map_err(|_| ()),
-			Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data).map_err(|_| ()),
-		}
+    fn verify(&self, input_data: &[TypedData], output_data: &[TypedData]) -> Result<TransactionPriority, OuterVerifierError> {
+        Ok(match self {
+			Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(input_data, output_data)?,
+			Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data)?,
+			Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(input_data, output_data)?,
+			Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data)?,
+			Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data)?,
+			Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data)?,
+		})
     }
 }
 
@@ -245,7 +267,7 @@ impl Verifier for OuterVerifier {
 pub struct Runtime;
 
 #[derive(Debug)]
-enum UtxoError {
+enum UtxoError<OuterVerifierError> {
 	/// This transaction defines the same input multiple times
 	DuplicateInput,
 	/// This transaction defines the same output multiple times
@@ -253,15 +275,16 @@ enum UtxoError {
 	/// This transaction defines an output that already existed in the UTXO set
 	PreExistingOutput,
 	/// The verifier errored.
-	/// TODO find a way to pass internal error information from the verifier to here
-	VerifierError,
+	VerifierError(OuterVerifierError),
 	/// The Redeemer errored.
-	/// TODO find a way to pass internal error information from the redeemer to here
+	/// TODO determine whether it is useful to relay an inner error from the redeemer.
+	/// So far, I haven't seen a case, although it seems reasonable to think there might be one.
 	RedeemerError,
 	/// One or more of the inputs required by this transaction is not present in the UTXO set
 	MissingInput,
 }
-type DispatchResult = Result<(), UtxoError>;
+
+type DispatchResult = Result<(), UtxoError<OuterVerifierError>>;
 
 impl Runtime {
 	fn print_state() {
@@ -341,7 +364,7 @@ impl Runtime {
 		Ok(())
 	}
 
-	fn validate_tuxedo_transaction(transaction: &Transaction<OuterRedeemer, OuterVerifier>) -> Result<ValidTransaction, UtxoError> {
+	fn validate_tuxedo_transaction(transaction: &Transaction<OuterRedeemer, OuterVerifier>) -> Result<ValidTransaction, UtxoError<OuterVerifierError>> {
 		// Make sure there are no duplicate inputs
 		{
 			let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
@@ -397,7 +420,7 @@ impl Runtime {
 		let output_data: Vec<TypedData> = transaction.outputs.iter().map(|o| o.payload.clone()).collect();
 
 		// Call the verifier
-		ensure!(transaction.verifier.verify(&input_data, &output_data).is_ok(), UtxoError::VerifierError);
+		transaction.verifier.verify(&input_data, &output_data).map_err(|e| UtxoError::VerifierError(e))?;
 
 		// Return the valid transaction
 		// TODO in the future we need to prioritize somehow. Perhaps the best strategy
