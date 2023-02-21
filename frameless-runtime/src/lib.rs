@@ -378,6 +378,14 @@ impl Runtime {
 		// Make sure no outputs already exist in storage
 		// TODO Actually I don't think we need to do this. It _does_ appear in the original utxo workshop,
 		// but I don't see how we could ever have an output collision.
+		for index in 0..transaction.outputs.len() {
+			let output_ref = OutputRef {
+				tx_hash: BlakeTwo256::hash_of(&transaction.encode()),
+				index: index as u32,
+			};
+
+			ensure!(!Self::peek_utxo(&output_ref).is_some(), UtxoError::PreExistingOutput);
+		}
 
 		// If any the inputs are missing, we cannot make any more progress
 		// If they are all present, we may proceed to call the verifier
