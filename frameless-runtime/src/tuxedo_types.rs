@@ -22,6 +22,19 @@ pub struct OutputRef {
 }
 
 /// A UTXO Transaction
+/// 
+/// Each transaction consumes some UTXOs (the inputs) and creates some new ones (the outputs).
+/// 
+/// The Transaction type is generic over two orthogonal pieces of validation logic:
+/// 1. Redeemers - A redeemer checks that an individual input may be consumed. A typical example
+///    of a redeemer is checking that there is a signature by the proper owner. Other examples
+///    may be that anyone can consume the input or no one can, or that a proof of work is required.
+/// 2. Verifiers - A verifier checks that the transaction as a whole meets a set of requirements.
+///    For example, that the total output value of a cryptocurrency transaction does not exceed its
+///    input value. Or that a cryptokitty was created with the correct genetic material from its parents.
+/// 
+/// In the future, there may be additional notions of peeks (inputs that are not consumed)
+/// and evictions (inputs that are forcefully consumed.)
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<R, V> {
@@ -30,7 +43,6 @@ pub struct Transaction<R, V> {
     pub outputs: Vec<Output<R>>,
     pub verifier: V,
 }
-
 
 // We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
 // See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
@@ -52,7 +64,6 @@ impl<R, V> Extrinsic for Transaction<R, V> {
 		Some(false)
 	}
 }
-
 
 /// A reference the a utxo that will be consumed along with proof that it may be consumed
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
