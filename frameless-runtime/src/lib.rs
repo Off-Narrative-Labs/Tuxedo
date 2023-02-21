@@ -287,31 +287,7 @@ enum UtxoError<OuterVerifierError> {
 type DispatchResult = Result<(), UtxoError<OuterVerifierError>>;
 
 impl Runtime {
-	fn print_state() {
-		let mut key = vec![];
-		while let Some(next) = sp_io::storage::next_key(&key) {
-			let val = sp_io::storage::get(&next).unwrap().to_vec();
-			log::trace!(
-				target: LOG_TARGET,
-				"{} <=> {}",
-				HexDisplay::from(&next),
-				HexDisplay::from(&val)
-			);
-			key = next;
-		}
-	}
-
-	fn get_state<T: Decode>(key: &[u8]) -> Option<T> {
-		sp_io::storage::get(key).and_then(|d| T::decode(&mut &*d).ok())
-	}
-
-	fn mutate_state<T: Decode + Encode + Default>(key: &[u8], update: impl FnOnce(&mut T)) {
-		let mut value = Self::get_state(key).unwrap_or_default();
-		update(&mut value);
-		sp_io::storage::set(key, &value.encode());
-	}
-
-	// These next few functions comprize what I sketched out in the UtxoSet trait in element the other day
+	// These first three functions comprize what I sketched out in the UtxoSet trait in element the other day
 	// For now, this is complicated enough, so I'll just leave them here. In the future it may be wise to
 	// abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
 
@@ -334,16 +310,17 @@ impl Runtime {
 		sp_io::storage::set(&output_ref.encode(), &output.encode());
 	}
 
-	// fn mutate_state<T: Decode + Encode + Default>(key: &[u8], update: impl FnOnce(&mut T)) {
-	// 	let mut value = Self::get_state(key).unwrap_or_default();
-	// 	update(&mut value);
-	// 	sp_io::storage::set(key, &value.encode());
-	// }
-
 	fn dispatch_extrinsic(ext: BasicExtrinsic) -> DispatchResult {
 		log::debug!(target: LOG_TARGET, "dispatching {:?}", ext);
 
-		Self::mutate_state::<Vec<Vec<u8>>>(EXTRINSIC_KEY, |s| s.push(ext.encode()));
+		let mut extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
+			.and_then(|d| 
+				<Vec<Vec<u8>>>::decode(&mut &*d)
+				.ok()
+			)
+			.unwrap_or_default();
+		extrinsics.push(ext.encode());
+		sp_io::storage::set(EXTRINSIC_KEY, &extrinsics.encode());
 
 		// execute it
 		match ext.0 {
@@ -452,14 +429,23 @@ impl Runtime {
 	}
 
 	fn do_finalize_block() -> <Block as BlockT>::Header {
-		let mut header = Self::get_state::<<Block as BlockT>::Header>(HEADER_KEY)
+		let mut header = sp_io::storage::get(HEADER_KEY)
+			.and_then(|d| 
+				<Block as BlockT>::Header::decode(&mut &*d)
+				.ok()
+			)
 			.expect("We initialized with header, it never got mutated, qed");
 
 		// the header itself contains the state root, so it cannot be inside the state (circular
 		// dependency..). Make sure in execute block path we have the same rule.
 		sp_io::storage::clear(&HEADER_KEY);
 
-		let extrinsics = Self::get_state::<Vec<Vec<u8>>>(EXTRINSIC_KEY).unwrap_or_default();
+		let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
+			.and_then(|d| 
+				<Vec<Vec<u8>>>::decode(&mut &*d)
+				.ok()
+			)
+			.unwrap_or_default();
 		let extrinsics_root =
 			BlakeTwo256::ordered_trie_root(extrinsics, sp_runtime::StateVersion::V0);
 		sp_io::storage::clear(&EXTRINSIC_KEY);
@@ -483,8 +469,20 @@ impl Runtime {
 		// check state root
 		let raw_state_root = &sp_io::storage::root(VERSION.state_version())[..];
 		let state_root = H256::decode(&mut &raw_state_root[..]).unwrap();
-		Self::print_state();
 		assert_eq!(block.header.state_root, state_root);
+
+		// Print state for quick debugging
+		let mut key = vec![];
+		while let Some(next) = sp_io::storage::next_key(&key) {
+			let val = sp_io::storage::get(&next).unwrap().to_vec();
+			log::trace!(
+				target: LOG_TARGET,
+				"{} <=> {}",
+				HexDisplay::from(&next),
+				HexDisplay::from(&val)
+			);
+			key = next;
+		}
 
 		// check extrinsics root.
 		let extrinsics =
