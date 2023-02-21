@@ -122,3 +122,16 @@ impl TypedData {
         }
     }
 }
+
+/// A helper function that allows tuxedo pieces to read the current block height
+pub fn block_height() -> u32 {
+    //TODO this is copied from lib.rs. Figure out the right separation between
+    // tuxedo core and the runtime template
+    const HEADER_KEY: &[u8] = b"header";
+
+    //TODO The header type is also copied.
+    sp_io::storage::get(HEADER_KEY)
+        .and_then(|d| crate::Header::decode(&mut &*d).ok())
+        .expect("A header is always stored at the beginning of the block")
+        .number
+}

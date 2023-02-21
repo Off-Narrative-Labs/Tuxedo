@@ -490,6 +490,11 @@ impl Runtime {
 	fn do_execute_block(block: Block) {
 		info!(target: LOG_TARGET, "Entering execute_block. block: {:?}", block);
 
+		// Store the header. Although we don't need to mutate it, we do need to make
+		// info, such as the block height, available to individual pieces. This will
+		// be cleared before the end of the block
+		sp_io::storage::set(&HEADER_KEY, &block.header.encode());
+
 		// Apply each extrinsic
 		for extrinsic in block.clone().extrinsics {
 			match Runtime::apply_tuxedo_transaction(extrinsic.clone()) {
@@ -497,6 +502,9 @@ impl Runtime {
 				Err(e) => panic!("{:?}", e),
 			}
 		}
+
+		// Clear the transient header out of storage
+		sp_io::storage::clear(&HEADER_KEY);
 
 		// Check state root
 		let raw_state_root = &sp_io::storage::root(VERSION.state_version())[..];
