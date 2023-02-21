@@ -15,9 +15,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
-    tx_hash: H256,
+    pub tx_hash: H256,
     /// The index of this output among all outputs created by the same transaction
-    index: u32,
+    pub index: u32,
 }
 
 /// A UTXO Transaction

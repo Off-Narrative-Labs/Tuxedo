@@ -298,15 +298,17 @@ impl Runtime {
 
 	/// Consume a Utxo from the set.
 	fn consume_utxo(output_ref: &OutputRef) -> Option<Output<OuterRedeemer>> {
-		let result = Self::peek_utxo(output_ref);
+		// TODO do we even need to read the stored value here? The only place we call this
+		// is from `update_storage` and we don't use the value there.
+		let maybe_output = Self::peek_utxo(output_ref);
 		sp_io::storage::clear(&output_ref.encode());
-		result
+		maybe_output
 	}
 
 	/// Add a utxo into the set.
 	/// This will overwrite any utxo that already exists at this OutputRef. It should never be the
 	/// case that there are collisions though. Right??
-	fn store_utxo(output_ref: OutputRef, output: Output<OuterRedeemer>) {
+	fn store_utxo(output_ref: OutputRef, output: &Output<OuterRedeemer>) {
 		sp_io::storage::set(&output_ref.encode(), &output.encode());
 	}
 
@@ -390,6 +392,8 @@ impl Runtime {
 		}
 
 		// Extract the contained data from each input and output
+		// We do not yet remove anything from the utxo set. That will happen later
+		// iff verification passes
 		let input_data: Vec<TypedData> = transaction.inputs.iter().map(|i| {
 			Self::peek_utxo(&i.output_ref).expect("We just checked that all inputs were present.").payload
 		})
@@ -417,7 +421,19 @@ impl Runtime {
 	/// has already passed validation. Changes proposed by the transaction are written
 	/// blindly to storage.
 	fn update_storage(transaction: Transaction<OuterRedeemer, OuterVerifier>) {
-		todo!()
+		// Remove redeemed UTXOs
+		for input in &transaction.inputs {
+			Self::consume_utxo(&input.output_ref);
+		}
+
+		// Write the newly created utxos
+		for (index, output) in transaction.outputs.iter().enumerate() {
+			let output_ref = OutputRef {
+				tx_hash: BlakeTwo256::hash_of(&transaction.encode()),
+				index: index as u32,
+			};
+			Self::store_utxo(output_ref, output);
+		}
 	}
 
 	fn do_initialize_block(header: &<Block as BlockT>::Header) {
