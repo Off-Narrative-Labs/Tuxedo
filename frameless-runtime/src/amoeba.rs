@@ -108,7 +108,10 @@ impl Verifier for AmoebaDeath {
         // Another valid design choice would be to allow killing many amoebas at once
         // but that is not the choice I've made here.
         ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
-        let victim = input_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
+
+        // We don't actually need to check any details of the victim, but we do need to make sure
+        // we have the correct type.
+        let _victim = input_data[0].extract::<AmoebaDetails>().map_err(|_| VerifierError::BadlyTypedInput)?;
 
         // Make sure there are no outputs
         ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
