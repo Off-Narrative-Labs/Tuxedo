@@ -90,6 +90,29 @@ impl Redeem for Redeemer {
     }
 }
 
+pub struct PreValidator<Piece>(PhantomData<Piece>);
+impl<Piece: UtxoSet> PreValidator<Piece> {
+    pub fn pre_validate(transaction: &Transaction) -> Result<(), ()> {
+        {
+            let input_set: BTreeSet<_> = transaction.inputs.iter().collect();
+            if input_set.len() < transaction.inputs.len() {
+                return Err(());
+            }
+        }
+
+        for input in transaction.inputs.iter() {
+            if let Some(utxo) = <Piece as UtxoSet>::peak(input.output) {
+                utxo.redeemer.redeem(&transaction.encode(), &input.witness).then_some(()).ok_or(())?;
+            }
+            else {
+                // Not handling any utxo races just fail this transaction
+                return Err(())
+            }
+        }
+        Ok(())
+    }
+}
+
 // TODO: Implement this for Each Tuxedo Piece
 pub trait UtxoSet {
 
@@ -182,28 +205,16 @@ impl TuxedoPiece for MoneyPiece {
     type Error = ();
 
     fn validate(transaction: Transaction) -> Result<(), Self::Error> {
-        // Check that the input is unique and a set
-        {
-            let input_set: BTreeSet<_> = transaction.inputs.iter().collect();
-            if input_set.len() < transaction.inputs.len() {
-                return Err(Self::Error::default());
-            }
-        }
+        // Always pre-validate before every validate
+        PreValidator::<Self>::pre_validate(&transaction)?;
 
         let mut total_input_value: Self::Data = 0;
         let mut total_output_value: Self::Data = 0;
-        // 1.) Check that the outputs referenced by each input can be redeemed
-        // 2.) Check that sum of input values < output values
+
+        // Check that sum of input values < output values
         for input in transaction.inputs.iter() {
-            if let Some(utxo) = <Self as UtxoSet>::peak(input.output) {
-                utxo.redeemer.redeem(&transaction.encode(), &input.witness).then_some(()).ok_or(())?;
-                let utxo_value = PieceExtracter::<Self>::extract(input.output)?;
-                total_input_value.checked_add(utxo_value).ok_or(())?;
-            }
-            else {
-                // Not handling any utxo races just fail this transaction
-                return Err(Self::Error::default());
-            }
+            let utxo_value = PieceExtracter::<Self>::extract(input.output)?;
+            total_input_value.checked_add(utxo_value).ok_or(())?;
         }
 
         for utxo in transaction.outputs.iter() {
