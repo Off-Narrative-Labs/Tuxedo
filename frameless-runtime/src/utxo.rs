@@ -316,8 +316,8 @@ impl UtxoSet for KittiesPiece {
     /// - Not consuming it but marking it as spent
     ///
     fn nullify(utxo_ref: UtxoRef) -> Option<Utxo> {
-        None
-        // let parents = PieceExtractor::<Self>::extract(utxo_ref).ok_or(())?;
+        // let parents = PieceExtracter::<Self>::extract(utxo_ref)?;
+
         // if Self::mom_ready(&parents.mom) {
 
         // }
@@ -327,6 +327,7 @@ impl UtxoSet for KittiesPiece {
         //     Err(_) => None,
         // }
         // PieceExtractor::<Self>::extract(utxo_ref)
+        None
     }
 }
 
