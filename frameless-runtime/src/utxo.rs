@@ -101,7 +101,7 @@ pub trait UtxoSet {
     /// Insert the given utxo into the state storing it with the given ref
     /// The ref is probably the hash of a tx that created it and its index in that tx, but this decision is opaque to this trait
     /// Return whether the operation is successful (It can fail if the ref is already present)
-    fn insert(utxo_ref: UtxoRef, utxo: Utxo) -> bool;
+    fn insert(utxo_ref: UtxoRef, utxo: &Utxo) -> bool;
 
     ///
     /// nullify the utxo by either:
@@ -129,9 +129,10 @@ pub trait TuxedoPiece {
     /// The type of data stored in Outputs associated with this Piece
     type Data: Encode + Decode;
     const TYPE_ID: TypeId;
+    type Error: Default;
 
     /// The validation function to determine whether a given input can be consumed.
-    fn validate(transaction: Transaction) -> bool;
+    fn validate(transaction: Transaction) -> Result<(), Self::Error>;
 }
 
 pub struct PieceExtracter<Piece>(PhantomData<Piece>);
@@ -139,6 +140,10 @@ impl<Piece: TuxedoPiece> PieceExtracter<Piece> {
     pub fn extract(key: UtxoRef) -> Result<Piece::Data, ()> {
         let encoded_utxo = sp_io::storage::get(&key.encode()).ok_or(())?;
         let utxo = Utxo::decode(&mut &encoded_utxo[..]).map_err(|_| ())?;
+        Self::extract_from_output(&utxo)
+    }
+
+    pub fn extract_from_output(utxo: &Utxo) -> Result<Piece::Data, ()> {
         if utxo.data_id != Piece::TYPE_ID {
             return Err(())
         }
@@ -155,7 +160,7 @@ impl UtxoSet for MoneyPiece {
         sp_io::storage::exists(&utxo_ref.encode())
     }
 
-    fn insert(utxo_ref: UtxoRef, utxo: Utxo) -> bool {
+    fn insert(utxo_ref: UtxoRef, utxo: &Utxo) -> bool {
         sp_io::storage::set(&utxo_ref.encode(), &utxo.encode());
         true
     }
@@ -174,29 +179,62 @@ impl UtxoSet for MoneyPiece {
 impl TuxedoPiece for MoneyPiece {
     type Data = u128;
     const TYPE_ID: TypeId = *b"1111";
+    type Error = ();
 
-    fn validate(transaction: Transaction) -> bool {
+    fn validate(transaction: Transaction) -> Result<(), Self::Error> {
         // Check that the input is unique and a set
         {
             let input_set: BTreeSet<_> = transaction.inputs.iter().collect();
             if input_set.len() < transaction.inputs.len() {
-                return false;
+                return Err(Self::Error::default());
             }
         }
 
+        let mut total_input_value: Self::Data = 0;
+        let mut total_output_value: Self::Data = 0;
         // 1.) Check that the outputs referenced by each input can be redeemed
         // 2.) Check that sum of input values < output values
         for input in transaction.inputs.iter() {
             if let Some(utxo) = <Self as UtxoSet>::peak(input.output) {
-                let _ = utxo.redeemer.redeem(&transaction.encode(), &input.witness);
-                // TODO: check that the redeem passes
-                // Sum up inputs
+                utxo.redeemer.redeem(&transaction.encode(), &input.witness).then_some(()).ok_or(())?;
+                let utxo_value = PieceExtracter::<Self>::extract(input.output)?;
+                total_input_value.checked_add(utxo_value).ok_or(())?;
+            }
+            else {
+                // Not handling any utxo races just fail this transaction
+                return Err(Self::Error::default());
             }
         }
 
-        // if it fails then return early
-        // TODO: Implement Money situation
-        true
+        for utxo in transaction.outputs.iter() {
+            let utxo_value = PieceExtracter::<Self>::extract_from_output(&utxo)?;
+            if utxo_value <= 0 {
+                return Err(Self::Error::default());
+            }
+            total_output_value.checked_add(utxo_value).ok_or(())?;
+        }
+
+        if total_output_value > total_input_value {
+            return Err(Self::Error::default());
+        }
+
+        // Update storage
+        let mut transaction = transaction;
+        for input in transaction.inputs.iter_mut() {
+            let _ = Self::nullify(input.output);
+            // strip the signature off the transaction for deterministic keys
+            input.witness = vec![];
+        }
+
+        let mut output_index: u32 = 0;
+        for utxo in transaction.outputs.iter() {
+            let new_utxo_ref = BlakeTwo256::hash_of(&(&transaction, output_index));
+            let _ = Self::insert(new_utxo_ref, utxo);
+            output_index.checked_add(1).ok_or(())?;
+        }
+
+        // TODO: construct 'ValidTransaction and return'
+        Ok(())
     }
 }
 
@@ -230,12 +268,13 @@ pub struct KittiesPiece; // Decodes Value -> KittyData
 impl TuxedoPiece for KittiesPiece {
     type Data = KittyData; // This is API user Defined
     const TYPE_ID: TypeId = *b"2222";
+    type Error = ();
 
-    fn validate(transaction: Transaction) -> bool {
+    fn validate(transaction: Transaction) -> Result<(), Self::Error> {
         // Check that the input is unique and a set
         // if it fails then return early
         // TODO: Implement Kitty Logic scenario
-        true
+        Ok(())
     }
 }
 
@@ -243,11 +282,12 @@ pub struct ExistencePiece; // Decodes Value -> H256
 impl TuxedoPiece for ExistencePiece {
     type Data = H256;
     const TYPE_ID: TypeId = *b"3333";
+    type Error = ();
 
-    fn validate(transaction: Transaction) -> bool {
+    fn validate(transaction: Transaction) -> Result<(), Self::Error> {
         // Check that the input is unique and a set
         // if it fails then return early
         // TODO: Implement Proof of existence Logic scenario
-        true
+        Ok(())
     }
 }

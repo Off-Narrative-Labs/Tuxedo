@@ -230,13 +230,13 @@ impl Runtime {
 		// execute it
 		match ext.0 {
 			Call::Money(tx) => {
-				utxo::MoneyPiece::validate(tx).then_some(()).ok_or(())
+				utxo::MoneyPiece::validate(tx).map_err(|_| ())
 			},
 			Call::Kitties(tx) => {
-				utxo::KittiesPiece::validate(tx).then_some(()).ok_or(())
+				utxo::KittiesPiece::validate(tx).map_err(|_| ())
 			},
 			Call::Existence(tx) => {
-				utxo::ExistencePiece::validate(tx).then_some(()).ok_or(())
+				utxo::ExistencePiece::validate(tx).map_err(|_| ())
 			},
 			Call::Upgrade(new_wasm_code) => {
 				// NOTE: make sure to upgrade your spec-version!
