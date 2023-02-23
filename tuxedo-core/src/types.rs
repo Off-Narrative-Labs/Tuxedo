@@ -84,6 +84,27 @@ pub struct Input {
     pub witness: Vec<u8>,
 }
 
+#[derive(Debug)]
+pub enum UtxoError<VerifierError> {
+    /// This transaction defines the same input multiple times
+    DuplicateInput,
+    /// This transaction defines the same output multiple times
+    DuplicateOutput,
+    /// This transaction defines an output that already existed in the UTXO set
+    PreExistingOutput,
+    /// The verifier errored.
+    VerifierError(VerifierError),
+    /// The Redeemer errored.
+    /// TODO determine whether it is useful to relay an inner error from the redeemer.
+    /// So far, I haven't seen a case, although it seems reasonable to think there might be one.
+    RedeemerError,
+    /// One or more of the inputs required by this transaction is not present in the UTXO set
+    MissingInput,
+}
+
+/// The Result of dispatching a UTXO transaction.
+pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
+
 /// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
 /// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
@@ -135,17 +156,4 @@ impl TypedData {
             Err(())
         }
     }
-}
-
-/// A helper function that allows tuxedo pieces to read the current block height
-pub fn block_height() -> u32 {
-    //TODO this is copied from lib.rs. Figure out the right separation between
-    // tuxedo core and the runtime template
-    const HEADER_KEY: &[u8] = b"header";
-
-    //TODO The header type is also copied.
-    sp_io::storage::get(HEADER_KEY)
-        .and_then(|d| crate::Header::decode(&mut &*d).ok())
-        .expect("A header is always stored at the beginning of the block")
-        .number
 }

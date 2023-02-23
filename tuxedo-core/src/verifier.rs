@@ -4,7 +4,10 @@
 //! proposed final state (as specified by the output set) meets the necessary constraints.
 //! They are loosely analogous to frame pallet calls.
 
-use crate::TypedData;
+use std::fmt::Debug;
+
+use crate::types::TypedData;
+use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A single verifier that a transaction can choose to call. Verifies whether the input
@@ -13,7 +16,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the verifier by including it in the fields
 /// of the verifier struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait Verifier {
+pub trait Verifier: Debug + Encode + Decode + Clone {
     /// The error type that this verifier may return
     type Error;
 

@@ -2,6 +2,7 @@
 members = [
     "node",
     "frameless-runtime",
+    "tuxedo-core",
 ]
 [profile.release]
 panic = "unwind"

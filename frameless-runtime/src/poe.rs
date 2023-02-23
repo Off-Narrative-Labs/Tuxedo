@@ -96,7 +96,10 @@ impl Verifier for PoeClaim {
                 .extract::<ClaimData>()
                 .map_err(|_| VerifierError::BadlyTypedOutput)?;
             ensure!(
-                output.effective_height >= tuxedo_types::block_height(),
+                //TODO we're grabbing the block height function directly from
+                // the runtime level. This needs to be made available through some
+                // kind of config.
+                output.effective_height >= crate::Executive::block_height(),
                 VerifierError::EffectiveHeightInPast
             );
         }

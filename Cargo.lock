@@ -7801,6 +7801,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "tuxedo-core"
+version = "1.0.0-dev"
+dependencies = [
+ "log",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-block-builder",
+ "sp-core",
+ "sp-debug-derive",
+ "sp-inherents",
+ "sp-io",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-storage",
+ "sp-timestamp",
+ "sp-transaction-pool",
+ "sp-version",
+]
+
+[[package]]
 name = "twox-hash"
 version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
