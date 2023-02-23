@@ -143,10 +143,6 @@ pub trait UtxoSet {
     }
 }
 
-pub trait Get<T> {
-    fn get(&self) -> T;
-}
-
 /// The API of a Tuxedo Piece
 pub trait TuxedoPiece {
     /// The type of data stored in Outputs associated with this Piece
