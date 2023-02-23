@@ -6,19 +6,20 @@
 //! It does all the reusable verification of UTXO transactions such as checking that there
 //! are no duplicate inputs or outputs, and that the redeemers are satisfied.
 
-use std::marker::PhantomData;
+use sp_std::marker::PhantomData;
+use log::info;
 use parity_scale_codec::{Encode, Decode};
-use sp_api::{HashT, BlockT, HeaderT};
-use sp_runtime::{traits::BlakeTwo256, transaction_validity::{ValidTransaction, TransactionLongevity}};
+use sp_api::{HashT, BlockT, HeaderT, TransactionValidity};
+use sp_runtime::{StateVersion, traits::BlakeTwo256, transaction_validity::{ValidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError, InvalidTransaction}, ApplyExtrinsicResult};
 use sp_std::{vec::Vec, collections::btree_set::BTreeSet};
-use crate::{utxo_set::TransparentUtxoSet, redeemer::Redeemer, verifier::Verifier, types::{DispatchResult, Transaction, UtxoError, OutputRef, TypedData}, ensure, fail};
+use crate::{utxo_set::TransparentUtxoSet, redeemer::Redeemer, verifier::Verifier, types::{DispatchResult, Transaction, UtxoError, OutputRef, TypedData}, ensure, fail, LOG_TARGET, HEADER_KEY, EXTRINSIC_KEY};
 
 /// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
 pub struct Executive<B, R, V>(PhantomData<(B, R, V)>);
 
 impl <
-    B: BlockT,
+    B: BlockT<Extrinsic = Transaction<R, V>>,
     R: Redeemer,
     V: Verifier,
 > Executive<B, R, V> {
@@ -138,11 +139,11 @@ impl <
     /// Most of the validation happens in the call to `validate_tuxedo_transaction`.
     /// Once those chekcs are done we make sure there are no missing inputs and then update storage.
     pub fn apply_tuxedo_transaction(transaction: Transaction<R, V>) -> DispatchResult<V::Error> {
-        // log::debug!(
-        //     target: LOG_TARGET,
-        //     "applying tuxedo transaction {:?}",
-        //     transaction
-        // );
+        log::debug!(
+            target: LOG_TARGET,
+            "applying tuxedo transaction {:?}",
+            transaction
+        );
 
         // Re-do the pre-checks. These should have been done in the pool, but we can't
         // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
@@ -187,14 +188,147 @@ impl <
     pub fn block_height() -> <<B as BlockT>::Header as HeaderT>::Number
         where B::Header: HeaderT
     {
-        //TODO this is copied from lib.rs. Figure out the right separation between
-        // tuxedo core and the runtime template
-        const HEADER_KEY: &[u8] = b"header";
-
-        //TODO The header type is also copied.
-        *sp_io::storage::get(HEADER_KEY)
+        *sp_io::storage::get(crate::HEADER_KEY)
             .and_then(|d| B::Header::decode(&mut &*d).ok())
             .expect("A header is always stored at the beginning of the block")
             .number()
+    }
+
+    // These next three methods are for the block authoring workflow.
+    // Open the block, apply zero or more extrinsics, close the block
+
+    pub fn open_block(header: &<B as BlockT>::Header) {
+        info!(
+            target: LOG_TARGET,
+            "Entering initialize_block. header: {:?}", header
+        );
+
+        // Store the transient partial header for updating at the end of the block.
+        // This will be removed from storage before the end of the block.
+        sp_io::storage::set(&HEADER_KEY, &header.encode());
+    }
+
+    pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
+        info!(
+            target: LOG_TARGET,
+            "Entering apply_extrinsic: {:?}", extrinsic
+        );
+
+        // Append the current extrinsic to the transient list of extrinsics.
+        // This will be used when we calculate the extrinsics root at the end of the block.
+        let mut extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
+            .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
+            .unwrap_or_default();
+        extrinsics.push(extrinsic.encode());
+        sp_io::storage::set(EXTRINSIC_KEY, &extrinsics.encode());
+
+        // Now actually
+        Self::apply_tuxedo_transaction(extrinsic)
+            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))?;
+
+        Ok(Ok(()))
+    }
+
+    pub fn close_block() -> <B as BlockT>::Header {
+        let mut header = sp_io::storage::get(HEADER_KEY)
+            .and_then(|d| <B as BlockT>::Header::decode(&mut &*d).ok())
+            .expect("We initialized with header, it never got mutated, qed");
+
+        // the header itself contains the state root, so it cannot be inside the state (circular
+        // dependency..). Make sure in execute block path we have the same rule.
+        sp_io::storage::clear(&HEADER_KEY);
+
+        let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
+            .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
+            .unwrap_or_default();
+        let extrinsics_root =
+        <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(extrinsics, StateVersion::V1);
+        sp_io::storage::clear(&EXTRINSIC_KEY);
+        header.set_extrinsics_root(extrinsics_root);
+
+        let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
+        let state_root = <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
+        header.set_state_root(state_root);
+
+        info!(target: LOG_TARGET, "finalizing block {:?}", header);
+        header
+    }
+
+    // This one is for the Core api. It is used to import blocks authored by foreign nodes.
+
+    pub fn execute_block(block: B) {
+        info!(
+            target: LOG_TARGET,
+            "Entering execute_block. block: {:?}", block
+        );
+
+        // Store the header. Although we don't need to mutate it, we do need to make
+        // info, such as the block height, available to individual pieces. This will
+        // be cleared before the end of the block
+        sp_io::storage::set(&HEADER_KEY, &block.header().encode());
+
+        // Apply each extrinsic
+        for extrinsic in block.clone().extrinsics() {
+            match Self::apply_tuxedo_transaction(extrinsic.clone()) {
+                Ok(()) => info!(
+                    target: LOG_TARGET,
+                    "Successfully executed extrinsic: {:?}", extrinsic
+                ),
+                Err(e) => panic!("{:?}", e),
+            }
+        }
+
+        // Clear the transient header out of storage
+        sp_io::storage::clear(&HEADER_KEY);
+
+        // Check state root
+        let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
+        let state_root = <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
+        assert_eq!(*block.header().state_root(), state_root);
+
+        // Print state for quick debugging
+        // let mut key = vec![];
+        // while let Some(next) = sp_io::storage::next_key(&key) {
+        //     let val = sp_io::storage::get(&next).unwrap().to_vec();
+        //     log::trace!(
+        //         target: LOG_TARGET,
+        //         "{} <=> {}",
+        //         HexDisplay::from(&next),
+        //         HexDisplay::from(&val)
+        //     );
+        //     key = next;
+        // }
+
+        // Check extrinsics root.
+        let extrinsics = block
+            .extrinsics()
+            .into_iter()
+            .map(|x| x.encode())
+            .collect::<Vec<_>>();
+        let extrinsics_root =
+            <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(extrinsics, StateVersion::V1);
+        assert_eq!(*block.header().extrinsics_root(), extrinsics_root);
+    }
+
+    // This one is the pool api. It is used to make preliminary checks in the transaction pool
+
+    pub fn validate_transaction(
+        source: TransactionSource,
+        tx: <B as BlockT>::Extrinsic,
+        block_hash: <B as BlockT>::Hash,
+    ) -> TransactionValidity {
+        log::debug!(
+            target: LOG_TARGET,
+            "Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}",
+            source,
+            tx,
+            block_hash
+        );
+
+        // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
+        // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
+        // For now, I just make them all custom zero
+        Self::validate_tuxedo_transaction(&tx)
+            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
     }
 }

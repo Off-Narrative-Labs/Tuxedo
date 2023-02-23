@@ -4,7 +4,7 @@
 //! proposed final state (as specified by the output set) meets the necessary constraints.
 //! They are loosely analogous to frame pallet calls.
 
-use std::fmt::Debug;
+use sp_std::fmt::Debug;
 
 use crate::types::TypedData;
 use parity_scale_codec::{Decode, Encode};
@@ -18,7 +18,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// is it stored in state.
 pub trait Verifier: Debug + Encode + Decode + Clone {
     /// The error type that this verifier may return
-    type Error;
+    type Error: Debug;
 
     /// The actual verification logic
     fn verify(

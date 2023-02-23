@@ -15,3 +15,14 @@ pub mod utxo_set;
 // TODO These are copied from frame_support. We should PR Substrate to move them
 // somewhere better and less frame-specific because they are more broadly useful.
 mod support_macros;
+
+/// A Tuxedo-specific target for diagnostic node log messages
+const LOG_TARGET: &'static str = "tuxedo-core";
+
+/// A transient storage key that will hold the partial header while a block is being built.
+/// This key is cleared before the end of the block.
+const HEADER_KEY: &[u8] = b"header"; // 686561646572
+
+/// A transient storage key that will hold the list of extrinsics that have been applied so far.
+/// This key is cleared before the end of the block.
+const EXTRINSIC_KEY: &[u8] = b"extrinsics";

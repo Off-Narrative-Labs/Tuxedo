@@ -1983,6 +1983,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "tuxedo-core",
 ]
 
 [[package]]

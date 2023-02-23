@@ -4,7 +4,7 @@
 //! and they will be aggregated into an enum. The most common and useful redeemers are included here
 //! with Tuxedo core, but downstream developers are expected to create their own as well.
 
-use std::fmt::Debug;
+use sp_std::fmt::Debug;
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};

@@ -37,14 +37,8 @@ use serde::{Deserialize, Serialize};
 
 mod amoeba;
 mod poe;
-mod redeemer;
 mod runtime_upgrade;
-mod support_macros;
-mod tuxedo_types;
-mod verifier;
-use redeemer::*;
-use tuxedo_types::{Output, OutputRef, TypedData};
-use verifier::*;
+use tuxedo_core::{Output, OutputRef, TypedData};
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -92,7 +86,8 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
     impl_version: 1,
     apis: RUNTIME_API_VERSIONS,
     transaction_version: 1,
-    state_version: 0,
+    // Tuxedo only supports state version 1. You must always use version 1.
+    state_version: 1,
 };
 
 /// The version information used to identify this runtime when compiled natively.
@@ -122,10 +117,11 @@ impl BuildStorage for GenesisConfig {
     // just like we have in FRAME
 }
 
-pub type Transaction = tuxedo_types::Transaction<OuterRedeemer, OuterVerifier>;
+pub type Transaction = tuxedo_core::Transaction<OuterRedeemer, OuterVerifier>;
 pub type BlockNumber = u32;
 pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, Transaction>;
+pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterRedeemer>;
 
 impl sp_runtime::traits::GetNodeBlockType for Runtime {
     type NodeBlock = opaque::Block;
@@ -135,19 +131,8 @@ impl sp_runtime::traits::GetRuntimeBlockType for Runtime {
     type RuntimeBlock = Block;
 }
 
-/// TODO Docs. Maybe switch the name and log target to tuxedo-template-runtime.
-const LOG_TARGET: &'static str = "frameless";
-
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
-
-/// A transient key that will hold the partial header while a block is being built.
-/// This key is cleared before the end of the block.
-const HEADER_KEY: &[u8] = b"header"; // 686561646572
-
-/// A transient key that will hold the list of extrinsics that have been applied so far.
-/// This key is cleared before the end of the block.
-const EXTRINSIC_KEY: &[u8] = b"extrinsics";
 
 //TODO this should be implemented by the aggregation macro I guess
 /// A redeemer checks that an individual input can be consumed. For example that it is signed properly
@@ -283,344 +268,6 @@ enum UtxoError<OuterVerifierError> {
     MissingInput,
 }
 
-type DispatchResult = Result<(), UtxoError<OuterVerifierError>>;
-
-impl Runtime {
-    // These first three functions comprize what I sketched out in the UtxoSet trait in element the other day
-    // For now, this is complicated enough, so I'll just leave them here. In the future it may be wise to
-    // abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
-
-    /// Fetch a utxo from the set.
-    fn peek_utxo(output_ref: &OutputRef) -> Option<Output<OuterRedeemer>> {
-        sp_io::storage::get(&output_ref.encode()).and_then(|d| Output::decode(&mut &*d).ok())
-    }
-
-    /// Consume a Utxo from the set.
-    fn consume_utxo(output_ref: &OutputRef) -> Option<Output<OuterRedeemer>> {
-        // TODO do we even need to read the stored value here? The only place we call this
-        // is from `update_storage` and we don't use the value there.
-        let maybe_output = Self::peek_utxo(output_ref);
-        sp_io::storage::clear(&output_ref.encode());
-        maybe_output
-    }
-
-    /// Add a utxo into the set.
-    /// This will overwrite any utxo that already exists at this OutputRef. It should never be the
-    /// case that there are collisions though. Right??
-    fn store_utxo(output_ref: OutputRef, output: &Output<OuterRedeemer>) {
-        sp_io::storage::set(&output_ref.encode(), &output.encode());
-    }
-
-    /// Does pool-style validation of a tuxedo transaction.
-    /// Does not commit anything to storage.
-    /// This returns Ok even if some inputs are still missing because the tagged transaction pool can handle that.
-    /// We later check that there are no missing inputs in `apply_tuxedo_transaction
-    fn validate_tuxedo_transaction(
-        transaction: &Transaction,
-    ) -> Result<ValidTransaction, UtxoError<OuterVerifierError>> {
-        // Make sure there are no duplicate inputs
-        {
-            let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
-            ensure!(
-                input_set.len() == transaction.inputs.len(),
-                UtxoError::DuplicateInput
-            );
-        }
-
-        // Make sure there are no duplicate outputs
-        {
-            let output_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
-            ensure!(
-                output_set.len() == transaction.outputs.len(),
-                UtxoError::DuplicateOutput
-            );
-        }
-
-        // Build the stripped transaction (with the witnesses stripped) and encode it
-        // This will be passed to the redeemers
-        let mut stripped = transaction.clone();
-        for input in stripped.inputs.iter_mut() {
-            input.witness = Vec::new();
-        }
-        let stripped_encoded = stripped.encode();
-
-        // Check that the redeemers of all inputs are satisfied
-        // Keep track of any missing inputs for use in the tagged transaction pool
-        let mut missing_inputs = Vec::new();
-        for input in transaction.inputs.iter() {
-            if let Some(input_utxo) = Self::peek_utxo(&input.output_ref) {
-                ensure!(
-                    input_utxo
-                        .redeemer
-                        .redeem(&stripped_encoded, &input.witness),
-                    UtxoError::RedeemerError
-                );
-            } else {
-                missing_inputs.push(input.output_ref.clone().encode());
-            }
-        }
-
-        // Make sure no outputs already exist in storage
-        // TODO Actually I don't think we need to do this. It _does_ appear in the original utxo workshop,
-        // but I don't see how we could ever have an output collision.
-        for index in 0..transaction.outputs.len() {
-            let output_ref = OutputRef {
-                tx_hash: BlakeTwo256::hash_of(&transaction.encode()),
-                index: index as u32,
-            };
-
-            ensure!(
-                !Self::peek_utxo(&output_ref).is_some(),
-                UtxoError::PreExistingOutput
-            );
-        }
-
-        // If any the inputs are missing, we cannot make any more progress
-        // If they are all present, we may proceed to call the verifier
-        if !missing_inputs.is_empty() {
-            return Ok(ValidTransaction {
-                requires: missing_inputs,
-                provides: transaction.outputs.iter().map(|o| o.encode()).collect(),
-                priority: 0,
-                longevity: TransactionLongevity::max_value(),
-                propagate: true,
-            });
-        }
-
-        // Extract the contained data from each input and output
-        // We do not yet remove anything from the utxo set. That will happen later
-        // iff verification passes
-        let input_data: Vec<TypedData> = transaction
-            .inputs
-            .iter()
-            .map(|i| {
-                Self::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<TypedData> = transaction
-            .outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
-        // Call the verifier
-        transaction
-            .verifier
-            .verify(&input_data, &output_data)
-            .map_err(|e| UtxoError::VerifierError(e))?;
-
-        // Return the valid transaction
-        // TODO in the future we need to prioritize somehow. Perhaps the best strategy
-        // is to have the verifier return a priority
-        Ok(ValidTransaction {
-            requires: Vec::new(),
-            provides: transaction.outputs.iter().map(|o| o.encode()).collect(),
-            priority: 0,
-            longevity: TransactionLongevity::max_value(),
-            propagate: true,
-        })
-    }
-
-    /// Does full verification and application of tuxedo transactions.
-    /// Most of the validation happens in the call to `validate_tuxedo_transaction`.
-    /// Once those cheks are done we make sure there are no missing inputs and then update storage.
-    fn apply_tuxedo_transaction(transaction: Transaction) -> DispatchResult {
-        log::debug!(
-            target: LOG_TARGET,
-            "applying tuxedo transaction {:?}",
-            transaction
-        );
-
-        // Re-do the pre-checks. These should have been done in the pool, but we can't
-        // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
-        let valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
-
-        // If there are still missing inputs, so we cannot execute this,
-        // although it would be valid in the pool
-        ensure!(
-            valid_transaction.requires.is_empty(),
-            UtxoError::MissingInput
-        );
-
-        // At this point, all validation is complete, so we can commit the storage changes.
-        Self::update_storage(transaction);
-
-        Ok(())
-    }
-
-    /// Helper function to update the utxo set according to the given transaction.
-    /// This function does absolutely no validation. It assumes that the transaction
-    /// has already passed validation. Changes proposed by the transaction are written
-    /// blindly to storage.
-    fn update_storage(transaction: Transaction) {
-        // Remove redeemed UTXOs
-        for input in &transaction.inputs {
-            Self::consume_utxo(&input.output_ref);
-        }
-
-        // Write the newly created utxos
-        for (index, output) in transaction.outputs.iter().enumerate() {
-            let output_ref = OutputRef {
-                tx_hash: BlakeTwo256::hash_of(&transaction.encode()),
-                index: index as u32,
-            };
-            Self::store_utxo(output_ref, output);
-        }
-    }
-
-    // These next three are for the block authoring workflow.
-    // Initialize the block, apply zero or more extrinsics, close the block
-
-    fn do_initialize_block(header: &<Block as BlockT>::Header) {
-        info!(
-            target: LOG_TARGET,
-            "Entering initialize_block. header: {:?} / version: {:?}", header, VERSION.spec_version
-        );
-
-        // Store the transient partial header for updating at the end of the block.
-        // This will be removed from storage before the end of the block.
-        sp_io::storage::set(&HEADER_KEY, &header.encode());
-    }
-
-    fn do_apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
-        info!(
-            target: LOG_TARGET,
-            "Entering apply_extrinsic: {:?}", extrinsic
-        );
-
-        // Append the current extrinsic to the transient list of extrinsics.
-        // This will be used when we calculate the extrinsics root at the end of the block.
-        let mut extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
-            .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
-            .unwrap_or_default();
-        extrinsics.push(extrinsic.encode());
-        sp_io::storage::set(EXTRINSIC_KEY, &extrinsics.encode());
-
-        // Now actually
-        Self::apply_tuxedo_transaction(extrinsic)
-            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))?;
-
-        Ok(Ok(()))
-    }
-
-    fn do_finalize_block() -> <Block as BlockT>::Header {
-        let mut header = sp_io::storage::get(HEADER_KEY)
-            .and_then(|d| <Block as BlockT>::Header::decode(&mut &*d).ok())
-            .expect("We initialized with header, it never got mutated, qed");
-
-        // the header itself contains the state root, so it cannot be inside the state (circular
-        // dependency..). Make sure in execute block path we have the same rule.
-        sp_io::storage::clear(&HEADER_KEY);
-
-        let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
-            .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
-            .unwrap_or_default();
-        let extrinsics_root =
-            BlakeTwo256::ordered_trie_root(extrinsics, sp_runtime::StateVersion::V0);
-        sp_io::storage::clear(&EXTRINSIC_KEY);
-        header.extrinsics_root = extrinsics_root;
-
-        let raw_state_root = &sp_io::storage::root(VERSION.state_version())[..];
-        header.state_root = sp_core::H256::decode(&mut &raw_state_root[..]).unwrap();
-
-        info!(target: LOG_TARGET, "finalizing block {:?}", header);
-        header
-    }
-
-    // This one is for the Core api. It is used to import blocks authored by foreign nodes.
-
-    fn do_execute_block(block: Block) {
-        info!(
-            target: LOG_TARGET,
-            "Entering execute_block. block: {:?}", block
-        );
-
-        // Store the header. Although we don't need to mutate it, we do need to make
-        // info, such as the block height, available to individual pieces. This will
-        // be cleared before the end of the block
-        sp_io::storage::set(&HEADER_KEY, &block.header.encode());
-
-        // Apply each extrinsic
-        for extrinsic in block.clone().extrinsics {
-            match Runtime::apply_tuxedo_transaction(extrinsic.clone()) {
-                Ok(()) => info!(
-                    target: LOG_TARGET,
-                    "Successfully executed extrinsic: {:?}", extrinsic
-                ),
-                Err(e) => panic!("{:?}", e),
-            }
-        }
-
-        // Clear the transient header out of storage
-        sp_io::storage::clear(&HEADER_KEY);
-
-        // Check state root
-        let raw_state_root = &sp_io::storage::root(VERSION.state_version())[..];
-        let state_root = H256::decode(&mut &raw_state_root[..]).unwrap();
-        assert_eq!(block.header.state_root, state_root);
-
-        // Print state for quick debugging
-        let mut key = vec![];
-        while let Some(next) = sp_io::storage::next_key(&key) {
-            let val = sp_io::storage::get(&next).unwrap().to_vec();
-            log::trace!(
-                target: LOG_TARGET,
-                "{} <=> {}",
-                HexDisplay::from(&next),
-                HexDisplay::from(&val)
-            );
-            key = next;
-        }
-
-        // Check extrinsics root.
-        let extrinsics = block
-            .extrinsics
-            .into_iter()
-            .map(|x| x.encode())
-            .collect::<Vec<_>>();
-        let extrinsics_root =
-            BlakeTwo256::ordered_trie_root(extrinsics, sp_core::storage::StateVersion::V0);
-        assert_eq!(block.header.extrinsics_root, extrinsics_root);
-    }
-
-    // This one is the pool api. It is used to make preliminary checks in the transaction pool
-
-    fn do_validate_transaction(
-        source: TransactionSource,
-        tx: <Block as BlockT>::Extrinsic,
-        block_hash: <Block as BlockT>::Hash,
-    ) -> TransactionValidity {
-        log::debug!(
-            target: LOG_TARGET,
-            "Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}",
-            source,
-            tx,
-            block_hash
-        );
-
-        // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
-        // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-        // For now, I just make them all custom zero
-        Self::validate_tuxedo_transaction(&tx)
-            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
-    }
-
-    fn do_inherent_extrinsics(_: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-        log::debug!(target: LOG_TARGET, "Entering do_inherent_extrinsics");
-        Default::default()
-    }
-
-    fn do_check_inherents(
-        _: Block,
-        _: sp_inherents::InherentData,
-    ) -> sp_inherents::CheckInherentsResult {
-        log::debug!(target: LOG_TARGET, "Entering do_check_inherents");
-        Default::default()
-    }
-}
-
 impl_runtime_apis! {
     // https://substrate.dev/rustdocs/master/sp_api/trait.Core.html
     impl sp_api::Core<Block> for Runtime {
@@ -629,33 +276,35 @@ impl_runtime_apis! {
         }
 
         fn execute_block(block: Block) {
-            Self::do_execute_block(block)
+            Executiveexecute_block(block)
         }
 
         fn initialize_block(header: &<Block as BlockT>::Header) {
-            Self::do_initialize_block(header)
+            Executive::open_block(header)
         }
     }
 
     // https://substrate.dev/rustdocs/master/sc_block_builder/trait.BlockBuilderApi.html
     impl sp_block_builder::BlockBuilder<Block> for Runtime {
         fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
-            Self::do_apply_extrinsic(extrinsic)
+            Executive::apply_extrinsic(extrinsic)
         }
 
         fn finalize_block() -> <Block as BlockT>::Header {
-            Self::do_finalize_block()
+            Executive::close_block()
         }
 
         fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-            Self::do_inherent_extrinsics(data)
+            // Tuxedo does not yet support inherents
+            Default::default()
         }
 
         fn check_inherents(
             block: Block,
             data: sp_inherents::InherentData
         ) -> sp_inherents::CheckInherentsResult {
-            Self::do_check_inherents(block, data)
+            // Tuxedo does not yet support inherents
+            Default::default()
         }
     }
 
@@ -665,20 +314,21 @@ impl_runtime_apis! {
             tx: <Block as BlockT>::Extrinsic,
             block_hash: <Block as BlockT>::Hash,
         ) -> TransactionValidity {
-            Self::do_validate_transaction(source, tx, block_hash)
+            Executive::validate_transaction(source, tx, block_hash)
         }
     }
 
     // Ignore everything after this.
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
+            // Tuxedo does not yet support metadata
             OpaqueMetadata::new(Default::default())
         }
     }
 
     impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
         fn offchain_worker(_header: &<Block as BlockT>::Header) {
-            // we do not do anything.
+            // Tuxedo does not yet support offchain workers, and maybe never will.
         }
     }
 
