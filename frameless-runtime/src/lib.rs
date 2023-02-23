@@ -6,6 +6,9 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 mod utxo;
 use utxo::{TuxedoPiece, UtxoSet};
 
+mod kitties;
+mod money;
+
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
@@ -111,7 +114,7 @@ impl Default for GenesisConfig {
 				utxo::Utxo {
 					redeemer: ALICE_PUB_KEY_BYTES.into(),
 					data: 100u128.encode(),
-					data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
+					data_id: <money::MoneyPiece as TuxedoPiece>::TYPE_ID
 				}
 			]
 		}
@@ -230,10 +233,10 @@ impl Runtime {
 		// execute it
 		match ext.0 {
 			Call::Money(tx) => {
-				utxo::MoneyPiece::validate(tx).map_err(|_| ())
+				money::MoneyPiece::validate(tx).map_err(|_| ())
 			},
 			Call::Kitties(tx) => {
-				utxo::KittiesPiece::validate(tx).map_err(|_| ())
+				kitties::KittiesPiece::validate(tx).map_err(|_| ())
 			},
 			Call::Existence(tx) => {
 				utxo::ExistencePiece::validate(tx).map_err(|_| ())
