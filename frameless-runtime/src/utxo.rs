@@ -151,7 +151,7 @@ pub trait TuxedoPiece {
     type Error: Default;
 
     /// The validation function to determine whether a given input can be consumed.
-    fn validate(transaction: Transaction) -> Result<(), Self::Error>;
+    fn validate(&self, transaction: Transaction) -> Result<(), Self::Error>;
 }
 
 pub struct PieceExtracter<Piece>(PhantomData<Piece>);
@@ -173,13 +173,15 @@ impl<Piece: TuxedoPiece> PieceExtracter<Piece> {
 
 // User defined logic below for the STF..
 
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct ExistencePiece; // Decodes Value -> H256
 impl TuxedoPiece for ExistencePiece {
     type Data = H256;
     const TYPE_ID: TypeId = *b"3333";
     type Error = ();
 
-    fn validate(transaction: Transaction) -> Result<(), Self::Error> {
+    fn validate(&self, transaction: Transaction) -> Result<(), Self::Error> {
         // Check that the input is unique and a set
         // if it fails then return early
         // TODO: Implement Proof of existence Logic scenario

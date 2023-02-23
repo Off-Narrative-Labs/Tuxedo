@@ -149,9 +149,12 @@ pub type Block = sp_runtime::generic::Block<Header, BasicExtrinsic>;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum Call {
-	Kitties(utxo::Transaction),
-	Money(utxo::Transaction),
-	Existence(utxo::Transaction),
+	// Added a field to each variant to indicate which validation path we're taking.
+	// The alternative is to have each call path represented separately at
+	// the runtime level as in Joshy's original draft.
+	Kitties(kitties::KittiesPiece, utxo::Transaction),
+	Money(money::MoneyPiece, utxo::Transaction),
+	Existence(utxo::ExistencePiece, utxo::Transaction),
 	Upgrade(Vec<u8>),
 }
 
@@ -232,14 +235,19 @@ impl Runtime {
 
 		// execute it
 		match ext.0 {
-			Call::Money(tx) => {
-				money::MoneyPiece::validate(tx).map_err(|_| ())
+			// @coax1d This is where I'm stuck.
+			// How do we pass information about which validation path to take?
+			// I ended up modifying the call enum to take an instance of the piece.
+			// The alternative is to expose each verification path individually at the
+			// runtime level as I did in my original draft, but I think we liked this better.
+			Call::Money(mp, tx) => {
+				mp.validate(tx).map_err(|_| ())
 			},
-			Call::Kitties(tx) => {
-				kitties::KittiesPiece::validate(tx).map_err(|_| ())
+			Call::Kitties(kp, tx) => {
+				kp.validate(tx).map_err(|_| ())
 			},
-			Call::Existence(tx) => {
-				utxo::ExistencePiece::validate(tx).map_err(|_| ())
+			Call::Existence(ep, tx) => {
+				ep.validate(tx).map_err(|_| ())
 			},
 			Call::Upgrade(new_wasm_code) => {
 				// NOTE: make sure to upgrade your spec-version!

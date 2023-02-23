@@ -45,14 +45,15 @@ pub struct KittyData {
     dad: DadKittyStatus,
     mom: MomKittyStatus,
 }
-
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittiesPiece; // Decodes Value -> KittyData
 impl TuxedoPiece for KittiesPiece {
     type Data = KittyData; // This is API user Defined
     const TYPE_ID: TypeId = *b"2222";
     type Error = ();
 
-    fn validate(transaction: Transaction) -> Result<(), Self::Error> {
+    fn validate(&self, transaction: Transaction) -> Result<(), Self::Error> {
         PreValidator::<Self>::pre_validate(&transaction)?;
         // TODO: Implement Kitty Logic scenario
 
