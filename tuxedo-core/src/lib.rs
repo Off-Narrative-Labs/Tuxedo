@@ -7,14 +7,18 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod types;
-pub mod executive;
+mod executive;
 pub mod redeemer;
-pub mod verifier;
-pub mod utxo_set;
+mod verifier;
+mod utxo_set;
+
+pub use executive::Executive;
+pub use verifier::Verifier;
+pub use redeemer::Redeemer;
 
 // TODO These are copied from frame_support. We should PR Substrate to move them
 // somewhere better and less frame-specific because they are more broadly useful.
-mod support_macros;
+pub mod support_macros;
 
 /// A Tuxedo-specific target for diagnostic node log messages
 const LOG_TARGET: &'static str = "tuxedo-core";

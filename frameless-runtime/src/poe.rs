@@ -14,9 +14,7 @@
 //! when they are discovered. This difference is analogous to the difference between recorded and registered
 //! land https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
 
-use crate::tuxedo_types::{TypedData, UtxoData};
-use crate::{ensure, fail};
-use crate::{tuxedo_types, Verifier};
+use tuxedo_core::{ensure, fail, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};

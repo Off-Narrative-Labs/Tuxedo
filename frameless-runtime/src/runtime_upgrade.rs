@@ -11,8 +11,7 @@
 //! wasm code. Then we pass the full wasm code as part of the verifier and write
 //! it to the well-known key as a side effect.
 
-use crate::{ensure, fail};
-use crate::{tuxedo_types::UtxoData, verifier::Verifier};
+use tuxedo_core::{ensure, fail, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -77,8 +76,8 @@ impl Verifier for RuntimeUpgrade {
 
     fn verify(
         &self,
-        input_data: &[crate::tuxedo_types::TypedData],
-        output_data: &[crate::tuxedo_types::TypedData],
+        input_data: &[TypedData],
+        output_data: &[TypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single input that matches the hash of the previous runtime logic
         ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);

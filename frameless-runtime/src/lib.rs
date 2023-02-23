@@ -8,25 +8,23 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
 use log::info;
 
-use sp_api::{impl_runtime_apis, HashT};
+use sp_api::impl_runtime_apis;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
     transaction_validity::{
-        InvalidTransaction, TransactionLongevity, TransactionPriority, TransactionSource,
-        TransactionValidity, TransactionValidityError, ValidTransaction,
+        TransactionPriority, TransactionSource,
+        TransactionValidity,
     },
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
-use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
-
+use sp_std::vec::Vec;
 use sp_storage::well_known_keys;
 
 #[cfg(any(feature = "std", test))]
 use sp_runtime::{BuildStorage, Storage};
-
-use sp_core::{hexdisplay::HexDisplay, OpaqueMetadata, H256};
+use sp_core::OpaqueMetadata;
 
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -38,7 +36,12 @@ use serde::{Deserialize, Serialize};
 mod amoeba;
 mod poe;
 mod runtime_upgrade;
-use tuxedo_core::{Output, OutputRef, TypedData};
+use tuxedo_core::{
+    Verifier,
+    Redeemer,
+    redeemer::{UpForGrabs, SigCheck},
+    types::{Transaction as TuxedoTransaction, TypedData},
+};
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -117,11 +120,11 @@ impl BuildStorage for GenesisConfig {
     // just like we have in FRAME
 }
 
-pub type Transaction = tuxedo_core::Transaction<OuterRedeemer, OuterVerifier>;
+pub type Transaction = TuxedoTransaction<OuterRedeemer, OuterVerifier>;
 pub type BlockNumber = u32;
 pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, Transaction>;
-pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterRedeemer>;
+pub type Executive = tuxedo_core::Executive<Block, OuterRedeemer, OuterVerifier>;
 
 impl sp_runtime::traits::GetNodeBlockType for Runtime {
     type NodeBlock = opaque::Block;
@@ -250,24 +253,6 @@ impl Verifier for OuterVerifier {
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
 
-#[derive(Debug)]
-enum UtxoError<OuterVerifierError> {
-    /// This transaction defines the same input multiple times
-    DuplicateInput,
-    /// This transaction defines the same output multiple times
-    DuplicateOutput,
-    /// This transaction defines an output that already existed in the UTXO set
-    PreExistingOutput,
-    /// The verifier errored.
-    VerifierError(OuterVerifierError),
-    /// The Redeemer errored.
-    /// TODO determine whether it is useful to relay an inner error from the redeemer.
-    /// So far, I haven't seen a case, although it seems reasonable to think there might be one.
-    RedeemerError,
-    /// One or more of the inputs required by this transaction is not present in the UTXO set
-    MissingInput,
-}
-
 impl_runtime_apis! {
     // https://substrate.dev/rustdocs/master/sp_api/trait.Core.html
     impl sp_api::Core<Block> for Runtime {
@@ -276,7 +261,7 @@ impl_runtime_apis! {
         }
 
         fn execute_block(block: Block) {
-            Executiveexecute_block(block)
+            Executive::execute_block(block)
         }
 
         fn initialize_block(header: &<Block as BlockT>::Header) {
@@ -294,14 +279,14 @@ impl_runtime_apis! {
             Executive::close_block()
         }
 
-        fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+        fn inherent_extrinsics(_data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
             // Tuxedo does not yet support inherents
             Default::default()
         }
 
         fn check_inherents(
-            block: Block,
-            data: sp_inherents::InherentData
+            _block: Block,
+            _data: sp_inherents::InherentData
         ) -> sp_inherents::CheckInherentsResult {
             // Tuxedo does not yet support inherents
             Default::default()
