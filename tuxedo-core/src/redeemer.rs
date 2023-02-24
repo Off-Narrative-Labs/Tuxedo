@@ -53,3 +53,40 @@ impl Redeemer for UpForGrabs {
         true
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use sp_core::{crypto::Pair as _, sr25519::Pair};
+
+    #[test]
+    fn up_for_grabs_always_redeems() {
+        assert!(UpForGrabs.redeem(&[], &[]))
+    }
+
+    #[test]
+    fn sig_check_with_good_sig() {
+        let pair = Pair::from_entropy(b"entropy_entropy_entropy_entropy!".as_slice(), None).0;
+        let simplified_tx = b"hello world".as_slice();
+        let sig = pair.sign(simplified_tx);
+        let witness: &[u8] = sig.as_ref();
+
+        let sig_check = SigCheck {
+            owner_pubkey: pair.public().into(),
+        };
+
+        assert!(sig_check.redeem(simplified_tx, witness));
+    }
+
+    #[test]
+    fn sig_check_with_bad_sig() {
+        let simplified_tx = b"hello world".as_slice();
+        let witness = b"bogus_signature".as_slice();
+
+        let sig_check = SigCheck {
+            owner_pubkey: H256::zero(),
+        };
+
+        assert!(!sig_check.redeem(simplified_tx, witness));
+    }
+}
