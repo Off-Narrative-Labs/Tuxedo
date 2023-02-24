@@ -11,7 +11,7 @@
 //! wasm code. Then we pass the full wasm code as part of the verifier and write
 //! it to the well-known key as a side effect.
 
-use tuxedo_core::{ensure, fail, Verifier, types::{TypedData, UtxoData}};
+use tuxedo_core::{ensure, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};

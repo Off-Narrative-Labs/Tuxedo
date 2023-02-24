@@ -1,6 +1,6 @@
 //! An implementation of a simple fungible token.
 
-use tuxedo_core::{ensure, fail, Verifier, types::{TypedData, UtxoData}};
+use tuxedo_core::{ensure, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]

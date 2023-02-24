@@ -12,7 +12,7 @@ use parity_scale_codec::{Encode, Decode};
 use sp_api::{HashT, BlockT, HeaderT, TransactionValidity};
 use sp_runtime::{StateVersion, traits::BlakeTwo256, transaction_validity::{ValidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError, InvalidTransaction}, ApplyExtrinsicResult};
 use sp_std::{vec::Vec, collections::btree_set::BTreeSet};
-use crate::{utxo_set::TransparentUtxoSet, redeemer::Redeemer, verifier::Verifier, types::{DispatchResult, Transaction, UtxoError, OutputRef, TypedData}, ensure, fail, LOG_TARGET, HEADER_KEY, EXTRINSIC_KEY};
+use crate::{utxo_set::TransparentUtxoSet, redeemer::Redeemer, verifier::Verifier, types::{DispatchResult, Transaction, UtxoError, OutputRef, TypedData}, ensure, LOG_TARGET, HEADER_KEY, EXTRINSIC_KEY};
 
 /// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
