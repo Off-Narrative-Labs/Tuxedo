@@ -26,7 +26,7 @@ pub trait Redeemer: Debug + Encode + Decode + Clone {
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct SigCheck {
-    owner_pubkey: H256,
+    pub owner_pubkey: H256,
 }
 
 impl Redeemer for SigCheck {

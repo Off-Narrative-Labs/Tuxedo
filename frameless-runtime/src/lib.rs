@@ -3,12 +3,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-mod utxo;
-use utxo::{TuxedoPiece, UtxoSet};
-
-mod kitties;
-mod money;
-
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
@@ -42,11 +36,14 @@ use serde::{Deserialize, Serialize};
 mod amoeba;
 mod poe;
 mod runtime_upgrade;
+//TODO kitties piece needs ported for merge
+//mod kitties;
+mod money;
 use tuxedo_core::{
     Verifier,
     Redeemer,
     redeemer::{UpForGrabs, SigCheck},
-    types::{Transaction as TuxedoTransaction, TypedData},
+    types::{UtxoData, Transaction as TuxedoTransaction, TypedData, Output, OutputRef},
 };
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -110,7 +107,7 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-	pub genesis_utxos: Vec<utxo::Utxo>,
+	pub genesis_utxos: Vec<Output<OuterRedeemer>>,
 }
 
 impl Default for GenesisConfig {
@@ -123,10 +120,14 @@ impl Default for GenesisConfig {
 		// Initial Config just for a Money UTXO
 		GenesisConfig {
 			genesis_utxos: vec![
-				utxo::Utxo {
-					redeemer: ALICE_PUB_KEY_BYTES.into(),
-					data: 100u128.encode(),
-					data_id: <money::MoneyPiece as TuxedoPiece>::TYPE_ID
+				Output {
+					redeemer: OuterRedeemer::SigCheck(SigCheck{
+                        owner_pubkey: ALICE_PUB_KEY_BYTES.into()
+                    }),
+					payload: TypedData{
+                        data: 100u128.encode(),
+					    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    },
 				}
 			]
 		}
@@ -146,9 +147,14 @@ impl BuildStorage for GenesisConfig {
 			WASM_BINARY.unwrap().to_vec()
 		);
 
-		self.genesis_utxos.iter().for_each(|utxo| {
-			storage.top.insert(<BlakeTwo256 as sp_api::HashT>::hash_of(&utxo).encode(), utxo.encode());
-		});
+		for (index, utxo) in self.genesis_utxos.iter().enumerate() {
+            let output_ref = OutputRef {
+                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                index: index as u32,
+            };
+			storage.top.insert(output_ref.encode(), utxo.encode());
+		};
 
 		Ok(())
 	}
@@ -208,6 +214,8 @@ impl Redeemer for OuterRedeemer {
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum OuterVerifier {
+    /// Verifies monetary transactions in a basic fungible cryptocurrency
+    Money(money::MoneyVerifier),
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
@@ -229,6 +237,8 @@ pub enum OuterVerifier {
 /// TODO This should probably be macro generated
 #[derive(Debug)]
 pub enum OuterVerifierError {
+    /// Error from the Money piece
+    Money(money::VerifierError),
     /// Error from the Amoeba piece
     Amoeba(amoeba::VerifierError),
     /// Error from the PoE piece
@@ -239,6 +249,12 @@ pub enum OuterVerifierError {
 
 // We impl conversions from each of the inner error types to the outer error type.
 // This should also be done by a macro
+
+impl From<money::VerifierError> for OuterVerifierError {
+    fn from(e: money::VerifierError) -> Self {
+        Self::Money(e)
+    }
+}
 
 impl From<amoeba::VerifierError> for OuterVerifierError {
     fn from(e: amoeba::VerifierError) -> Self {
@@ -267,6 +283,7 @@ impl Verifier for OuterVerifier {
         output_data: &[TypedData],
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
+            Self::Money(money) => money.verify(input_data, output_data)?,
             Self::AmoebaMitosis(amoeba_mitosis) => {
                 amoeba_mitosis.verify(input_data, output_data)?
             }
