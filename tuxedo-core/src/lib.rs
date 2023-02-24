@@ -8,6 +8,7 @@
 
 mod executive;
 pub mod redeemer;
+pub mod support_macros;
 pub mod types;
 mod utxo_set;
 mod verifier;
@@ -15,10 +16,6 @@ mod verifier;
 pub use executive::Executive;
 pub use redeemer::Redeemer;
 pub use verifier::Verifier;
-
-// TODO These are copied from frame_support. We should PR Substrate to move them
-// somewhere better and less frame-specific because they are more broadly useful.
-pub mod support_macros;
 
 /// A Tuxedo-specific target for diagnostic node log messages
 const LOG_TARGET: &'static str = "tuxedo-core";
