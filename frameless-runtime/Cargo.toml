@@ -43,6 +43,9 @@ tuxedo-core = { path = '../tuxedo-core', default-features = false }
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-02" }
 
+[dev-dependencies]
+sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false }
+
 [features]
 default = ["std"]
 std = [
