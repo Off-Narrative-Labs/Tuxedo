@@ -1,20 +1,20 @@
 //! This crate is the core of the Tuxedo runtime framework.
-//! 
+//!
 //! All Tuxedo runtimes will use this machinery and plug in their specific
 //! Tuxedo piece(s)
 
 // TODO Maybe this doesn't even need to be conditional. Just always build to no_std.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub mod types;
 mod executive;
 pub mod redeemer;
-mod verifier;
+pub mod types;
 mod utxo_set;
+mod verifier;
 
 pub use executive::Executive;
-pub use verifier::Verifier;
 pub use redeemer::Redeemer;
+pub use verifier::Verifier;
 
 // TODO These are copied from frame_support. We should PR Substrate to move them
 // somewhere better and less frame-specific because they are more broadly useful.

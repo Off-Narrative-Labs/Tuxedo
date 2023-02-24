@@ -1,18 +1,23 @@
 //! An implementation of a simple fungible token.
 
-use tuxedo_core::{ensure, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
-use sp_runtime::{
-	transaction_validity::{TransactionPriority},
+use tuxedo_core::{
+    ensure,
+    types::{TypedData, UtxoData},
+    Verifier,
 };
 
 // use log::info;
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MoneyVerifier {
     /// A typical spend transaction where some coins are consumed and others are created.
@@ -25,7 +30,10 @@ pub enum MoneyVerifier {
 
 /// A single coin in the fungible money system.
 /// A new type wrapper around a u128 value.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct Coin(u128);
 
@@ -50,10 +58,8 @@ impl Verifier for MoneyVerifier {
         input_data: &[TypedData],
         output_data: &[TypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        
         match &self {
             Self::Spend => {
-
                 let mut total_input_value: u128 = 0;
                 let mut total_output_value: u128 = 0;
 
@@ -78,8 +84,12 @@ impl Verifier for MoneyVerifier {
                 // Priority is based on how many token are burned
                 // Type stuff is kinda ugly. Maybe division would be better?
                 let burned = total_input_value - total_output_value;
-                Ok(if burned < u64::max_value() as u128 {burned as u64} else {u64::max_value()})
-            },
+                Ok(if burned < u64::max_value() as u128 {
+                    burned as u64
+                } else {
+                    u64::max_value()
+                })
+            }
             Self::Mint => {
                 // Make sure there are no inputs being consumed
                 if !input_data.is_empty() {

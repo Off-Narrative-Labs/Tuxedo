@@ -14,12 +14,16 @@
 //! when they are discovered. This difference is analogous to the difference between recorded and registered
 //! land https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
 
-use tuxedo_core::{ensure, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
+use tuxedo_core::{
+    ensure,
+    types::{TypedData, UtxoData},
+    Verifier,
+};
 
 // Notice this type doesn't have to be public. Cool.
 #[cfg_attr(

@@ -8,11 +8,15 @@
 //! 3. An existing amoeba can undergo mitosis. Mitosis is a process that consumes the
 //!    mother amoeba and creates, in its place two new daughter amoebas.
 
-use tuxedo_core::{ensure, Verifier, types::{TypedData, UtxoData}};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+use tuxedo_core::{
+    ensure,
+    types::{TypedData, UtxoData},
+    Verifier,
+};
 
 /// An amoeba tracked by our simple Amoeba APP
 #[cfg_attr(

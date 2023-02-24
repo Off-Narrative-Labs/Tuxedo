@@ -12,19 +12,16 @@ use sp_api::impl_runtime_apis;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
-    transaction_validity::{
-        TransactionPriority, TransactionSource,
-        TransactionValidity,
-    },
+    transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys;
 
+use sp_core::OpaqueMetadata;
 #[cfg(any(feature = "std", test))]
 use sp_runtime::{BuildStorage, Storage};
-use sp_core::OpaqueMetadata;
 
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -40,10 +37,9 @@ mod runtime_upgrade;
 //mod kitties;
 mod money;
 use tuxedo_core::{
-    Verifier,
-    Redeemer,
-    redeemer::{UpForGrabs, SigCheck},
-    types::{UtxoData, Transaction as TuxedoTransaction, TypedData, Output, OutputRef},
+    redeemer::{SigCheck, UpForGrabs},
+    types::{Output, OutputRef, Transaction as TuxedoTransaction, TypedData, UtxoData},
+    Redeemer, Verifier,
 };
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -107,57 +103,54 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-	pub genesis_utxos: Vec<Output<OuterRedeemer>>,
+    pub genesis_utxos: Vec<Output<OuterRedeemer>>,
 }
 
 impl Default for GenesisConfig {
-	fn default() -> Self {
-		use hex_literal::hex;
+    fn default() -> Self {
+        use hex_literal::hex;
 
-		const ALICE_PUB_KEY_BYTES: [u8; 32] =
-			hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
+        const ALICE_PUB_KEY_BYTES: [u8; 32] =
+            hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
 
-		// Initial Config just for a Money UTXO
-		GenesisConfig {
-			genesis_utxos: vec![
-				Output {
-					redeemer: OuterRedeemer::SigCheck(SigCheck{
-                        owner_pubkey: ALICE_PUB_KEY_BYTES.into()
-                    }),
-					payload: TypedData{
-                        data: 100u128.encode(),
-					    type_id: <money::Coin as UtxoData>::TYPE_ID,
-                    },
-				}
-			]
-		}
+        // Initial Config just for a Money UTXO
+        GenesisConfig {
+            genesis_utxos: vec![Output {
+                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                    owner_pubkey: ALICE_PUB_KEY_BYTES.into(),
+                }),
+                payload: TypedData {
+                    data: 100u128.encode(),
+                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                },
+            }],
+        }
 
-		// TODO: Initial UTXO for Kitties
+        // TODO: Initial UTXO for Kitties
 
-		// TODO: Initial UTXO for Existence
-	}
+        // TODO: Initial UTXO for Existence
+    }
 }
 
 #[cfg(feature = "std")]
 impl BuildStorage for GenesisConfig {
-	fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-		// we have nothing to put into storage in genesis, except this:
-		storage.top.insert(
-			well_known_keys::CODE.into(),
-			WASM_BINARY.unwrap().to_vec()
-		);
+    fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
+        // we have nothing to put into storage in genesis, except this:
+        storage
+            .top
+            .insert(well_known_keys::CODE.into(), WASM_BINARY.unwrap().to_vec());
 
-		for (index, utxo) in self.genesis_utxos.iter().enumerate() {
+        for (index, utxo) in self.genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
                 index: index as u32,
             };
-			storage.top.insert(output_ref.encode(), utxo.encode());
-		};
+            storage.top.insert(output_ref.encode(), utxo.encode());
+        }
 
-		Ok(())
-	}
+        Ok(())
+    }
 }
 
 pub type Transaction = TuxedoTransaction<OuterRedeemer, OuterVerifier>;
