@@ -13,9 +13,8 @@ use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
-    ensure,
-    types::{TypedData, UtxoData},
-    Verifier,
+    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    ensure, Verifier,
 };
 
 /// An amoeba tracked by our simple Amoeba APP
@@ -75,8 +74,8 @@ impl Verifier for AmoebaMitosis {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, VerifierError> {
         // Make sure there is exactly one mother.
         ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
@@ -129,8 +128,8 @@ impl Verifier for AmoebaDeath {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single victim
         // Another valid design choice would be to allow killing many amoebas at once
@@ -166,8 +165,8 @@ impl Verifier for AmoebaCreation {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single created amoeba
         ensure!(output_data.len() == 1, VerifierError::WrongNumberOutputs);

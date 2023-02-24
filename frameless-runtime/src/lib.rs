@@ -37,8 +37,9 @@ mod runtime_upgrade;
 //mod kitties;
 mod money;
 use tuxedo_core::{
+    dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
-    types::{Output, OutputRef, Transaction as TuxedoTransaction, TypedData, UtxoData},
+    types::{Output, OutputRef, Transaction as TuxedoTransaction},
     Redeemer, Verifier,
 };
 
@@ -119,7 +120,7 @@ impl Default for GenesisConfig {
                 redeemer: OuterRedeemer::SigCheck(SigCheck {
                     owner_pubkey: ALICE_PUB_KEY_BYTES.into(),
                 }),
-                payload: TypedData {
+                payload: DynamicallyTypedData {
                     data: 100u128.encode(),
                     type_id: <money::Coin as UtxoData>::TYPE_ID,
                 },
@@ -272,8 +273,8 @@ impl Verifier for OuterVerifier {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
             Self::Money(money) => money.verify(input_data, output_data)?,

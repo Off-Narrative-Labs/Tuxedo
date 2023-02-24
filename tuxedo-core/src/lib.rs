@@ -6,6 +6,7 @@
 // TODO Maybe this doesn't even need to be conditional. Just always build to no_std.
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub mod dynamic_typing;
 mod executive;
 pub mod redeemer;
 pub mod support_macros;

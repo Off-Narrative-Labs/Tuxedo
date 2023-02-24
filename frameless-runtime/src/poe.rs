@@ -20,9 +20,8 @@ use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
-    ensure,
-    types::{TypedData, UtxoData},
-    Verifier,
+    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    ensure, Verifier,
 };
 
 // Notice this type doesn't have to be public. Cool.
@@ -82,8 +81,8 @@ impl Verifier for PoeClaim {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no inputs
         ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
@@ -125,8 +124,8 @@ impl Verifier for PoeRevoke {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no outputs
         ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
@@ -164,8 +163,8 @@ impl Verifier for PoeDispute {
 
     fn verify(
         &self,
-        _input_data: &[TypedData],
-        _output_data: &[TypedData],
+        _input_data: &[DynamicallyTypedData],
+        _output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         todo!("implement this once we have at least peeks and maybe evictions")
 

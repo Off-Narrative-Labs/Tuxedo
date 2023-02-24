@@ -18,9 +18,8 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
-    ensure,
-    types::{TypedData, UtxoData},
-    Verifier,
+    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    ensure, Verifier,
 };
 
 /// A reference to a runtime wasm blob. It is just a hash.
@@ -80,8 +79,8 @@ impl Verifier for RuntimeUpgrade {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single input that matches the hash of the previous runtime logic
         ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);

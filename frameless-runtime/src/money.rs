@@ -7,9 +7,8 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
-    ensure,
-    types::{TypedData, UtxoData},
-    Verifier,
+    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    ensure, Verifier,
 };
 
 // use log::info;
@@ -41,9 +40,12 @@ impl UtxoData for Coin {
     const TYPE_ID: [u8; 4] = *b"coin";
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub enum VerifierError{
+pub enum VerifierError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
@@ -55,7 +57,7 @@ pub enum VerifierError{
     /// Either the output value will exceed the input value, or if there are no outputs,
     /// it is a waste of processing power, so it is not allowed.
     SpendingNothing,
-    /// The value of the spent input coins is less than the value of the newly created 
+    /// The value of the spent input coins is less than the value of the newly created
     /// output coins. This would lead to money creation and is not allowed.
     OutputsExceedInputs,
     /// The value consumed or created by this transaction overflows the value type.
@@ -71,8 +73,8 @@ impl Verifier for MoneyVerifier {
 
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {
             Self::Spend => {
@@ -84,17 +86,30 @@ impl Verifier for MoneyVerifier {
 
                 // Check that sum of input values < output values
                 for input in input_data {
-                    let utxo_value = input.extract::<Coin>().map_err(|_| VerifierError::BadlyTyped)?.0;
-                    total_input_value = total_input_value.checked_add(utxo_value).ok_or(VerifierError::ValueOverflow)?;
+                    let utxo_value = input
+                        .extract::<Coin>()
+                        .map_err(|_| VerifierError::BadlyTyped)?
+                        .0;
+                    total_input_value = total_input_value
+                        .checked_add(utxo_value)
+                        .ok_or(VerifierError::ValueOverflow)?;
                 }
 
                 for utxo in output_data {
-                    let utxo_value = utxo.extract::<Coin>().map_err(|_| VerifierError::BadlyTyped)?.0;
+                    let utxo_value = utxo
+                        .extract::<Coin>()
+                        .map_err(|_| VerifierError::BadlyTyped)?
+                        .0;
                     ensure!(utxo_value > 0, VerifierError::ZeroValueCoin);
-                    total_output_value = total_output_value.checked_add(utxo_value).ok_or(VerifierError::ValueOverflow)?;
+                    total_output_value = total_output_value
+                        .checked_add(utxo_value)
+                        .ok_or(VerifierError::ValueOverflow)?;
                 }
 
-                ensure!(total_output_value <= total_input_value, VerifierError::OutputsExceedInputs);
+                ensure!(
+                    total_output_value <= total_input_value,
+                    VerifierError::OutputsExceedInputs
+                );
 
                 // Priority is based on how many token are burned
                 // Type stuff is kinda ugly. Maybe division would be better?
@@ -114,7 +129,10 @@ impl Verifier for MoneyVerifier {
 
                 // Make sure the outputs are the right type
                 for utxo in output_data {
-                    let utxo_value = utxo.extract::<Coin>().map_err(|_| VerifierError::BadlyTyped)?.0;
+                    let utxo_value = utxo
+                        .extract::<Coin>()
+                        .map_err(|_| VerifierError::BadlyTyped)?
+                        .0;
                     ensure!(utxo_value > 0, VerifierError::ZeroValueCoin);
                 }
 
@@ -124,7 +142,6 @@ impl Verifier for MoneyVerifier {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -222,10 +239,7 @@ mod test {
         let input_data = vec![];
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
-        assert_eq!(
-            MoneyVerifier::Mint.verify(&input_data, &output_data),
-            Ok(0),
-        );
+        assert_eq!(MoneyVerifier::Mint.verify(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
