@@ -96,6 +96,14 @@ impl Verifier for MoneyVerifier {
                     return Err(());
                 }
 
+                // Make sure the outputs are the right type
+                for utxo in output_data {
+                    let utxo_value = utxo.extract::<Coin>()?.0;
+                    if utxo_value <= 0 {
+                        return Err(Self::Error::default());
+                    }
+                }
+
                 // No priority for minting
                 Ok(0)
             }
