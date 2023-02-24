@@ -1,11 +1,11 @@
-use node_template_runtime::GenesisConfig as FramelessGenesisConfig;
+use node_template_runtime::GenesisConfig;
 use sc_service::ChainType;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<FramelessGenesisConfig>;
+pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
 // /// Generate a crypto pair from seed.
 // pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -36,7 +36,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// ID
 		"dev",
 		ChainType::Development,
-		move || FramelessGenesisConfig,
+		move || GenesisConfig::default(),
 		// Bootnodes
 		vec![],
 		// Telemetry
@@ -58,7 +58,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// ID
 		"local_testnet",
 		ChainType::Local,
-		move || FramelessGenesisConfig,
+		move || GenesisConfig::default(),
 		// Bootnodes
 		vec![],
 		// Telemetry
