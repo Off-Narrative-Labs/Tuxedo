@@ -144,6 +144,7 @@ pub trait UtxoData: Encode + Decode {
     const TYPE_ID: [u8; 4];
 }
 
+//TODO should this just be From or Into impl?
 impl TypedData {
     /// Extracts strongly typed data from an Output, iff the output contains the type of data
     /// specified. If the contained data is not the specified type, or decoding fails, this errors.
@@ -154,6 +155,15 @@ impl TypedData {
             T::decode(&mut &self.data[..]).map_err(|_| ())
         } else {
             Err(())
+        }
+    }
+}
+
+impl<T: UtxoData> From<T> for TypedData {
+    fn from(value: T) -> Self {
+        Self {
+            data: value.encode(),
+            type_id: T::TYPE_ID,
         }
     }
 }
