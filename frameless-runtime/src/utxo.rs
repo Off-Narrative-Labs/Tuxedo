@@ -200,11 +200,19 @@ impl UtxoSet for MoneyPiece {
 }
 
 pub trait MoneyConfig {
+    type Existence;
+}
+
+impl MoneyConfig for MoneyPiece {
+    type Existence = ExistencePiece;
+}
+
+pub trait MoneyData {
     type Currency: Encode + Decode;
     type Existence: Encode + Decode;
 }
 
-impl MoneyConfig for Money {
+impl MoneyData for Money {
     type Currency = u128;
     type Existence = H256;
 }
@@ -231,8 +239,8 @@ impl TuxedoPiece for MoneyPiece {
         // Always pre-validate before every validate
         PreValidator::<Self>::pre_validate(&transaction)?;
 
-        let mut total_input_value: <Self::Data as MoneyConfig>::Currency = 0;
-        let mut total_output_value: <Self::Data as MoneyConfig>::Currency = 0;
+        let mut total_input_value: <Self::Data as MoneyData>::Currency = 0;
+        let mut total_output_value: <Self::Data as MoneyData>::Currency = 0;
 
         // Check that sum of input values < output values
         for input in transaction.inputs.iter() {
@@ -242,6 +250,7 @@ impl TuxedoPiece for MoneyPiece {
                     total_input_value.checked_add(value).ok_or(())?;
                 },
                 Money::Existence(existence_value) => {
+                    // <<Self as MoneyConfig>::Existence as Verify>::verify_input(&existence_value)
                     // TODO: Could add some helpers such that you can easily access
                     //       The state of an existence piece and its validation logic
                     // Check state of existence Piece? and validate? some glue code?
