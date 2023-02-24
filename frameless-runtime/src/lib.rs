@@ -110,7 +110,7 @@ impl Default for GenesisConfig {
 			genesis_utxos: vec![
 				utxo::Utxo {
 					redeemer: ALICE_PUB_KEY_BYTES.into(),
-					data: 100u128.encode(),
+					data: utxo::Money::Currency(100u128).encode(),
 					data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
 				}
 			]
@@ -514,7 +514,7 @@ mod tests {
 			// Grab genesis value from storage and assert it is correct
 			let genesis_utxo = utxo::Utxo {
 				redeemer: alice_pub_key.into(),
-				data: 100u128.encode(),
+				data: utxo::Money::Currency(100u128).encode(),
 				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
 			};
 			let encoded_utxo =
@@ -524,26 +524,33 @@ mod tests {
 		})
 	}
 
-	// #[test]
-	// fn utxo_money_test_extracter() {
-	// 	new_test_ext().execute_with(|| {
-	// 		let keystore = KeyStore::new();
-	// 		let alice_pub_key =
-	// 			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+	#[test]
+	fn utxo_money_test_extracter() {
+		new_test_ext().execute_with(|| {
+			let keystore = KeyStore::new();
+			let alice_pub_key =
+				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
-	// 		let genesis_utxo = utxo::Utxo {
-	// 			redeemer: alice_pub_key.into(),
-	// 			data: 100u128.encode(),
-	// 			data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
-	// 		};
+			let genesis_utxo = utxo::Utxo {
+				redeemer: alice_pub_key.into(),
+				data: utxo::Money::Currency(100u128).encode(),
+				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
+			};
 
-	// 		let expected_data = 100u128;
-	// 		let extracted_data =
-	// 			utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
-	// 			.expect("Can extract Genesis Data");
-	// 		assert_eq!(extracted_data, expected_data);
-	// 	})
-	// }
+			let expected_data = 100u128;
+			let extracted_type =
+				utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
+				.expect("Can extract Genesis Data");
+			match extracted_type {
+				utxo::Money::Currency(extracted_value) => {
+					assert_eq!(extracted_value, expected_data);
+				},
+				utxo::Money::Existence(existence) => {
+					// do some assertion in this case
+				},
+			}
+		})
+	}
 
 	// TODO: More Tests for Money Kitties ETC
 
