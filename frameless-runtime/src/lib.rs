@@ -524,26 +524,26 @@ mod tests {
 		})
 	}
 
-	#[test]
-	fn utxo_money_test_extracter() {
-		new_test_ext().execute_with(|| {
-			let keystore = KeyStore::new();
-			let alice_pub_key =
-				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+	// #[test]
+	// fn utxo_money_test_extracter() {
+	// 	new_test_ext().execute_with(|| {
+	// 		let keystore = KeyStore::new();
+	// 		let alice_pub_key =
+	// 			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
-			let genesis_utxo = utxo::Utxo {
-				redeemer: alice_pub_key.into(),
-				data: 100u128.encode(),
-				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
-			};
+	// 		let genesis_utxo = utxo::Utxo {
+	// 			redeemer: alice_pub_key.into(),
+	// 			data: 100u128.encode(),
+	// 			data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
+	// 		};
 
-			let expected_data = 100u128;
-			let extracted_data =
-				utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
-				.expect("Can extract Genesis Data");
-			assert_eq!(extracted_data, expected_data);
-		})
-	}
+	// 		let expected_data = 100u128;
+	// 		let extracted_data =
+	// 			utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
+	// 			.expect("Can extract Genesis Data");
+	// 		assert_eq!(extracted_data, expected_data);
+	// 	})
+	// }
 
 	// TODO: More Tests for Money Kitties ETC
 

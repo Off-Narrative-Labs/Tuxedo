@@ -199,8 +199,31 @@ impl UtxoSet for MoneyPiece {
     }
 }
 
+pub trait MoneyConfig {
+    type Currency: Encode + Decode;
+    type Existence: Encode + Decode;
+}
+
+impl MoneyConfig for Money {
+    type Currency = u128;
+    type Existence = H256;
+}
+
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+pub enum Money {
+    Currency(u128),
+    Existence(H256),
+}
+
+impl Default for Money {
+    fn default() -> Self {
+        Money::Currency(0)
+    }
+}
+
 impl TuxedoPiece for MoneyPiece {
-    type Data = u128;
+    type Data = Money;
     const TYPE_ID: TypeId = *b"1111";
     type Error = ();
 
@@ -208,24 +231,44 @@ impl TuxedoPiece for MoneyPiece {
         // Always pre-validate before every validate
         PreValidator::<Self>::pre_validate(&transaction)?;
 
-        let mut total_input_value: Self::Data = 0;
-        let mut total_output_value: Self::Data = 0;
+        let mut total_input_value: <Self::Data as MoneyConfig>::Currency = 0;
+        let mut total_output_value: <Self::Data as MoneyConfig>::Currency = 0;
 
         // Check that sum of input values < output values
         for input in transaction.inputs.iter() {
-            let utxo_value = PieceExtracter::<Self>::extract(input.output)?;
-            total_input_value.checked_add(utxo_value).ok_or(())?;
+            let money_type = PieceExtracter::<Self>::extract(input.output)?;
+            match money_type {
+                Money::Currency(value) => {
+                    total_input_value.checked_add(value).ok_or(())?;
+                },
+                Money::Existence(existence_value) => {
+                    // TODO: Could add some helpers such that you can easily access
+                    //       The state of an existence piece and its validation logic
+                    // Check state of existence Piece? and validate? some glue code?
+                    // Such as verify input is required for every Piece???
+                },
+            }
         }
 
         for utxo in transaction.outputs.iter() {
-            let utxo_value = PieceExtracter::<Self>::extract_from_output(&utxo)?;
-            if utxo_value <= 0 {
-                return Err(Self::Error::default());
+            let money_type = PieceExtracter::<Self>::extract_from_output(&utxo)?;
+            match money_type {
+                Money::Currency(value) => {
+                    if value <= 0 {
+                        return Err(Self::Error::default());
+                    }
+                    total_output_value.checked_add(value).ok_or(())?;
+                },
+                Money::Existence(existence_value) => {
+                    // TODO: Could add some helpers such that you can easily access
+                    //       The state of an existence piece and its validation logic
+                    // Check state of existence Piece? and validate? some glue code?
+                    // Such as verify output is required for every Piece???
+                },
             }
-            total_output_value.checked_add(utxo_value).ok_or(())?;
         }
 
-        if total_output_value > total_input_value {
+        if total_output_value < total_input_value {
             return Err(Self::Error::default());
         }
 
