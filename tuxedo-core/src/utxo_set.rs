@@ -2,9 +2,12 @@
 //! For now, this is complicated enough, so I'll just leave them here. In the future it may be wise to
 //! abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
 
+use crate::{
+    redeemer::Redeemer,
+    types::{Output, OutputRef},
+};
+use parity_scale_codec::{Decode, Encode};
 use sp_std::marker::PhantomData;
-use crate::{redeemer::Redeemer, types::{OutputRef, Output}};
-use parity_scale_codec::{Encode, Decode};
 
 pub struct TransparentUtxoSet<Redeemer>(PhantomData<Redeemer>);
 

@@ -1,28 +1,39 @@
 //! # Executive Module
-//! 
+//!
 //! The executive is the main orchestrator for the entire runtime.
 //! It has functions that implement the Core, BlockBuilder, and TxPool runtime APIs.
-//! 
+//!
 //! It does all the reusable verification of UTXO transactions such as checking that there
 //! are no duplicate inputs or outputs, and that the redeemers are satisfied.
 
-use sp_std::marker::PhantomData;
+use crate::{
+    dynamic_typing::DynamicallyTypedData,
+    ensure,
+    redeemer::Redeemer,
+    types::{DispatchResult, OutputRef, Transaction, UtxoError},
+    utxo_set::TransparentUtxoSet,
+    verifier::Verifier,
+    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
+};
 use log::info;
-use parity_scale_codec::{Encode, Decode};
-use sp_api::{HashT, BlockT, HeaderT, TransactionValidity};
-use sp_runtime::{StateVersion, traits::BlakeTwo256, transaction_validity::{ValidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError, InvalidTransaction}, ApplyExtrinsicResult};
-use sp_std::{vec::Vec, collections::btree_set::BTreeSet};
-use crate::{utxo_set::TransparentUtxoSet, redeemer::Redeemer, verifier::Verifier, types::{DispatchResult, Transaction, UtxoError, OutputRef, TypedData}, ensure, fail, LOG_TARGET, HEADER_KEY, EXTRINSIC_KEY};
+use parity_scale_codec::{Decode, Encode};
+use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
+use sp_runtime::{
+    traits::BlakeTwo256,
+    transaction_validity::{
+        InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError,
+        ValidTransaction,
+    },
+    ApplyExtrinsicResult, StateVersion,
+};
+use sp_std::marker::PhantomData;
+use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 
 /// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
 pub struct Executive<B, R, V>(PhantomData<(B, R, V)>);
 
-impl <
-    B: BlockT<Extrinsic = Transaction<R, V>>,
-    R: Redeemer,
-    V: Verifier,
-> Executive<B, R, V> {
+impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executive<B, R, V> {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
     /// This returns Ok even if some inputs are still missing because the tagged transaction pool can handle that.
@@ -102,7 +113,7 @@ impl <
         // Extract the contained data from each input and output
         // We do not yet remove anything from the utxo set. That will happen later
         // iff verification passes
-        let input_data: Vec<TypedData> = transaction
+        let input_data: Vec<DynamicallyTypedData> = transaction
             .inputs
             .iter()
             .map(|i| {
@@ -111,7 +122,7 @@ impl <
                     .payload
             })
             .collect();
-        let output_data: Vec<TypedData> = transaction
+        let output_data: Vec<DynamicallyTypedData> = transaction
             .outputs
             .iter()
             .map(|o| o.payload.clone())
@@ -186,7 +197,8 @@ impl <
     /// TODO This must be exposed to the pieces somehow. We need some kind of config system.
     /// We should probably steal it from FRAME a la https://github.com/paritytech/substrate/pull/104
     pub fn block_height() -> <<B as BlockT>::Header as HeaderT>::Number
-        where B::Header: HeaderT
+    where
+        B::Header: HeaderT,
     {
         *sp_io::storage::get(crate::HEADER_KEY)
             .and_then(|d| B::Header::decode(&mut &*d).ok())
@@ -241,13 +253,16 @@ impl <
         let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
             .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
             .unwrap_or_default();
-        let extrinsics_root =
-        <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(extrinsics, StateVersion::V1);
+        let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
+            extrinsics,
+            StateVersion::V1,
+        );
         sp_io::storage::clear(&EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
 
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
-        let state_root = <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
+        let state_root =
+            <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
         header.set_state_root(state_root);
 
         info!(target: LOG_TARGET, "finalizing block {:?}", header);
@@ -283,7 +298,8 @@ impl <
 
         // Check state root
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
-        let state_root = <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
+        let state_root =
+            <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
         assert_eq!(*block.header().state_root(), state_root);
 
         // Print state for quick debugging
@@ -305,8 +321,10 @@ impl <
             .into_iter()
             .map(|x| x.encode())
             .collect::<Vec<_>>();
-        let extrinsics_root =
-            <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(extrinsics, StateVersion::V1);
+        let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
+            extrinsics,
+            StateVersion::V1,
+        );
         assert_eq!(*block.header().extrinsics_root(), extrinsics_root);
     }
 

@@ -1,6 +1,5 @@
-//! These macros are defined in frame support, but they are useful more broadly than just frame.
-//! TODO PR Substrate so that they live somewhere better so we can benefit from them.
-//! Is there a runtime support crate? OR maybe sp runtime?
+//! These macros are copied from frame support. Substrate maintainers are not open to putting them in
+//! a more sensible location. See https://github.com/paritytech/substrate/issues/13456
 
 /// Return Err of the expression: `return Err($expression);`.
 ///
@@ -12,11 +11,14 @@ macro_rules! fail {
     }};
 }
 
+/// Evaluate `$x:expr` and if not true return `Err($y:expr)`.
+///
+/// Used as `ensure!(expression_to_ensure, expression_to_return_on_false)`.
 #[macro_export]
 macro_rules! ensure {
     ( $x:expr, $y:expr $(,)? ) => {{
         if !$x {
-            fail!($y);
+            $crate::fail!($y);
         }
     }};
 }

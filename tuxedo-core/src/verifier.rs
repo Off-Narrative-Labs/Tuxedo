@@ -6,7 +6,7 @@
 
 use sp_std::fmt::Debug;
 
-use crate::types::TypedData;
+use crate::dynamic_typing::DynamicallyTypedData;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -23,8 +23,8 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
     /// The actual verification logic
     fn verify(
         &self,
-        input_data: &[TypedData],
-        output_data: &[TypedData],
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
@@ -36,8 +36,8 @@ impl Verifier for () {
 
     fn verify(
         &self,
-        _input_data: &[TypedData],
-        _output_data: &[TypedData],
+        _input_data: &[DynamicallyTypedData],
+        _output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, ()> {
         Ok(0)
     }
