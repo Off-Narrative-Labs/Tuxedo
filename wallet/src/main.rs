@@ -2,7 +2,7 @@
 
 use std::{thread::sleep, time::Duration};
 
-use jsonrpsee::{core::client::ClientT, http_client::HttpClientBuilder, rpc_params};
+use jsonrpsee::{core::client::ClientT, http_client::{HttpClientBuilder, HttpClient}, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
@@ -46,8 +46,6 @@ async fn main() -> anyhow::Result<()> {
         tx_hash: <BlakeTwo256 as Hash>::hash_of(&spawn_tx.encode()),
         index: 0,
     };
-    let eve_ref_hex = format!("{:?}", HexDisplay::from(&eve_ref.encode()));
-    println!("eve ref hex: {:?}", eve_ref_hex);
 
     // Send the transaction
     let spawn_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));
@@ -56,22 +54,11 @@ async fn main() -> anyhow::Result<()> {
     println!("Node's response to spawn transaction: {:?}", spawn_response);
 
     // Wait a few seconds to make sure a block has been authored.
-    sleep(Duration::from_secs(4));
+    sleep(Duration::from_secs(3));
 
     // Check that the amoeba is in storage and print its details
-    let params = rpc_params![eve_ref_hex];
-    let raw_eve_response: Result<Option<String>, _> =
-        client.request("state_getStorage", params).await;
-    let eve_from_storage_hex = raw_eve_response?
-        .expect("Eve is found in storage")
-        .chars()
-        .skip(2)
-        .collect::<String>();
-    let eve_storage_bytes = hex::decode(eve_from_storage_hex)
-        .expect("Eve bytes from storage can decode correctly");
-    let eve_output_from_storage: Output<OuterRedeemer> = Decode::decode(&mut &eve_storage_bytes[..])?;
-    let eve_from_storage: AmoebaDetails = eve_output_from_storage.payload.extract().unwrap();
-    println!("Eve Amoeba retreived from storage: {:?}", eve_from_storage);
+    let eve_from_storage = get_amoeba_from_storage(&eve_ref, &client).await?;
+    println!("Eve Amoeba retrieved from storage: {:?}", eve_from_storage);
 
     // Create a mitosis transaction on the Eve amoeba
     let cain = AmoebaDetails {
@@ -109,8 +96,6 @@ async fn main() -> anyhow::Result<()> {
         tx_hash: <BlakeTwo256 as Hash>::hash_of(&mitosis_tx.encode()),
         index: 1,
     };
-    println!("cain ref: {:?}", HexDisplay::from(&cain_ref.encode()));
-    println!("able ref: {:?}", HexDisplay::from(&able_ref.encode()));
 
     // Send the mitosis transaction
     let mitosis_hex = format!("{:?}", HexDisplay::from(&mitosis_tx.encode()));
@@ -118,9 +103,37 @@ async fn main() -> anyhow::Result<()> {
     let mitosis_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
     println!("Node's response to mitosis transaction: {:?}", mitosis_response);
 
+    // Wait a few seconds to make sure a block has been authored.
+    sleep(Duration::from_secs(3));
+
     // Check that the daughters are in storage and print their details
+    let cain_from_storage = get_amoeba_from_storage(&cain_ref, &client).await?;
+    println!("Cain Amoeba retrieved from storage: {:?}", cain_from_storage);
+    let able_from_storage = get_amoeba_from_storage(&able_ref, &client).await?;
+    println!("Able Amoeba retrieved from storage: {:?}", able_from_storage);
 
     Ok(())
+}
+
+async fn get_amoeba_from_storage(output_ref: &OutputRef, client: &HttpClient) -> anyhow::Result<AmoebaDetails> {
+    let ref_hex = format!("{:?}", HexDisplay::from(&output_ref.encode()));
+    let params = rpc_params![ref_hex];
+    let rpc_response: Result<Option<String>, _> =
+        client.request("state_getStorage", params).await;
+
+    // Open up result and strip off 0x prefix
+    let response_hex = rpc_response?
+        .expect("Amoeba was not found in storage")
+        .chars()
+        .skip(2)
+        .collect::<String>();
+    let response_bytes = hex::decode(response_hex)
+        //TODO I would prefer to use `?` here instead of panicking
+        .expect("Eve bytes from storage can decode correctly");
+    let utxo: Output<OuterRedeemer> = Decode::decode(&mut &response_bytes[..])?;
+    let amoeba_from_storage: AmoebaDetails = utxo.payload.extract().unwrap();
+
+    Ok(amoeba_from_storage)
 }
 
 //TODO Ask question (either github issue or stack exchange)
