@@ -8,7 +8,7 @@ use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
     OuterRedeemer, Transaction,
 };
-use sp_core::{blake2_256, hexdisplay::HexDisplay, H256};
+use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::UpForGrabs,
@@ -130,7 +130,7 @@ async fn main() -> anyhow::Result<()> {
 fn blake_2_256_inconsistency() {
     let message = b"hello world".to_vec();
 
-    let hash_1 = H256::from(sp_core::blake2_256(&message));
+    let hash_1 = sp_core::H256::from(sp_core::blake2_256(&message));
     let hash_2 = <sp_runtime::traits::BlakeTwo256 as sp_runtime::traits::Hash>::hash_of(&message);
 
     println!("Hash 1: {:?}", hash_1);
