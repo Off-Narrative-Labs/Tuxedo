@@ -18,7 +18,9 @@ use sp_runtime::{
 use sp_std::marker::PhantomData;
 
 use log::info;
-use crate::utxo::{TuxedoPiece, TypeId, Transaction, PreValidator, PieceExtracter, UtxoSet, UtxoRef, Utxo};
+use crate::andrew_utxo::{
+    TuxedoPiece, TypeId, Transaction, PreValidator, PieceExtracter, UtxoSet, UtxoRef, Utxo
+};
 
 // Api USER defined
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]

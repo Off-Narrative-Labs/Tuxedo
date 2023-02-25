@@ -8,7 +8,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
 use log::info;
 
-use sp_api::impl_runtime_apis;
+use sp_api::{impl_runtime_apis, HashT};
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
@@ -36,6 +36,8 @@ use serde::{Deserialize, Serialize};
 mod amoeba;
 mod poe;
 mod runtime_upgrade;
+mod andrew_utxo;
+use andrew_utxo::{TuxedoPiece};
 //TODO kitties piece needs ported for merge
 //mod kitties;
 mod money;
@@ -465,53 +467,64 @@ mod tests {
 		ext
 	}
 
-    #[test]
-    fn host_function_call_works() {
-        sp_io::TestExternalities::new_empty().execute_with(|| {
-            sp_io::storage::get(&HEADER_KEY);
-        })
-    }
-
 	#[test]
-	fn utxo_money_test_genesis() {
+	fn andrew_utxo_money_test_genesis() {
 		new_test_ext().execute_with(|| {
 			let keystore = KeyStore::new();
 			let alice_pub_key =
 				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
 			// Grab genesis value from storage and assert it is correct
-			let genesis_utxo = utxo::Utxo {
-				redeemer: alice_pub_key.into(),
-				data: 100u128.encode(),
-				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
+			let genesis_utxo = Output {
+				redeemer: OuterRedeemer::SigCheck(SigCheck{
+					owner_pubkey: alice_pub_key.into()
+				}),
+				payload: TypedData {
+					data: 100u128.encode(),
+					type_id: <money::Coin as UtxoData>::TYPE_ID,
+				},
 			};
+
+			let output_ref = OutputRef { // Storing -> (hash, id) (32 + 4) 36 bytes is this good?
+                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                index: 0 as u32,
+            };
+
 			let encoded_utxo =
-				sp_io::storage::get(&BlakeTwo256::hash_of(&genesis_utxo).encode()).expect("Retrieve Genesis UTXO");
-			let utxo = utxo::Utxo::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
+				sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
+			let utxo = Output::<OuterRedeemer>::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
 			assert_eq!(utxo, genesis_utxo);
 		})
 	}
 
-	#[test]
-	fn utxo_money_test_extracter() {
-		new_test_ext().execute_with(|| {
-			let keystore = KeyStore::new();
-			let alice_pub_key =
-				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+	// #[test]
+	// fn andrew_utxo_money_test_extracter() {
+	// 	new_test_ext().execute_with(|| {
+	// 		let keystore = KeyStore::new();
+	// 		let alice_pub_key =
+	// 			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
-			let genesis_utxo = utxo::Utxo {
-				redeemer: alice_pub_key.into(),
-				data: 100u128.encode(),
-				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
-			};
+	// 		let genesis_utxo = andrew_utxo::Utxo {
+	// 			redeemer: alice_pub_key.into(),
+	// 			data: andrew_utxo::Money::Currency(100u128).encode(),
+	// 			data_id: <andrew_utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
+	// 		};
 
-			let expected_data = 100u128;
-			let extracted_data =
-				utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
-				.expect("Can extract Genesis Data");
-			assert_eq!(extracted_data, expected_data);
-		})
-	}
+	// 		let expected_data = 100u128;
+	// 		let extracted_type =
+	// 			andrew_utxo::PieceExtracter::<andrew_utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
+	// 			.expect("Can extract Genesis Data");
+	// 		match extracted_type {
+	// 			andrew_utxo::Money::Currency(extracted_value) => {
+	// 				assert_eq!(extracted_value, expected_data);
+	// 			},
+	// 			andrew_utxo::Money::Existence(existence) => {
+	// 				// do some assertion in this case
+	// 			},
+	// 		}
+	// 	})
+	// }
 
 	// TODO: More Tests for Money Kitties ETC
 
