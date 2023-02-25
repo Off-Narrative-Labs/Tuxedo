@@ -73,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
     let eve_from_storage: AmoebaDetails = eve_output_from_storage.payload.extract().unwrap();
     println!("Eve Amoeba retreived from storage: {:?}", eve_from_storage);
 
-    // Perform mitosis on the amoeba
+    // Create a mitosis transaction on the Eve amoeba
     let cain = AmoebaDetails {
         generation: 1,
         four_bytes: *b"cain",
@@ -101,6 +101,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Calculate the two OutputRefs for the daughters
+    //TODO for some reason this one fails with pre-existing output
     let cain_ref = OutputRef {
         tx_hash: H256::from(blake2_256(&mitosis_tx.encode())),
         index: 0,
@@ -109,6 +110,12 @@ async fn main() -> anyhow::Result<()> {
         tx_hash: H256::from(blake2_256(&mitosis_tx.encode())),
         index: 1,
     };
+
+    // Send the mitosis transaction
+    let mitosis_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));
+    let params = rpc_params![mitosis_hex];
+    let mitosis_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
+    println!("Node's response to mitosis transaction: {:?}", mitosis_response);
 
     // Check that the daughters are in storage and print their details
 
