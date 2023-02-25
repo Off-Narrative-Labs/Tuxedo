@@ -37,6 +37,7 @@ mod andrew_utxo;
 use andrew_utxo::{TuxedoPiece};
 //TODO kitties piece needs ported for merge
 mod andrew_kitties;
+mod kitties;
 mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
@@ -212,6 +213,8 @@ impl Redeemer for OuterRedeemer {
 pub enum OuterVerifier {
     /// Verifies monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyVerifier),
+	/// Verifies kitties breeding
+	Kitties(kitties::KittyVerifier),
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
@@ -235,6 +238,8 @@ pub enum OuterVerifier {
 pub enum OuterVerifierError {
     /// Error from the Money piece
     Money(money::VerifierError),
+	/// Error from Kitties piece
+	Kitty(kitties::VerifierError),
     /// Error from the Amoeba piece
     Amoeba(amoeba::VerifierError),
     /// Error from the PoE piece
@@ -250,6 +255,12 @@ impl From<money::VerifierError> for OuterVerifierError {
     fn from(e: money::VerifierError) -> Self {
         Self::Money(e)
     }
+}
+
+impl From<kitties::VerifierError> for OuterVerifierError {
+	fn from(e: kitties::VerifierError) -> Self {
+		Self::Kitty(e)
+	}
 }
 
 impl From<amoeba::VerifierError> for OuterVerifierError {
@@ -280,6 +291,7 @@ impl Verifier for OuterVerifier {
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
             Self::Money(money) => money.verify(input_data, output_data)?,
+			Self::Kitties(kitty) => kitty.verify(input_data, output_data)?,
             Self::AmoebaMitosis(amoeba_mitosis) => {
                 amoeba_mitosis.verify(input_data, output_data)?
             }
