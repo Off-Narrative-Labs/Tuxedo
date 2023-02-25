@@ -364,7 +364,6 @@ impl_runtime_apis! {
 
     impl sp_session::SessionKeys<Block> for Runtime {
         fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
-            info!(target: "frameless", "🖼️ Entering generate_session_keys. seed: {:?}", seed);
             opaque::SessionKeys::generate(seed)
         }
 
