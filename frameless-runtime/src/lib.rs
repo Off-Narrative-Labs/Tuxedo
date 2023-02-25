@@ -3,6 +3,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use amoeba::{AmoebaCreation, AmoebaMitosis};
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
@@ -30,7 +31,7 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-mod amoeba;
+pub mod amoeba;
 mod poe;
 mod runtime_upgrade;
 //TODO kitties piece needs ported for merge
@@ -194,6 +195,18 @@ impl Redeemer for OuterRedeemer {
     }
 }
 
+impl From<UpForGrabs> for OuterRedeemer {
+    fn from(value: UpForGrabs) -> Self {
+        Self::UpForGrabs(value)
+    }
+}
+
+impl From<SigCheck> for OuterRedeemer {
+    fn from(value: SigCheck) -> Self {
+        Self::SigCheck(value)
+    }
+}
+
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
@@ -294,6 +307,21 @@ impl Verifier for OuterVerifier {
         })
     }
 }
+
+impl From<AmoebaCreation> for OuterVerifier {
+    fn from(value: AmoebaCreation) -> Self {
+        Self::AmoebaCreation(value)
+    }
+}
+
+impl From<AmoebaMitosis> for OuterVerifier {
+    fn from(value: AmoebaMitosis) -> Self {
+        Self::AmoebaMitosis(value)
+    }
+}
+
+//TODO the rest of these impl blocks. For now I'm only doing these two
+// because they are the only two I use in my wallet prototype
 
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
