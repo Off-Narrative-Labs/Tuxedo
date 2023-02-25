@@ -143,7 +143,7 @@ impl BuildStorage for GenesisConfig {
 
         for (index, utxo) in self.genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                // Genesis UTXOs don't come from any real transaction, so just use the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
                 index: index as u32,
             };
