@@ -7847,6 +7847,7 @@ version = "1.0.0-dev"
 dependencies = [
  "anyhow",
  "frameless-runtime",
+ "hex",
  "jsonrpsee",
  "parity-scale-codec",
  "sp-core",

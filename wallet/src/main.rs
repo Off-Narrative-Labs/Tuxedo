@@ -2,14 +2,14 @@
 
 use std::{thread::sleep, time::Duration};
 
-use jsonrpsee::{http_client::HttpClientBuilder, rpc_params, core::client::ClientT};
+use jsonrpsee::{core::client::ClientT, http_client::HttpClientBuilder, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
-    Transaction, OuterRedeemer,
+    OuterRedeemer, Transaction,
 };
-use sp_core::{H256, hexdisplay::HexDisplay, blake2_256};
-use sp_runtime::traits::{Hash, BlakeTwo256};
+use sp_core::{blake2_256, hexdisplay::HexDisplay, H256};
+use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::UpForGrabs,
     types::{Input, Output, OutputRef},
@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Calculate the OutputRef which also serves as the storage location
-   let eve_ref = OutputRef {
+    let eve_ref = OutputRef {
         tx_hash: H256::from(<BlakeTwo256 as Hash>::hash_of(&spawn_tx.encode())),
         index: 0,
     };
@@ -53,16 +53,25 @@ async fn main() -> anyhow::Result<()> {
     let spawn_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));
     let params = rpc_params![spawn_hex];
     let spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
-	println!("{:?}", spawn_response);
+    println!("Node's response to spawn transaction: {:?}", spawn_response);
 
     // Wait a few seconds to make sure a block has been authored.
     sleep(Duration::from_secs(4));
 
     // Check that the amoeba is in storage and print its details
     let params = rpc_params![eve_ref_hex];
-    let eve_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
-    println!("Eve response: {:?}", eve_response);
-    // let eve_from_storage: Output<OuterRedeemer> = 
+    let raw_eve_response: Result<Option<String>, _> =
+        client.request("state_getStorage", params).await;
+    let eve_from_storage_hex = raw_eve_response?
+        .expect("Eve is found in storage")
+        .chars()
+        .skip(2)
+        .collect::<String>();
+    let eve_storage_bytes = hex::decode(eve_from_storage_hex)
+        .expect("Eve bytes from storage can decode correctly");
+    let eve_output_from_storage: Output<OuterRedeemer> = Decode::decode(&mut &eve_storage_bytes[..])?;
+    let eve_from_storage: AmoebaDetails = eve_output_from_storage.payload.extract().unwrap();
+    println!("Eve Amoeba retreived from storage: {:?}", eve_from_storage);
 
     // Perform mitosis on the amoeba
     let cain = AmoebaDetails {
@@ -105,7 +114,6 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-
 
 //TODO Ask question (either github issue or stack exchange)
 // Why do the blake2_256 methods give different results

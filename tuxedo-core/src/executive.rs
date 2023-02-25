@@ -346,7 +346,14 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
         // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
         // For now, I just make them all custom zero
-        Self::validate_tuxedo_transaction(&tx)
-            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        let r = Self::validate_tuxedo_transaction(&tx);
+
+        log::debug!(
+            target: LOG_TARGET,
+            "Validation result: {:?}",
+            r
+        );
+
+        r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
     }
 }
