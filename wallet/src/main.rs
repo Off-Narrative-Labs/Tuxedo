@@ -134,18 +134,3 @@ async fn get_amoeba_from_storage(output_ref: &OutputRef, client: &HttpClient) ->
 
     Ok(amoeba_from_storage)
 }
-
-//TODO Ask question (either github issue or stack exchange)
-// Why do the blake2_256 methods give different results
-#[test]
-fn blake_2_256_inconsistency() {
-    let message = b"hello world".to_vec();
-
-    let hash_1 = sp_core::H256::from(sp_core::blake2_256(&message));
-    let hash_2 = <sp_runtime::traits::BlakeTwo256 as sp_runtime::traits::Hash>::hash_of(&message);
-
-    println!("Hash 1: {:?}", hash_1);
-    println!("Hash 2: {:?}", hash_2);
-
-    assert_eq!(hash_1, hash_2);
-}
