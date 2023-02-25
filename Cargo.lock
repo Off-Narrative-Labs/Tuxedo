@@ -7828,6 +7828,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tuxedo-template-wallet"
+version = "1.0.0-dev"
+dependencies = [
+ "frameless-runtime",
+ "parity-scale-codec",
+ "sp-core",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "twox-hash"
 version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
