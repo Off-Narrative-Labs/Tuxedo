@@ -2,7 +2,11 @@
 
 use std::{thread::sleep, time::Duration};
 
-use jsonrpsee::{core::client::ClientT, http_client::{HttpClientBuilder, HttpClient}, rpc_params};
+use jsonrpsee::{
+    core::client::ClientT,
+    http_client::{HttpClient, HttpClientBuilder},
+    rpc_params,
+};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
@@ -99,26 +103,38 @@ async fn main() -> anyhow::Result<()> {
     // Send the mitosis transaction
     let mitosis_hex = hex::encode(&mitosis_tx.encode());
     let params = rpc_params![mitosis_hex];
-    let mitosis_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
-    println!("Node's response to mitosis transaction: {:?}", mitosis_response);
+    let mitosis_response: Result<String, _> =
+        client.request("author_submitExtrinsic", params).await;
+    println!(
+        "Node's response to mitosis transaction: {:?}",
+        mitosis_response
+    );
 
     // Wait a few seconds to make sure a block has been authored.
     sleep(Duration::from_secs(3));
 
     // Check that the daughters are in storage and print their details
     let cain_from_storage = get_amoeba_from_storage(&cain_ref, &client).await?;
-    println!("Cain Amoeba retrieved from storage: {:?}", cain_from_storage);
+    println!(
+        "Cain Amoeba retrieved from storage: {:?}",
+        cain_from_storage
+    );
     let able_from_storage = get_amoeba_from_storage(&able_ref, &client).await?;
-    println!("Able Amoeba retrieved from storage: {:?}", able_from_storage);
+    println!(
+        "Able Amoeba retrieved from storage: {:?}",
+        able_from_storage
+    );
 
     Ok(())
 }
 
-async fn get_amoeba_from_storage(output_ref: &OutputRef, client: &HttpClient) -> anyhow::Result<AmoebaDetails> {
+async fn get_amoeba_from_storage(
+    output_ref: &OutputRef,
+    client: &HttpClient,
+) -> anyhow::Result<AmoebaDetails> {
     let ref_hex = hex::encode(&output_ref.encode());
     let params = rpc_params![ref_hex];
-    let rpc_response: Result<Option<String>, _> =
-        client.request("state_getStorage", params).await;
+    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
 
     // Open up result and strip off 0x prefix
     let response_hex = rpc_response?
