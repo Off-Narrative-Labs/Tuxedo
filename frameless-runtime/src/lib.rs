@@ -490,42 +490,4 @@ mod tests {
 			assert_eq!(utxo, genesis_utxo);
 		})
 	}
-
-	// #[test]
-	// fn andrew_utxo_money_test_extracter() {
-	// 	new_test_ext().execute_with(|| {
-	// 		let keystore = KeyStore::new();
-	// 		let alice_pub_key =
-	// 			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
-
-	// 		let genesis_utxo = andrew_utxo::Utxo {
-	// 			redeemer: alice_pub_key.into(),
-	// 			data: andrew_utxo::Money::Currency(100u128).encode(),
-	// 			data_id: <andrew_utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
-	// 		};
-
-	// 		let expected_data = 100u128;
-	// 		let extracted_type =
-	// 			andrew_utxo::PieceExtracter::<andrew_utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
-	// 			.expect("Can extract Genesis Data");
-	// 		match extracted_type {
-	// 			andrew_utxo::Money::Currency(extracted_value) => {
-	// 				assert_eq!(extracted_value, expected_data);
-	// 			},
-	// 			andrew_utxo::Money::Existence(existence) => {
-	// 				// do some assertion in this case
-	// 			},
-	// 		}
-	// 	})
-	// }
-
-	// TODO: More Tests for Money Kitties ETC
-
-	#[test]
-	fn encode_examples() {
-		// run with `cargo test -p frameless-runtime -- --nocapture`
-		// let extrinsic = BasicExtrinsic::new_unsigned(Call::SetValue(42));
-		// println!("ext {:?}", HexDisplay::from(&extrinsic.encode()));
-		// println!("key {:?}", HexDisplay::from(&VALUE_KEY));
-	}
 }
