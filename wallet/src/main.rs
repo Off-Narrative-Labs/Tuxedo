@@ -101,7 +101,6 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Calculate the two OutputRefs for the daughters
-    //TODO for some reason this one fails with pre-existing output
     let cain_ref = OutputRef {
         tx_hash: <BlakeTwo256 as Hash>::hash_of(&mitosis_tx.encode()),
         index: 0,
@@ -114,7 +113,7 @@ async fn main() -> anyhow::Result<()> {
     println!("able ref: {:?}", HexDisplay::from(&able_ref.encode()));
 
     // Send the mitosis transaction
-    let mitosis_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));
+    let mitosis_hex = format!("{:?}", HexDisplay::from(&mitosis_tx.encode()));
     let params = rpc_params![mitosis_hex];
     let mitosis_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
     println!("Node's response to mitosis transaction: {:?}", mitosis_response);
