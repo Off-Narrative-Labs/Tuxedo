@@ -8,7 +8,6 @@ use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
     OuterRedeemer, Transaction,
 };
-use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::UpForGrabs,
@@ -48,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Send the transaction
-    let spawn_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));
+    let spawn_hex = hex::encode(&spawn_tx.encode());
     let params = rpc_params![spawn_hex];
     let spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
     println!("Node's response to spawn transaction: {:?}", spawn_response);
@@ -98,7 +97,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Send the mitosis transaction
-    let mitosis_hex = format!("{:?}", HexDisplay::from(&mitosis_tx.encode()));
+    let mitosis_hex = hex::encode(&mitosis_tx.encode());
     let params = rpc_params![mitosis_hex];
     let mitosis_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
     println!("Node's response to mitosis transaction: {:?}", mitosis_response);
@@ -116,7 +115,7 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn get_amoeba_from_storage(output_ref: &OutputRef, client: &HttpClient) -> anyhow::Result<AmoebaDetails> {
-    let ref_hex = format!("{:?}", HexDisplay::from(&output_ref.encode()));
+    let ref_hex = hex::encode(&output_ref.encode());
     let params = rpc_params![ref_hex];
     let rpc_response: Result<Option<String>, _> =
         client.request("state_getStorage", params).await;
