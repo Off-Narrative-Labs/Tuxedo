@@ -1,17 +1,25 @@
 //! A simple CLI wallet. For now it is a toy just to start testing things out.
 
+use jsonrpsee::{http_client::HttpClientBuilder, rpc_params, core::client::ClientT};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
     Transaction,
 };
-use sp_core::{blake2_256, H256};
+use sp_core::{blake2_256, H256, hexdisplay::HexDisplay};
 use tuxedo_core::{
     redeemer::UpForGrabs,
     types::{Input, Output, OutputRef},
 };
 
-fn main() {
+// This async, tokio, anyhow stuff arose because I needed to `await` for rpc responses.
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Setup jsonrpsee and endpoint-related information. Kind of blindly following
+    // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
+    let url = "http://localhost:9933";
+    let client = HttpClientBuilder::default().build(url)?;
+
     // TODO Eventually we will have to work with key
     // Generate the well-known alice key
     // let pair = todo!();
@@ -30,14 +38,17 @@ fn main() {
         verifier: AmoebaCreation.into(),
     };
 
-    // Send the transaction
-    //todo!();
-
     // Calculate the OutputRef which also serves as the storage location
     let eve_ref = OutputRef {
         tx_hash: H256::from(blake2_256(&spawn_tx.encode())),
         index: 0,
     };
+
+    // Send the transaction
+    let spawn_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));
+    let params = rpc_params![spawn_hex];
+    let spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
+	println!("{:?}", spawn_response);
 
     // Check that the amoeba is in storage and print its details
 
@@ -79,4 +90,6 @@ fn main() {
     };
 
     // Check that the daughters are in storage and print their details
+
+    Ok(())
 }

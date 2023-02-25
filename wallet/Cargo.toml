@@ -9,6 +9,10 @@ description = "A simple example / template wallet built for the tuxedo template 
 [dependencies]
 runtime = { path = "../frameless-runtime", package = "frameless-runtime"}
 tuxedo-core = { path = "../tuxedo-core" }
-parity-scale-codec = { version = '3.4.0', default-features = false, features = ['derive'] }
+
+parity-scale-codec = { version = '3.4.0', default-features = false }
+jsonrpsee = { version = "0.16.2", features = ["http-client"] }
+tokio = { version = "1.25.0", features = ["full"] }
+anyhow = "1.0.69"
 
 sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02" }
