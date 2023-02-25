@@ -36,7 +36,7 @@ mod runtime_upgrade;
 mod andrew_utxo;
 use andrew_utxo::{TuxedoPiece};
 //TODO kitties piece needs ported for merge
-//mod kitties;
+mod andrew_kitties;
 mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},

@@ -55,7 +55,7 @@ impl TuxedoPiece for KittiesPiece {
     const TYPE_ID: TypeId = *b"2222";
     type Error = ();
 
-    fn validate(&self, transaction: Transaction) -> Result<(), Self::Error> {
+    fn validate(transaction: Transaction) -> Result<(), Self::Error> {
         PreValidator::<Self>::pre_validate(&transaction)?;
         // TODO: Implement Kitty Logic scenario
 
