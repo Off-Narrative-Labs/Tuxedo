@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Calculate the OutputRef which also serves as the storage location
     let eve_ref = OutputRef {
-        tx_hash: H256::from(<BlakeTwo256 as Hash>::hash_of(&spawn_tx.encode())),
+        tx_hash: <BlakeTwo256 as Hash>::hash_of(&spawn_tx.encode()),
         index: 0,
     };
     let eve_ref_hex = format!("{:?}", HexDisplay::from(&eve_ref.encode()));
@@ -103,13 +103,15 @@ async fn main() -> anyhow::Result<()> {
     // Calculate the two OutputRefs for the daughters
     //TODO for some reason this one fails with pre-existing output
     let cain_ref = OutputRef {
-        tx_hash: H256::from(blake2_256(&mitosis_tx.encode())),
+        tx_hash: <BlakeTwo256 as Hash>::hash_of(&mitosis_tx.encode()),
         index: 0,
     };
     let able_ref = OutputRef {
-        tx_hash: H256::from(blake2_256(&mitosis_tx.encode())),
+        tx_hash: <BlakeTwo256 as Hash>::hash_of(&mitosis_tx.encode()),
         index: 1,
     };
+    println!("cain ref: {:?}", HexDisplay::from(&cain_ref.encode()));
+    println!("able ref: {:?}", HexDisplay::from(&able_ref.encode()));
 
     // Send the mitosis transaction
     let mitosis_hex = format!("{:?}", HexDisplay::from(&spawn_tx.encode()));

@@ -84,13 +84,18 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         }
 
         // Make sure no outputs already exist in storage
-        // TODO Actually I don't think we need to do this. It _does_ appear in the original utxo workshop,
-        // but I don't see how we could ever have an output collision.
+        let tx_hash = BlakeTwo256::hash_of(&transaction.encode());
         for index in 0..transaction.outputs.len() {
             let output_ref = OutputRef {
-                tx_hash: BlakeTwo256::hash_of(&transaction.encode()),
+                tx_hash,
                 index: index as u32,
             };
+
+            log::debug!(
+                target: LOG_TARGET,
+                "Checking for pre-existing output {:?}",
+                output_ref
+            );
 
             ensure!(
                 !TransparentUtxoSet::<R>::peek_utxo(&output_ref).is_some(),
