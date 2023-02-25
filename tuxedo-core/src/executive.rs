@@ -43,7 +43,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
     ) -> Result<ValidTransaction, UtxoError<V::Error>> {
         // Make sure there are no duplicate inputs
         {
-            let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
+            let input_set: BTreeSet<_> = transaction.inputs.iter().map(|o| o.encode()).collect();
             ensure!(
                 input_set.len() == transaction.inputs.len(),
                 UtxoError::DuplicateInput
