@@ -412,4 +412,78 @@ mod test {
             Err(VerifierError::WrongNumberOutputs),
         );
     }
+
+    #[test]
+    fn death_valid_transaction_works() {
+        let example = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![example.into()];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Ok(0),
+        );
+    }
+
+    #[test]
+    fn death_no_input() {
+        let input_data = vec![];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberInputs),
+        );
+    }
+
+    #[test]
+    fn death_multiple_inputs() {
+        let a1 = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let a2 = AmoebaDetails {
+            generation: 4,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![a1.into(), a2.into()];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberInputs),
+        );
+    }
+
+    #[test]
+    fn death_with_output() {
+        let example = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![example.clone().into()];
+        let output_data = vec![example.into()];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberOutputs),
+        );
+    }
+
+    #[test]
+    fn death_badly_typed_input() {
+        let example = Bogus;
+        let input_data = vec![example.into()];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::BadlyTypedInput),
+        );
+    }
+
+
 }
