@@ -299,7 +299,7 @@ impl Verifier for OuterVerifier {
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
 
-// Here we hard-code aura authority IDs for the well-known identities that work with the CLI flags
+// Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags
 // Such as `--alice`, `--bob`, etc. Only Alice is enabled by default which makes things work nicely
 // in a `--dev` node. You may enable more authorities to test more interesting networks, or replace
 // these IDs entirely.
