@@ -190,17 +190,47 @@ mod test {
     use tuxedo_core::dynamic_typing::testing::Bogus;
 
     #[test]
-    fn valid_creation_works() {
+    fn creation_valid_transaction_works() {
         let to_spawn = AmoebaDetails {
             generation: 0,
             four_bytes: *b"test",
         };
-        let input_data = vec![to_spawn.into()];
-        let output_data = Vec::new();
+        let input_data = Vec::new();
+        let output_data = vec![to_spawn.into()];
 
         assert_eq!(
             AmoebaCreation.verify(&input_data, &output_data),
             Ok(0),
-        )
+        );
+    }
+
+    #[test]
+    fn creation_invalid_generation_fails() {
+        todo!()
+    }
+
+    #[test]
+    fn creation_with_inputs_fails() {
+        let example = AmoebaDetails {
+            generation: 0,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![example.clone().into()];
+        let output_data = vec![example.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberInputs),
+        );
+    }
+
+    #[test]
+    fn creation_with_badly_typed_output_fails() {
+        todo!()
+    }
+
+    #[test]
+    fn creation_multiple_fails() {
+        todo!()
     }
 }
