@@ -15,21 +15,15 @@ use log::info;
 
 // TODO:
 
-// 1.) First need a Verifier enum
+// 1.) First need a Verifier types
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub enum KittyVerifier {
-    /// Someone who just breeds their kitty free of charge
-    BreedFree,
-    /// Breed for money Someone who requires payment for breeding kitties
-    BreedForMoney(Coin),
-}
+pub struct FreeKittyVerifier;
 
 // 2.) Then need UtxoData type
-
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum DadKittyStatus {
@@ -51,6 +45,7 @@ pub enum MomKittyStatus {
 pub struct KittyData {
     dad: DadKittyStatus,
     mom: MomKittyStatus,
+    free_breedings: u64, // Ignore in breed for money case
 }
 
 impl UtxoData for KittyData {
@@ -67,11 +62,29 @@ pub enum VerifierError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
+    BreedingFailed,
+    MinimumSpendAndBreedNotMet,
     // TODO: Add others..
 }
 
+trait Breed {
+    const COST: u128;
+    type Error: Into<VerifierError>;
+    fn breed() -> Result<(), VerifierError>;
+}
+
+pub struct KittyHelpers;
+impl Breed for KittyHelpers {
+    const COST: u128 = 5u128;
+    type Error = VerifierError;
+    fn breed() -> Result<(), Self::Error> {
+        // TODO: Implment breeding algo
+        Ok(())
+    }
+}
+
 // 4.) Implement Verifier Trait on my new Verifier
-impl Verifier for KittyVerifier {
+impl Verifier for FreeKittyVerifier {
     type Error = VerifierError;
     fn verify(
         &self,
@@ -79,14 +92,36 @@ impl Verifier for KittyVerifier {
         output_data: &[DynamicallyTypedData]
     ) -> Result<TransactionPriority, Self::Error> {
         // TODO:
-        // match on each input
-        match &self {
-            KittyVerifier::BreedFree => {},
-            KittyVerifier::BreedForMoney(coin) => {
-                // TODO: How can I handle the coupling?
-                // MoneyVerifier::verify(&input_data, output_data)?;
-            }
-        }
+        // Implement normal breed scenario
+        let _ = KittyHelpers::breed()?;
+        Ok(0)
+    }
+}
+
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+pub struct MoneyKittyVerifier;
+impl Verifier for MoneyKittyVerifier {
+    type Error = VerifierError;
+    fn verify(
+        &self,
+        input_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData]
+    ) -> Result<TransactionPriority, Self::Error> {
+        // TODO: Verify that there is a spend that happens which covers the cost to breed.
+        // First input and output must be money
+        ensure!(
+            input_data.len() >= 2,
+            Self::Error::MinimumSpendAndBreedNotMet,
+        );
+        // let money = input_data[0]
+        //     .extract::<Coin>()
+        //     .map_err(|_| Self::Error::BadlyTyped)
+        //     .0;
+        // MoneyVerifier::verify()
         Ok(0)
     }
 }

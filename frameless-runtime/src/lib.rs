@@ -213,8 +213,8 @@ impl Redeemer for OuterRedeemer {
 pub enum OuterVerifier {
     /// Verifies monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyVerifier),
-	/// Verifies kitties breeding
-	Kitties(kitties::KittyVerifier),
+	/// Verifies free kitties breeding
+	Kitties(kitties::FreeKittyVerifier),
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
