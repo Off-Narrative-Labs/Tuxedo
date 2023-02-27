@@ -37,7 +37,7 @@ impl UtxoData for AmoebaDetails {
 }
 
 /// Reasons that the amoeba verifiers may fail
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum VerifierError {
     // TODO In the current design, this will need to be repeated in every piece. This is not nice.
     // Well, actually, no. Some pieces will be flexible about how many inputs and outputs they can take.
@@ -181,5 +181,26 @@ impl Verifier for AmoebaCreation {
         ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
 
         Ok(0)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use tuxedo_core::dynamic_typing::testing::Bogus;
+
+    #[test]
+    fn valid_creation_works() {
+        let to_spawn = AmoebaDetails {
+            generation: 0,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![to_spawn.into()];
+        let output_data = Vec::new();
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Ok(0),
+        )
     }
 }
