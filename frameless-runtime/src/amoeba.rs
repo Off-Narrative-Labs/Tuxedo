@@ -172,7 +172,7 @@ impl Verifier for AmoebaCreation {
         ensure!(output_data.len() == 1, VerifierError::WrongNumberOutputs);
         let eve = output_data[0]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedInput)?;
+            .map_err(|_| VerifierError::BadlyTypedOutput)?;
 
         // Make sure the newly created amoeba has generation 0
         ensure!(eve.generation == 0, VerifierError::WrongGeneration);
@@ -206,7 +206,17 @@ mod test {
 
     #[test]
     fn creation_invalid_generation_fails() {
-        todo!()
+        let to_spawn = AmoebaDetails {
+            generation: 100,
+            four_bytes: *b"test",
+        };
+        let input_data = Vec::new();
+        let output_data = vec![to_spawn.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::WrongGeneration),
+        );
     }
 
     #[test]
@@ -226,11 +236,27 @@ mod test {
 
     #[test]
     fn creation_with_badly_typed_output_fails() {
-        todo!()
+        let input_data = Vec::new();
+        let output_data = vec![Bogus.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::BadlyTypedOutput),
+        );
     }
 
     #[test]
     fn creation_multiple_fails() {
-        todo!()
+        let to_spawn = AmoebaDetails {
+            generation: 0,
+            four_bytes: *b"test",
+        };
+        let input_data = Vec::new();
+        let output_data = vec![to_spawn.clone().into(), to_spawn.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberOutputs),
+        );
     }
 }
