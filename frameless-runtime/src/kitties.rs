@@ -1,4 +1,3 @@
-
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -101,6 +100,7 @@ impl UtxoData for KittyData {
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum VerifierError {
+    // TODO: Add documentation for each of these Error types
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
@@ -113,6 +113,7 @@ pub enum VerifierError {
     // TODO: Add others..
 }
 
+// TODO: Add documentation for each of these trait items
 trait Breed {
     const COST: u128;
     type Error: Into<VerifierError>;
