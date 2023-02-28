@@ -34,7 +34,7 @@ mod amoeba;
 mod poe;
 mod runtime_upgrade;
 //TODO kitties piece needs ported for merge
-//mod kitties;
+mod kitties;
 mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
@@ -210,6 +210,10 @@ impl Redeemer for OuterRedeemer {
 pub enum OuterVerifier {
     /// Verifies monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyVerifier),
+    /// Verifies Free Kitty transactions
+    FreeKittyVerifier(kitties::FreeKittyVerifier),
+    /// Verifies Paid for Kitty transactions
+    MoneyKittyVerifier(kitties::MoneyKittyVerifier::<kitties::KittyConfig>),
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
@@ -233,6 +237,8 @@ pub enum OuterVerifier {
 pub enum OuterVerifierError {
     /// Error from the Money piece
     Money(money::VerifierError),
+    /// Error for the Kitties piece
+    Kitty(kitties::VerifierError),
     /// Error from the Amoeba piece
     Amoeba(amoeba::VerifierError),
     /// Error from the PoE piece
@@ -247,6 +253,12 @@ pub enum OuterVerifierError {
 impl From<money::VerifierError> for OuterVerifierError {
     fn from(e: money::VerifierError) -> Self {
         Self::Money(e)
+    }
+}
+
+impl From<kitties::VerifierError> for OuterVerifierError {
+    fn from(e: kitties::VerifierError) -> Self {
+        Self::Kitty(e)
     }
 }
 
@@ -278,6 +290,10 @@ impl Verifier for OuterVerifier {
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
             Self::Money(money) => money.verify(input_data, output_data)?,
+            Self::FreeKittyVerifier(free_breed) => free_breed.verify(input_data, output_data)?,
+            Self::MoneyKittyVerifier(money_breed) => {
+                money_breed.verify(input_data, output_data)?
+            }
             Self::AmoebaMitosis(amoeba_mitosis) => {
                 amoeba_mitosis.verify(input_data, output_data)?
             }
