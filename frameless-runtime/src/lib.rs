@@ -111,14 +111,14 @@ impl Default for GenesisConfig {
     fn default() -> Self {
         use hex_literal::hex;
 
-        const ALICE_PUB_KEY_BYTES: [u8; 32] =
+        const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
 
         // Initial Config just for a Money UTXO
         GenesisConfig {
             genesis_utxos: vec![Output {
                 redeemer: OuterRedeemer::SigCheck(SigCheck {
-                    owner_pubkey: ALICE_PUB_KEY_BYTES.into(),
+                    owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
@@ -440,14 +440,14 @@ mod tests {
 	use std::sync::Arc;
 
 	// other random account generated with subkey
-	const ALICE_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+	const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
 	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
 
 	fn new_test_ext() -> sp_io::TestExternalities {
 
 		let keystore = KeyStore::new();
-		let alice_pub_key =
-			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+		let shawn_pub_key =
+			keystore.sr25519_generate_new(SR25519, Some(SHAWN_PHRASE)).unwrap();
 
 		let mut t = GenesisConfig::default()
 			.build_storage()
@@ -462,13 +462,13 @@ mod tests {
 	fn utxo_money_test_genesis() {
 		new_test_ext().execute_with(|| {
 			let keystore = KeyStore::new();
-			let alice_pub_key =
-				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+			let shawn_pub_key =
+				keystore.sr25519_generate_new(SR25519, Some(SHAWN_PHRASE)).unwrap();
 
 			// Grab genesis value from storage and assert it is correct
 			let genesis_utxo = Output {
 				redeemer: OuterRedeemer::SigCheck(SigCheck{
-					owner_pubkey: alice_pub_key.into()
+					owner_pubkey: shawn_pub_key.into()
 				}),
 				payload: DynamicallyTypedData {
 					data: 100u128.encode(),
