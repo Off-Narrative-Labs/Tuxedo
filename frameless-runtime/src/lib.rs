@@ -427,92 +427,65 @@ impl_runtime_apis! {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
-// 	use parity_scale_codec::Encode;
-// 	use sp_core::hexdisplay::HexDisplay;
-// 	use sp_core::{H512, testing::SR25519};
-// 	use sp_keystore::testing::KeyStore;
-// 	use sp_keystore::{KeystoreExt, SyncCryptoStore};
-// 	use hex_literal::hex;
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use parity_scale_codec::Encode;
+	use sp_core::hexdisplay::HexDisplay;
+	use sp_core::{H512, testing::SR25519};
+	use sp_keystore::testing::KeyStore;
+	use sp_keystore::{KeystoreExt, SyncCryptoStore};
+	use hex_literal::hex;
 
-// 	use std::sync::Arc;
+	use std::sync::Arc;
 
-// 	// other random account generated with subkey
-// 	const ALICE_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-// 	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
+	// other random account generated with subkey
+	const ALICE_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
 
-// 	fn new_test_ext() -> sp_io::TestExternalities {
+	fn new_test_ext() -> sp_io::TestExternalities {
 
-// 		let keystore = KeyStore::new();
-// 		let alice_pub_key =
-// 			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+		let keystore = KeyStore::new();
+		let alice_pub_key =
+			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
-// 		let mut t = GenesisConfig::default()
-// 			.build_storage()
-// 			.expect("Frameless system builds valid default genesis config");
+		let mut t = GenesisConfig::default()
+			.build_storage()
+			.expect("Frameless system builds valid default genesis config");
 
-// 		let mut ext = sp_io::TestExternalities::from(t);
-// 		ext.register_extension(KeystoreExt(Arc::new(keystore)));
-// 		ext
-// 	}
+		let mut ext = sp_io::TestExternalities::from(t);
+		ext.register_extension(KeystoreExt(Arc::new(keystore)));
+		ext
+	}
 
-//     #[test]
-//     fn host_function_call_works() {
-//         sp_io::TestExternalities::new_empty().execute_with(|| {
-//             sp_io::storage::get(&HEADER_KEY);
-//         })
-//     }
+	#[test]
+	fn utxo_money_test_genesis() {
+		new_test_ext().execute_with(|| {
+			let keystore = KeyStore::new();
+			let alice_pub_key =
+				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
 
-// 	#[test]
-// 	fn utxo_money_test_genesis() {
-// 		new_test_ext().execute_with(|| {
-// 			let keystore = KeyStore::new();
-// 			let alice_pub_key =
-// 				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+			// Grab genesis value from storage and assert it is correct
+			let genesis_utxo = Output {
+				redeemer: OuterRedeemer::SigCheck(SigCheck{
+					owner_pubkey: alice_pub_key.into()
+				}),
+				payload: DynamicallyTypedData {
+					data: 100u128.encode(),
+					type_id: <money::Coin as UtxoData>::TYPE_ID,
+				},
+			};
 
-// 			// Grab genesis value from storage and assert it is correct
-// 			let genesis_utxo = utxo::Utxo {
-// 				redeemer: alice_pub_key.into(),
-// 				data: 100u128.encode(),
-// 				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
-// 			};
-// 			let encoded_utxo =
-// 				sp_io::storage::get(&BlakeTwo256::hash_of(&genesis_utxo).encode()).expect("Retrieve Genesis UTXO");
-// 			let utxo = utxo::Utxo::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-// 			assert_eq!(utxo, genesis_utxo);
-// 		})
-// 	}
+			let output_ref = OutputRef {
+                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                index: 0 as u32,
+            };
 
-// 	#[test]
-// 	fn utxo_money_test_extracter() {
-// 		new_test_ext().execute_with(|| {
-// 			let keystore = KeyStore::new();
-// 			let alice_pub_key =
-// 				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
-
-// 			let genesis_utxo = utxo::Utxo {
-// 				redeemer: alice_pub_key.into(),
-// 				data: 100u128.encode(),
-// 				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
-// 			};
-
-// 			let expected_data = 100u128;
-// 			let extracted_data =
-// 				utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
-// 				.expect("Can extract Genesis Data");
-// 			assert_eq!(extracted_data, expected_data);
-// 		})
-// 	}
-
-// 	// TODO: More Tests for Money Kitties ETC
-
-// 	#[test]
-// 	fn encode_examples() {
-// 		// run with `cargo test -p frameless-runtime -- --nocapture`
-// 		// let extrinsic = BasicExtrinsic::new_unsigned(Call::SetValue(42));
-// 		// println!("ext {:?}", HexDisplay::from(&extrinsic.encode()));
-// 		// println!("key {:?}", HexDisplay::from(&VALUE_KEY));
-// 	}
-// }
+			let encoded_utxo =
+				sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
+			let utxo = Output::<OuterRedeemer>::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
+			assert_eq!(utxo, genesis_utxo);
+		})
+	}
+}
