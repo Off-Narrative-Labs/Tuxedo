@@ -106,32 +106,49 @@ pub enum VerifierError {
     BadlyTyped,
     BreedingFailed,
     MinimumSpendAndBreedNotMet,
+    TwoParentsDoNotExist,
+    NotEnoughFamilyMembers,
+    MomNotReadyYet,
+    TwoDadsNotValid,
     // TODO: Add others..
 }
 
-trait Breed<Kitty> {
+trait Breed {
     const COST: u128;
     type Error: Into<VerifierError>;
-    fn breed(mom: Kitty, dad: Kitty) -> Result<(), VerifierError>;
+    fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error>;
+    fn check_new_family(
+        mom: &KittyData,
+        dad: &KittyData,
+        new_family: &[DynamicallyTypedData]
+    ) -> Result<(), Self::Error>;
+    fn check_mom(mom: &KittyData) -> Result<(), Self::Error>;
+    fn check_dad(dad: &KittyData) -> Result<(), Self::Error>;
 }
 
-pub struct KittyHelpers<Kitty>(PhantomData<Kitty>);
-impl<Kitty> Breed<Kitty> for KittyHelpers<Kitty>
-where
-    Kitty: From<KittyData>,
+pub struct KittyHelpers;
+impl Breed for KittyHelpers
 {
     const COST: u128 = 5u128;
     type Error = VerifierError;
-    fn breed(mom: Kitty, dad: Kitty) -> Result<(), Self::Error> {
-        // TODO: Implment breeding algo
-
+    fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error> {
         // Input side
         // 1.) Check if mom is a mom
-        // 2.) Check if dad is a dad
         // 3.) Check if mom has recently given birth
+        Self::check_mom(mom)?;
+        // 2.) Check if dad is a dad
         // 4.) Check if dad is tired
+        Self::check_dad(dad)?;
         // 5.) Check if mom and dad have enough free breedings
 
+        Ok(())
+    }
+
+    fn check_new_family(
+        mom: &KittyData,
+        dad: &KittyData,
+        new_family: &[DynamicallyTypedData]
+    ) -> Result<(), Self::Error> {
         // Output Side
         // 1.) If both checks pass you can breed and swap the states
         // 2.) Check if Mom and Dad new status(Output) has been swapped and that it is still a mom and dad
@@ -139,7 +156,25 @@ where
         //      - Check Mom and Dad still has the same DNA
         //      - Check free breedings for both parents have been decreased by 1
         // 3.) Check if Child Kitty created (Output) is a Mom or Dad and is initialized correctly
+        Ok(())
+    }
 
+    fn check_mom(mom: &KittyData) -> Result<(), Self::Error> {
+        match &mom.parent {
+            Parent::Mom(status) => {
+                if let MomKittyStatus::HadBirthRecently = status {
+                    return Err(Self::Error::MomNotReadyYet)
+                }
+            },
+            Parent::Dad(_) => {
+                return Err(Self::Error::TwoDadsNotValid)
+            }
+        }
+        Ok(())
+    }
+
+    fn check_dad(dad: &KittyData) -> Result<(), Self::Error> {
+        // TODO: Same as in check_mom but with dad
         Ok(())
     }
 }
@@ -159,11 +194,22 @@ impl Verifier for FreeKittyVerifier {
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData]
     ) -> Result<TransactionPriority, Self::Error> {
-        // TODO:
-        // Implement normal breed scenario
+        // Input must be a Mom and a Dad
+        ensure!(
+            input_data.len() == 2,
+            Self::Error::TwoParentsDoNotExist
+        );
         let mom: KittyData = input_data[0].clone().try_into()?;
         let dad: KittyData = input_data[1].clone().try_into()?;
-        let _ = KittyHelpers::<KittyData>::breed(mom, dad)?;
+        KittyHelpers::can_breed(&mom, &dad)?;
+
+        // Output must be Mom, Dad, Child
+        ensure!(
+            output_data.len() == 3,
+            Self::Error::NotEnoughFamilyMembers
+        );
+        KittyHelpers::check_new_family(&mom, &dad, output_data)?;
+
         Ok(0)
     }
 }
