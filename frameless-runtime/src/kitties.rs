@@ -9,6 +9,7 @@ use sp_std::{
     marker::PhantomData,
     fmt::Debug,
 };
+use sp_core::H256;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, Verifier,
@@ -16,8 +17,6 @@ use tuxedo_core::{
 use crate::money::{Coin, MoneyVerifier};
 
 use log::info;
-
-// TODO:
 
 // 1.) First need a Verifier types
 #[cfg_attr(
@@ -45,11 +44,50 @@ pub enum MomKittyStatus {
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+pub enum Parent {
+    Mom(MomKittyStatus),
+    Dad(DadKittyStatus),
+}
+
+impl Default for Parent {
+    fn default() -> Self {
+        Parent::Mom(MomKittyStatus::RearinToGo)
+    }
+}
+
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+pub struct GenerateGender {
+    is_mom: bool,
+}
+
+impl GenerateGender {
+    /// For now this just flips a bool to see what the gender of the next child is and rotates
+    pub fn random_gender(&self) -> Self {
+        let mut is_mom = self.is_mom;
+        if is_mom {
+            is_mom = false;
+        } else {
+            is_mom = true
+        }
+        Self {
+            is_mom: is_mom,
+        }
+    }
+}
+
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+pub struct KittyDNA(H256);
+
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittyData {
-    dad: DadKittyStatus,
-    mom: MomKittyStatus,
+    parent: Parent,
     free_breedings: u64, // Ignore in breed for money case
+    dna: KittyDNA,
+    is_mom: bool,
 }
 
 impl UtxoData for KittyData {
@@ -71,19 +109,45 @@ pub enum VerifierError {
     // TODO: Add others..
 }
 
-trait Breed {
+trait Breed<Kitty> {
     const COST: u128;
     type Error: Into<VerifierError>;
-    fn breed() -> Result<(), VerifierError>;
+    fn breed(mom: Kitty, dad: Kitty) -> Result<(), VerifierError>;
 }
 
-pub struct KittyHelpers;
-impl Breed for KittyHelpers {
+pub struct KittyHelpers<Kitty>(PhantomData<Kitty>);
+impl<Kitty> Breed<Kitty> for KittyHelpers<Kitty>
+where
+    Kitty: From<KittyData>,
+{
     const COST: u128 = 5u128;
     type Error = VerifierError;
-    fn breed() -> Result<(), Self::Error> {
+    fn breed(mom: Kitty, dad: Kitty) -> Result<(), Self::Error> {
         // TODO: Implment breeding algo
+
+        // Input side
+        // 1.) Check if mom is a mom
+        // 2.) Check if dad is a dad
+        // 3.) Check if mom has recently given birth
+        // 4.) Check if dad is tired
+        // 5.) Check if mom and dad have enough free breedings
+
+        // Output Side
+        // 1.) If both checks pass you can breed and swap the states
+        // 2.) Check if Mom and Dad new status(Output) has been swapped and that it is still a mom and dad
+        //      - Check Mom is still a mom, Dad is still a dad i.e. Cant have two dads now or two moms
+        //      - Check Mom and Dad still has the same DNA
+        //      - Check free breedings for both parents have been decreased by 1
+        // 3.) Check if Child Kitty created (Output) is a Mom or Dad and is initialized correctly
+
         Ok(())
+    }
+}
+
+impl TryFrom<DynamicallyTypedData> for KittyData {
+    type Error = VerifierError;
+    fn try_from(a: DynamicallyTypedData) -> Result<Self, Self::Error> {
+        a.extract::<KittyData>().map_err(|_| VerifierError::BadlyTyped)
     }
 }
 
@@ -97,7 +161,9 @@ impl Verifier for FreeKittyVerifier {
     ) -> Result<TransactionPriority, Self::Error> {
         // TODO:
         // Implement normal breed scenario
-        let _ = KittyHelpers::breed()?;
+        let mom: KittyData = input_data[0].clone().try_into()?;
+        let dad: KittyData = input_data[1].clone().try_into()?;
+        let _ = KittyHelpers::<KittyData>::breed(mom, dad)?;
         Ok(0)
     }
 }
