@@ -3,15 +3,20 @@ on: [push, pull_request]
 name: Continuous integration
 
 jobs:
-  check:
-    name: Check
+  install-protoc:
+    name: Install Protobuf Compiler
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
       - name: Install tooling
         run: |
           sudo apt-get install -y protobuf-compiler
           protoc --version
+  check:
+    name: Check
+    needs: install-protoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -23,13 +28,10 @@ jobs:
 
   test:
     name: Test Suite
+    needs: install-protoc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install tooling
-        run: |
-          sudo apt-get install -y protobuf-compiler
-          protoc --version
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -41,13 +43,10 @@ jobs:
 
   fmt:
     name: Rustfmt
+    needs: install-protoc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install tooling
-        run: |
-          sudo apt-get install -y protobuf-compiler
-          protoc --version
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -61,13 +60,10 @@ jobs:
 
   clippy:
     name: Clippy
+    needs: install-protoc
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install tooling
-        run: |
-          sudo apt-get install -y protobuf-compiler
-          protoc --version
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
