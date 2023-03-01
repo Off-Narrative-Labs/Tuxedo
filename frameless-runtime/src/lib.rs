@@ -5,6 +5,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
+use sp_finality_grandpa::AuthorityId as GrandpaId;
 
 use log::info;
 
@@ -298,6 +299,61 @@ impl Verifier for OuterVerifier {
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
 
+// Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags
+// Such as `--alice`, `--bob`, etc. Only Alice is enabled by default which makes things work nicely
+// in a `--dev` node. You may enable more authorities to test more interesting networks, or replace
+// these IDs entirely.
+impl Runtime {
+
+    /// Aura authority IDs
+    fn aura_authorities() -> Vec<AuraId> {
+        use hex_literal::hex;
+        use sp_application_crypto::ByteArray;
+
+        [
+            // Alice
+            hex!("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"),
+            // Bob
+            // hex!("8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"),
+            // Charlie
+            // hex!("90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22"),
+            // Dave
+            // hex!("306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20"),
+            // Eve
+            // hex!("e659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e"),
+            // Ferdie
+            // hex!("1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c"),
+        ]
+        .iter()
+        .map(|hex| AuraId::from_slice(&hex.to_vec()).expect("Valid Aura authority hex was provided"))
+        .collect()
+    }
+
+    ///Grandpa Authority IDs - All equally weighted
+    fn grandpa_authorities() -> sp_finality_grandpa::AuthorityList {
+        use hex_literal::hex;
+        use sp_application_crypto::ByteArray;
+        
+        [
+            // Alice
+            hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"),
+            // Bob
+            // hex!("d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69"),
+            // Charlie
+            // hex!("439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f"),
+            // Dave
+            // hex!("5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9"),
+            // Eve
+            // hex!("1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5"),
+            // Ferdie
+            // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
+        ]
+        .iter()
+        .map(|hex| (GrandpaId::from_slice(&hex.to_vec()).expect("Valid Grandpa authority hex was provided"), 1))
+        .collect()
+    }
+}
+
 impl_runtime_apis! {
     // https://substrate.dev/rustdocs/master/sp_api/trait.Core.html
     impl sp_api::Core<Block> for Runtime {
@@ -380,28 +436,13 @@ impl_runtime_apis! {
         }
 
         fn authorities() -> Vec<AuraId> {
-            // The only authority is Alice. This makes things work nicely in `--dev` mode
-            use sp_application_crypto::ByteArray;
-
-            vec![
-                AuraId::from_slice(
-                    &hex_literal::hex!("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d").to_vec()
-                ).unwrap()
-            ]
+            Self::aura_authorities()
         }
     }
 
     impl sp_finality_grandpa::GrandpaApi<Block> for Runtime {
         fn grandpa_authorities() -> sp_finality_grandpa::AuthorityList {
-            use sp_application_crypto::ByteArray;
-            vec![
-                (
-                    sp_finality_grandpa::AuthorityId::from_slice(
-                        &hex_literal::hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee").to_vec()
-                    ).unwrap(),
-                    1
-                )
-            ]
+            Self::grandpa_authorities()
         }
 
         fn current_set_id() -> sp_finality_grandpa::SetId {
