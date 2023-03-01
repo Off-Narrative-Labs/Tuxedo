@@ -3,6 +3,8 @@ on: [push, pull_request]
 name: Continuous integration
 
 jobs:
+  # This job is a prerequisite for all of the others.
+  # The dependency technique is inspired by https://stackoverflow.com/q/63148639/4184410
   install-protoc:
     name: Install Protobuf Compiler
     runs-on: ubuntu-latest
