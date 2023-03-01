@@ -5,7 +5,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_finality_grandpa::AuthorityId as GrandpaId;
+use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use log::info;
 
@@ -77,7 +77,7 @@ pub mod opaque {
 
     pub struct GrandpaAppPublic;
     impl BoundToRuntimeAppPublic for GrandpaAppPublic {
-        type Public = sp_finality_grandpa::AuthorityId;
+        type Public = sp_consensus_grandpa::AuthorityId;
     }
 }
 
@@ -330,7 +330,7 @@ impl Runtime {
     }
 
     ///Grandpa Authority IDs - All equally weighted
-    fn grandpa_authorities() -> sp_finality_grandpa::AuthorityList {
+    fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
         use hex_literal::hex;
         use sp_application_crypto::ByteArray;
         
@@ -440,29 +440,29 @@ impl_runtime_apis! {
         }
     }
 
-    impl sp_finality_grandpa::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> sp_finality_grandpa::AuthorityList {
+    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
             Self::grandpa_authorities()
         }
 
-        fn current_set_id() -> sp_finality_grandpa::SetId {
+        fn current_set_id() -> sp_consensus_grandpa::SetId {
             0u64
         }
 
         fn submit_report_equivocation_unsigned_extrinsic(
-            _equivocation_proof: sp_finality_grandpa::EquivocationProof<
+            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
                 <Block as BlockT>::Hash,
                 sp_runtime::traits::NumberFor<Block>,
             >,
-            _key_owner_proof: sp_finality_grandpa::OpaqueKeyOwnershipProof,
+            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
         ) -> Option<()> {
             None
         }
 
         fn generate_key_ownership_proof(
-            _set_id: sp_finality_grandpa::SetId,
-            _authority_id: sp_finality_grandpa::AuthorityId,
-        ) -> Option<sp_finality_grandpa::OpaqueKeyOwnershipProof> {
+            _set_id: sp_consensus_grandpa::SetId,
+            _authority_id: sp_consensus_grandpa::AuthorityId,
+        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
             None
         }
     }

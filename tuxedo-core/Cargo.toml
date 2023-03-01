@@ -13,20 +13,20 @@ parity-scale-codec = { version = '3.4.0', default-features = false, features = [
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
 parity-util-mem = { version = '0.12.0', optional = true }
 
-sp-api = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-debug-derive = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false, features = ["force-debug"] }
-sp-block-builder = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-inherents = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-io = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false, features = ["with-tracing"] }
-sp-offchain = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-session = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-storage = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-transaction-pool = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-version = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
-sp-timestamp = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02", default_features = false}
+sp-api = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-debug-derive = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false, features = ["force-debug"] }
+sp-block-builder = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-inherents = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-io = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false, features = ["with-tracing"] }
+sp-offchain = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-session = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-storage = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-transaction-pool = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-version = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
+sp-timestamp = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 
 [features]
 default = ["std"]
