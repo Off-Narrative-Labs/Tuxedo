@@ -7,8 +7,6 @@ use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
-use log::info;
-
 use sp_api::impl_runtime_apis;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
@@ -18,7 +16,6 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 use sp_std::vec::Vec;
-use sp_storage::well_known_keys;
 
 use sp_core::OpaqueMetadata;
 #[cfg(any(feature = "std", test))]
@@ -40,9 +37,12 @@ mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
-    types::{Output, OutputRef, Transaction as TuxedoTransaction},
+    types::{Output, Transaction as TuxedoTransaction},
     Redeemer, Verifier,
 };
+
+#[cfg(feature = "std")]
+use tuxedo_core::types::OutputRef;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -140,7 +140,7 @@ impl BuildStorage for GenesisConfig {
         // we have nothing to put into storage in genesis, except this:
         storage
             .top
-            .insert(well_known_keys::CODE.into(), WASM_BINARY.unwrap().to_vec());
+            .insert(sp_storage::well_known_keys::CODE.into(), WASM_BINARY.unwrap().to_vec());
 
         for (index, utxo) in self.genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {
