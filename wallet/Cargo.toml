@@ -16,4 +16,4 @@ tokio = { version = "1.25.0", features = ["full"] }
 anyhow = "1.0.69"
 hex = "0.4.3"
 
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-02" }
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }

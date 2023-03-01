@@ -6,6 +6,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use amoeba::{AmoebaCreation, AmoebaMitosis};
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
+use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use log::info;
 
@@ -77,7 +78,7 @@ pub mod opaque {
 
     pub struct GrandpaAppPublic;
     impl BoundToRuntimeAppPublic for GrandpaAppPublic {
-        type Public = sp_finality_grandpa::AuthorityId;
+        type Public = sp_consensus_grandpa::AuthorityId;
     }
 }
 
@@ -112,14 +113,14 @@ impl Default for GenesisConfig {
     fn default() -> Self {
         use hex_literal::hex;
 
-        const ALICE_PUB_KEY_BYTES: [u8; 32] =
+        const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
 
         // Initial Config just for a Money UTXO
         GenesisConfig {
             genesis_utxos: vec![Output {
                 redeemer: OuterRedeemer::SigCheck(SigCheck {
-                    owner_pubkey: ALICE_PUB_KEY_BYTES.into(),
+                    owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
@@ -326,6 +327,61 @@ impl From<AmoebaMitosis> for OuterVerifier {
 /// The main struct in this module. In frame this comes from `construct_runtime!`
 pub struct Runtime;
 
+// Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags
+// Such as `--alice`, `--bob`, etc. Only Alice is enabled by default which makes things work nicely
+// in a `--dev` node. You may enable more authorities to test more interesting networks, or replace
+// these IDs entirely.
+impl Runtime {
+
+    /// Aura authority IDs
+    fn aura_authorities() -> Vec<AuraId> {
+        use hex_literal::hex;
+        use sp_application_crypto::ByteArray;
+
+        [
+            // Alice
+            hex!("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"),
+            // Bob
+            // hex!("8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"),
+            // Charlie
+            // hex!("90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22"),
+            // Dave
+            // hex!("306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20"),
+            // Eve
+            // hex!("e659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e"),
+            // Ferdie
+            // hex!("1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c"),
+        ]
+        .iter()
+        .map(|hex| AuraId::from_slice(&hex.to_vec()).expect("Valid Aura authority hex was provided"))
+        .collect()
+    }
+
+    ///Grandpa Authority IDs - All equally weighted
+    fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
+        use hex_literal::hex;
+        use sp_application_crypto::ByteArray;
+        
+        [
+            // Alice
+            hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"),
+            // Bob
+            // hex!("d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69"),
+            // Charlie
+            // hex!("439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f"),
+            // Dave
+            // hex!("5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9"),
+            // Eve
+            // hex!("1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5"),
+            // Ferdie
+            // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
+        ]
+        .iter()
+        .map(|hex| (GrandpaId::from_slice(&hex.to_vec()).expect("Valid Grandpa authority hex was provided"), 1))
+        .collect()
+    }
+}
+
 impl_runtime_apis! {
     // https://substrate.dev/rustdocs/master/sp_api/trait.Core.html
     impl sp_api::Core<Block> for Runtime {
@@ -408,139 +464,97 @@ impl_runtime_apis! {
         }
 
         fn authorities() -> Vec<AuraId> {
-            // The only authority is Alice. This makes things work nicely in `--dev` mode
-            use sp_application_crypto::ByteArray;
-
-            vec![
-                AuraId::from_slice(
-                    &hex_literal::hex!("d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d").to_vec()
-                ).unwrap()
-            ]
+            Self::aura_authorities()
         }
     }
 
-    impl sp_finality_grandpa::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> sp_finality_grandpa::AuthorityList {
-            use sp_application_crypto::ByteArray;
-            vec![
-                (
-                    sp_finality_grandpa::AuthorityId::from_slice(
-                        &hex_literal::hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee").to_vec()
-                    ).unwrap(),
-                    1
-                )
-            ]
+    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
+            Self::grandpa_authorities()
         }
 
-        fn current_set_id() -> sp_finality_grandpa::SetId {
+        fn current_set_id() -> sp_consensus_grandpa::SetId {
             0u64
         }
 
         fn submit_report_equivocation_unsigned_extrinsic(
-            _equivocation_proof: sp_finality_grandpa::EquivocationProof<
+            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
                 <Block as BlockT>::Hash,
                 sp_runtime::traits::NumberFor<Block>,
             >,
-            _key_owner_proof: sp_finality_grandpa::OpaqueKeyOwnershipProof,
+            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
         ) -> Option<()> {
             None
         }
 
         fn generate_key_ownership_proof(
-            _set_id: sp_finality_grandpa::SetId,
-            _authority_id: sp_finality_grandpa::AuthorityId,
-        ) -> Option<sp_finality_grandpa::OpaqueKeyOwnershipProof> {
+            _set_id: sp_consensus_grandpa::SetId,
+            _authority_id: sp_consensus_grandpa::AuthorityId,
+        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
             None
         }
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
-// 	use parity_scale_codec::Encode;
-// 	use sp_core::hexdisplay::HexDisplay;
-// 	use sp_core::{H512, testing::SR25519};
-// 	use sp_keystore::testing::KeyStore;
-// 	use sp_keystore::{KeystoreExt, SyncCryptoStore};
-// 	use hex_literal::hex;
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use parity_scale_codec::Encode;
+	use sp_core::hexdisplay::HexDisplay;
+	use sp_core::{H512, testing::SR25519};
+	use sp_keystore::testing::KeyStore;
+	use sp_keystore::{KeystoreExt, SyncCryptoStore};
+	use hex_literal::hex;
 
-// 	use std::sync::Arc;
+	use std::sync::Arc;
 
-// 	// other random account generated with subkey
-// 	const ALICE_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-// 	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
+	// other random account generated with subkey
+	const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
 
-// 	fn new_test_ext() -> sp_io::TestExternalities {
+	fn new_test_ext() -> sp_io::TestExternalities {
 
-// 		let keystore = KeyStore::new();
-// 		let alice_pub_key =
-// 			keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+		let keystore = KeyStore::new();
+		let shawn_pub_key =
+			keystore.sr25519_generate_new(SR25519, Some(SHAWN_PHRASE)).unwrap();
 
-// 		let mut t = GenesisConfig::default()
-// 			.build_storage()
-// 			.expect("Frameless system builds valid default genesis config");
+		let mut t = GenesisConfig::default()
+			.build_storage()
+			.expect("Frameless system builds valid default genesis config");
 
-// 		let mut ext = sp_io::TestExternalities::from(t);
-// 		ext.register_extension(KeystoreExt(Arc::new(keystore)));
-// 		ext
-// 	}
+		let mut ext = sp_io::TestExternalities::from(t);
+		ext.register_extension(KeystoreExt(Arc::new(keystore)));
+		ext
+	}
 
-//     #[test]
-//     fn host_function_call_works() {
-//         sp_io::TestExternalities::new_empty().execute_with(|| {
-//             sp_io::storage::get(&HEADER_KEY);
-//         })
-//     }
+	#[test]
+	fn utxo_money_test_genesis() {
+		new_test_ext().execute_with(|| {
+			let keystore = KeyStore::new();
+			let shawn_pub_key =
+				keystore.sr25519_generate_new(SR25519, Some(SHAWN_PHRASE)).unwrap();
 
-// 	#[test]
-// 	fn utxo_money_test_genesis() {
-// 		new_test_ext().execute_with(|| {
-// 			let keystore = KeyStore::new();
-// 			let alice_pub_key =
-// 				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
+			// Grab genesis value from storage and assert it is correct
+			let genesis_utxo = Output {
+				redeemer: OuterRedeemer::SigCheck(SigCheck{
+					owner_pubkey: shawn_pub_key.into()
+				}),
+				payload: DynamicallyTypedData {
+					data: 100u128.encode(),
+					type_id: <money::Coin as UtxoData>::TYPE_ID,
+				},
+			};
 
-// 			// Grab genesis value from storage and assert it is correct
-// 			let genesis_utxo = utxo::Utxo {
-// 				redeemer: alice_pub_key.into(),
-// 				data: 100u128.encode(),
-// 				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID
-// 			};
-// 			let encoded_utxo =
-// 				sp_io::storage::get(&BlakeTwo256::hash_of(&genesis_utxo).encode()).expect("Retrieve Genesis UTXO");
-// 			let utxo = utxo::Utxo::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-// 			assert_eq!(utxo, genesis_utxo);
-// 		})
-// 	}
+			let output_ref = OutputRef {
+                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                index: 0 as u32,
+            };
 
-// 	#[test]
-// 	fn utxo_money_test_extracter() {
-// 		new_test_ext().execute_with(|| {
-// 			let keystore = KeyStore::new();
-// 			let alice_pub_key =
-// 				keystore.sr25519_generate_new(SR25519, Some(ALICE_PHRASE)).unwrap();
-
-// 			let genesis_utxo = utxo::Utxo {
-// 				redeemer: alice_pub_key.into(),
-// 				data: 100u128.encode(),
-// 				data_id: <utxo::MoneyPiece as TuxedoPiece>::TYPE_ID,
-// 			};
-
-// 			let expected_data = 100u128;
-// 			let extracted_data =
-// 				utxo::PieceExtracter::<utxo::MoneyPiece>::extract(BlakeTwo256::hash_of(&genesis_utxo))
-// 				.expect("Can extract Genesis Data");
-// 			assert_eq!(extracted_data, expected_data);
-// 		})
-// 	}
-
-// 	// TODO: More Tests for Money Kitties ETC
-
-// 	#[test]
-// 	fn encode_examples() {
-// 		// run with `cargo test -p frameless-runtime -- --nocapture`
-// 		// let extrinsic = BasicExtrinsic::new_unsigned(Call::SetValue(42));
-// 		// println!("ext {:?}", HexDisplay::from(&extrinsic.encode()));
-// 		// println!("key {:?}", HexDisplay::from(&VALUE_KEY));
-// 	}
-// }
+			let encoded_utxo =
+				sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
+			let utxo = Output::<OuterRedeemer>::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
+			assert_eq!(utxo, genesis_utxo);
+		})
+	}
+}
