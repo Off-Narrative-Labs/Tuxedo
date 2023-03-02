@@ -2,7 +2,10 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_runtime::transaction_validity::TransactionPriority;
+use sp_runtime::{
+    transaction_validity::TransactionPriority,
+    traits::{BlakeTwo256, Hash as HashT},
+};
 use sp_std::{
     prelude::*,
     marker::PhantomData,
@@ -57,27 +60,6 @@ impl Default for Parent {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub struct GenerateGender {
-    is_mom: bool,
-}
-
-impl GenerateGender {
-    /// For now this just flips a bool to see what the gender of the next child is and rotates
-    pub fn random_gender(&self) -> Self {
-        let mut is_mom = self.is_mom;
-        if is_mom {
-            is_mom = false;
-        } else {
-            is_mom = true
-        }
-        Self {
-            is_mom: is_mom,
-        }
-    }
-}
-
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittyDNA(H256);
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
@@ -86,7 +68,7 @@ pub struct KittyData {
     parent: Parent,
     free_breedings: u64, // Ignore in breed for money case
     dna: KittyDNA,
-    is_mom: bool,
+    num_breedings: u128,
 }
 
 impl UtxoData for KittyData {
@@ -104,63 +86,77 @@ pub enum VerifierError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
-    BreedingFailed,
+    /// Needed when spending for breeding
     MinimumSpendAndBreedNotMet,
+    /// Need two parents to breed
     TwoParentsDoNotExist,
+    /// Incorrect number of outputs when it comes to breeding
     NotEnoughFamilyMembers,
+    /// Mom has recently given birth and isnt ready to breed
     MomNotReadyYet,
+    /// Dad cannot breed because he is still too tired
+    DadTooTired,
+    /// Cannot have two moms when breeding
+    TwoMomsNotValid,
+    /// Cannot have two dads when breeding
     TwoDadsNotValid,
-    // TODO: Add others..
+    /// New Mom after breeding should be in HadBirthRecently state
+    NewMomIsStillRearinToGo,
+    /// New Dad after breeding should be in Tired state
+    NewDadIsStillRearinToGo,
+    /// Number of free breedings of new parent is not correct
+    NewParentFreeBreedingsIncorrect,
+    /// New parents DNA does not match the old one parent has to still be the same kitty
+    NewParentDnaDoesntMatchOld,
+    /// New parent Breedings has not incremented or is incorrect
+    NewParentNumberBreedingsIncorrect,
+    /// New child DNA is not correct given the protocol
+    NewChildDnaIncorrect,
+    /// New child doesnt have the correct number of free breedings
+    NewChildFreeBreedingsIncorrect,
+    /// New child has non zero breedings which is impossible because it was just born
+    NewChildHasNonZeroBreedings,
+    /// New child parent info is either in Tired state or HadBirthRecently state which is not possible
+    NewChildIncorrectParentInfo,
+    /// Too many breedings for this kitty can no longer breed
+    TooManyBreedingsForKitty,
+    /// Not enough free breedings available for these parents
+    NotEnoughFreeBreedings,
 }
 
 // TODO: Add documentation for each of these trait items
 trait Breed {
     const COST: u128;
+    const NUM_FREE_BREEDINGS: u64;
     type Error: Into<VerifierError>;
     fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error>;
+    fn check_mom_can_breed(mom: &KittyData) -> Result<(), Self::Error>;
+    fn check_dad_can_breed(dad: &KittyData) -> Result<(), Self::Error>;
+    fn check_free_breedings(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error>;
     fn check_new_family(
-        mom: &KittyData,
-        dad: &KittyData,
+        old_mom: &KittyData,
+        old_dad: &KittyData,
         new_family: &[DynamicallyTypedData]
     ) -> Result<(), Self::Error>;
-    fn check_mom(mom: &KittyData) -> Result<(), Self::Error>;
-    fn check_dad(dad: &KittyData) -> Result<(), Self::Error>;
+    fn check_new_mom(old_mom: &KittyData, new_mom: &KittyData) -> Result<(), Self::Error>;
+    fn check_new_dad(old_dad: &KittyData, new_dad: &KittyData) -> Result<(), Self::Error>;
+    fn check_child(new_mom: &KittyData, new_dad: &KittyData, child: &KittyData) -> Result<(), Self::Error>;
 }
 
 pub struct KittyHelpers;
 impl Breed for KittyHelpers
 {
     const COST: u128 = 5u128;
+    const NUM_FREE_BREEDINGS: u64 = 2u64;
     type Error = VerifierError;
     fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error> {
-        // Input side
-        // 1.) Check if mom is a mom
-        // 3.) Check if mom has recently given birth
-        Self::check_mom(mom)?;
-        // 2.) Check if dad is a dad
-        // 4.) Check if dad is tired
-        Self::check_dad(dad)?;
-        // 5.) Check if mom and dad have enough free breedings
-
+        Self::check_mom_can_breed(mom)?;
+        Self::check_dad_can_breed(dad)?;
+        Self::check_free_breedings(mom, dad)?;
         Ok(())
     }
 
-    fn check_new_family(
-        mom: &KittyData,
-        dad: &KittyData,
-        new_family: &[DynamicallyTypedData]
-    ) -> Result<(), Self::Error> {
-        // Output Side
-        // 1.) If both checks pass you can breed and swap the states
-        // 2.) Check if Mom and Dad new status(Output) has been swapped and that it is still a mom and dad
-        //      - Check Mom is still a mom, Dad is still a dad i.e. Cant have two dads now or two moms
-        //      - Check Mom and Dad still has the same DNA
-        //      - Check free breedings for both parents have been decreased by 1
-        // 3.) Check if Child Kitty created (Output) is a Mom or Dad and is initialized correctly
-        Ok(())
-    }
-
-    fn check_mom(mom: &KittyData) -> Result<(), Self::Error> {
+    fn check_mom_can_breed(mom: &KittyData) -> Result<(), Self::Error> {
         match &mom.parent {
             Parent::Mom(status) => {
                 if let MomKittyStatus::HadBirthRecently = status {
@@ -171,18 +167,141 @@ impl Breed for KittyHelpers
                 return Err(Self::Error::TwoDadsNotValid)
             }
         }
+        mom.num_breedings.checked_add(1).ok_or(Self::Error::TooManyBreedingsForKitty)?;
         Ok(())
     }
 
-    fn check_dad(dad: &KittyData) -> Result<(), Self::Error> {
-        // TODO: Same as in check_mom but with dad
+    fn check_dad_can_breed(dad: &KittyData) -> Result<(), Self::Error> {
+        match &dad.parent {
+            Parent::Dad(status) => {
+                if let DadKittyStatus::Tired = status {
+                    return Err(Self::Error::DadTooTired)
+                }
+            },
+            Parent::Mom(_) => {
+                return Err(Self::Error::TwoMomsNotValid)
+            }
+        }
+        dad.num_breedings.checked_add(1).ok_or(Self::Error::TooManyBreedingsForKitty)?;
+        Ok(())
+    }
+
+    fn check_free_breedings(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error> {
+        let mom_breedings = mom.free_breedings;
+        let dad_breedings = dad.free_breedings;
+        if (mom_breedings == 0) && (dad_breedings == 0) {
+            return Err(Self::Error::NotEnoughFreeBreedings)
+        }
+        Ok(())
+    }
+
+    fn check_new_family(
+        old_mom: &KittyData,
+        old_dad: &KittyData,
+        new_family: &[DynamicallyTypedData]
+    ) -> Result<(), Self::Error> {
+        // Output Side
+        ensure!(
+            new_family.len() == 3,
+            Self::Error::NotEnoughFamilyMembers
+        );
+        let new_mom = KittyData::try_from(&new_family[0])?;
+        let new_dad = KittyData::try_from(&new_family[1])?;
+        let child = KittyData::try_from(&new_family[2])?;
+        Self::check_new_mom(old_mom, &new_mom)?;
+        Self::check_new_dad(old_dad, &new_dad)?;
+        Self::check_child(&new_mom, &new_dad, &child)?;
+        Ok(())
+    }
+
+    fn check_new_mom(old_mom: &KittyData, new_mom: &KittyData) -> Result<(), Self::Error> {
+        match &new_mom.parent {
+            Parent::Mom(status) => {
+                if let MomKittyStatus::RearinToGo = status {
+                    return Err(Self::Error::NewMomIsStillRearinToGo)
+                }
+            },
+            Parent::Dad(_) => return Err(Self::Error::TwoDadsNotValid),
+        }
+
+        ensure!(
+            new_mom.free_breedings == old_mom.free_breedings - 1,
+            Self::Error::NewParentFreeBreedingsIncorrect
+        );
+        ensure!(
+            new_mom.num_breedings == old_mom.num_breedings + 1,
+            Self::Error::NewParentNumberBreedingsIncorrect
+        );
+        ensure!(
+            new_mom.dna == old_mom.dna,
+            Self::Error::NewParentDnaDoesntMatchOld
+        );
+
+        Ok(())
+    }
+
+    fn check_new_dad(old_dad: &KittyData, new_dad: &KittyData) -> Result<(), Self::Error> {
+        match &new_dad.parent {
+            Parent::Dad(status) => {
+                if let DadKittyStatus::RearinToGo = status {
+                    return Err(Self::Error::NewDadIsStillRearinToGo)
+                }
+            },
+            Parent::Mom(_) => return Err(Self::Error::TwoMomsNotValid),
+        }
+
+        ensure!(
+            new_dad.free_breedings == old_dad.free_breedings - 1,
+            Self::Error::NewParentFreeBreedingsIncorrect
+        );
+        ensure!(
+            new_dad.num_breedings == old_dad.num_breedings + 1,
+            Self::Error::NewParentNumberBreedingsIncorrect
+        );
+        ensure!(
+            new_dad.dna == old_dad.dna,
+            Self::Error::NewParentDnaDoesntMatchOld
+        );
+
+        Ok(())
+    }
+
+    fn check_child(new_mom: &KittyData, new_dad: &KittyData, child: &KittyData) -> Result<(), Self::Error> {
+        let new_dna =
+            BlakeTwo256::hash_of(&(&new_mom.dna, &new_dad.dna, &new_mom.num_breedings, &new_dad.num_breedings));
+
+        ensure!(
+            child.dna == KittyDNA(new_dna),
+            Self::Error::NewChildDnaIncorrect,
+        );
+        ensure!(
+            child.free_breedings == Self::NUM_FREE_BREEDINGS,
+            Self::Error::NewChildFreeBreedingsIncorrect
+        );
+        ensure!(
+            child.num_breedings == 0,
+            Self::Error::NewChildHasNonZeroBreedings,
+        );
+
+        match &child.parent {
+            Parent::Mom(status) => {
+                if let MomKittyStatus::HadBirthRecently = status {
+                    return Err(Self::Error::NewChildIncorrectParentInfo)
+                }
+            },
+            Parent::Dad(status) => {
+                if let DadKittyStatus::Tired = status {
+                    return Err(Self::Error::NewChildIncorrectParentInfo)
+                }
+            }
+        }
         Ok(())
     }
 }
 
-impl TryFrom<DynamicallyTypedData> for KittyData {
+impl TryFrom<&DynamicallyTypedData> for KittyData {
     type Error = VerifierError;
-    fn try_from(a: DynamicallyTypedData) -> Result<Self, Self::Error> {
+    fn try_from(a: &DynamicallyTypedData) -> Result<Self, Self::Error> {
         a.extract::<KittyData>().map_err(|_| VerifierError::BadlyTyped)
     }
 }
@@ -200,8 +319,9 @@ impl Verifier for FreeKittyVerifier {
             input_data.len() == 2,
             Self::Error::TwoParentsDoNotExist
         );
-        let mom: KittyData = input_data[0].clone().try_into()?;
-        let dad: KittyData = input_data[1].clone().try_into()?;
+
+        let mom = KittyData::try_from(&input_data[0])?;
+        let dad = KittyData::try_from(&input_data[0])?;
         KittyHelpers::can_breed(&mom, &dad)?;
 
         // Output must be Mom, Dad, Child
@@ -209,6 +329,7 @@ impl Verifier for FreeKittyVerifier {
             output_data.len() == 3,
             Self::Error::NotEnoughFamilyMembers
         );
+
         KittyHelpers::check_new_family(&mom, &dad, output_data)?;
 
         Ok(0)
@@ -244,7 +365,7 @@ where
     fn verify(
         &self,
         input_data: &[DynamicallyTypedData],
-        output_data: &[DynamicallyTypedData]
+        _output_data: &[DynamicallyTypedData]
     ) -> Result<TransactionPriority, Self::Error> {
         // TODO: Verify that there is a spend that happens which covers the cost to breed.
         // First input and output must be money
@@ -260,136 +381,157 @@ where
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    /// A bogus data type used in tests for type validation
+    #[derive(Encode, Decode)]
+    struct Bogus;
 
-// #[cfg_attr(
-//     feature = "std",
-//     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-// )]
-// #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-// pub enum MoneyVerifier {
-//     /// A typical spend transaction where some coins are consumed and others are created.
-//     Spend,
-//     /// A mint transaction that creates no coins out of the void. In a real-world chain,
-//     /// this should be protected somehow, or not included at all. For now it is publicly
-//     /// available. I'm adding it to explore multiple validation paths in a single piece.
-//     Mint,
-// }
+    impl UtxoData for Bogus {
+        const TYPE_ID: [u8; 4] = *b"bogs";
+    }
 
-// /// A single coin in the fungible money system.
-// /// A new type wrapper around a u128 value.
-// #[cfg_attr(
-//     feature = "std",
-//     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-// )]
-// #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-// pub struct Coin(u128);
+    #[test]
+    fn breed_wrong_input_type_fails() {
+        todo!();
+    }
 
-// impl UtxoData for Coin {
-//     const TYPE_ID: [u8; 4] = *b"coin";
-// }
+    #[test]
+    fn breed_wrong_output_type_fails() {
+        todo!();
+    }
 
-// #[cfg_attr(
-//     feature = "std",
-//     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-// )]
-// #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-// pub enum VerifierError {
-//     /// Dynamic typing issue.
-//     /// This error doesn't discriminate between badly typed inputs and outputs.
-//     BadlyTyped,
-//     /// The transaction attempts to consume inputs while minting. This is not allowed.
-//     MintingWithInputs,
-//     /// The transaction attempts to mint zero coins. This is not allowed.
-//     MintingNothing,
-//     /// The transaction attempts to spend without consuming any inputs.
-//     /// Either the output value will exceed the input value, or if there are no outputs,
-//     /// it is a waste of processing power, so it is not allowed.
-//     SpendingNothing,
-//     /// The value of the spent input coins is less than the value of the newly created
-//     /// output coins. This would lead to money creation and is not allowed.
-//     OutputsExceedInputs,
-//     /// The value consumed or created by this transaction overflows the value type.
-//     /// This could lead to problems like https://bitcointalk.org/index.php?topic=823.0
-//     ValueOverflow,
-//     /// The transaction attempted to create a coin with zero value. This is not allowed
-//     /// because it wastes state space.
-//     ZeroValueCoin,
-// }
+    #[test]
+    fn inputs_dont_contain_two_parents_fails() {
+        todo!();
+    }
 
-// impl Verifier for MoneyVerifier {
-//     type Error = VerifierError;
+    #[test]
+    fn outputs_dont_contain_all_family_members_fails() {
+        todo!();
+    }
 
-//     fn verify(
-//         &self,
-//         input_data: &[DynamicallyTypedData],
-//         output_data: &[DynamicallyTypedData],
-//     ) -> Result<TransactionPriority, Self::Error> {
-//         match &self {
-//             Self::Spend => {
-//                 // Check that we are consuming at least one input
-//                 ensure!(!input_data.is_empty(), VerifierError::SpendingNothing);
+    #[test]
+    fn breed_two_dads_fails() {
+        todo!();
+    }
 
-//                 let mut total_input_value: u128 = 0;
-//                 let mut total_output_value: u128 = 0;
+    #[test]
+    fn breed_two_moms_fails() {
+        todo!();
+    }
 
-//                 // Check that sum of input values < output values
-//                 for input in input_data {
-//                     let utxo_value = input
-//                         .extract::<Coin>()
-//                         .map_err(|_| VerifierError::BadlyTyped)?
-//                         .0;
-//                     total_input_value = total_input_value
-//                         .checked_add(utxo_value)
-//                         .ok_or(VerifierError::ValueOverflow)?;
-//                 }
+    #[test]
+    fn first_input_not_mom_fails() {
+        todo!();
+    }
 
-//                 for utxo in output_data {
-//                     let utxo_value = utxo
-//                         .extract::<Coin>()
-//                         .map_err(|_| VerifierError::BadlyTyped)?
-//                         .0;
-//                     ensure!(utxo_value > 0, VerifierError::ZeroValueCoin);
-//                     total_output_value = total_output_value
-//                         .checked_add(utxo_value)
-//                         .ok_or(VerifierError::ValueOverflow)?;
-//                 }
+    #[test]
+    fn second_input_not_dad_fails() {
+        todo!();
+    }
 
-//                 ensure!(
-//                     total_output_value <= total_input_value,
-//                     VerifierError::OutputsExceedInputs
-//                 );
+    #[test]
+    fn first_output_not_mom_fails() {
+        todo!();
+    }
 
-//                 // Priority is based on how many token are burned
-//                 // Type stuff is kinda ugly. Maybe division would be better?
-//                 let burned = total_input_value - total_output_value;
-//                 Ok(if burned < u64::max_value() as u128 {
-//                     burned as u64
-//                 } else {
-//                     u64::max_value()
-//                 })
-//             }
-//             Self::Mint => {
-//                 // Make sure there are no inputs being consumed
-//                 ensure!(input_data.is_empty(), VerifierError::MintingWithInputs);
+    #[test]
+    fn second_output_not_dad_fails() {
+        todo!();
+    }
 
-//                 // Make sure there is at least one output being minted
-//                 ensure!(!output_data.is_empty(), VerifierError::MintingNothing);
+    #[test]
+    fn third_output_not_child_fails() {
+        todo!();
+    }
 
-//                 // Make sure the outputs are the right type
-//                 for utxo in output_data {
-//                     let utxo_value = utxo
-//                         .extract::<Coin>()
-//                         .map_err(|_| VerifierError::BadlyTyped)?
-//                         .0;
-//                     ensure!(utxo_value > 0, VerifierError::ZeroValueCoin);
-//                 }
+    #[test]
+    fn breed_mom_when_she_gave_birth_recently_fails() {
+        todo!();
+    }
 
-//                 // No priority for minting
-//                 Ok(0)
-//             }
-//         }
-//     }
-// }
+    #[test]
+    fn breed_dad_when_he_is_tired_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_mom_breedings_overflow_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_dad_breedings_overflow_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_mom_free_breedings_zero_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_dad_free_breedings_zero_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_new_mom_free_breedings_incorrect_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_new_dad_free_breedings_incorrect_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_new_mom_num_breedings_incorrect_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_new_dad_num_breedings_incorrect_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_new_mom_dna_doesnt_match_old_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_new_dad_dna_doesnt_match_old_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_child_dna_incorrect_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_child_dad_parent_tired_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_child_mom_parent_recently_gave_birth_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_child_free_breedings_incorrect_fails() {
+        todo!();
+    }
+
+    #[test]
+    fn check_child_num_breedings_non_zero_fails() {
+        todo!();
+    }
+}
 
 // #[cfg(test)]
 // mod test {
