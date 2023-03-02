@@ -20,7 +20,6 @@ use crate::money::{Coin, MoneyVerifier};
 
 use log::info;
 
-// 1.) First need a Verifier types
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -28,7 +27,6 @@ use log::info;
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct FreeKittyVerifier;
 
-// 2.) Then need UtxoData type
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum DadKittyStatus {
@@ -75,71 +73,79 @@ impl UtxoData for KittyData {
     const TYPE_ID: [u8; 4] = *b"Kitt";
 }
 
-// 3.) Need Verifier Error
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum VerifierError {
-    // TODO: Add documentation for each of these Error types
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
-    /// Needed when spending for breeding
+    /// Needed when spending for breeding.
     MinimumSpendAndBreedNotMet,
-    /// Need two parents to breed
+    /// Need two parents to breed.
     TwoParentsDoNotExist,
-    /// Incorrect number of outputs when it comes to breeding
+    /// Incorrect number of outputs when it comes to breeding.
     NotEnoughFamilyMembers,
-    /// Mom has recently given birth and isnt ready to breed
+    /// Mom has recently given birth and isnt ready to breed.
     MomNotReadyYet,
-    /// Dad cannot breed because he is still too tired
+    /// Dad cannot breed because he is still too tired.
     DadTooTired,
-    /// Cannot have two moms when breeding
+    /// Cannot have two moms when breeding.
     TwoMomsNotValid,
-    /// Cannot have two dads when breeding
+    /// Cannot have two dads when breeding.
     TwoDadsNotValid,
-    /// New Mom after breeding should be in HadBirthRecently state
+    /// New Mom after breeding should be in HadBirthRecently state.
     NewMomIsStillRearinToGo,
-    /// New Dad after breeding should be in Tired state
+    /// New Dad after breeding should be in Tired state.
     NewDadIsStillRearinToGo,
-    /// Number of free breedings of new parent is not correct
+    /// Number of free breedings of new parent is not correct.
     NewParentFreeBreedingsIncorrect,
-    /// New parents DNA does not match the old one parent has to still be the same kitty
+    /// New parents DNA does not match the old one parent has to still be the same kitty.
     NewParentDnaDoesntMatchOld,
-    /// New parent Breedings has not incremented or is incorrect
+    /// New parent Breedings has not incremented or is incorrect.
     NewParentNumberBreedingsIncorrect,
-    /// New child DNA is not correct given the protocol
+    /// New child DNA is not correct given the protocol.
     NewChildDnaIncorrect,
-    /// New child doesnt have the correct number of free breedings
+    /// New child doesnt have the correct number of free breedings.
     NewChildFreeBreedingsIncorrect,
-    /// New child has non zero breedings which is impossible because it was just born
+    /// New child has non zero breedings which is impossible because it was just born.
     NewChildHasNonZeroBreedings,
-    /// New child parent info is either in Tired state or HadBirthRecently state which is not possible
+    /// New child parent info is either in Tired state or HadBirthRecently state which is not possible.
     NewChildIncorrectParentInfo,
-    /// Too many breedings for this kitty can no longer breed
+    /// Too many breedings for this kitty can no longer breed.
     TooManyBreedingsForKitty,
-    /// Not enough free breedings available for these parents
+    /// Not enough free breedings available for these parents.
     NotEnoughFreeBreedings,
 }
 
-// TODO: Add documentation for each of these trait items
 trait Breed {
+    /// The Cost to breed a kitty if it is not free.
     const COST: u128;
+    /// Number of free breedings a kitty will have.
     const NUM_FREE_BREEDINGS: u64;
+    /// Error type for all Kitty errors.
     type Error: Into<VerifierError>;
+    /// Check if the two parents (Mom, Dad) proposed are capable of breeding.
     fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error>;
+    /// Checks if mom is in the correct state and capable of breeding.
     fn check_mom_can_breed(mom: &KittyData) -> Result<(), Self::Error>;
+    /// Checks if dad is in the correct state and capable of breeding.
     fn check_dad_can_breed(dad: &KittyData) -> Result<(), Self::Error>;
+    /// Makes sure each parent has a non-zero number of free breedings.
     fn check_free_breedings(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error>;
+    /// Checks outputs which consists of (Mom, Dad, Child) is correctly formulated.
     fn check_new_family(
         old_mom: &KittyData,
         old_dad: &KittyData,
         new_family: &[DynamicallyTypedData]
     ) -> Result<(), Self::Error>;
+    /// Checks if new mom matches the old ones DNA and changes state correctly.
     fn check_new_mom(old_mom: &KittyData, new_mom: &KittyData) -> Result<(), Self::Error>;
+    /// Checks if new dad matches the old ones DNA and changes state correctly.
     fn check_new_dad(old_dad: &KittyData, new_dad: &KittyData) -> Result<(), Self::Error>;
+    /// Checks if new child DNA is formulated correctly and is initialized to the proper state.
     fn check_child(new_mom: &KittyData, new_dad: &KittyData, child: &KittyData) -> Result<(), Self::Error>;
 }
 
@@ -149,6 +155,10 @@ impl Breed for KittyHelpers
     const COST: u128 = 5u128;
     const NUM_FREE_BREEDINGS: u64 = 2u64;
     type Error = VerifierError;
+    /// Checks:
+    ///     - Mom can breed
+    ///     - Dad can breed
+    ///
     fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error> {
         Self::check_mom_can_breed(mom)?;
         Self::check_dad_can_breed(dad)?;
@@ -156,6 +166,10 @@ impl Breed for KittyHelpers
         Ok(())
     }
 
+    /// Checks:
+    ///     - Mom is in `RearinToGo` state
+    ///     - Mom number of breedings is not maxed out
+    ///
     fn check_mom_can_breed(mom: &KittyData) -> Result<(), Self::Error> {
         match &mom.parent {
             Parent::Mom(status) => {
@@ -171,6 +185,10 @@ impl Breed for KittyHelpers
         Ok(())
     }
 
+    /// Checks:
+    ///     - Dad is in `RearinToGo` state
+    ///     - Dad number of breedings is not maxed out
+    ///
     fn check_dad_can_breed(dad: &KittyData) -> Result<(), Self::Error> {
         match &dad.parent {
             Parent::Dad(status) => {
@@ -186,6 +204,9 @@ impl Breed for KittyHelpers
         Ok(())
     }
 
+    /// Checks:
+    ///     - Both parents free breedings is non-zero
+    ///
     fn check_free_breedings(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error> {
         let mom_breedings = mom.free_breedings;
         let dad_breedings = dad.free_breedings;
@@ -214,6 +235,12 @@ impl Breed for KittyHelpers
         Ok(())
     }
 
+    /// Checks:
+    ///     - Mom is now in `HadBirthRecently`
+    ///     - Mom has 1 less `free_breedings`
+    ///     - Mom's DNA matches old Mom
+    ///     - Mom's num breedings is incremented
+    ///
     fn check_new_mom(old_mom: &KittyData, new_mom: &KittyData) -> Result<(), Self::Error> {
         match &new_mom.parent {
             Parent::Mom(status) => {
@@ -240,6 +267,12 @@ impl Breed for KittyHelpers
         Ok(())
     }
 
+    /// Checks:
+    ///     - Dad is now `Tired`
+    ///     - Dad has 1 less `free_breedings`
+    ///     - Dad's DNA matches old Dad
+    ///     - Dad's num breedings is incremented
+    ///
     fn check_new_dad(old_dad: &KittyData, new_dad: &KittyData) -> Result<(), Self::Error> {
         match &new_dad.parent {
             Parent::Dad(status) => {
@@ -266,6 +299,13 @@ impl Breed for KittyHelpers
         Ok(())
     }
 
+    /// Checks:
+    ///     - DNA formation correct -> `hash_of(mom_dna + dad_dna + mom_num_breedings + dad_num_breedings)
+    ///     - Free breedings is correct given the trait implementation in this case 2
+    ///     - has non-zero bredings
+    ///     - If Mom is in RearinToGo
+    ///     - If Dad is in RearinToGo
+    ///
     fn check_child(new_mom: &KittyData, new_dad: &KittyData, child: &KittyData) -> Result<(), Self::Error> {
         let new_dna =
             BlakeTwo256::hash_of(&(&new_mom.dna, &new_dad.dna, &new_mom.num_breedings, &new_dad.num_breedings));
@@ -309,6 +349,10 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
 // 4.) Implement Verifier Trait on my new Verifier
 impl Verifier for FreeKittyVerifier {
     type Error = VerifierError;
+    /// Checks:
+    ///     - `input_data` is of length 2
+    ///     - `output_data` is of length 3
+    ///
     fn verify(
         &self,
         input_data: &[DynamicallyTypedData],
