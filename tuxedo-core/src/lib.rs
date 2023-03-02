@@ -19,7 +19,7 @@ pub use redeemer::Redeemer;
 pub use verifier::Verifier;
 
 /// A Tuxedo-specific target for diagnostic node log messages
-const LOG_TARGET: &'static str = "tuxedo-core";
+const LOG_TARGET: &str = "tuxedo-core";
 
 /// A transient storage key that will hold the partial header while a block is being built.
 /// This key is cleared before the end of the block.

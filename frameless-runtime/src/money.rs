@@ -146,14 +146,7 @@ impl Verifier for MoneyVerifier {
 #[cfg(test)]
 mod test {
     use super::*;
-
-    /// A bogus data type used in tests for type validation
-    #[derive(Encode, Decode)]
-    struct Bogus;
-
-    impl UtxoData for Bogus {
-        const TYPE_ID: [u8; 4] = *b"bogs";
-    }
+    use tuxedo_core::dynamic_typing::testing::Bogus;
 
     #[test]
     fn spend_valid_transaction_work() {
