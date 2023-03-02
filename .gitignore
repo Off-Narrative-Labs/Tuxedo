@@ -11,8 +11,5 @@
 # The cache for docker container dependency
 .cargo
 
-# The cache for chain data in container
-.local
-
 # direnv cache
 .direnv
