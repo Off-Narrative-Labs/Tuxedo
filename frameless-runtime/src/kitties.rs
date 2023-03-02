@@ -18,8 +18,6 @@ use tuxedo_core::{
 };
 use crate::money::{Coin, MoneyVerifier};
 
-use log::info;
-
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
