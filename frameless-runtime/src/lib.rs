@@ -325,7 +325,7 @@ impl Runtime {
             // hex!("1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c"),
         ]
         .iter()
-        .map(|hex| AuraId::from_slice(&hex.to_vec()).expect("Valid Aura authority hex was provided"))
+        .map(|hex| AuraId::from_slice(hex.as_ref()).expect("Valid Aura authority hex was provided"))
         .collect()
     }
 
@@ -349,7 +349,7 @@ impl Runtime {
             // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
         ]
         .iter()
-        .map(|hex| (GrandpaId::from_slice(&hex.to_vec()).expect("Valid Grandpa authority hex was provided"), 1))
+        .map(|hex| (GrandpaId::from_slice(hex.as_ref()).expect("Valid Grandpa authority hex was provided"), 1))
         .collect()
     }
 }
