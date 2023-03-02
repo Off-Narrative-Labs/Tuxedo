@@ -39,19 +39,34 @@ impl UtxoData for AmoebaDetails {
 /// Reasons that the amoeba verifiers may fail
 #[derive(Debug, Eq, PartialEq)]
 pub enum VerifierError {
-    // TODO In the current design, this will need to be repeated in every piece. This is not nice.
-    // Well, actually, no. Some pieces will be flexible about how many inputs and outputs they can take.
-    // For example, the money piece can take as many input or output coins as it wants.
-    // Similarly, in kitties, we may allow breeding via cat orgies with arbitrarily many parents providing genetic source material.
-    /// Wrong number of inputs were provided to the verifier.
-    WrongNumberInputs,
-    /// Wrong number of outputs were provided to the verifier.
-    WrongNumberOutputs,
     /// An input data has the wrong type.
     BadlyTypedInput,
     /// An output data has the wrong type.
     BadlyTypedOutput,
 
+    /// Amoeba creation requires a new amoeba to be created, but none was provided.
+    CreatedNothing,
+    /// Amoeba creation is not a mass operation. Only one new amoeba can be created.
+    /// If you need to create multiple amoebas, you must submit multiple transactions.
+    CreatedTooMany,
+    /// No input may be consumed by amoeba creation.
+    CreationMayNotConsume,
+
+    /// Amoeba death requires a "victim" amoeba that will be consumed
+    /// but noe was provided.
+    NoVictim,
+    /// Amoeba death is not a mass operation. Only one "victim" may be specified.
+    /// If you need to kill off multiple amoebas, you must submit multiple transactions.
+    TooManyVictims,
+    /// No output may be created by amoeba death.
+    DeathMayNotCreate,
+    
+    /// Amoeba mitosis requires exactly two daughter amoebas to be created.
+    // Creating more or fewer than that is invalid.
+    WrongNumberOfDaughters,
+    /// Amoeba mitosis requires exactly one mother amoeba to be consumed.
+    /// Consuming any more or fewer than that is invalid.
+    WrongNumberOfMothers,
     // Now we get on to the actual amoeba-specific errors
     /// The daughters did not have to right generation based on the mother.
     WrongGeneration,
@@ -78,13 +93,13 @@ impl Verifier for AmoebaMitosis {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, VerifierError> {
         // Make sure there is exactly one mother.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
+        ensure!(input_data.len() == 1, VerifierError::WrongNumberOfMothers);
         let mother = input_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| VerifierError::BadlyTypedInput)?;
 
         // Make sure there are exactly two daughters.
-        ensure!(output_data.len() == 2, VerifierError::WrongNumberOutputs);
+        ensure!(output_data.len() == 2, VerifierError::WrongNumberOfDaughters);
         let first_daughter = output_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| VerifierError::BadlyTypedOutput)?;
@@ -132,9 +147,8 @@ impl Verifier for AmoebaDeath {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single victim
-        // Another valid design choice would be to allow killing many amoebas at once
-        // but that is not the choice I've made here.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
+        ensure!(!input_data.is_empty(), VerifierError::NoVictim);
+        ensure!(input_data.len() == 1, VerifierError::TooManyVictims);
 
         // We don't actually need to check any details of the victim, but we do need to make sure
         // we have the correct type.
@@ -143,7 +157,7 @@ impl Verifier for AmoebaDeath {
             .map_err(|_| VerifierError::BadlyTypedInput)?;
 
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
+        ensure!(output_data.is_empty(), VerifierError::DeathMayNotCreate);
 
         Ok(0)
     }
@@ -169,7 +183,8 @@ impl Verifier for AmoebaCreation {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single created amoeba
-        ensure!(output_data.len() == 1, VerifierError::WrongNumberOutputs);
+        ensure!(!output_data.is_empty(), VerifierError::CreatedNothing);
+        ensure!(output_data.len() == 1, VerifierError::CreatedTooMany);
         let eve = output_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| VerifierError::BadlyTypedOutput)?;
@@ -178,7 +193,7 @@ impl Verifier for AmoebaCreation {
         ensure!(eve.generation == 0, VerifierError::WrongGeneration);
 
         // Make sure there are no inputs
-        ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
+        ensure!(input_data.is_empty(), VerifierError::CreationMayNotConsume);
 
         Ok(0)
     }
@@ -230,7 +245,7 @@ mod test {
 
         assert_eq!(
             AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberInputs),
+            Err(VerifierError::CreationMayNotConsume),
         );
     }
 
@@ -256,7 +271,18 @@ mod test {
 
         assert_eq!(
             AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOutputs),
+            Err(VerifierError::CreatedTooMany),
+        );
+    }
+
+    #[test]
+    fn creation_with_no_output_fails() {
+        let input_data = Vec::new();
+        let output_data = Vec::new();
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::CreatedNothing),
         );
     }
 
@@ -341,7 +367,7 @@ mod test {
 
         assert_eq!(
             AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberInputs),
+            Err(VerifierError::WrongNumberOfMothers),
         );
     }
 
@@ -381,7 +407,7 @@ mod test {
 
         assert_eq!(
             AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOutputs),
+            Err(VerifierError::WrongNumberOfDaughters),
         );
     }
 
@@ -409,7 +435,7 @@ mod test {
 
         assert_eq!(
             AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOutputs),
+            Err(VerifierError::WrongNumberOfDaughters),
         );
     }
 
@@ -435,7 +461,7 @@ mod test {
 
         assert_eq!(
             AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberInputs),
+            Err(VerifierError::NoVictim),
         );
     }
 
@@ -454,7 +480,7 @@ mod test {
 
         assert_eq!(
             AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberInputs),
+            Err(VerifierError::TooManyVictims),
         );
     }
 
@@ -469,7 +495,7 @@ mod test {
 
         assert_eq!(
             AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOutputs),
+            Err(VerifierError::DeathMayNotCreate),
         );
     }
 
