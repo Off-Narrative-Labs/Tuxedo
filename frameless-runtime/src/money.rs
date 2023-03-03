@@ -13,6 +13,7 @@ use tuxedo_core::{
 
 // use log::info;
 
+/// The main verifier for the money piece. Allows spending and minting tokens.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -20,6 +21,8 @@ use tuxedo_core::{
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MoneyVerifier {
     /// A typical spend transaction where some coins are consumed and others are created.
+    /// Input value must exceed output value. The difference is burned and reflected in the
+    /// transaction's priority.
     Spend,
     /// A mint transaction that creates no coins out of the void. In a real-world chain,
     /// this should be protected somehow, or not included at all. For now it is publicly
@@ -28,7 +31,7 @@ pub enum MoneyVerifier {
 }
 
 /// A single coin in the fungible money system.
-/// A new type wrapper around a u128 value.
+/// A new-type wrapper around a `u128` value.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -46,6 +49,7 @@ impl UtxoData for Coin {
     const TYPE_ID: [u8; 4] = *b"coin";
 }
 
+/// Errors that can occur when verifying money transactions.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -149,17 +153,11 @@ impl Verifier for MoneyVerifier {
     }
 }
 
+/// Unit tests for the Money piece
 #[cfg(test)]
 mod test {
     use super::*;
-
-    /// A bogus data type used in tests for type validation
-    #[derive(Encode, Decode)]
-    struct Bogus;
-
-    impl UtxoData for Bogus {
-        const TYPE_ID: [u8; 4] = *b"bogs";
-    }
+    use tuxedo_core::dynamic_typing::testing::Bogus;
 
     #[test]
     fn spend_valid_transaction_work() {

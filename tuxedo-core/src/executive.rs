@@ -98,7 +98,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             );
 
             ensure!(
-                !TransparentUtxoSet::<R>::peek_utxo(&output_ref).is_some(),
+                TransparentUtxoSet::<R>::peek_utxo(&output_ref).is_none(),
                 UtxoError::PreExistingOutput
             );
         }
@@ -137,7 +137,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         transaction
             .verifier
             .verify(&input_data, &output_data)
-            .map_err(|e| UtxoError::VerifierError(e))?;
+            .map_err(UtxoError::VerifierError)?;
 
         // Return the valid transaction
         // TODO in the future we need to prioritize somehow. Perhaps the best strategy
@@ -210,7 +210,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
     where
         B::Header: HeaderT,
     {
-        *sp_io::storage::get(crate::HEADER_KEY)
+        *sp_io::storage::get(HEADER_KEY)
             .and_then(|d| B::Header::decode(&mut &*d).ok())
             .expect("A header is always stored at the beginning of the block")
             .number()
@@ -227,7 +227,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
 
         // Store the transient partial header for updating at the end of the block.
         // This will be removed from storage before the end of the block.
-        sp_io::storage::set(&HEADER_KEY, &header.encode());
+        sp_io::storage::set(HEADER_KEY, &header.encode());
     }
 
     pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
@@ -258,7 +258,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
 
         // the header itself contains the state root, so it cannot be inside the state (circular
         // dependency..). Make sure in execute block path we have the same rule.
-        sp_io::storage::clear(&HEADER_KEY);
+        sp_io::storage::clear(HEADER_KEY);
 
         let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
             .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
@@ -267,7 +267,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             extrinsics,
             StateVersion::V1,
         );
-        sp_io::storage::clear(&EXTRINSIC_KEY);
+        sp_io::storage::clear(EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
 
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
@@ -290,10 +290,10 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // Store the header. Although we don't need to mutate it, we do need to make
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
-        sp_io::storage::set(&HEADER_KEY, &block.header().encode());
+        sp_io::storage::set(HEADER_KEY, &block.header().encode());
 
         // Apply each extrinsic
-        for extrinsic in block.clone().extrinsics() {
+        for extrinsic in block.extrinsics() {
             match Self::apply_tuxedo_transaction(extrinsic.clone()) {
                 Ok(()) => info!(
                     target: LOG_TARGET,
@@ -304,7 +304,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         }
 
         // Clear the transient header out of storage
-        sp_io::storage::clear(&HEADER_KEY);
+        sp_io::storage::clear(HEADER_KEY);
 
         // Check state root
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
@@ -328,7 +328,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // Check extrinsics root.
         let extrinsics = block
             .extrinsics()
-            .into_iter()
+            .iter()
             .map(|x| x.encode())
             .collect::<Vec<_>>();
         let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
