@@ -37,21 +37,36 @@ impl UtxoData for AmoebaDetails {
 }
 
 /// Reasons that the amoeba verifiers may fail
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum VerifierError {
-    // TODO In the current design, this will need to be repeated in every piece. This is not nice.
-    // Well, actually, no. Some pieces will be flexible about how many inputs and outputs they can take.
-    // For example, the money piece can take as many input or output coins as it wants.
-    // Similarly, in kitties, we may allow breeding via cat orgies with arbitrarily many parents providing genetic source material.
-    /// Wrong number of inputs were provided to the verifier.
-    WrongNumberInputs,
-    /// Wrong number of outputs were provided to the verifier.
-    WrongNumberOutputs,
     /// An input data has the wrong type.
     BadlyTypedInput,
     /// An output data has the wrong type.
     BadlyTypedOutput,
 
+    /// Amoeba creation requires a new amoeba to be created, but none was provided.
+    CreatedNothing,
+    /// Amoeba creation is not a mass operation. Only one new amoeba can be created.
+    /// If you need to create multiple amoebas, you must submit multiple transactions.
+    CreatedTooMany,
+    /// No input may be consumed by amoeba creation.
+    CreationMayNotConsume,
+
+    /// Amoeba death requires a "victim" amoeba that will be consumed
+    /// but noe was provided.
+    NoVictim,
+    /// Amoeba death is not a mass operation. Only one "victim" may be specified.
+    /// If you need to kill off multiple amoebas, you must submit multiple transactions.
+    TooManyVictims,
+    /// No output may be created by amoeba death.
+    DeathMayNotCreate,
+    
+    /// Amoeba mitosis requires exactly two daughter amoebas to be created.
+    // Creating more or fewer than that is invalid.
+    WrongNumberOfDaughters,
+    /// Amoeba mitosis requires exactly one mother amoeba to be consumed.
+    /// Consuming any more or fewer than that is invalid.
+    WrongNumberOfMothers,
     // Now we get on to the actual amoeba-specific errors
     /// The daughters did not have to right generation based on the mother.
     WrongGeneration,
@@ -78,13 +93,13 @@ impl Verifier for AmoebaMitosis {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, VerifierError> {
         // Make sure there is exactly one mother.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
+        ensure!(input_data.len() == 1, VerifierError::WrongNumberOfMothers);
         let mother = input_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| VerifierError::BadlyTypedInput)?;
 
         // Make sure there are exactly two daughters.
-        ensure!(output_data.len() == 2, VerifierError::WrongNumberOutputs);
+        ensure!(output_data.len() == 2, VerifierError::WrongNumberOfDaughters);
         let first_daughter = output_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| VerifierError::BadlyTypedOutput)?;
@@ -132,9 +147,8 @@ impl Verifier for AmoebaDeath {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single victim
-        // Another valid design choice would be to allow killing many amoebas at once
-        // but that is not the choice I've made here.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberInputs);
+        ensure!(!input_data.is_empty(), VerifierError::NoVictim);
+        ensure!(input_data.len() == 1, VerifierError::TooManyVictims);
 
         // We don't actually need to check any details of the victim, but we do need to make sure
         // we have the correct type.
@@ -143,7 +157,7 @@ impl Verifier for AmoebaDeath {
             .map_err(|_| VerifierError::BadlyTypedInput)?;
 
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
+        ensure!(output_data.is_empty(), VerifierError::DeathMayNotCreate);
 
         Ok(0)
     }
@@ -169,17 +183,333 @@ impl Verifier for AmoebaCreation {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single created amoeba
-        ensure!(output_data.len() == 1, VerifierError::WrongNumberOutputs);
+        ensure!(!output_data.is_empty(), VerifierError::CreatedNothing);
+        ensure!(output_data.len() == 1, VerifierError::CreatedTooMany);
         let eve = output_data[0]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedInput)?;
+            .map_err(|_| VerifierError::BadlyTypedOutput)?;
 
         // Make sure the newly created amoeba has generation 0
         ensure!(eve.generation == 0, VerifierError::WrongGeneration);
 
         // Make sure there are no inputs
-        ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
+        ensure!(input_data.is_empty(), VerifierError::CreationMayNotConsume);
 
         Ok(0)
     }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use tuxedo_core::dynamic_typing::testing::Bogus;
+
+    #[test]
+    fn creation_valid_transaction_works() {
+        let to_spawn = AmoebaDetails {
+            generation: 0,
+            four_bytes: *b"test",
+        };
+        let input_data = Vec::new();
+        let output_data = vec![to_spawn.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Ok(0),
+        );
+    }
+
+    #[test]
+    fn creation_invalid_generation_fails() {
+        let to_spawn = AmoebaDetails {
+            generation: 100,
+            four_bytes: *b"test",
+        };
+        let input_data = Vec::new();
+        let output_data = vec![to_spawn.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::WrongGeneration),
+        );
+    }
+
+    #[test]
+    fn creation_with_inputs_fails() {
+        let example = AmoebaDetails {
+            generation: 0,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![example.clone().into()];
+        let output_data = vec![example.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::CreationMayNotConsume),
+        );
+    }
+
+    #[test]
+    fn creation_with_badly_typed_output_fails() {
+        let input_data = Vec::new();
+        let output_data = vec![Bogus.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::BadlyTypedOutput),
+        );
+    }
+
+    #[test]
+    fn creation_multiple_fails() {
+        let to_spawn = AmoebaDetails {
+            generation: 0,
+            four_bytes: *b"test",
+        };
+        let input_data = Vec::new();
+        let output_data = vec![to_spawn.clone().into(), to_spawn.into()];
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::CreatedTooMany),
+        );
+    }
+
+    #[test]
+    fn creation_with_no_output_fails() {
+        let input_data = Vec::new();
+        let output_data = Vec::new();
+
+        assert_eq!(
+            AmoebaCreation.verify(&input_data, &output_data),
+            Err(VerifierError::CreatedNothing),
+        );
+    }
+
+    #[test]
+    fn mitosis_valid_transaction_works() {
+        let mother = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let d1 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let d2 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![mother.into()];
+        let output_data = vec![d1.into(), d2.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Ok(0),
+        );
+    }
+
+    #[test]
+    fn mitosis_wrong_generation() {
+        let mother = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let d1 = AmoebaDetails {
+            generation: 3, // This daughter has the wrong generation
+            four_bytes: *b"test",
+        };
+        let d2 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![mother.into()];
+        let output_data = vec![d1.into(), d2.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Err(VerifierError::WrongGeneration),
+        );
+    }
+
+    #[test]
+    fn mitosis_badly_typed_input() {
+        let mother = Bogus;
+        let d1 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let d2 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![mother.into()];
+        let output_data = vec![d1.into(), d2.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Err(VerifierError::BadlyTypedInput),
+        );
+    }
+
+    #[test]
+    fn mitosis_no_input() {
+        let d1 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let d2 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let input_data = Vec::new();
+        let output_data = vec![d1.into(), d2.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberOfMothers),
+        );
+    }
+
+    #[test]
+    fn mitosis_badly_typed_output() {
+        let mother = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let d1 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let d2 = Bogus;
+        let input_data = vec![mother.into()];
+        let output_data = vec![d1.into(), d2.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Err(VerifierError::BadlyTypedOutput),
+        );
+    }
+
+    #[test]
+    fn mitosis_only_one_output() {
+        let mother = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let d1 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![mother.into()];
+        // There is only one daughter when there should be two
+        let output_data = vec![d1.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberOfDaughters),
+        );
+    }
+
+    #[test]
+    fn mitosis_too_many_outputs() {
+        let mother = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let d1 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let d2 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        // Mitosis requires exactly two daughters. There should not be a third one.
+        let d3 = AmoebaDetails {
+            generation: 2,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![mother.into()];
+        let output_data = vec![d1.into(), d2.into(), d3.into()];
+
+        assert_eq!(
+            AmoebaMitosis.verify(&input_data, &output_data),
+            Err(VerifierError::WrongNumberOfDaughters),
+        );
+    }
+
+    #[test]
+    fn death_valid_transaction_works() {
+        let example = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![example.into()];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Ok(0),
+        );
+    }
+
+    #[test]
+    fn death_no_input() {
+        let input_data = vec![];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::NoVictim),
+        );
+    }
+
+    #[test]
+    fn death_multiple_inputs() {
+        let a1 = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let a2 = AmoebaDetails {
+            generation: 4,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![a1.into(), a2.into()];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::TooManyVictims),
+        );
+    }
+
+    #[test]
+    fn death_with_output() {
+        let example = AmoebaDetails {
+            generation: 1,
+            four_bytes: *b"test",
+        };
+        let input_data = vec![example.clone().into()];
+        let output_data = vec![example.into()];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::DeathMayNotCreate),
+        );
+    }
+
+    #[test]
+    fn death_badly_typed_input() {
+        let example = Bogus;
+        let input_data = vec![example.into()];
+        let output_data = vec![];
+
+        assert_eq!(
+            AmoebaDeath.verify(&input_data, &output_data),
+            Err(VerifierError::BadlyTypedInput),
+        );
+    }
+
+
 }

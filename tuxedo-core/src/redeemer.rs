@@ -31,12 +31,12 @@ pub struct SigCheck {
 
 impl Redeemer for SigCheck {
     fn redeem(&self, simplified_tx: &[u8], witness: &[u8]) -> bool {
-        let sig = match Signature::try_from(&witness[..]) {
+        let sig = match Signature::try_from(witness) {
             Ok(s) => s,
             Err(_) => return false,
         };
 
-        sp_io::crypto::sr25519_verify(&sig, &simplified_tx, &Public::from_h256(self.owner_pubkey))
+        sp_io::crypto::sr25519_verify(&sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
     }
 }
 

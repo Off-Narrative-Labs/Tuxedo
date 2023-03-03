@@ -120,3 +120,20 @@ impl<T: UtxoData> From<T> for DynamicallyTypedData {
         }
     }
 }
+
+pub mod testing {
+    use super::*;
+
+    /// A bogus data type used in tests.
+    /// 
+    /// When writing tests for individual Tuxedo pieces, developers
+    /// need to make sure that the piece properly sanitizes the dynamically
+    /// typed data that is passed into its verifiers.
+    /// This type is used to represent incorrectly typed data.
+    #[derive(Encode, Decode)]
+    pub struct Bogus;
+
+    impl UtxoData for Bogus {
+        const TYPE_ID: [u8; 4] = *b"bogs";
+    }
+}
