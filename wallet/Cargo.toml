@@ -7,7 +7,7 @@ license = "Apache-2.0"
 description = "A simple example / template wallet built for the tuxedo template runtime"
 
 [dependencies]
-runtime = { path = "../frameless-runtime", package = "frameless-runtime"}
+runtime = { path = "../tuxedo-template-runtime", package = "tuxedo-template-runtime"}
 tuxedo-core = { path = "../tuxedo-core" }
 
 parity-scale-codec = { version = '3.4.0', default-features = false }
