@@ -46,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
     // Genesis Coin Reference
     let shawn_coin_ref = OutputRef {
         tx_hash: H256::zero(),
-        index: 0 as u32,
+        index: 0u32,
     };
 
     // Construct a simple Transaction to spend Shawn genesis coin
@@ -77,7 +77,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Send the transaction
-    let genesis_spend_hex = hex::encode(&transaction.encode());
+    let genesis_spend_hex = hex::encode(transaction.encode());
     let params = rpc_params![genesis_spend_hex];
     let genesis_spend_response: Result<String, _> =
         client.request("author_submitExtrinsic", params).await;
@@ -99,7 +99,7 @@ async fn get_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
 ) -> anyhow::Result<(H256, Coin)> {
-    let ref_hex = hex::encode(&output_ref.encode());
+    let ref_hex = hex::encode(output_ref.encode());
     let params = rpc_params![ref_hex];
     let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
 
@@ -112,9 +112,8 @@ async fn get_coin_from_storage(
     let utxo = Output::<OuterRedeemer>::decode(&mut &response_bytes[..])?;
     let coin_in_storage: Coin = utxo.payload.extract().unwrap();
     let mut returned_pubkey = H256::zero();
-    match utxo.redeemer {
-        OuterRedeemer::SigCheck(sig_check) => returned_pubkey = sig_check.owner_pubkey,
-        _ => {}
+    if let OuterRedeemer::SigCheck(sig_check) = utxo.redeemer {
+        returned_pubkey = sig_check.owner_pubkey;
     }
     Ok((returned_pubkey, coin_in_storage))
 }
