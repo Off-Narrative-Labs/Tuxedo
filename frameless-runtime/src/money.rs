@@ -36,6 +36,12 @@ pub enum MoneyVerifier {
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct Coin(u128);
 
+impl Coin {
+    pub fn new(amt: u128) -> Self {
+        Coin(amt)
+    }
+}
+
 impl UtxoData for Coin {
     const TYPE_ID: [u8; 4] = *b"coin";
 }
