@@ -43,7 +43,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
     ) -> Result<ValidTransaction, UtxoError<V::Error>> {
         // Make sure there are no duplicate inputs
         {
-            let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
+            let input_set: BTreeSet<_> = transaction.inputs.iter().map(|o| o.encode()).collect();
             ensure!(
                 input_set.len() == transaction.inputs.len(),
                 UtxoError::DuplicateInput
@@ -84,13 +84,18 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         }
 
         // Make sure no outputs already exist in storage
-        // TODO Actually I don't think we need to do this. It _does_ appear in the original utxo workshop,
-        // but I don't see how we could ever have an output collision.
+        let tx_hash = BlakeTwo256::hash_of(&transaction.encode());
         for index in 0..transaction.outputs.len() {
             let output_ref = OutputRef {
-                tx_hash: BlakeTwo256::hash_of(&transaction.encode()),
+                tx_hash,
                 index: index as u32,
             };
+
+            log::debug!(
+                target: LOG_TARGET,
+                "Checking for pre-existing output {:?}",
+                output_ref
+            );
 
             ensure!(
                 TransparentUtxoSet::<R>::peek_utxo(&output_ref).is_none(),
@@ -183,6 +188,11 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             TransparentUtxoSet::<R>::consume_utxo(&input.output_ref);
         }
 
+        log::debug!(
+            target: LOG_TARGET,
+            "Transaction before updating storage {:?}",
+            transaction
+        );
         // Write the newly created utxos
         for (index, output) in transaction.outputs.iter().enumerate() {
             let output_ref = OutputRef {
@@ -346,7 +356,14 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
         // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
         // For now, I just make them all custom zero
-        Self::validate_tuxedo_transaction(&tx)
-            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        let r = Self::validate_tuxedo_transaction(&tx);
+
+        log::debug!(
+            target: LOG_TARGET,
+            "Validation result: {:?}",
+            r
+        );
+
+        r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
     }
 }
