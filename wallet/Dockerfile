@@ -23,7 +23,7 @@ RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
   # But currently keys just live in the code.
   #ln -s /wallet-data /node-dev/.local/share/node-template/todo/what/is/the/real/path/for/wallet/data && \
   # unclutter and minimize the attack surface
-  rm -rf /usr/bin /usr/sbin && \
+  rm -rf /usr/bin /usr/sbin 
   # TODO this is a good check to do once we actually have a --version flag
   # check if executable works in this container
   #/usr/local/bin/tuxedo-template-wallet --version
