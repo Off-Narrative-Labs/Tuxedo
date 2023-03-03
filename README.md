@@ -4,23 +4,23 @@ Write UTXO-based Substrate Runtimes
 
 ## Table of Contents
 
-* [Architecture](#architecture)
-* [Repository Contents](#repository-contents)
-  * [Tuxedo Core](#tuxedo-core)
-  * [Template Runtime](#template-runtime)
-  * [Template Node](#template-node)
-  * [Wallet](#wallet)
-* [Funding and Roadmap](#funding-and-roadmap)
-* [Building and Running  Locally](#building-and-running-locally)
-* [Docker](#docker)
-* [Testing and Code Quality](#testing-and-code-quality)
-* [License](#license)
+- [Architecture](#architecture)
+- [Repository Contents](#repository-contents)
+  - [Tuxedo Core](#tuxedo-core)
+  - [Template Runtime](#template-runtime)
+  - [Template Node](#template-node)
+  - [Wallet](#wallet)
+- [Funding and Roadmap](#funding-and-roadmap)
+- [Building and Running Locally](#building-and-running-locally)
+- [Docker](#docker)
+- [Testing and Code Quality](#testing-and-code-quality)
+- [License](#license)
 
 ## Architecture
 
 Tuxedo is a framework for developing Substrate runtimes with the UTXO model.
 
-In the standard UTXO model each transaction provides some inputs that represent pieces of current state to be consumed, and provides some outputs which are new pieces of state to be added to the UTXO set. The chain logic then checks that the input and output sets satisfy some constraints. For example, the input coins must have value greater or equal to the output coins. Tuxedo generalizes this model slightly in two ways. First, by adding a notion of peeks, which are pieces of state to be read only, and not modified or consumed. This reduces the frequency with with transactions race for particular UTXOs. Second, by abstracting the notion of checking a transactions so that runtime developers can plug in their own custom "Tuxedo Pieces" or use some from a standard library. Rather than being constrained to build only a cryptocurrency, developers can build *proof of stake*, *governance*, *NFT games* or anything else they choose.
+In the standard UTXO model each transaction provides some inputs that represent pieces of current state to be consumed, and provides some outputs which are new pieces of state to be added to the UTXO set. The chain logic then checks that the input and output sets satisfy some constraints. For example, the input coins must have value greater or equal to the output coins. Tuxedo generalizes this model slightly in two ways. First, by adding a notion of peeks, which are pieces of state to be read only, and not modified or consumed. This reduces the frequency with with transactions race for particular UTXOs. Second, by abstracting the notion of checking a transactions so that runtime developers can plug in their own custom "Tuxedo Pieces" or use some from a standard library. Rather than being constrained to build only a cryptocurrency, developers can build _proof of stake_, _governance_, _NFT games_ or anything else they choose.
 
 Tuxedo makes the process of developing UTXO-based runtimes faster and safer by freeing developers from having to re-implement all of the common and error-prone UTXO logic in each chain. It also makes the process more standard by providing developers with simple interfaces for their Tuxedo Pieces. When developing a Tuxedo piece, a developer will complete some or all of these following tasks.
 
@@ -50,11 +50,11 @@ This mono-repo contains the core Tuxedo code as well as an example node built wi
 
 The reusable core of the Tuxedo framework lives in the `tuxedo-core` directory. This crate will be used by every runtime built with Tuxedo. The best way to explore this crate is by browsing its [code](./tuxedo-core/) or its [hosted rustdocs](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/index.html). It contains:
 
-* The core datatypes for the UTXO model such as `Input`, `Output`, `OutputRef`, `Transaction`, and others.
-* A standard interface for developers to access the UTXO set.
-* Common transaction validation logic that all UTXO transactions need to conduct.
-* A dynamic typing system to allow developers to store bespoke data types in the UTXO set in a type-safe manner, 
-* Public interfaces for developers to implement while writing their own Tuxedo pieces.
+- The core datatypes for the UTXO model such as `Input`, `Output`, `OutputRef`, `Transaction`, and others.
+- A standard interface for developers to access the UTXO set.
+- Common transaction validation logic that all UTXO transactions need to conduct.
+- A dynamic typing system to allow developers to store bespoke data types in the UTXO set in a type-safe manner,
+- Public interfaces for developers to implement while writing their own Tuxedo pieces.
 
 ### Template Runtime
 
@@ -73,14 +73,16 @@ The repo contains a proof-of-concept wallet in the `wallet` directory. This wall
 Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their support of Tuxedo through their grants program.
 
 As part of this grant we will deliver three milestones. More details are available in the [Tuxedo grant application](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md).
-* ✅ Core Tuxedo Functionality (complete)
-* 🏗️ User wallet (in development)
-* 🔜 Full Documentation and Tutorial (not yet started)
+
+- ✅ Core Tuxedo Functionality (complete)
+- 🏗️ User wallet (in development)
+- 🔜 Full Documentation and Tutorial (not yet started)
 
 After the grant work is complete we intend to continue developing Tuxedo. The future is less clear, but our current ideas include:
-* 🔮 Cumulus and Parachain support including cross-chain UTXOs
-* 🔮 Zero-knowledge runtimes a-la [zero-cash](https://www.ieee-security.org/TC/SP2014/papers/Zerocash_c_DecentralizedAnonymousPaymentsfromBitcoin.pdf) and [zexe](https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=9152634&ref=)
-* 🔮 UTXO-native Smart Contracts based on the pi-calculus
+
+- 🔮 Cumulus and Parachain support including cross-chain UTXOs
+- 🔮 Zero-knowledge runtimes a-la [zero-cash](https://www.ieee-security.org/TC/SP2014/papers/Zerocash_c_DecentralizedAnonymousPaymentsfromBitcoin.pdf) and [zexe](https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=9152634&ref=)
+- 🔮 UTXO-native Smart Contracts based on the pi-calculus
 
 ## Building and Running Locally
 
@@ -99,6 +101,7 @@ cargo build --release -p tuxedo-template-wallet
 ```
 
 Once you have the node and wallet built you can run a development node, and transfer some tokens.
+
 ```sh
 # Check out the CLI if you want to.
 # It supports all standard Substrate CLI options
