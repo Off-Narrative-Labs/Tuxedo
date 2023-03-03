@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SHAWN_PHRASE"],"fn":["get_coin_from_storage","main"],"opaque":[""]};

@@ -33,13 +33,19 @@
 <a href="#33" id="33">33</a>
 <a href="#34" id="34">34</a>
 <a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
 </pre><pre class="rust"><code><span class="doccomment">//! These three functions comprize what I sketched out in the UtxoSet trait in element the other day
 //! For now, this is complicated enough, so I&#39;ll just leave them here. In the future it may be wise to
 //! abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
 
 </span><span class="kw">use crate</span>::{
     redeemer::Redeemer,
-    types::{Output, OutputRef},
+    types::{Output, OutputRef}, LOG_TARGET,
 };
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>sp_std::marker::PhantomData;
@@ -65,7 +71,13 @@
     /// This will overwrite any utxo that already exists at this OutputRef. It should never be the
     /// case that there are collisions though. Right??
     </span><span class="kw">pub fn </span>store_utxo(output_ref: OutputRef, output: <span class="kw-2">&amp;</span>Output&lt;R&gt;) {
-        sp_io::storage::set(<span class="kw-2">&amp;</span>output_ref.encode(), <span class="kw-2">&amp;</span>output.encode());
+        <span class="kw">let </span>key = output_ref.encode();
+        <span class="macro">log::debug!</span>(
+            target: LOG_TARGET,
+            <span class="string">&quot;Storing UTXO at key: {:?}&quot;</span>,
+            sp_core::hexdisplay::HexDisplay::from(<span class="kw-2">&amp;</span>key)
+        );
+        sp_io::storage::set(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>output.encode());
     }
 }
 </code></pre></div>

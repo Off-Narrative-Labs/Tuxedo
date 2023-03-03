@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["frameless_runtime","node_template","tuxedo_core"];
+window.ALL_CRATES = ["frameless_runtime","node_template","tuxedo_core","tuxedo_template_wallet"];

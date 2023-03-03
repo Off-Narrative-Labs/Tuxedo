@@ -538,13 +538,13 @@
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-</span><span class="kw">struct </span>AmoebaDetails {
+</span><span class="kw">pub struct </span>AmoebaDetails {
     <span class="doccomment">/// How many generations after the original Eve Amoeba this one is.
     /// When going through mitosis, this number must increase by 1 each time.
-    </span>generation: u32,
+    </span><span class="kw">pub </span>generation: u32,
     <span class="doccomment">/// Four totally arbitrary bytes that each amoeba has. There is literally no
     /// validation on this field whatsoever. I just had an instinct to include a second field.
-    </span>four_bytes: [u8; <span class="number">4</span>],
+    </span><span class="kw">pub </span>four_bytes: [u8; <span class="number">4</span>],
 }
 
 <span class="kw">impl </span>UtxoData <span class="kw">for </span>AmoebaDetails {

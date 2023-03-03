@@ -284,6 +284,12 @@
 <a href="#284" id="284">284</a>
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
 </pre><pre class="rust"><code><span class="doccomment">//! An implementation of a simple fungible token.
 
 </span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
@@ -323,7 +329,13 @@
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-</span><span class="kw">pub struct </span>Coin(u128);
+</span><span class="kw">pub struct </span>Coin(<span class="kw">pub </span>u128);
+
+<span class="kw">impl </span>Coin {
+    <span class="kw">pub fn </span>new(amt: u128) -&gt; <span class="self">Self </span>{
+        Coin(amt)
+    }
+}
 
 <span class="kw">impl </span>UtxoData <span class="kw">for </span>Coin {
     <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;coin&quot;</span>;
