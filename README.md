@@ -6,8 +6,10 @@ Write UTXO-based Substrate Runtimes
 
 * [Architecture](#architecture)
 * [Repository Contents](#repository-contents)
+  * [Tuxedo Core](#tuxedo-core)
+  * [Template Runtime](#template-runtime)
+  * [Template Node](#template-node)
   * [Wallet](#wallet)
-  * 
 * [Funding and Roadmap](#funding-and-roadmap)
 * [Building and Running  Locally](#building-and-running-locally)
 * [Docker](#docker)
@@ -15,6 +17,8 @@ Write UTXO-based Substrate Runtimes
 * [License](#license)
 
 ## Architecture
+
+Tuxedo is 
 
 ## Repository Contents
 
