@@ -78,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
     );
 
     // Wait a few seconds to make sure a block has been authored.
-    sleep(Duration::from_secs(3));
+    sleep(Duration::from_secs(5));
 
     // Retrieve new coins from storage
     // Check that the daughters are in storage and print their details
@@ -91,9 +91,19 @@ async fn get_coin_from_storage(
     client: &HttpClient,
 ) -> anyhow::Result<Coin> {
     let ref_hex = hex::encode(&output_ref.encode());
-    Ok(Coin::new(50u128))
-}
+    let params = rpc_params![ref_hex];
+    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
 
+    let response_hex = rpc_response?
+        .expect("New coin can be retrieved from storage")
+        .chars()
+        .skip(2) // skipping 0x
+        .collect::<String>();
+    let response_bytes = hex::decode(response_hex)?;
+    let utxo = Output::<OuterRedeemer>::decode(&mut &response_bytes[..])?;
+    let coin_in_storage: Coin = utxo.payload.extract().unwrap();
+    Ok(coin_in_storage)
+}
 
 
 

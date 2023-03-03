@@ -27,7 +27,8 @@ use sp_runtime::{
     ApplyExtrinsicResult, StateVersion,
 };
 use sp_std::marker::PhantomData;
-use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
+use sp_std::{collections::btree_set::BTreeSet, vec::Vec, prelude::*,};
+use sp_core::hexdisplay::HexDisplay;
 
 /// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
@@ -41,9 +42,18 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<R, V>,
     ) -> Result<ValidTransaction, UtxoError<V::Error>> {
+        // info!(
+        //     target: LOG_TARGET,
+        //     "HELLO!? {:?}",
+        //     transaction
+        // );
+        info!(
+            target: LOG_TARGET,
+            "HELLO!!?",
+        );
         // Make sure there are no duplicate inputs
         {
-            let input_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
+            let input_set: BTreeSet<_> = transaction.inputs.iter().map(|o| o.encode()).collect();
             ensure!(
                 input_set.len() == transaction.inputs.len(),
                 UtxoError::DuplicateInput
@@ -93,7 +103,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             };
 
             ensure!(
-                TransparentUtxoSet::<R>::peek_utxo(&output_ref).is_none(),
+                !TransparentUtxoSet::<R>::peek_utxo(&output_ref).is_some(),
                 UtxoError::PreExistingOutput
             );
         }
@@ -132,7 +142,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         transaction
             .verifier
             .verify(&input_data, &output_data)
-            .map_err(UtxoError::VerifierError)?;
+            .map_err(|e| UtxoError::VerifierError(e))?;
 
         // Return the valid transaction
         // TODO in the future we need to prioritize somehow. Perhaps the best strategy
@@ -150,7 +160,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
     /// Most of the validation happens in the call to `validate_tuxedo_transaction`.
     /// Once those chekcs are done we make sure there are no missing inputs and then update storage.
     pub fn apply_tuxedo_transaction(transaction: Transaction<R, V>) -> DispatchResult<V::Error> {
-        log::debug!(
+        log::info!(
             target: LOG_TARGET,
             "applying tuxedo transaction {:?}",
             transaction
@@ -200,7 +210,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
     where
         B::Header: HeaderT,
     {
-        *sp_io::storage::get(HEADER_KEY)
+        *sp_io::storage::get(crate::HEADER_KEY)
             .and_then(|d| B::Header::decode(&mut &*d).ok())
             .expect("A header is always stored at the beginning of the block")
             .number()
@@ -217,7 +227,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
 
         // Store the transient partial header for updating at the end of the block.
         // This will be removed from storage before the end of the block.
-        sp_io::storage::set(HEADER_KEY, &header.encode());
+        sp_io::storage::set(&HEADER_KEY, &header.encode());
     }
 
     pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
@@ -248,7 +258,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
 
         // the header itself contains the state root, so it cannot be inside the state (circular
         // dependency..). Make sure in execute block path we have the same rule.
-        sp_io::storage::clear(HEADER_KEY);
+        sp_io::storage::clear(&HEADER_KEY);
 
         let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
             .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
@@ -257,7 +267,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             extrinsics,
             StateVersion::V1,
         );
-        sp_io::storage::clear(EXTRINSIC_KEY);
+        sp_io::storage::clear(&EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
 
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
@@ -280,10 +290,10 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // Store the header. Although we don't need to mutate it, we do need to make
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
-        sp_io::storage::set(HEADER_KEY, &block.header().encode());
+        sp_io::storage::set(&HEADER_KEY, &block.header().encode());
 
         // Apply each extrinsic
-        for extrinsic in block.extrinsics() {
+        for extrinsic in block.clone().extrinsics() {
             match Self::apply_tuxedo_transaction(extrinsic.clone()) {
                 Ok(()) => info!(
                     target: LOG_TARGET,
@@ -294,7 +304,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         }
 
         // Clear the transient header out of storage
-        sp_io::storage::clear(HEADER_KEY);
+        sp_io::storage::clear(&HEADER_KEY);
 
         // Check state root
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
@@ -303,22 +313,22 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         assert_eq!(*block.header().state_root(), state_root);
 
         // Print state for quick debugging
-        // let mut key = vec![];
-        // while let Some(next) = sp_io::storage::next_key(&key) {
-        //     let val = sp_io::storage::get(&next).unwrap().to_vec();
-        //     log::trace!(
-        //         target: LOG_TARGET,
-        //         "{} <=> {}",
-        //         HexDisplay::from(&next),
-        //         HexDisplay::from(&val)
-        //     );
-        //     key = next;
-        // }
+        let mut key = vec![];
+        while let Some(next) = sp_io::storage::next_key(&key) {
+            let val = sp_io::storage::get(&next).unwrap().to_vec();
+            log::info!(
+                target: LOG_TARGET,
+                "{} <=> {}",
+                HexDisplay::from(&next),
+                HexDisplay::from(&val)
+            );
+            key = next;
+        }
 
         // Check extrinsics root.
         let extrinsics = block
             .extrinsics()
-            .iter()
+            .into_iter()
             .map(|x| x.encode())
             .collect::<Vec<_>>();
         let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
@@ -335,7 +345,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         tx: <B as BlockT>::Extrinsic,
         block_hash: <B as BlockT>::Hash,
     ) -> TransactionValidity {
-        log::debug!(
+        log::info!(
             target: LOG_TARGET,
             "Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}",
             source,

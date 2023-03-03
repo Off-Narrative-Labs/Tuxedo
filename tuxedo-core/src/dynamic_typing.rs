@@ -91,6 +91,7 @@ impl DynamicallyTypedData {
 }
 
 /// Errors that can occur when casting dynamically typed data into strongly typed data.
+#[derive(Debug)]
 pub enum DynamicTypingError {
     /// The data provided was not of the target decoding type.
     WrongType,
