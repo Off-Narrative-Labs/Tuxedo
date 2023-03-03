@@ -30,10 +30,8 @@ async fn main() -> anyhow::Result<()> {
     let url = "http://localhost:9933";
     let client = HttpClientBuilder::default().build(url)?;
 
-    // TODO: Eventually we will have to work with key
     const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
     let (shawn_pair, _) = Pair::from_phrase(SHAWN_PHRASE, None)?;
-    // Construct a simple Transaction to spend Shawn genesis coin
 
     // Genesis Coin Reference
     let shawn_coin_ref = OutputRef {
@@ -41,6 +39,7 @@ async fn main() -> anyhow::Result<()> {
         index: 0 as u32,
     };
 
+    // Construct a simple Transaction to spend Shawn genesis coin
     let mut transaction = Transaction {
         inputs: vec![
             Input {
@@ -81,7 +80,6 @@ async fn main() -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Retrieve new coins from storage
-    // Check that the daughters are in storage and print their details
     let (pubkey, new_coin_from_storage) = get_coin_from_storage(&new_coin_ref, &client).await?;
     println!("Retrieved the new coin from storage {:?} with owner: {:?}", new_coin_from_storage, sp_core::hexdisplay::HexDisplay::from(&pubkey.encode()));
     Ok(())
@@ -110,31 +108,6 @@ async fn get_coin_from_storage(
     }
     Ok((returned_pubkey, coin_in_storage))
 }
-
-
-
-// async fn get_amoeba_from_storage(
-//     output_ref: &OutputRef,
-//     client: &HttpClient,
-// ) -> anyhow::Result<AmoebaDetails> {
-//     let ref_hex = hex::encode(&output_ref.encode());
-//     let params = rpc_params![ref_hex];
-//     let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
-
-//     // Open up result and strip off 0x prefix
-//     let response_hex = rpc_response?
-//         .expect("Amoeba was not found in storage")
-//         .chars()
-//         .skip(2)
-//         .collect::<String>();
-//     let response_bytes = hex::decode(response_hex)
-//         //TODO I would prefer to use `?` here instead of panicking
-//         .expect("Eve bytes from storage can decode correctly");
-//     let utxo: Output<OuterRedeemer> = Decode::decode(&mut &response_bytes[..])?;
-//     let amoeba_from_storage: AmoebaDetails = utxo.payload.extract().unwrap();
-
-//     Ok(amoeba_from_storage)
-// }
 
 // // This async, tokio, anyhow stuff arose because I needed to `await` for rpc responses.
 // #[tokio::main]
