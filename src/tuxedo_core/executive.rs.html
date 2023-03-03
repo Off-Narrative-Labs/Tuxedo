@@ -572,9 +572,9 @@
         }
     }
 
-    <span class="doccomment">/// A helper function that allows tuxedo runtimes to read the current block height
-    /// TODO This must be exposed to the pieces somehow. We need some kind of config system.
-    /// We should probably steal it from FRAME a la https://github.com/paritytech/substrate/pull/104
+    <span class="comment">// TODO This must be exposed to the pieces somehow. We need some kind of config system.
+    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/15
+    </span><span class="doccomment">/// A helper function that allows tuxedo runtimes to read the current block height
     </span><span class="kw">pub fn </span>block_height() -&gt; &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Number
     <span class="kw">where
         </span>B::Header: HeaderT,

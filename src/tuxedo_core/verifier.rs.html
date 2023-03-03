@@ -41,12 +41,10 @@
 <a href="#41" id="41">41</a>
 <a href="#42" id="42">42</a>
 <a href="#43" id="43">43</a>
-<a href="#44" id="44">44</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A verifier is a piece of logic that determines whether a transaction as a whole is valid
 //! and should be committed. Most tuxedo pieces will provide one or more verifiers. Verifiers
 //!  do not typically calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
-//! They are loosely analogous to frame pallet calls.
 
 </span><span class="kw">use </span>sp_std::fmt::Debug;
 

@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"frameless_runtime":[["impl GetNodeBlockType for <a class=\"struct\" href=\"frameless_runtime/struct.Runtime.html\" title=\"struct frameless_runtime::Runtime\">Runtime</a>"]]
+"tuxedo_template_runtime":[["impl GetNodeBlockType for <a class=\"struct\" href=\"tuxedo_template_runtime/struct.Runtime.html\" title=\"struct tuxedo_template_runtime::Runtime\">Runtime</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

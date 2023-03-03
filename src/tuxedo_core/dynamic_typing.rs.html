@@ -208,10 +208,10 @@
 /// Using a new type allows strong type disambiguation between bespoke use-cases in which
 /// the same primitive may be stored.
 </span><span class="kw">pub trait </span>UtxoData: Encode + Decode {
-    <span class="comment">//TODO this is ugly. But at least I&#39;m not stuck anymore.
+    <span class="comment">//TODO Not great that it is up to the runtime dev to enforce uniqueness
+    // Maybe macros can help... Doesn&#39;t frame somehow pass info about the string in construct runtime to the pallet-level storage items?
     </span><span class="doccomment">/// A unique identifier for this type. For now choosing this value and making sure it
     /// really is unique is the problem of the developer. Ideally this would be better.
-    /// Maybe macros... Doesn&#39;t frame somehow pass info about the string in construct runtime to the pallet-level storage items?
     </span><span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>];
 }
 
