@@ -17,8 +17,8 @@ LABEL description="Tuxedo Templet Wallet"
 COPY --from=builder /wallet/target/release/tuxedo-template-wallet /usr/local/bin
 
 RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
-  mkdir -p /chain-data /node-dev/.local/share && \
-  chown -R node-dev:node-dev /chain-data && \
+  mkdir -p /wallet-data /node-dev/.local/share && \
+  chown -R node-dev:node-dev /wallet-data && \
   # We may eventually want to make a wallet data directory available outside the container,
   # But currently keys just live in the code.
   #ln -s /wallet-data /node-dev/.local/share/node-template/todo/what/is/the/real/path/for/wallet/data && \
