@@ -7885,6 +7885,7 @@ dependencies = [
  "hex",
  "jsonrpsee",
  "parity-scale-codec",
+ "sp-core",
  "sp-runtime",
  "tokio",
  "tuxedo-core",

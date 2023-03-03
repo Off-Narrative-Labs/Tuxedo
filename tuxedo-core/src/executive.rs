@@ -188,6 +188,11 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             TransparentUtxoSet::<R>::consume_utxo(&input.output_ref);
         }
 
+        log::debug!(
+            target: LOG_TARGET,
+            "Transaction before updating storage {:?}",
+            transaction
+        );
         // Write the newly created utxos
         for (index, output) in transaction.outputs.iter().enumerate() {
             let output_ref = OutputRef {
