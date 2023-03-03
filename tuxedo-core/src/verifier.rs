@@ -2,7 +2,6 @@
 //! and should be committed. Most tuxedo pieces will provide one or more verifiers. Verifiers
 //!  do not typically calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
-//! They are loosely analogous to frame pallet calls.
 
 use sp_std::fmt::Debug;
 

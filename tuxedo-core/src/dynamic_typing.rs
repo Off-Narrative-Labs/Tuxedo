@@ -69,10 +69,10 @@ pub struct DynamicallyTypedData {
 /// Using a new type allows strong type disambiguation between bespoke use-cases in which
 /// the same primitive may be stored.
 pub trait UtxoData: Encode + Decode {
-    //TODO this is ugly. But at least I'm not stuck anymore.
+    //TODO Not great that it is up to the runtime dev to enforce uniqueness
+    // Maybe macros can help... Doesn't frame somehow pass info about the string in construct runtime to the pallet-level storage items?
     /// A unique identifier for this type. For now choosing this value and making sure it
     /// really is unique is the problem of the developer. Ideally this would be better.
-    /// Maybe macros... Doesn't frame somehow pass info about the string in construct runtime to the pallet-level storage items?
     const TYPE_ID: [u8; 4];
 }
 

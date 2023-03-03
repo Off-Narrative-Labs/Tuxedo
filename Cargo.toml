@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "node",
-    "frameless-runtime",
+    "tuxedo-template-runtime",
     "tuxedo-core",
     "wallet",
 ]
