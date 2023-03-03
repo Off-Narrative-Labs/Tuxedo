@@ -6,6 +6,10 @@ on:
       - main
       - ci-rustdocs
 
+# So github actions runner can publish the built docs to the gh-pages branch
+permissions:
+  contents: write
+
 jobs:
   deploy-docs:
     name: Deploy docs
