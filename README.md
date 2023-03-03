@@ -91,10 +91,14 @@ Developers and Curious individuals who want to quickly try out Tuxedo and its te
 
 Docker is a complex software and there are many ways to pull and run images and map host ports to container ports. For those not already familiar with Docker, you may benefit from referencing the [docker documentation](https://docs.docker.com/) or [building and running locally](#building-and-running-locally) instead.
 
+The following commands are meant as a quickstart that will work on most platforms for users who already have Docker setup.
+
 ```sh
 # Run a development node with Docker
 docker run --network host ghcr.io/off-narrative-labs/tuxedo:ci-build-publish-docker --dev
 
+# In a separate terminal, run the PoC wallet to transfer 10 tokens to the specified user
+docker run ghcr.io/off-narrative-labs/tuxedo-wallet:ci-build-publish-docker 10 "news slush supreme milk chapter athlete soap sausage put clutch what kitten"
 ```
 
 ## Testing and Code Quality
