@@ -279,6 +279,11 @@
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
 </pre><pre class="rust"><code><span class="doccomment">//! An implementation of a simple fungible token.
 
 </span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
@@ -294,6 +299,7 @@
 
 <span class="comment">// use log::info;
 
+</span><span class="doccomment">/// The main verifier for the money piece. Allows spending and minting tokens.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -301,6 +307,8 @@
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 </span><span class="kw">pub enum </span>MoneyVerifier {
     <span class="doccomment">/// A typical spend transaction where some coins are consumed and others are created.
+    /// Input value must exceed output value. The difference is burned and reflected in the
+    /// transaction&#39;s priority.
     </span>Spend,
     <span class="doccomment">/// A mint transaction that creates no coins out of the void. In a real-world chain,
     /// this should be protected somehow, or not included at all. For now it is publicly
@@ -309,7 +317,7 @@
 }
 
 <span class="doccomment">/// A single coin in the fungible money system.
-/// A new type wrapper around a u128 value.
+/// A new-type wrapper around a `u128` value.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -321,7 +329,8 @@
     <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;coin&quot;</span>;
 }
 
-<span class="attr">#[cfg_attr(
+<span class="doccomment">/// Errors that can occur when verifying money transactions.
+</span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
@@ -424,7 +433,8 @@
     }
 }
 
-<span class="attr">#[cfg(test)]
+<span class="doccomment">/// Unit tests for the Money piece
+</span><span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>tuxedo_core::dynamic_typing::testing::Bogus;
