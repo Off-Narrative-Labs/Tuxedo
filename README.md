@@ -34,7 +34,7 @@ All Tuxedo pieces will define one or more sets of constraints that a transaction
 
 ### Declaring Redemption Logic
 
-Each individual UTXO in the UXO set is protected by a piece of associated logic that determines when it may be spent. This lgic is defined in the [`Redeemer` Trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/redeemer/trait.Redeemer.html). The most classic example is that the UTXO is owned by a particular public key and the transaction must be signed by that key in order to unlock the input. Other examples also exist. For example, the UTXO may be claimable by anyone, or by nobody at all, or it may require a valid proof or work to be consumed.
+Each individual UTXO in the UTXO set is protected by a piece of associated logic that determines when it may be spent. This logic is defined in the [`Redeemer` Trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/redeemer/trait.Redeemer.html). The most classic example is that the UTXO is owned by a particular public key and the transaction must be signed by that key in order to unlock the input. Other examples also exist, such as, the UTXO may be claimable by anyone, or by nobody at all, or it may require a valid proof or work to be consumed.
 
 Tuxedo core provides the most common redemption logic already, so it is uncommon that individual pieces need to add custom redemption logic, but the possibility exists none-the-less.
 
