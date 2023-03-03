@@ -33,7 +33,7 @@ mod poe;
 mod runtime_upgrade;
 //TODO kitties piece needs ported for merge
 //mod kitties;
-mod money;
+pub mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
