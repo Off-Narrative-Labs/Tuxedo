@@ -8,8 +8,6 @@ use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
-use log::info;
-
 use sp_api::impl_runtime_apis;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
