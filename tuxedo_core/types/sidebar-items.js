@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["UtxoError"],"struct":["Input","Output","OutputRef","Transaction"],"type":["DispatchResult"]};

@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"frameless_runtime":[["impl BoundToRuntimeAppPublic for <a class=\"struct\" href=\"frameless_runtime/opaque/struct.GrandpaAppPublic.html\" title=\"struct frameless_runtime::opaque::GrandpaAppPublic\">GrandpaAppPublic</a>"],["impl BoundToRuntimeAppPublic for <a class=\"struct\" href=\"frameless_runtime/opaque/struct.AuraAppPublic.html\" title=\"struct frameless_runtime::opaque::AuraAppPublic\">AuraAppPublic</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

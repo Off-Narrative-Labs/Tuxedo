@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"macro":["ensure","fail"],"mod":["dynamic_typing","redeemer","support_macros","types"],"struct":["Executive"],"trait":["Verifier"]};
