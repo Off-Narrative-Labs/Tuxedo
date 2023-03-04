@@ -25,6 +25,8 @@ use tuxedo_core::{
     types::{Input, Output, OutputRef},
 };
 
+
+/// Create and send a transaction that spends coins on the network
 pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
 
     // How much of a coin to create the rest gets burned
@@ -85,20 +87,23 @@ pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Retrieve new coins from storage
-    let (pubkey, new_coin_from_storage) = get_coin_from_storage(&new_coin_ref, &client).await?;
-    println!("Retrieved the new coin from storage {:?} with owner: {:?}", new_coin_from_storage, sp_core::hexdisplay::HexDisplay::from(&pubkey.encode()));
-    Ok(())
+    print_coin_from_storage(&new_coin_ref, &client).await
 }
 
-async fn get_coin_from_storage(
+/// Pretty print the details of a coin in storage given the OutputRef
+pub async fn print_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<(H256, Coin)> {
+) -> anyhow::Result<()> {
     let utxo = fetch_storage::<OuterRedeemer>(output_ref, client).await?;
     let coin_in_storage: Coin = utxo.payload.extract()?;
-    let mut returned_pubkey = H256::zero();
-    if let OuterRedeemer::SigCheck(sig_check) = utxo.redeemer {
-        returned_pubkey = sig_check.owner_pubkey;
+
+    print!("{}: Found coin worth {:?} units ", hex::encode(output_ref.encode()), coin_in_storage.0);
+    
+    match utxo.redeemer {
+        OuterRedeemer::SigCheck(sig_check) => println!{"owned by 0x{}", hex::encode(sig_check.owner_pubkey)},
+        OuterRedeemer::UpForGrabs(_) => println!("that can be spent by anyone"),
     }
-    Ok((returned_pubkey, coin_in_storage))
+
+    Ok(())
 }

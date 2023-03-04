@@ -28,7 +28,10 @@ enum Command {
     /// Demonstrate creating an amoeba and performing mitosis on it.
     AmoebaDemo,
     /// Verify that a particular coin exists in storage. Show its value and owner.
-    VerifyCoin,
+    VerifyCoin {
+        /// A hex-encoded output reference (non 0x prefixed for now)
+        ref_string: String,
+    },
     /// Spend some coins
     SpendCoins,
 }
@@ -36,15 +39,21 @@ enum Command {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    
+    // Parse command line args
     let cli = Cli::parse();
 
     // Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
     let client = HttpClientBuilder::default().build(cli.endpoint)?;
 
+    // Dispatch to proper subcommand
     match cli.command {
         Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
-        Command::VerifyCoin => todo!(),
+        Command::VerifyCoin{ref_string} => {
+            let output_ref = OutputRef::decode(&mut &hex::decode(ref_string)?[..])?;
+            money::print_coin_from_storage(&output_ref, &client).await
+        },
         Command::SpendCoins => money::spend_coins(&client).await,
     }
 }
