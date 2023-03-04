@@ -102,18 +102,60 @@ cargo build --release -p node-template
 cargo build --release -p tuxedo-template-wallet
 ```
 
-Once you have the node and wallet built you can run a development node, and transfer some tokens.
+Once you have the node and wallet built, you can run a development node.
 
 ```sh
-# Check out the CLI if you want to.
+# Check out the CLI if you want to
 # It supports all standard Substrate CLI options
 ./target/release/node-template --help
 
 # Start a development node
 ./target/release/node-template --dev
+```
 
-# In a separate terminal, run the PoC wallet to transfer 10 tokens to the specified user
-./target/release/tuxedo-template-wallet 10 "news slush supreme milk chapter athlete soap sausage put clutch what kitten"
+Then, in a separate terminal, experiment with the PoC wallet.
+
+```sh
+# Check out the minimal PoC CLI
+./target/release/tuxedo-template-wallet --help
+
+# Confirm that a 100 token genesis utxo is present in storage
+./target/release/tuxedo-template-wallet verify-coin verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
+
+  000000000000000000000000000000000000000000000000000000000000000000000000:
+    Found coin worth 100 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+
+# Split the 100 tokens into two of values 20 and 25, burning the remaining 5
+./target/release/tuxedo-template-wallet spend-coins \
+  --input 000000000000000000000000000000000000000000000000000000000000000000000000 \
+  --output 20 \
+  --output 25
+
+  f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1400000000:
+    Found coin worth 20 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+  f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1401000000:
+    Found coin worth 25 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+
+
+# Further split the 25 token utxo into 10 and 5, burning the remaining 10
+./target/release/tuxedo-template-wallet spend-coins \
+  --input f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1401000000 \
+  --output-amount 10 \
+  --output-amount 5
+
+  06fa6e2a1875ee6cab54e863a244bf2577dba8061782c20411f49168e0a18a9300000000:
+    Found coin worth 10 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+  06fa6e2a1875ee6cab54e863a244bf2577dba8061782c20411f49168e0a18a9301000000:
+    Found coin worth 5 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+
+# Join the 20 token utxo and 10 token utxo back into a single 30 token utxo, burning nothing
+./target/release/tuxedo-template-wallet spend-coins \
+  --input f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1400000000 \
+  --input 06fa6e2a1875ee6cab54e863a244bf2577dba8061782c20411f49168e0a18a9300000000 \
+  --output-amount 30
+
+  f8ee7f42d81b749223da7a49838df414aef6f4343da59bc4798335d67886f13000000000:
+    Found coin worth 30 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
 ```
 
 ## Docker
@@ -126,11 +168,19 @@ The following commands are meant as a quickstart that will work on most platform
 
 ```sh
 # Run a development node with Docker
-docker run --network host ghcr.io/off-narrative-labs/tuxedo:ci-build-publish-docker --dev
+docker run --network host ghcr.io/off-narrative-labs/tuxedo --dev
 
-# In a separate terminal, run the PoC wallet to transfer 10 tokens to the specified user
-docker run ghcr.io/off-narrative-labs/tuxedo-wallet:ci-build-publish-docker 10 "news slush supreme milk chapter athlete soap sausage put clutch what kitten"
+# In a separate terminal, explore the PoC wallet's CLI
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet --help
+
+# Use the PoC wallet to confirm that a 100 token genesis utxo is present in storage
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet verify-coin verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
+
+  000000000000000000000000000000000000000000000000000000000000000000000000:
+    Found coin worth 100 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
 ```
+
+More example commands are listed above in the section on [running locally](#building-and-running-locally). They all work with docker as well.
 
 ## Testing and Code Quality
 
