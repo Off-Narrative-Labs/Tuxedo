@@ -1,10 +1,12 @@
-//! A simple CLI wallet. For now it is a toy just to start testing things out.
+//! Wallet features related to spending money and checking balances.
+
+use crate::fetch_storage;
 
 use std::{thread::sleep, time::Duration};
 
 use jsonrpsee::{
     core::client::ClientT,
-    http_client::{HttpClient, HttpClientBuilder},
+    http_client::HttpClient,
     rpc_params,
 };
 use parity_scale_codec::{Decode, Encode};
@@ -20,57 +22,11 @@ use sp_core::{
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::{SigCheck},
-    types::{Input, Output, OutputRef}, Redeemer,
+    types::{Input, Output, OutputRef},
 };
-use clap::{Parser, Subcommand};
 use anyhow::anyhow;
 
-mod amoeba;
-
-const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
-
-
-#[derive(Debug, Parser)]
-#[command(about, version)]
-struct Cli {
-    #[arg(long, short, default_value_t = DEFAULT_ENDPOINT.to_string())]
-    /// RPC endpoint of the node that this wallet will connect to
-    endpoint: String,
-
-    #[command(subcommand)]
-    command: Command,
-}
-
-#[derive(Debug, Subcommand)]
-enum Command {
-    /// Demonstrate creating an amoeba and performing mitosis on it.
-    AmoebaDemo,
-    /// Verify that a particular coin exists in storage. Show its value and owner.
-    VerifyCoin,
-    /// Spend some coins
-    SpendCoins,
-}
-
-
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let cli = Cli::parse();
-
-    // Setup jsonrpsee and endpoint-related information.
-    // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
-    let client = HttpClientBuilder::default().build(cli.endpoint)?;
-
-    match cli.command {
-        Command::AmoebaDemo => amoeba::amoeba_demo(&client).await?,
-        Command::VerifyCoin => todo!(),
-        Command::SpendCoins => (),
-    };
-
-
-
-
-
-
+pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
 
     // How much of a coin to create the rest gets burned
     let amount: u128 = 1;//args[1].parse().expect("Can parse string into u128");
@@ -135,31 +91,12 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn fetch_storage<R: Redeemer>(
-    output_ref: &OutputRef,
-    client: &HttpClient,
-) -> anyhow::Result<Output<R>> {
-    let ref_hex = hex::encode(output_ref.encode());
-    let params = rpc_params![ref_hex];
-    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
-
-    let response_hex = rpc_response?
-        .ok_or(anyhow!("New coin can be retrieved from storage"))?
-        .chars()
-        .skip(2) // skipping 0x
-        .collect::<String>();
-    let response_bytes = hex::decode(response_hex)?;
-    let utxo = Output::decode(&mut &response_bytes[..])?;
-
-    Ok(utxo)
-}
-
 async fn get_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
 ) -> anyhow::Result<(H256, Coin)> {
     let utxo = fetch_storage::<OuterRedeemer>(output_ref, client).await?;
-    let coin_in_storage: Coin = utxo.payload.extract().unwrap();
+    let coin_in_storage: Coin = utxo.payload.extract()?;
     let mut returned_pubkey = H256::zero();
     if let OuterRedeemer::SigCheck(sig_check) = utxo.redeemer {
         returned_pubkey = sig_check.owner_pubkey;

@@ -1,4 +1,6 @@
-//! A simple CLI wallet. For now it is a toy just to start testing things out.
+//! Toy off-chain process to create an amoeba and perform mitosis on it
+
+use crate::fetch_storage;
 
 use std::{thread::sleep, time::Duration};
 
@@ -21,10 +23,6 @@ use tuxedo_core::{
 
 pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     
-    // TODO Eventually we will have to work with key
-    // Generate the well-known alice key
-    // let pair = todo!();
-
     // Construct a simple amoeba spawning transaction (no signature required)
     let eve = AmoebaDetails {
         generation: 0,
@@ -55,7 +53,9 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Check that the amoeba is in storage and print its details
-    let eve_from_storage = get_amoeba_from_storage(&eve_ref, &client).await?;
+    let eve_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&eve_ref, client).await?
+        .payload
+        .extract()?;
     println!("Eve Amoeba retrieved from storage: {:?}", eve_from_storage);
 
     // Create a mitosis transaction on the Eve amoeba
@@ -109,39 +109,20 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Check that the daughters are in storage and print their details
-    let cain_from_storage = get_amoeba_from_storage(&cain_ref, &client).await?;
+    let cain_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&cain_ref, client).await?
+        .payload
+        .extract()?;
     println!(
         "Cain Amoeba retrieved from storage: {:?}",
         cain_from_storage
     );
-    let able_from_storage = get_amoeba_from_storage(&able_ref, &client).await?;
+    let able_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&able_ref, client).await?
+        .payload
+        .extract()?;
     println!(
         "Able Amoeba retrieved from storage: {:?}",
         able_from_storage
     );
 
     Ok(())
-}
-
-async fn get_amoeba_from_storage(
-    output_ref: &OutputRef,
-    client: &HttpClient,
-) -> anyhow::Result<AmoebaDetails> {
-    let ref_hex = hex::encode(&output_ref.encode());
-    let params = rpc_params![ref_hex];
-    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
-
-    // Open up result and strip off 0x prefix
-    let response_hex = rpc_response?
-        .expect("Amoeba was not found in storage")
-        .chars()
-        .skip(2)
-        .collect::<String>();
-    let response_bytes = hex::decode(response_hex)
-        //TODO I would prefer to use `?` here instead of panicking
-        .expect("Eve bytes from storage can decode correctly");
-    let utxo: Output<OuterRedeemer> = Decode::decode(&mut &response_bytes[..])?;
-    let amoeba_from_storage: AmoebaDetails = utxo.payload.extract().unwrap();
-
-    Ok(amoeba_from_storage)
 }
