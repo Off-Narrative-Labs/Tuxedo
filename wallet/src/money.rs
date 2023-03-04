@@ -1,6 +1,6 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::fetch_storage;
+use crate::{fetch_storage, SpendArgs};
 
 use std::{thread::sleep, time::Duration};
 
@@ -9,7 +9,7 @@ use jsonrpsee::{
     http_client::HttpClient,
     rpc_params,
 };
-use parity_scale_codec::Encode;
+use parity_scale_codec::{Decode, Encode};
 use runtime::{
     money::{Coin, MoneyVerifier},
     OuterRedeemer, Transaction, OuterVerifier,
@@ -27,51 +27,47 @@ use tuxedo_core::{
 
 
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
+pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result<()> {
 
-    // How much of a coin to create the rest gets burned
-    let amount: u128 = 1;//args[1].parse().expect("Can parse string into u128");
-    // Seed from user
-    let seed = "example";//&args[2];
+    println!("The args are:: {:?}", args);
+    let (provided_pair, _) = Pair::from_phrase(&args.seed, None)?;
 
-    const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-    let (shawn_pair, _) = Pair::from_phrase(SHAWN_PHRASE, None)?;
-
-    println!("Seed is:: {}", seed);
-    let (provided_pair, _) = Pair::from_phrase(seed, None)?;
-
-    // Genesis Coin Reference
-    let shawn_coin_ref = OutputRef {
-        tx_hash: H256::zero(),
-        index: 0u32,
-    };
-
-    // Construct a simple Transaction to spend Shawn genesis coin
+    // Construct a template Transaction to push coins into later
     let mut transaction = Transaction {
-        inputs: vec![
-            Input {
-                output_ref: shawn_coin_ref,
-                witness: vec![], // We will sign the total transaction so this should be empty
-            }
-        ],
-        outputs: vec![
-            Output {
-                payload: Coin::new(amount).into(),
-                redeemer: OuterRedeemer::SigCheck(SigCheck { owner_pubkey: provided_pair.public().into() }),
-            }
-        ],
+        inputs: Vec::new(),
+        outputs: Vec::new(),
         verifier: OuterVerifier::Money(MoneyVerifier::Spend),
     };
 
-    let signature = shawn_pair.sign(&transaction.encode());
-    transaction.inputs[0].witness = signature.encode();
+    // Make sure each input decodes and is present in storage, and then push to transaction.
+    for input in &args.input {
+        let output_ref = OutputRef::decode(&mut &hex::decode(input)?[..])?;
+        print_coin_from_storage(&output_ref, client).await?;
+        transaction.inputs.push(Input {
+            output_ref,
+            witness: vec![], // We will sign the total transaction so this should be empty
+        });
+    }
 
-    // Calculate the OutputRef which also serves as the storage location
-    // In order to retrieve later
-    let new_coin_ref = OutputRef {
-        tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
-        index: 0,
-    };
+    // Construct each output and then push to the transactions
+    for amount in &args.output_amount {
+        let output = Output {
+            payload: Coin::new(*amount).into(),
+            redeemer: OuterRedeemer::SigCheck(SigCheck { owner_pubkey: provided_pair.public().into() }),
+        };
+        transaction.outputs.push(output);
+    }
+
+    // Create a signature over the entire transaction
+    // TODO this will need to generalize. We will need to loop through the inputs
+    // producing the signature for whichever owner it is, or even more generally,
+    // producing the witness for whichever redeemer it is.
+    let signature = provided_pair.sign(&transaction.encode());
+
+    // Iterate back through the inputs putting the signature in place.
+    for input in &mut transaction.inputs {
+        input.witness = signature.encode();
+    }
 
     // Send the transaction
     let genesis_spend_hex = hex::encode(transaction.encode());
@@ -79,7 +75,7 @@ pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
     let genesis_spend_response: Result<String, _> =
         client.request("author_submitExtrinsic", params).await;
     println!(
-        "Node's response to genesis_spend transaction: {:?}",
+        "Node's response to spend transaction: {:?}",
         genesis_spend_response
     );
 
@@ -87,7 +83,16 @@ pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Retrieve new coins from storage
-    print_coin_from_storage(&new_coin_ref, &client).await
+    for i in 0..transaction.outputs.len() {
+        let new_coin_ref = OutputRef {
+            tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
+            index: i as u32,
+        };
+
+        print_coin_from_storage(&new_coin_ref, &client).await?;
+    }
+
+    Ok(())
 }
 
 /// Pretty print the details of a coin in storage given the OutputRef
