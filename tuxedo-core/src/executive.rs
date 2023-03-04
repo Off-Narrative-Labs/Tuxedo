@@ -4,7 +4,7 @@
 //! It has functions that implement the Core, BlockBuilder, and TxPool runtime APIs.
 //!
 //! It does all the reusable verification of UTXO transactions such as checking that there
-//! are no duplicate inputs or outputs, and that the redeemers are satisfied.
+//! are no duplicate inputs, and that the redeemers are satisfied.
 
 use crate::{
     dynamic_typing::DynamicallyTypedData,
@@ -47,15 +47,6 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             ensure!(
                 input_set.len() == transaction.inputs.len(),
                 UtxoError::DuplicateInput
-            );
-        }
-
-        // Make sure there are no duplicate outputs
-        {
-            let output_set: BTreeSet<_> = transaction.outputs.iter().map(|o| o.encode()).collect();
-            ensure!(
-                output_set.len() == transaction.outputs.len(),
-                UtxoError::DuplicateOutput
             );
         }
 
