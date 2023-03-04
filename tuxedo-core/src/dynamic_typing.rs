@@ -99,6 +99,18 @@ pub enum DynamicTypingError {
     DecodingFailed,
 }
 
+impl sp_std::fmt::Display for DynamicTypingError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::WrongType => write!(f, "dynamic type does not match extraction target"),
+            Self::DecodingFailed => write!(f, "failed to decode dynamically typed data with scale codec"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for DynamicTypingError {}
+
 //TODO, I tried replacing the extract method above with this impl,
 // but it conflicts with something in core, that I don't understand.
 // Extracts strongly typed data from dynamically typed data.
