@@ -4,31 +4,21 @@ use crate::{fetch_storage, SpendArgs};
 
 use std::{thread::sleep, time::Duration};
 
-use jsonrpsee::{
-    core::client::ClientT,
-    http_client::HttpClient,
-    rpc_params,
-};
+use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
     money::{Coin, MoneyVerifier},
-    OuterRedeemer, Transaction, OuterVerifier,
+    OuterRedeemer, OuterVerifier, Transaction,
 };
-use sp_core::{
-    sr25519::{Pair},
-    crypto::{Pair as PairT},
-    H256,
-};
+use sp_core::{crypto::Pair as PairT, sr25519::Pair, H256};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    redeemer::{SigCheck},
+    redeemer::SigCheck,
     types::{Input, Output, OutputRef},
 };
 
-
 /// Create and send a transaction that spends coins on the network
 pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result<()> {
-
     println!("The args are:: {:?}", args);
     let (provided_pair, _) = Pair::from_phrase(&args.seed, None)?;
 
@@ -53,7 +43,9 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::new(*amount).into(),
-            redeemer: OuterRedeemer::SigCheck(SigCheck { owner_pubkey: provided_pair.public().into() }),
+            redeemer: OuterRedeemer::SigCheck(SigCheck {
+                owner_pubkey: provided_pair.public().into(),
+            }),
         };
         transaction.outputs.push(output);
     }
@@ -103,10 +95,16 @@ pub async fn print_coin_from_storage(
     let utxo = fetch_storage::<OuterRedeemer>(output_ref, client).await?;
     let coin_in_storage: Coin = utxo.payload.extract()?;
 
-    print!("{}: Found coin worth {:?} units ", hex::encode(output_ref.encode()), coin_in_storage.0);
-    
+    print!(
+        "{}: Found coin worth {:?} units ",
+        hex::encode(output_ref.encode()),
+        coin_in_storage.0
+    );
+
     match utxo.redeemer {
-        OuterRedeemer::SigCheck(sig_check) => println!{"owned by 0x{}", hex::encode(sig_check.owner_pubkey)},
+        OuterRedeemer::SigCheck(sig_check) => {
+            println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
+        }
         OuterRedeemer::UpForGrabs(_) => println!("that can be spent by anyone"),
     }
 

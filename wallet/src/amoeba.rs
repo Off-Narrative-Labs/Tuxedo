@@ -4,11 +4,7 @@ use crate::fetch_storage;
 
 use std::{thread::sleep, time::Duration};
 
-use jsonrpsee::{
-    core::client::ClientT,
-    http_client::{HttpClient},
-    rpc_params,
-};
+use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
@@ -20,9 +16,7 @@ use tuxedo_core::{
     types::{Input, Output, OutputRef},
 };
 
-
 pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
-    
     // Construct a simple amoeba spawning transaction (no signature required)
     let eve = AmoebaDetails {
         generation: 0,
@@ -53,7 +47,8 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Check that the amoeba is in storage and print its details
-    let eve_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&eve_ref, client).await?
+    let eve_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&eve_ref, client)
+        .await?
         .payload
         .extract()?;
     println!("Eve Amoeba retrieved from storage: {:?}", eve_from_storage);
@@ -109,14 +104,16 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Check that the daughters are in storage and print their details
-    let cain_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&cain_ref, client).await?
+    let cain_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&cain_ref, client)
+        .await?
         .payload
         .extract()?;
     println!(
         "Cain Amoeba retrieved from storage: {:?}",
         cain_from_storage
     );
-    let able_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&able_ref, client).await?
+    let able_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&able_ref, client)
+        .await?
         .payload
         .extract()?;
     println!(

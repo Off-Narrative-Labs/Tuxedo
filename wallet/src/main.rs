@@ -1,10 +1,17 @@
 //! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-use jsonrpsee::{http_client::{HttpClientBuilder, HttpClient}, rpc_params, core::client::ClientT};
-use clap::{Parser, Subcommand, Args, ArgAction::Append};
-use parity_scale_codec::{Encode, Decode};
-use tuxedo_core::{Redeemer, types::{Output, OutputRef}};
 use anyhow::anyhow;
+use clap::{ArgAction::Append, Args, Parser, Subcommand};
+use jsonrpsee::{
+    core::client::ClientT,
+    http_client::{HttpClient, HttpClientBuilder},
+    rpc_params,
+};
+use parity_scale_codec::{Decode, Encode};
+use tuxedo_core::{
+    types::{Output, OutputRef},
+    Redeemer,
+};
 
 mod amoeba;
 mod money;
@@ -14,7 +21,8 @@ const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
 /// A default seed phrase for signing inputs when none is provided
 /// Corresponds to the default pubkey.
-const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+const SHAWN_PHRASE: &str =
+    "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
 
 /// A default pubkey for receiving outputs when none is provided
 /// Corresponds to the default seed phrase
@@ -45,14 +53,14 @@ enum Command {
     },
 
     /// Spend some coins.
-    /// 
+    ///
     /// For now, all inputs must be owned by the same signer, and all outputs go to
     /// the same recipient.
     SpendCoins(SpendArgs),
 }
 
 #[derive(Debug, Args)]
-pub struct SpendArgs{
+pub struct SpendArgs {
     /// The seed phrase of the coin owner who will sign the inputs. For now, all inputs
     /// must be owned by the same signer.
     #[arg(long, short, default_value_t = SHAWN_PHRASE.to_string())]
@@ -77,10 +85,8 @@ pub struct SpendArgs{
     output_amount: Vec<u128>,
 }
 
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-
     // Parse command line args
     let cli = Cli::parse();
 
@@ -91,10 +97,10 @@ async fn main() -> anyhow::Result<()> {
     // Dispatch to proper subcommand
     match cli.command {
         Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
-        Command::VerifyCoin{ref_string} => {
+        Command::VerifyCoin { ref_string } => {
             let output_ref = OutputRef::decode(&mut &hex::decode(ref_string)?[..])?;
             money::print_coin_from_storage(&output_ref, &client).await
-        },
+        }
         Command::SpendCoins(args) => money::spend_coins(&client, args).await,
     }
 }
