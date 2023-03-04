@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SHAWN_PHRASE"],"fn":["get_coin_from_storage","main"],"opaque":[""]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ENDPOINT","SHAWN_PHRASE","SHAWN_PUB_KEY"],"enum":["Command"],"fn":["fetch_storage","main"],"mod":["amoeba","money"],"opaque":[""],"static":["DEFAULT_VALUE"],"struct":["Cli","SpendArgs"]};

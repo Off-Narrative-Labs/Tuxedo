@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wallet/src/main.rs`."><title>main.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e5308b57e507db71.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-d59023bfa12059d2.css"><link rel="stylesheet" disabled href="../../static.files/dark-1ca41bb1e10af075.css"><link rel="stylesheet" disabled href="../../static.files/ayu-18b4181a2f3fb862.css"><script src="../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_wallet/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wallet/src/main.rs`."><title>main.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" disabled href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" disabled href="../../static.files/ayu-be46fdc453a55015.css"><script src="../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_wallet/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -117,123 +117,138 @@
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-</span><span class="kw">use </span>std::{thread::sleep, time::Duration};
-
+</span><span class="kw">use </span>anyhow::anyhow;
+<span class="kw">use </span>clap::{ArgAction::Append, Args, Parser, Subcommand};
 <span class="kw">use </span>jsonrpsee::{
     core::client::ClientT,
     http_client::{HttpClient, HttpClientBuilder},
     rpc_params,
 };
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
-<span class="kw">use </span>runtime::{
-    money::{Coin, MoneyVerifier},
-    OuterRedeemer, Transaction, OuterVerifier,
-};
-<span class="kw">use </span>sp_core::{
-    sr25519::{Pair},
-    crypto::{Pair <span class="kw">as </span>PairT},
-    H256,
-};
-<span class="kw">use </span>sp_runtime::traits::{BlakeTwo256, Hash};
 <span class="kw">use </span>tuxedo_core::{
-    redeemer::{SigCheck},
-    types::{Input, Output, OutputRef},
+    types::{Output, OutputRef},
+    Redeemer,
 };
+
+<span class="kw">mod </span>amoeba;
+<span class="kw">mod </span>money;
+
+<span class="doccomment">/// The default RPC endpoint for the wallet to connect to
+</span><span class="kw">const </span>DEFAULT_ENDPOINT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;http://localhost:9933&quot;</span>;
+
+<span class="doccomment">/// A default seed phrase for signing inputs when none is provided
+/// Corresponds to the default pubkey.
+</span><span class="kw">const </span>SHAWN_PHRASE: <span class="kw-2">&amp;</span>str =
+    <span class="string">&quot;news slush supreme milk chapter athlete soap sausage put clutch what kitten&quot;</span>;
+
+<span class="doccomment">/// A default pubkey for receiving outputs when none is provided
+/// Corresponds to the default seed phrase
+</span><span class="kw">const </span>SHAWN_PUB_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67&quot;</span>;
+
+<span class="doccomment">/// The wallet&#39;s main CLI struct
+</span><span class="attr">#[derive(Debug, Parser)]
+#[command(about, version)]
+</span><span class="kw">struct </span>Cli {
+    <span class="attr">#[arg(long, short, default_value_t = DEFAULT_ENDPOINT.to_string())]
+    </span><span class="doccomment">/// RPC endpoint of the node that this wallet will connect to
+    </span>endpoint: String,
+
+    <span class="attr">#[command(subcommand)]
+    </span>command: Command,
+}
+
+<span class="doccomment">/// The tasks supported by the wallet
+</span><span class="attr">#[derive(Debug, Subcommand)]
+</span><span class="kw">enum </span>Command {
+    <span class="doccomment">/// Demonstrate creating an amoeba and performing mitosis on it.
+    </span>AmoebaDemo,
+
+    <span class="doccomment">/// Verify that a particular coin exists in storage. Show its value and owner.
+    </span>VerifyCoin {
+        <span class="doccomment">/// A hex-encoded output reference (non 0x prefixed for now)
+        </span>ref_string: String,
+    },
+
+    <span class="doccomment">/// Spend some coins.
+    ///
+    /// For now, all inputs must be owned by the same signer, and all outputs go to
+    /// the same recipient.
+    </span>SpendCoins(SpendArgs),
+}
+
+<span class="attr">#[derive(Debug, Args)]
+</span><span class="kw">pub struct </span>SpendArgs {
+    <span class="doccomment">/// The seed phrase of the coin owner who will sign the inputs. For now, all inputs
+    /// must be owned by the same signer.
+    </span><span class="attr">#[arg(long, short, default_value_t = SHAWN_PHRASE.to_string())]
+    </span>seed: String,
+
+    <span class="doccomment">/// An input to be consumed by this transaction. This argument may be specified multiple times.
+    /// They must all be coins and, for now, must all be owned by the same signer.
+    </span><span class="attr">#[arg(long, short)]
+    </span>input: Vec&lt;String&gt;,
+
+    <span class="doccomment">/// Hex encoded address (sr25519 pubkey) of the recipient (non 0x prefixed for now)
+    /// Generate with subkey, or use Shawn&#39;s: d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+    </span><span class="attr">#[arg(long, short, default_value_t = SHAWN_PUB_KEY.to_string())]
+    </span>recipient: String,
+
+    <span class="comment">// The `action = Append` allows us to accept the same value multiple times.
+    // This works on the wallet side, but is incorrectly rejected by the node. See #37.
+    </span><span class="doccomment">/// An output amount. For the transaction to be valid, the outputs must add up to less than
+    /// the sum of the inputs. The wallet will not enforce this and will gladly send an invalid transaction
+    /// which will then e rejected by the node.
+    </span><span class="attr">#[arg(long, short, action = Append)]
+    </span>output_amount: Vec&lt;u128&gt;,
+}
 
 <span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() -&gt; anyhow::Result&lt;()&gt; {
-    <span class="comment">// Setup jsonrpsee and endpoint-related information. Kind of blindly following
+    <span class="comment">// Parse command line args
+    </span><span class="kw">let </span>cli = Cli::parse();
+
+    <span class="comment">// Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
-    </span><span class="kw">let </span>args: Vec&lt;String&gt; = std::env::args().collect();
+    </span><span class="kw">let </span>client = HttpClientBuilder::default().build(cli.endpoint)<span class="question-mark">?</span>;
 
-    <span class="comment">// How much of a coin to create the rest gets burned
-    </span><span class="kw">let </span>amount: u128 = args[<span class="number">1</span>].parse().expect(<span class="string">&quot;Can parse string into u128&quot;</span>);
-    <span class="comment">// Seed from user
-    </span><span class="kw">let </span>seed = <span class="kw-2">&amp;</span>args[<span class="number">2</span>];
-
-    <span class="kw">let </span>url = <span class="string">&quot;http://localhost:9933&quot;</span>;
-    <span class="kw">let </span>client = HttpClientBuilder::default().build(url)<span class="question-mark">?</span>;
-
-    <span class="kw">const </span>SHAWN_PHRASE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;news slush supreme milk chapter athlete soap sausage put clutch what kitten&quot;</span>;
-    <span class="kw">let </span>(shawn_pair, <span class="kw">_</span>) = Pair::from_phrase(SHAWN_PHRASE, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-
-    <span class="macro">println!</span>(<span class="string">&quot;Seed is:: {}&quot;</span>, seed.as_str());
-    <span class="kw">let </span>(provided_pair, <span class="kw">_</span>) = Pair::from_phrase(seed.as_str(), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-
-    <span class="comment">// Genesis Coin Reference
-    </span><span class="kw">let </span>shawn_coin_ref = OutputRef {
-        tx_hash: H256::zero(),
-        index: <span class="number">0u32</span>,
-    };
-
-    <span class="comment">// Construct a simple Transaction to spend Shawn genesis coin
-    </span><span class="kw">let </span><span class="kw-2">mut </span>transaction = Transaction {
-        inputs: <span class="macro">vec!</span>[
-            Input {
-                output_ref: shawn_coin_ref,
-                witness: <span class="macro">vec!</span>[], <span class="comment">// We will sign the total transaction so this should be empty
-            </span>}
-        ],
-        outputs: <span class="macro">vec!</span>[
-            Output {
-                payload: Coin::new(amount).into(),
-                redeemer: OuterRedeemer::SigCheck(SigCheck { owner_pubkey: provided_pair.public().into() }),
-            }
-        ],
-        verifier: OuterVerifier::Money(MoneyVerifier::Spend),
-    };
-
-    <span class="kw">let </span>signature = shawn_pair.sign(<span class="kw-2">&amp;</span>transaction.encode());
-    transaction.inputs[<span class="number">0</span>].witness = signature.encode();
-
-    <span class="comment">// Calculate the OutputRef which also serves as the storage location
-    // In order to retrieve later
-    </span><span class="kw">let </span>new_coin_ref = OutputRef {
-        tx_hash: &lt;BlakeTwo256 <span class="kw">as </span>Hash&gt;::hash_of(<span class="kw-2">&amp;</span>transaction.encode()),
-        index: <span class="number">0</span>,
-    };
-
-    <span class="comment">// Send the transaction
-    </span><span class="kw">let </span>genesis_spend_hex = hex::encode(transaction.encode());
-    <span class="kw">let </span>params = <span class="macro">rpc_params!</span>[genesis_spend_hex];
-    <span class="kw">let </span>genesis_spend_response: <span class="prelude-ty">Result</span>&lt;String, <span class="kw">_</span>&gt; =
-        client.request(<span class="string">&quot;author_submitExtrinsic&quot;</span>, params).<span class="kw">await</span>;
-    <span class="macro">println!</span>(
-        <span class="string">&quot;Node&#39;s response to genesis_spend transaction: {:?}&quot;</span>,
-        genesis_spend_response
-    );
-
-    <span class="comment">// Wait a few seconds to make sure a block has been authored.
-    </span>sleep(Duration::from_secs(<span class="number">3</span>));
-
-    <span class="comment">// Retrieve new coins from storage
-    </span><span class="kw">let </span>(pubkey, new_coin_from_storage) = get_coin_from_storage(<span class="kw-2">&amp;</span>new_coin_ref, <span class="kw-2">&amp;</span>client).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="macro">println!</span>(<span class="string">&quot;Retrieved the new coin from storage {:?} with owner: {:?}&quot;</span>, new_coin_from_storage, sp_core::hexdisplay::HexDisplay::from(<span class="kw-2">&amp;</span>pubkey.encode()));
-    <span class="prelude-val">Ok</span>(())
+    <span class="comment">// Dispatch to proper subcommand
+    </span><span class="kw">match </span>cli.command {
+        Command::AmoebaDemo =&gt; amoeba::amoeba_demo(<span class="kw-2">&amp;</span>client).<span class="kw">await</span>,
+        Command::VerifyCoin { ref_string } =&gt; {
+            <span class="kw">let </span>output_ref = OutputRef::decode(<span class="kw-2">&amp;mut &amp;</span>hex::decode(ref_string)<span class="question-mark">?</span>[..])<span class="question-mark">?</span>;
+            money::print_coin_from_storage(<span class="kw-2">&amp;</span>output_ref, <span class="kw-2">&amp;</span>client).<span class="kw">await
+        </span>}
+        Command::SpendCoins(args) =&gt; money::spend_coins(<span class="kw-2">&amp;</span>client, args).<span class="kw">await</span>,
+    }
 }
 
-<span class="kw">async fn </span>get_coin_from_storage(
+<span class="doccomment">/// Fetch an output from chain storage given an OutputRef
+</span><span class="kw">pub async fn </span>fetch_storage&lt;R: Redeemer&gt;(
     output_ref: <span class="kw-2">&amp;</span>OutputRef,
     client: <span class="kw-2">&amp;</span>HttpClient,
-) -&gt; anyhow::Result&lt;(H256, Coin)&gt; {
+) -&gt; anyhow::Result&lt;Output&lt;R&gt;&gt; {
     <span class="kw">let </span>ref_hex = hex::encode(output_ref.encode());
     <span class="kw">let </span>params = <span class="macro">rpc_params!</span>[ref_hex];
     <span class="kw">let </span>rpc_response: <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;, <span class="kw">_</span>&gt; = client.request(<span class="string">&quot;state_getStorage&quot;</span>, params).<span class="kw">await</span>;
 
     <span class="kw">let </span>response_hex = rpc_response<span class="question-mark">?
-        </span>.expect(<span class="string">&quot;New coin can be retrieved from storage&quot;</span>)
-        .chars()
+        </span>.ok_or(<span class="macro">anyhow!</span>(<span class="string">&quot;New coin can be retrieved from storage&quot;</span>))<span class="question-mark">?
+        </span>.chars()
         .skip(<span class="number">2</span>) <span class="comment">// skipping 0x
         </span>.collect::&lt;String&gt;();
     <span class="kw">let </span>response_bytes = hex::decode(response_hex)<span class="question-mark">?</span>;
-    <span class="kw">let </span>utxo = Output::&lt;OuterRedeemer&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>response_bytes[..])<span class="question-mark">?</span>;
-    <span class="kw">let </span>coin_in_storage: Coin = utxo.payload.extract().unwrap();
-    <span class="kw">let </span><span class="kw-2">mut </span>returned_pubkey = H256::zero();
-    <span class="kw">if let </span>OuterRedeemer::SigCheck(sig_check) = utxo.redeemer {
-        returned_pubkey = sig_check.owner_pubkey;
-    }
-    <span class="prelude-val">Ok</span>((returned_pubkey, coin_in_storage))
-}</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_wallet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (13471d3b2 2023-03-02)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+    <span class="kw">let </span>utxo = Output::decode(<span class="kw-2">&amp;mut &amp;</span>response_bytes[..])<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(utxo)
+}
+</code></pre></div>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_wallet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (44cfafe2f 2023-03-03)" data-search-js="search-894761433ba8c506.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
