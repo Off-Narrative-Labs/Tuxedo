@@ -20,9 +20,10 @@ use sp_core::{
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::{SigCheck},
-    types::{Input, Output, OutputRef},
+    types::{Input, Output, OutputRef}, Redeemer,
 };
 use clap::{Parser, Subcommand};
+use anyhow::anyhow;
 
 mod amoeba;
 
@@ -134,21 +135,30 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn get_coin_from_storage(
+async fn fetch_storage<R: Redeemer>(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<(H256, Coin)> {
+) -> anyhow::Result<Output<R>> {
     let ref_hex = hex::encode(output_ref.encode());
     let params = rpc_params![ref_hex];
     let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
 
     let response_hex = rpc_response?
-        .expect("New coin can be retrieved from storage")
+        .ok_or(anyhow!("New coin can be retrieved from storage"))?
         .chars()
         .skip(2) // skipping 0x
         .collect::<String>();
     let response_bytes = hex::decode(response_hex)?;
-    let utxo = Output::<OuterRedeemer>::decode(&mut &response_bytes[..])?;
+    let utxo = Output::decode(&mut &response_bytes[..])?;
+
+    Ok(utxo)
+}
+
+async fn get_coin_from_storage(
+    output_ref: &OutputRef,
+    client: &HttpClient,
+) -> anyhow::Result<(H256, Coin)> {
+    let utxo = fetch_storage::<OuterRedeemer>(output_ref, client).await?;
     let coin_in_storage: Coin = utxo.payload.extract().unwrap();
     let mut returned_pubkey = H256::zero();
     if let OuterRedeemer::SigCheck(sig_check) = utxo.redeemer {
