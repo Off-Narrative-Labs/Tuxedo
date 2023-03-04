@@ -26,11 +26,11 @@ Tuxedo makes the process of developing UTXO-based runtimes faster and safer by f
 
 ### Declaring Data Types
 
-If the Tuxedo piece has any custom data types, they must be declared by implementing the [`UtxoData` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/dynamic_typing/trait.UtxoData.html). For example, a crytpocurrency may have a data type called `Coin` or a voting solution may have data types called `Poll` and `Vote`. The developer only has to declare the data type, no notion of a "storage item" because there is no global state in the UTXO model. All state is local to individual UTXOs.
+If the Tuxedo piece has any custom data types, they must be declared by implementing the [`UtxoData` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/dynamic_typing/trait.UtxoData.html). For example, a crytpocurrency may have a data type called `Coin` or a voting solution may have data types called `Poll` and `Vote`. The developer only has to declare the data type; there is no notion of a "storage item" because there is no global state in the UTXO model. All state is local to individual UTXOs.
 
 ### Defining Transaction Constraints
 
-All Tuxedo pieces will define one or more sets of constraints that a transaction must satisfy to be valid. This is done through a [dedicated trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/trait.Verifier.html) (whose name will be changed very soon and is therefore not mentioned in the Readme). Unlike the accounts model, the Tuxedo piece is not responsible for calculating the final state after the transaction. Rather the final state is passed in as the transaction's output set. The piece only verifies that the appropriate constraints are met. For example it may check that in an on-chain chess game, the input piece really is allowed to move to the location specified in the output. In a more classic example, it will check tha the tokens that are being spent are of greater or equal value to the tokens being created.
+All Tuxedo pieces will define one or more sets of constraints that a transaction must satisfy to be valid. This is done through a [dedicated trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/trait.Verifier.html) (whose name will be changed very soon and is therefore not mentioned in this Readme). Unlike the accounts model, the Tuxedo piece is not responsible for calculating the final state after the transaction. Rather, the final state is passed in as the transaction's output set. The piece only verifies that the appropriate constraints are met. For example, it may check that in an on-chain chess game, the input piece really is allowed to move to the location specified in the output. In a more classic example, it will check that the tokens being spent are of greater or equal value to the tokens being created.
 
 ### Declaring Redemption Logic
 
@@ -50,7 +50,7 @@ This mono-repo contains the core Tuxedo code as well as an example node built wi
 
 The reusable core of the Tuxedo framework lives in the `tuxedo-core` directory. This crate will be used by every runtime built with Tuxedo. The best way to explore this crate is by browsing its [code](./tuxedo-core/) or its [hosted rustdocs](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/index.html). It contains:
 
-- The core datatypes for the UTXO model such as `Input`, `Output`, `OutputRef`, `Transaction`, and others.
+- The core data types for the UTXO model such as `Input`, `Output`, `OutputRef`, `Transaction`, and others.
 - A standard interface for developers to access the UTXO set.
 - Common transaction validation logic that all UTXO transactions need to conduct.
 - A dynamic typing system to allow developers to store bespoke data types in the UTXO set in a type-safe manner,
@@ -68,7 +68,7 @@ There is an example node built with the Tuxedo template runtime. Because Tuxedo 
 
 ### Wallet
 
-The repo contains a proof-of-concept wallet in the `wallet` directory. This wallet will be expanded to be a fully-featured usable cryptocurrency wallet over the next few weeks (see the [roadmap](#funding-and-roadmap) above). For now, the PoC is enough to demonstrate that transferring tokens works.
+The repo contains a proof-of-concept wallet in the `wallet` directory. This wallet will be expanded to be a fully-featured usable cryptocurrency wallet over the next few weeks (see the [roadmap](#funding-and-roadmap) below). For now, the PoC is enough to demonstrate that transferring tokens works.
 
 ## Funding and Roadmap
 
@@ -128,8 +128,8 @@ Then, in a separate terminal, experiment with the PoC wallet.
 # Split the 100 tokens into two of values 20 and 25, burning the remaining 5
 ./target/release/tuxedo-template-wallet spend-coins \
   --input 000000000000000000000000000000000000000000000000000000000000000000000000 \
-  --output 20 \
-  --output 25
+  --output-amount 20 \
+  --output-amount 25
 
   f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1400000000:
     Found coin worth 20 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
@@ -160,7 +160,7 @@ Then, in a separate terminal, experiment with the PoC wallet.
 
 ## Docker
 
-Developers and Curious individuals who want to quickly try out Tuxedo and its template runtime can save the setup and compile time by using docker. our CI publishes Docker images for both the example node and the PoC wallet at https://github.com/orgs/Off-Narrative-Labs/packages.
+Developers and curious individuals who want to quickly try out Tuxedo and its template runtime can save the setup and compile time by using docker. CI publishes Docker images for both the example node and the PoC wallet at https://github.com/orgs/Off-Narrative-Labs/packages.
 
 Docker is a complex software and there are many ways to pull and run images and map host ports to container ports. For those not already familiar with Docker, you may benefit from referencing the [docker documentation](https://docs.docker.com/) or [building and running locally](#building-and-running-locally) instead.
 
@@ -184,7 +184,7 @@ More example commands are listed above in the section on [running locally](#buil
 
 ## Testing and Code Quality
 
-Tuxedo strives for excellent code quality which is enforced through unit tests, and [clippy linting](https://doc.rust-lang.org/stable/clippy/). Both of these are enforced in the CI and you are free to inspect. You may also run them locally.
+Tuxedo strives for excellent code quality which is enforced through unit tests, and [clippy linting](https://doc.rust-lang.org/stable/clippy/). Both of these are enforced in the CI, which you are free to inspect. You may also run them locally.
 
 ```sh
 # Run unit tests on all aspects of the project
