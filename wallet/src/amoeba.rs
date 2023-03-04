@@ -38,7 +38,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     };
 
     // Send the transaction
-    let spawn_hex = hex::encode(&spawn_tx.encode());
+    let spawn_hex = hex::encode(spawn_tx.encode());
     let params = rpc_params![spawn_hex];
     let spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
     println!("Node's response to spawn transaction: {:?}", spawn_response);
@@ -91,7 +91,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     };
 
     // Send the mitosis transaction
-    let mitosis_hex = hex::encode(&mitosis_tx.encode());
+    let mitosis_hex = hex::encode(mitosis_tx.encode());
     let params = rpc_params![mitosis_hex];
     let mitosis_response: Result<String, _> =
         client.request("author_submitExtrinsic", params).await;

@@ -10,7 +10,7 @@ use runtime::{
     money::{Coin, MoneyVerifier},
     OuterRedeemer, OuterVerifier, Transaction,
 };
-use sp_core::{crypto::Pair as PairT, sr25519::Pair, H256};
+use sp_core::{crypto::Pair as PairT, sr25519::Pair};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::SigCheck,
@@ -81,7 +81,7 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
             index: i as u32,
         };
 
-        print_coin_from_storage(&new_coin_ref, &client).await?;
+        print_coin_from_storage(&new_coin_ref, client).await?;
     }
 
     Ok(())
