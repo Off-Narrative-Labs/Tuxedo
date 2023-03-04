@@ -4,7 +4,7 @@ use std::{thread::sleep, time::Duration};
 
 use jsonrpsee::{
     core::client::ClientT,
-    http_client::{HttpClient, HttpClientBuilder},
+    http_client::{HttpClient},
     rpc_params,
 };
 use parity_scale_codec::{Decode, Encode};
@@ -18,14 +18,9 @@ use tuxedo_core::{
     types::{Input, Output, OutputRef},
 };
 
-// This async, tokio, anyhow stuff arose because I needed to `await` for rpc responses.
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    // Setup jsonrpsee and endpoint-related information. Kind of blindly following
-    // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
-    let url = "http://localhost:9933";
-    let client = HttpClientBuilder::default().build(url)?;
 
+pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
+    
     // TODO Eventually we will have to work with key
     // Generate the well-known alice key
     // let pair = todo!();

@@ -7973,6 +7973,7 @@ name = "tuxedo-template-wallet"
 version = "1.0.0-dev"
 dependencies = [
  "anyhow",
+ "clap",
  "hex",
  "jsonrpsee",
  "parity-scale-codec",

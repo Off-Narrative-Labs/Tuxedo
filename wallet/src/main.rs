@@ -22,26 +22,65 @@ use tuxedo_core::{
     redeemer::{SigCheck},
     types::{Input, Output, OutputRef},
 };
+use clap::{Parser, Subcommand};
+
+mod amoeba;
+
+const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
+
+
+#[derive(Debug, Parser)]
+#[command(about, version)]
+struct Cli {
+    #[arg(long, short, default_value_t = DEFAULT_ENDPOINT.to_string())]
+    /// RPC endpoint of the node that this wallet will connect to
+    endpoint: String,
+
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    /// Demonstrate creating an amoeba and performing mitosis on it.
+    AmoebaDemo,
+    /// Verify that a particular coin exists in storage. Show its value and owner.
+    VerifyCoin,
+    /// Spend some coins
+    SpendCoins,
+}
+
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Setup jsonrpsee and endpoint-related information. Kind of blindly following
+    let cli = Cli::parse();
+
+    // Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
-    let args: Vec<String> = std::env::args().collect();
+    let client = HttpClientBuilder::default().build(cli.endpoint)?;
+
+    match cli.command {
+        Command::AmoebaDemo => amoeba::amoeba_demo(&client).await?,
+        Command::VerifyCoin => todo!(),
+        Command::SpendCoins => (),
+    };
+
+
+
+
+
+
 
     // How much of a coin to create the rest gets burned
-    let amount: u128 = args[1].parse().expect("Can parse string into u128");
+    let amount: u128 = 1;//args[1].parse().expect("Can parse string into u128");
     // Seed from user
-    let seed = &args[2];
-
-    let url = "http://localhost:9933";
-    let client = HttpClientBuilder::default().build(url)?;
+    let seed = "example";//&args[2];
 
     const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
     let (shawn_pair, _) = Pair::from_phrase(SHAWN_PHRASE, None)?;
 
-    println!("Seed is:: {}", seed.as_str());
-    let (provided_pair, _) = Pair::from_phrase(seed.as_str(), None)?;
+    println!("Seed is:: {}", seed);
+    let (provided_pair, _) = Pair::from_phrase(seed, None)?;
 
     // Genesis Coin Reference
     let shawn_coin_ref = OutputRef {
