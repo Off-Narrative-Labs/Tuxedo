@@ -84,8 +84,8 @@ pub mod opaque {
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: create_runtime_str!("frameless-runtime"),
-    impl_name: create_runtime_str!("frameless-runtime"),
+    spec_name: create_runtime_str!("tuxedo-template-runtime"),
+    impl_name: create_runtime_str!("tuxedo-template-runtime"),
     authoring_version: 1,
     spec_version: 1,
     impl_version: 1,
@@ -324,7 +324,7 @@ impl From<AmoebaMitosis> for OuterVerifier {
 //TODO the rest of these impl blocks. For now I'm only doing these two
 // because they are the only two I use in my wallet prototype
 
-/// The main struct in this module. In frame this comes from `construct_runtime!`
+/// The main struct in this module.
 pub struct Runtime;
 
 // Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags
@@ -520,7 +520,7 @@ mod tests {
 
 		let mut t = GenesisConfig::default()
 			.build_storage()
-			.expect("Frameless system builds valid default genesis config");
+			.expect("System builds valid default genesis config");
 
 		let mut ext = sp_io::TestExternalities::from(t);
 		ext.register_extension(KeystoreExt(Arc::new(keystore)));

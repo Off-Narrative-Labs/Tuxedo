@@ -1,10 +1,10 @@
 [package]
-name = "frameless-runtime"
+name = "tuxedo-template-runtime"
 version = "1.0.0-dev"
-repository = 'https://github.com/substrate-developer-hub/recipes'
+repository = 'https://github.com/Off-Narative-Labs/Tuxedo'
 edition = "2021"
 license = "Apache-2.0"
-description = "A Substrate runtime that is built without FRAME."
+description = "An example and template runtime built with Tuxedo."
 
 [dependencies]
 log = "0.4"
@@ -27,9 +27,6 @@ sp-storage = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2
 sp-transaction-pool = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 sp-version = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 sp-timestamp = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
-
-# Only to experiment with metadata..
-frame-metadata = { git = 'https://github.com/paritytech/frame-metadata/', tag = 'v15.0.0', default-features = false, features = ["v14"] }
 
 # These were added for Aura / Grandpa API support
 hex-literal = "0.3.4"
@@ -69,6 +66,5 @@ std = [
 	"sp-application-crypto/std",
 	"sp-consensus-grandpa/std",
 
-	"frame-metadata/std",
 	"tuxedo-core/std",
 ]

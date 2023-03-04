@@ -1,13 +1,10 @@
 [package]
 name = "node-template"
 version = "4.0.0-dev"
-description = "A fresh FRAME-based Substrate node, ready for hacking."
-authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
-homepage = "https://substrate.io/"
+description = "A fresh Substrate node, ready for hacking."
 edition = "2021"
 license = "Unlicense"
 publish = false
-repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
 build = "build.rs"
 
 [package.metadata.docs.rs]
@@ -51,7 +48,7 @@ sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", tag
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
 
 # Local Dependencies
-node-template-runtime = { package = "frameless-runtime", path = "../frameless-runtime" }
+node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }

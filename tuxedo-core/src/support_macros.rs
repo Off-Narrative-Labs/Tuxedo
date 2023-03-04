@@ -1,4 +1,4 @@
-//! These macros are copied from frame support. Substrate maintainers are not open to putting them in
+//! These macros are copied from frame-support. Substrate maintainers are not open to putting them in
 //! a more sensible location. See https://github.com/paritytech/substrate/issues/13456
 
 /// Return Err of the expression: `return Err($expression);`.
