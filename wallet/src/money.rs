@@ -9,7 +9,7 @@ use jsonrpsee::{
     http_client::HttpClient,
     rpc_params,
 };
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyVerifier},
     OuterRedeemer, Transaction, OuterVerifier,
@@ -24,7 +24,6 @@ use tuxedo_core::{
     redeemer::{SigCheck},
     types::{Input, Output, OutputRef},
 };
-use anyhow::anyhow;
 
 pub async fn spend_coins(client: &HttpClient) -> anyhow::Result<()> {
 

@@ -9,7 +9,7 @@ use jsonrpsee::{
     http_client::{HttpClient},
     rpc_params,
 };
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
     OuterRedeemer, Transaction,
