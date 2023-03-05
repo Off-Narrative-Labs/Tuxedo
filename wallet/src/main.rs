@@ -77,7 +77,6 @@ pub struct SpendArgs {
     recipient: String,
 
     // The `action = Append` allows us to accept the same value multiple times.
-    // This works on the wallet side, but is incorrectly rejected by the node. See #37.
     /// An output amount. For the transaction to be valid, the outputs must add up to less than
     /// the sum of the inputs. The wallet will not enforce this and will gladly send an invalid transaction
     /// which will then e rejected by the node.
