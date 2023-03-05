@@ -85,8 +85,6 @@ pub struct Input {
 pub enum UtxoError<VerifierError> {
     /// This transaction defines the same input multiple times
     DuplicateInput,
-    /// This transaction defines the same output multiple times
-    DuplicateOutput,
     /// This transaction defines an output that already existed in the UTXO set
     PreExistingOutput,
     /// The verifier errored.
