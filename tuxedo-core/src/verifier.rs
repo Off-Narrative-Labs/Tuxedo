@@ -27,17 +27,41 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
-// A trivial verifier that verifies everything. Not practical. More for testing
-// and for the sake of making things compile before I get around to writing the
-// amoeba nd PoE verifiers
-impl Verifier for () {
-    type Error = ();
 
-    fn verify(
-        &self,
-        _input_data: &[DynamicallyTypedData],
-        _output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, ()> {
-        Ok(0)
+/// Simple verifiers for use in unit tests. Not for use in production runtimes.
+pub mod testing {
+
+    use super::*;
+
+    /// A testing verifier that verifies everything.
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct AlwaysVerifies;
+
+    impl Verifier for AlwaysVerifies {
+        type Error = ();
+
+        fn verify(
+            &self,
+            _input_data: &[DynamicallyTypedData],
+            _output_data: &[DynamicallyTypedData],
+        ) -> Result<TransactionPriority, ()> {
+            Ok(0)
+        }
+    }
+
+    /// A testing verifier that verifies nothing.
+    #[derive(Encode, Decode, Debug, Clone)]
+    pub struct NeverVerifies;
+
+    impl Verifier for NeverVerifies {
+        type Error = ();
+
+        fn verify(
+            &self,
+            _input_data: &[DynamicallyTypedData],
+            _output_data: &[DynamicallyTypedData],
+        ) -> Result<TransactionPriority, ()> {
+            Err(())
+        }
     }
 }
