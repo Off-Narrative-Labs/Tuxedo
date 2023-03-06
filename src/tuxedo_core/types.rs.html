@@ -113,8 +113,6 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
 </pre><pre class="rust"><code><span class="doccomment">//! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
 </span><span class="kw">use </span><span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData;
@@ -202,8 +200,6 @@
 </span><span class="kw">pub enum </span>UtxoError&lt;VerifierError&gt; {
     <span class="doccomment">/// This transaction defines the same input multiple times
     </span>DuplicateInput,
-    <span class="doccomment">/// This transaction defines the same output multiple times
-    </span>DuplicateOutput,
     <span class="doccomment">/// This transaction defines an output that already existed in the UTXO set
     </span>PreExistingOutput,
     <span class="doccomment">/// The verifier errored.
@@ -233,4 +229,4 @@
     <span class="kw">pub </span>redeemer: R,
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (44cfafe2f 2023-03-03)" data-search-js="search-894761433ba8c506.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7820b62d2 2023-03-05)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
