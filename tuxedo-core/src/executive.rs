@@ -358,3 +358,52 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Builds externalities using the builder pattern.
+    //struct ExternalityBuilder<R: Redeemer>(Vec<(OutputRef, Output<R>)>);
+
+    #[test]
+    fn validate_empty_works() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_input_works() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_output_works() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_missing_input_works() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_duplicate_input_fails() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_unsatisfied_redeemer_fails() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_pre_existing_output_fails() {
+        todo!()
+    }
+
+    #[test]
+    fn validate_with_verifier_error_fails() {
+        todo!()
+    }
+
+}
