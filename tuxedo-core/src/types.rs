@@ -117,13 +117,14 @@ pub struct Output<R> {
 #[cfg(test)]
 pub mod tests {
 
-    use crate::{redeemer::UpForGrabs, verifier::testing::AlwaysVerifies};
+    use crate::{redeemer::UpForGrabs, verifier::testing::TestVerifier};
 
     use super::*;
 
     #[test]
     fn extrinsic_no_signed_payload() {
-        let tx: Transaction<UpForGrabs, AlwaysVerifies> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier: AlwaysVerifies };
+        let verifier = TestVerifier{ verifies: true };
+        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier, };
         let e = Transaction::new(tx.clone(), None).unwrap();
 
         assert_eq!(e, tx);
@@ -132,7 +133,8 @@ pub mod tests {
 
     #[test]
     fn extrinsic_is_signed_works() {
-        let tx: Transaction<UpForGrabs, AlwaysVerifies> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier: AlwaysVerifies };
+        let verifier = TestVerifier{ verifies: true };
+        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier, };
         let e = Transaction::new(tx.clone(), Some(())).unwrap();
 
         assert_eq!(e, tx);

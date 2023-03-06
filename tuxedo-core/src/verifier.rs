@@ -33,11 +33,15 @@ pub mod testing {
 
     use super::*;
 
-    /// A testing verifier that verifies everything.
+    /// A testing verifier that passes (with zero priority) or not depending on
+    /// the boolean value enclosed.
     #[derive(Encode, Decode, Debug, Clone, PartialEq, Eq)]
-    pub struct AlwaysVerifies;
+    pub struct TestVerifier {
+        /// Whether the verifier should pass.
+        pub verifies: bool,
+    }
 
-    impl Verifier for AlwaysVerifies {
+    impl Verifier for TestVerifier {
         type Error = ();
 
         fn verify(
@@ -45,23 +49,23 @@ pub mod testing {
             _input_data: &[DynamicallyTypedData],
             _output_data: &[DynamicallyTypedData],
         ) -> Result<TransactionPriority, ()> {
-            Ok(0)
+            if self.verifies {
+                Ok(0)
+            } else {
+                Err(())
+            }
         }
     }
 
-    /// A testing verifier that verifies nothing.
-    #[derive(Encode, Decode, Debug, Clone, PartialEq, Eq)]
-    pub struct NeverVerifies;
+    #[test]
+    fn test_verifier_passes() {
+        let result = TestVerifier{verifies: true}.verify(&[], &[]);
+        assert_eq!(result, Ok(0));
+    }
 
-    impl Verifier for NeverVerifies {
-        type Error = ();
-
-        fn verify(
-            &self,
-            _input_data: &[DynamicallyTypedData],
-            _output_data: &[DynamicallyTypedData],
-        ) -> Result<TransactionPriority, ()> {
-            Err(())
-        }
+    #[test]
+    fn test_verifier_fails() {
+        let result = TestVerifier{verifies: false}.verify(&[], &[]);
+        assert_eq!(result, Err(()));
     }
 }
