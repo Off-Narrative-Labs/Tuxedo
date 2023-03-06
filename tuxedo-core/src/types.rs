@@ -113,3 +113,29 @@ pub struct Output<R> {
     pub payload: DynamicallyTypedData,
     pub redeemer: R,
 }
+
+#[cfg(test)]
+pub mod tests {
+
+    use crate::{redeemer::UpForGrabs, verifier::testing::AlwaysVerifies};
+
+    use super::*;
+
+    #[test]
+    fn extrinsic_no_signed_payload() {
+        let tx: Transaction<UpForGrabs, AlwaysVerifies> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier: AlwaysVerifies };
+        let e = Transaction::new(tx.clone(), None).unwrap();
+
+        assert_eq!(e, tx);
+        assert_eq!(e.is_signed(), Some(false));
+    }
+
+    #[test]
+    fn extrinsic_is_signed_works() {
+        let tx: Transaction<UpForGrabs, AlwaysVerifies> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier: AlwaysVerifies };
+        let e = Transaction::new(tx.clone(), Some(())).unwrap();
+
+        assert_eq!(e, tx);
+        assert_eq!(e.is_signed(), Some(false));
+    }
+}

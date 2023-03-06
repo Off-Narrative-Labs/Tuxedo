@@ -34,7 +34,7 @@ pub mod testing {
     use super::*;
 
     /// A testing verifier that verifies everything.
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, PartialEq, Eq)]
     pub struct AlwaysVerifies;
 
     impl Verifier for AlwaysVerifies {
@@ -50,7 +50,7 @@ pub mod testing {
     }
 
     /// A testing verifier that verifies nothing.
-    #[derive(Encode, Decode, Debug, Clone)]
+    #[derive(Encode, Decode, Debug, Clone, PartialEq, Eq)]
     pub struct NeverVerifies;
 
     impl Verifier for NeverVerifies {
