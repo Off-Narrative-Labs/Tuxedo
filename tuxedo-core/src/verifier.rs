@@ -8,6 +8,8 @@ use sp_std::fmt::Debug;
 use crate::dynamic_typing::DynamicallyTypedData;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 /// A single verifier that a transaction can choose to call. Verifies whether the input
 /// and output data from a transaction meets the codified constraints.
@@ -28,14 +30,15 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 }
 
 
-/// Simple verifiers for use in unit tests. Not for use in production runtimes.
+/// Simple verifier for use in unit tests. Not for use in production runtimes.
+#[cfg(feature = "std")]
 pub mod testing {
 
     use super::*;
 
     /// A testing verifier that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
-    #[derive(Encode, Decode, Debug, Clone, PartialEq, Eq)]
+    #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, PartialEq, Eq)]
     pub struct TestVerifier {
         /// Whether the verifier should pass.
         pub verifies: bool,
