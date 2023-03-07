@@ -361,14 +361,37 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
 
 #[cfg(test)]
 mod tests {
+    use crate::{verifier::testing::TestVerifier, redeemer::TestRedeemer};
+
     use super::*;
+
+    type TestTransaction = Transaction<TestRedeemer, TestVerifier>;
+    pub type TestHeader = sp_runtime::generic::Header<u32, BlakeTwo256>;
+    pub type TestBlock = sp_runtime::generic::Block<TestHeader, TestTransaction>;
+    pub type TestExecutive = Executive<TestBlock, TestRedeemer, TestVerifier>;
 
     // Builds externalities using the builder pattern.
     //struct ExternalityBuilder<R: Redeemer>(Vec<(OutputRef, Output<R>)>);
 
     #[test]
     fn validate_empty_works() {
-        todo!()
+        let tx = TestTransaction {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            verifier: TestVerifier{ verifies: true },
+        };
+
+        let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
+
+        let expected_result = ValidTransaction {
+            priority: 0,
+            requires: Vec::new(),
+            provides: Vec::new(),
+            longevity: TransactionLongevity::max_value(),
+            propagate: true,
+        };
+
+        assert_eq!(vt, expected_result);
     }
 
     #[test]
