@@ -668,4 +668,65 @@ mod tests {
             });
     }
 
+    #[test]
+    fn update_storage_consumes_input() {
+        ExternalityBuilder::default()
+            .with_utxo(0, 0, Bogus, true)
+            .build()
+            .execute_with(||{
+
+                let output_ref = mock_output_ref(0, 0);
+                let input = Input {
+                    output_ref: output_ref.clone(),
+                    witness: Vec::new(),
+                };
+
+                let tx = TestTransaction {
+                    inputs: vec![input],
+                    outputs: Vec::new(),
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+                // Commit the tx to storage
+                TestExecutive::update_storage(tx);
+
+                // Check whether the Input is still in storage
+                assert!(!sp_io::storage::exists(&output_ref.encode()));
+            });
+    }
+
+    #[test]
+    fn update_storage_adds_output() {
+        ExternalityBuilder::default()
+            .build()
+            .execute_with(||{
+
+                let output = Output {
+                    payload: Bogus.into(),
+                    redeemer: TestRedeemer{ redeems: false },
+                };
+
+                let tx = TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: vec![output.clone()],
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+
+                let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: 0,
+                };
+
+                // Commit the tx to storage
+                TestExecutive::update_storage(tx);
+
+                // Check whether the Output has been written to storage and the proper value is stored
+                let stored_bytes = sp_io::storage::get(&output_ref.encode()).unwrap();
+                let stored_value = Output::decode(&mut &stored_bytes[..]).unwrap();
+                assert_eq!(stored_value, output);
+            });
+    }
+
 }
