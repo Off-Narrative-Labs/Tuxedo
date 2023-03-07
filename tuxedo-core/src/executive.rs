@@ -401,7 +401,11 @@ mod tests {
 
     /// Builds test externalities using a minimal builder pattern.
     #[derive(Default)]
-    struct ExternalityBuilder(Vec<(OutputRef, Output<TestRedeemer>)>);
+    struct ExternalityBuilder {
+        utxos: Vec<(OutputRef, Output<TestRedeemer>)>,
+        pre_header: Option<TestHeader>,
+        noted_extrinsics: Vec<Vec<u8>>,
+    }
 
     impl ExternalityBuilder {
         /// Add the given Utxo to the storage.
@@ -425,16 +429,66 @@ mod tests {
                 payload: payload.into(),
                 redeemer: TestRedeemer { redeems },
             };
-            self.0.push((output_ref, output));
+            self.utxos.push((output_ref, output));
+            self
+        }
+
+        /// Add a preheader to the storage.
+        ///
+        /// In normal execution `open_block` stores a header in storage
+        /// before any extrinsics are applied. This function allows setting up
+        /// a test case with a stored pre-header.
+        ///
+        /// Rather than passing in a header, we pass in parts of it. This ensures
+        /// that a realistic pre-header (without extrinsics root or state root)
+        /// is stored.
+        ///
+        /// Although a partial digest would be part of the pre-header, we have no
+        /// use case for setting one, so it is also omitted here.
+        fn with_pre_header(mut self, parent_hash: H256, number: u32) -> Self {
+            let h = TestHeader {
+                parent_hash,
+                number,
+                state_root: H256::zero(),
+                extrinsics_root: H256::zero(),
+                digest: Default::default(),
+            };
+
+            self.pre_header = Some(h);
+            self
+        }
+
+        /// Add a noted extrinsic to the state.
+        ///
+        /// In normal block authoring, extrinsics are noted in state as they are
+        /// applied so that an extrinsics root can be calculated at the end of the
+        /// block. This function allows setting up a test case with som extrinsics
+        /// already noted.
+        ///
+        /// The extrinsic is already encoded so that it doesn't have to be a proper
+        /// extrinsic, but can just be some example bytes.
+        fn with_noted_extrinsic(mut self, ext: Vec<u8>) -> Self {
+            self.noted_extrinsics.push(ext);
             self
         }
 
         /// Build the test externalities with all the utxos already stored
         fn build(self) -> TestExternalities {
             let mut ext = TestExternalities::default();
-            for (output_ref, output) in self.0 {
+
+            // Write all the utxos
+            for (output_ref, output) in self.utxos {
                 ext.insert(output_ref.encode(), output.encode());
             }
+
+            // Write the pre-header
+            if let Some(pre_header) = self.pre_header {
+                ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
+            }
+
+            // Write the noted extrinsics
+            ext.insert(EXTRINSIC_KEY.to_vec(), self.noted_extrinsics.encode());
+
             ext
         }
     }
@@ -713,5 +767,110 @@ mod tests {
             let stored_value = Output::decode(&mut &stored_bytes[..]).unwrap();
             assert_eq!(stored_value, output);
         });
+    }
+
+    #[test]
+    fn open_block_works() {
+        let header = TestHeader {
+            parent_hash: H256::repeat_byte(5),
+            number: 5,
+            state_root: H256::repeat_byte(6),
+            extrinsics_root: H256::repeat_byte(7),
+            digest: Default::default(),
+        };
+
+        ExternalityBuilder::default().build().execute_with(|| {
+            // Call open block which just writes the header to storage
+            TestExecutive::open_block(&header);
+
+            // Fetch the header back out of storage
+            let retrieved_header = sp_io::storage::get(HEADER_KEY)
+                .and_then(|d| TestHeader::decode(&mut &*d).ok())
+                .expect("Open block should have written a header to storage");
+
+            // Make sure the header that came out is the same one that went in.
+            assert_eq!(retrieved_header, header);
+        });
+    }
+
+    #[test]
+    fn apply_valid_extrinsic_work() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let tx = TestTransaction {
+                inputs: Vec::new(),
+                outputs: Vec::new(),
+                verifier: TestVerifier { verifies: true },
+            };
+
+            let apply_result = TestExecutive::apply_extrinsic(tx.clone());
+
+            // Make sure the returned result is Ok
+            assert_eq!(apply_result, Ok(Ok(())));
+
+            // Make sure the transaction is noted in storage
+            let noted_extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
+                .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
+                .unwrap_or_default();
+
+            assert_eq!(noted_extrinsics, vec![tx.encode()]);
+        });
+    }
+
+    #[test]
+    fn apply_invalid_extrinsic_rejects() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let tx = TestTransaction {
+                inputs: Vec::new(),
+                outputs: Vec::new(),
+                verifier: TestVerifier { verifies: false },
+            };
+
+            let apply_result = TestExecutive::apply_extrinsic(tx.clone());
+
+            // Make sure the returned result is an error
+            assert!(apply_result.is_err());
+
+            // TODO Do we actually want to note transactions that ultimately reject?
+            // Make sure the transaction is noted in storage
+            let noted_extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
+                .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
+                .unwrap_or_default();
+
+            assert_eq!(noted_extrinsics, vec![tx.encode()]);
+        });
+    }
+
+    #[test]
+    fn close_block_works() {
+        let parent_hash = H256::repeat_byte(5);
+        let block_number = 6;
+        let extrinsic = vec![1, 2, 3];
+        ExternalityBuilder::default()
+            .with_pre_header(parent_hash, block_number)
+            .with_noted_extrinsic(extrinsic.clone())
+            .build()
+            .execute_with(|| {
+                let returned_header = TestExecutive::close_block();
+
+                // Make sure the header is as we expected
+                let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
+                let state_root = H256::decode(&mut &raw_state_root[..]).unwrap();
+                let expected_header = TestHeader {
+                    parent_hash,
+                    number: block_number,
+                    state_root,
+                    extrinsics_root: BlakeTwo256::ordered_trie_root(
+                        vec![extrinsic],
+                        StateVersion::V1,
+                    ),
+                    digest: Default::default(),
+                };
+
+                assert_eq!(returned_header, expected_header);
+
+                // Make sure the transient storage has been removed
+                assert!(!sp_io::storage::exists(&HEADER_KEY));
+                assert!(!sp_io::storage::exists(&EXTRINSIC_KEY));
+            });
     }
 }
