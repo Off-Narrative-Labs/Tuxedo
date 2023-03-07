@@ -4,7 +4,8 @@
 
 use crate::{
     redeemer::Redeemer,
-    types::{Output, OutputRef}, LOG_TARGET,
+    types::{Output, OutputRef},
+    LOG_TARGET,
 };
 use parity_scale_codec::{Decode, Encode};
 use sp_std::marker::PhantomData;

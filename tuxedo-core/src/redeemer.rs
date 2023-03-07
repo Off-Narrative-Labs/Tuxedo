@@ -107,13 +107,13 @@ mod test {
 
     #[test]
     fn test_redeemer_passes() {
-        let result = TestRedeemer{redeems: true}.redeem(&[], &[]);
+        let result = TestRedeemer { redeems: true }.redeem(&[], &[]);
         assert_eq!(result, true);
     }
 
     #[test]
     fn test_redeemer_fails() {
-        let result = TestRedeemer{redeems: false}.redeem(&[], &[]);
+        let result = TestRedeemer { redeems: false }.redeem(&[], &[]);
         assert_eq!(result, false);
     }
 }

@@ -123,8 +123,12 @@ pub mod tests {
 
     #[test]
     fn extrinsic_no_signed_payload() {
-        let verifier = TestVerifier{ verifies: true };
-        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier, };
+        let verifier = TestVerifier { verifies: true };
+        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            verifier,
+        };
         let e = Transaction::new(tx.clone(), None).unwrap();
 
         assert_eq!(e, tx);
@@ -133,8 +137,12 @@ pub mod tests {
 
     #[test]
     fn extrinsic_is_signed_works() {
-        let verifier = TestVerifier{ verifies: true };
-        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction { inputs: Vec::new(), outputs: Vec::new(), verifier, };
+        let verifier = TestVerifier { verifies: true };
+        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            verifier,
+        };
         let e = Transaction::new(tx.clone(), Some(())).unwrap();
 
         assert_eq!(e, tx);

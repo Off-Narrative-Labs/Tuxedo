@@ -163,10 +163,9 @@ mod tests {
     #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
     struct Byte(u8);
 
-    impl UtxoData for Byte{
+    impl UtxoData for Byte {
         const TYPE_ID: [u8; 4] = *b"byte";
     }
-
 
     #[test]
     fn extract_works() {

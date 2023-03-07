@@ -7,9 +7,9 @@ use sp_std::fmt::Debug;
 
 use crate::dynamic_typing::DynamicallyTypedData;
 use parity_scale_codec::{Decode, Encode};
-use sp_runtime::transaction_validity::TransactionPriority;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A single verifier that a transaction can choose to call. Verifies whether the input
 /// and output data from a transaction meets the codified constraints.
@@ -28,7 +28,6 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 }
-
 
 /// Simple verifier for use in unit tests. Not for use in production runtimes.
 #[cfg(feature = "std")]
@@ -62,13 +61,13 @@ pub mod testing {
 
     #[test]
     fn test_verifier_passes() {
-        let result = TestVerifier{verifies: true}.verify(&[], &[]);
+        let result = TestVerifier { verifies: true }.verify(&[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_verifier_fails() {
-        let result = TestVerifier{verifies: false}.verify(&[], &[]);
+        let result = TestVerifier { verifies: false }.verify(&[], &[]);
         assert_eq!(result, Err(()));
     }
 }
