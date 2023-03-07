@@ -3,6 +3,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use amoeba::{AmoebaCreation, AmoebaMitosis};
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
@@ -28,12 +29,11 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-mod amoeba;
+pub mod amoeba;
 mod poe;
 mod runtime_upgrade;
-//TODO kitties piece needs ported for merge
-mod kitties;
-mod money;
+pub mod kitties;
+pub mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
@@ -83,8 +83,8 @@ pub mod opaque {
 
 /// This runtime version.
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: create_runtime_str!("frameless-runtime"),
-    impl_name: create_runtime_str!("frameless-runtime"),
+    spec_name: create_runtime_str!("tuxedo-template-runtime"),
+    impl_name: create_runtime_str!("tuxedo-template-runtime"),
     authoring_version: 1,
     spec_version: 1,
     impl_version: 1,
@@ -192,6 +192,18 @@ impl Redeemer for OuterRedeemer {
             Self::SigCheck(sig_check) => sig_check.redeem(simplified_tx, witness),
             Self::UpForGrabs(up_for_grabs) => up_for_grabs.redeem(simplified_tx, witness),
         }
+    }
+}
+
+impl From<UpForGrabs> for OuterRedeemer {
+    fn from(value: UpForGrabs) -> Self {
+        Self::UpForGrabs(value)
+    }
+}
+
+impl From<SigCheck> for OuterRedeemer {
+    fn from(value: SigCheck) -> Self {
+        Self::SigCheck(value)
     }
 }
 
@@ -312,7 +324,22 @@ impl Verifier for OuterVerifier {
     }
 }
 
-/// The main struct in this module. In frame this comes from `construct_runtime!`
+impl From<AmoebaCreation> for OuterVerifier {
+    fn from(value: AmoebaCreation) -> Self {
+        Self::AmoebaCreation(value)
+    }
+}
+
+impl From<AmoebaMitosis> for OuterVerifier {
+    fn from(value: AmoebaMitosis) -> Self {
+        Self::AmoebaMitosis(value)
+    }
+}
+
+//TODO the rest of these impl blocks. For now I'm only doing these two
+// because they are the only two I use in my wallet prototype
+
+/// The main struct in this module.
 pub struct Runtime;
 
 // Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags
@@ -508,7 +535,7 @@ mod tests {
 
 		let mut t = GenesisConfig::default()
 			.build_storage()
-			.expect("Frameless system builds valid default genesis config");
+			.expect("System builds valid default genesis config");
 
 		let mut ext = sp_io::TestExternalities::from(t);
 		ext.register_extension(KeystoreExt(Arc::new(keystore)));

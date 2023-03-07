@@ -1,0 +1,52 @@
+name: Publish Rust Docs
+
+on:
+  push:
+    branches:
+      - main
+
+# So github actions runner can publish the built docs to the gh-pages branch
+permissions:
+  contents: write
+
+jobs:
+  deploy-docs:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v1
+
+      - name: Install tooling
+        run: |
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Build rustdocs
+        uses: actions-rs/cargo@v1
+        env:
+          CARGO_INCREMENTAL: "0"
+        with:
+          command: doc
+          args: --all --no-deps
+
+      # Make an index.html file so we start at the tuxedo core
+      # Copied from https://github.com/substrate-developer-hub/rustdocs/blob/master/index.html
+      - name: Make index.html
+        run: echo "<meta http-equiv=refresh content=0;url=tuxedo_core/index.html>" > ./target/doc/index.html
+
+      - name: Deploy documentation
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./target/doc
