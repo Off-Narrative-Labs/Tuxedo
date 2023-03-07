@@ -439,13 +439,7 @@ mod tests {
 
         let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
-        let expected_result = ValidTransaction {
-            priority: 0,
-            requires: Vec::new(),
-            provides: Vec::new(),
-            longevity: TransactionLongevity::max_value(),
-            propagate: true,
-        };
+        let expected_result = ValidTransactionBuilder::default().into();
 
         assert_eq!(vt, expected_result);
     }
@@ -471,13 +465,7 @@ mod tests {
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
-                let expected_result = ValidTransaction {
-                    priority: 0,
-                    requires: Vec::new(),
-                    provides: Vec::new(),
-                    longevity: TransactionLongevity::max_value(),
-                    propagate: true,
-                };
+                let expected_result = ValidTransactionBuilder::default().into();
 
                 assert_eq!(vt, expected_result);
             });
@@ -507,13 +495,7 @@ mod tests {
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
-                let expected_result = ValidTransaction {
-                    priority: 0,
-                    requires: Vec::new(),
-                    provides: vec![output_ref.encode()],
-                    longevity: TransactionLongevity::max_value(),
-                    propagate: true,
-                };
+                let expected_result = ValidTransactionBuilder::default().and_provides(output_ref).into();
 
                 assert_eq!(vt, expected_result);
             });
@@ -539,13 +521,7 @@ mod tests {
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
-                let expected_result = ValidTransaction {
-                    priority: 0,
-                    requires: vec![output_ref.encode()],
-                    provides: Vec::new(),
-                    longevity: TransactionLongevity::max_value(),
-                    propagate: true,
-                };
+                let expected_result = ValidTransactionBuilder::default().and_requires(output_ref).into();
 
                 assert_eq!(vt, expected_result);
             });
@@ -585,13 +561,7 @@ mod tests {
 
         let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
-        let expected_result = ValidTransaction {
-            priority: 0,
-            requires: Vec::new(),
-            provides: Vec::new(),
-            longevity: TransactionLongevity::max_value(),
-            propagate: true,
-        };
+        let expected_result = ValidTransactionBuilder::default().into();
 
         assert_eq!(vt, expected_result);
     }
