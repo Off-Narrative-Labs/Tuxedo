@@ -552,7 +552,21 @@ mod tests {
 
     #[test]
     fn validate_with_duplicate_input_fails() {
-        todo!()
+        let output_ref = mock_output_ref(0, 0);
+        let input = Input {
+            output_ref: output_ref.clone(),
+            witness: Vec::new(),
+        };
+
+        let tx = TestTransaction {
+            inputs: vec![input.clone(), input],
+            outputs: Vec::new(),
+            verifier: TestVerifier{ verifies: true },
+        };
+
+        let result = TestExecutive::validate_tuxedo_transaction(&tx);
+
+        assert_eq!(result, Err(UtxoError::DuplicateInput));
     }
 
     #[test]

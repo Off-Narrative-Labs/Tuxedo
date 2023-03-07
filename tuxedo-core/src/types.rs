@@ -81,7 +81,7 @@ pub struct Input {
     pub witness: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum UtxoError<VerifierError> {
     /// This transaction defines the same input multiple times
     DuplicateInput,
