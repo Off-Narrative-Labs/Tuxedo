@@ -200,4 +200,20 @@ mod tests {
 
         assert_eq!(extracted_b, Err(DynamicTypingError::DecodingFailed));
     }
+
+    #[test]
+    fn display_wrong_type_error() {
+        let actual = format!("{}", DynamicTypingError::WrongType);
+        let expected = String::from("dynamic type does not match extraction target");
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn display_decoding_failed_error() {
+        let actual = format!("{}", DynamicTypingError::DecodingFailed);
+        let expected = String::from("failed to decode dynamically typed data with scale codec");
+
+        assert_eq!(actual, expected);
+    }
 }
