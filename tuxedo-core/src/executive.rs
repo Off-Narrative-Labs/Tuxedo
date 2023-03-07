@@ -540,6 +540,30 @@ mod tests {
                 };
 
                 let tx = TestTransaction {
+                    inputs: vec![input.clone(), input],
+                    outputs: Vec::new(),
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+                let result = TestExecutive::validate_tuxedo_transaction(&tx);
+
+                assert_eq!(result, Err(UtxoError::DuplicateInput));
+            });
+    }
+
+    #[test]
+    fn validate_with_unsatisfied_redeemer_fails() {
+        ExternalityBuilder::default()
+            .with_utxo(0, 0, Bogus, false)
+            .build()
+            .execute_with(||{
+                let output_ref = mock_output_ref(0, 0);
+                let input = Input {
+                    output_ref,
+                    witness: Vec::new(),
+                };
+
+                let tx = TestTransaction {
                     inputs: vec![input],
                     outputs: Vec::new(),
                     verifier: TestVerifier{ verifies: true },
@@ -549,21 +573,6 @@ mod tests {
 
                 assert_eq!(result, Err(UtxoError::RedeemerError));
             });
-    }
-
-    #[test]
-    fn validate_with_unsatisfied_redeemer_fails() {
-        let tx = TestTransaction {
-            inputs: Vec::new(),
-            outputs: Vec::new(),
-            verifier: TestVerifier{ verifies: true },
-        };
-
-        let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
-
-        let expected_result = ValidTransactionBuilder::default().into();
-
-        assert_eq!(vt, expected_result);
     }
 
     #[test]
