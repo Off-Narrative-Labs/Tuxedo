@@ -63,6 +63,7 @@ pub struct TestRedeemer {
     pub redeems: bool,
 }
 
+#[cfg(feature = "std")]
 impl Redeemer for TestRedeemer {
     fn redeem(&self, _simplified_tx: &[u8], _witness: &[u8]) -> bool {
         self.redeems
