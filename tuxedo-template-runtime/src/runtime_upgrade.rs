@@ -18,8 +18,9 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
+    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, Verifier, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
 };
 
 /// A reference to a runtime wasm blob. It is just a hash.
@@ -74,7 +75,7 @@ pub struct RuntimeUpgrade {
     full_wasm: Vec<u8>,
 }
 
-impl Verifier for RuntimeUpgrade {
+impl SimpleVerifier for RuntimeUpgrade {
     type Error = VerifierError;
 
     fn verify(
@@ -105,5 +106,30 @@ impl Verifier for RuntimeUpgrade {
 
         //TODO Figure out a better priority
         Ok(0)
+    }
+}
+
+impl Verifier for RuntimeUpgrade {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <RuntimeUpgrade as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }

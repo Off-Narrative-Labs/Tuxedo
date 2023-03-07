@@ -12,9 +12,11 @@ use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_std::vec::Vec;
 use tuxedo_core::{
+    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, Verifier, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
 };
 
 /// An amoeba tracked by our simple Amoeba APP
@@ -84,7 +86,7 @@ pub enum VerifierError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaMitosis;
 
-impl Verifier for AmoebaMitosis {
+impl SimpleVerifier for AmoebaMitosis {
     type Error = VerifierError;
 
     fn verify(
@@ -127,6 +129,31 @@ impl Verifier for AmoebaMitosis {
     }
 }
 
+impl Verifier for AmoebaMitosis {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <AmoebaMitosis as SimpleVerifier>::verify(self, &input_data, &output_data)
+    }
+}
+
 /// A verifier for simple death of an amoeba.
 ///
 /// Any amoeba can be killed by providing it as the sole input to this verifier. No
@@ -138,7 +165,7 @@ impl Verifier for AmoebaMitosis {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaDeath;
 
-impl Verifier for AmoebaDeath {
+impl SimpleVerifier for AmoebaDeath {
     type Error = VerifierError;
 
     fn verify(
@@ -163,6 +190,31 @@ impl Verifier for AmoebaDeath {
     }
 }
 
+impl Verifier for AmoebaDeath {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <AmoebaDeath as SimpleVerifier>::verify(self, &input_data, &output_data)
+    }
+}
+
 /// A verifier for simple creation of an amoeba.
 ///
 /// A new amoeba can be created by providing it as the sole output to this verifier. No
@@ -174,7 +226,7 @@ impl Verifier for AmoebaDeath {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaCreation;
 
-impl Verifier for AmoebaCreation {
+impl SimpleVerifier for AmoebaCreation {
     type Error = VerifierError;
 
     fn verify(
@@ -196,6 +248,31 @@ impl Verifier for AmoebaCreation {
         ensure!(input_data.is_empty(), VerifierError::CreationMayNotConsume);
 
         Ok(0)
+    }
+}
+
+impl Verifier for AmoebaCreation {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <AmoebaCreation as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }
 

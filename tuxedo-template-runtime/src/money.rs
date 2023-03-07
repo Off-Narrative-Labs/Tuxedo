@@ -7,8 +7,9 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    types::{Input, Output},
+    dynamic_typing::{DynamicallyTypedData, UtxoData}, utxo_set::TransparentUtxoSet,
+    ensure, Verifier, SimpleVerifier, Redeemer,
 };
 
 // use log::info;
@@ -78,7 +79,7 @@ pub enum VerifierError {
     ZeroValueCoin,
 }
 
-impl Verifier for MoneyVerifier {
+impl SimpleVerifier for MoneyVerifier {
     type Error = VerifierError;
 
     fn verify(
@@ -150,6 +151,31 @@ impl Verifier for MoneyVerifier {
                 Ok(0)
             }
         }
+    }
+}
+
+impl Verifier for MoneyVerifier {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <MoneyVerifier as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }
 

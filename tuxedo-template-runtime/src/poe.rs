@@ -19,9 +19,11 @@ use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_std::vec::Vec;
 use tuxedo_core::{
+    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, Verifier, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
 };
 
 // Notice this type doesn't have to be public. Cool.
@@ -76,7 +78,7 @@ pub enum VerifierError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeClaim;
 
-impl Verifier for PoeClaim {
+impl SimpleVerifier for PoeClaim {
     type Error = VerifierError;
 
     fn verify(
@@ -109,6 +111,31 @@ impl Verifier for PoeClaim {
     }
 }
 
+impl Verifier for PoeClaim {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <PoeClaim as SimpleVerifier>::verify(self, &input_data, &output_data)
+    }
+}
+
 /// A verifier to revoke claims.
 ///
 /// Like the creation verifier, this allows batch revocation.
@@ -119,7 +146,7 @@ impl Verifier for PoeClaim {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeRevoke;
 
-impl Verifier for PoeRevoke {
+impl SimpleVerifier for PoeRevoke {
     type Error = VerifierError;
 
     fn verify(
@@ -141,6 +168,31 @@ impl Verifier for PoeRevoke {
     }
 }
 
+impl Verifier for PoeRevoke {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <PoeRevoke as SimpleVerifier>::verify(self, &input_data, &output_data)
+    }
+}
+
 /// A verifier that resolves claim disputes by keeping whichever claim came first.
 ///
 /// TODO this will work much more elegantly once peek is implemented. We only need to peek at the
@@ -158,7 +210,7 @@ impl Verifier for PoeRevoke {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeDispute;
 
-impl Verifier for PoeDispute {
+impl SimpleVerifier for PoeDispute {
     type Error = VerifierError;
 
     fn verify(
@@ -176,6 +228,31 @@ impl Verifier for PoeDispute {
         // Make sure that all other claims have block heights strictly greater than the winner.
 
         //TODO what to do about the redeemers on those losing claims.
+    }
+}
+
+impl Verifier for PoeDispute {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <PoeDispute as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }
 

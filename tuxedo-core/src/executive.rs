@@ -109,25 +109,25 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // Extract the contained data from each input and output
         // We do not yet remove anything from the utxo set. That will happen later
         // iff verification passes
-        let input_data: Vec<DynamicallyTypedData> = transaction
-            .inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = transaction
-            .outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
+        // let input_data: Vec<DynamicallyTypedData> = transaction
+        //     .inputs
+        //     .iter()
+        //     .map(|i| {
+        //         TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+        //             .expect("We just checked that all inputs were present.")
+        //             .payload
+        //     })
+        //     .collect();
+        // let output_data: Vec<DynamicallyTypedData> = transaction
+        //     .outputs
+        //     .iter()
+        //     .map(|o| o.payload.clone())
+        //     .collect();
 
         // Call the verifier
         transaction
             .verifier
-            .verify(&input_data, &output_data)
+            .verify(&transaction.inputs, &transaction.outputs)
             .map_err(UtxoError::VerifierError)?;
 
         // Return the valid transaction

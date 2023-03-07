@@ -19,7 +19,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the verifier by including it in the fields
 /// of the verifier struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait Verifier: Debug + Encode + Decode + Clone {
+pub trait SimpleVerifier: Debug + Encode + Decode + Clone {
     /// The error type that this verifier may return
     type Error: Debug;
 
@@ -31,12 +31,12 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
-pub trait PowerfulVerifier<R: Redeemer>: Debug + Encode + Decode + Clone {
+pub trait Verifier: Debug + Encode + Decode + Clone {
     /// the error type that this verifier may return
     type Error: Debug;
 
     /// The actual verification logic
-    fn verify(
+    fn verify<R: Redeemer>(
         &self,
         inputs: &[Input],
         outputs: &[Output<R>],
@@ -58,7 +58,7 @@ pub trait PowerfulVerifier<R: Redeemer>: Debug + Encode + Decode + Clone {
 // A trivial verifier that verifies everything. Not practical. More for testing
 // and for the sake of making things compile before I get around to writing the
 // amoeba nd PoE verifiers
-impl Verifier for () {
+impl SimpleVerifier for () {
     type Error = ();
 
     fn verify(

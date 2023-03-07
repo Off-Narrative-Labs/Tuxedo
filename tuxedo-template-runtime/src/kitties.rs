@@ -10,13 +10,15 @@ use sp_std::{
     prelude::*,
     marker::PhantomData,
     fmt::Debug,
+    vec::Vec,
 };
 use sp_core::H256;
 use tuxedo_core::{
+    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, Verifier, SimpleVerifier, Redeemer, utxo_set::TransparentUtxoSet,
 };
-use crate::money::{Coin, MoneyVerifier};
+// use crate::money::{Coin, MoneyVerifier};
 
 #[cfg_attr(
     feature = "std",
@@ -345,7 +347,7 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
 }
 
 // 4.) Implement Verifier Trait on my new Verifier
-impl Verifier for FreeKittyVerifier {
+impl SimpleVerifier for FreeKittyVerifier {
     type Error = VerifierError;
     /// Checks:
     ///     - `input_data` is of length 2
@@ -375,6 +377,32 @@ impl Verifier for FreeKittyVerifier {
         KittyHelpers::check_new_family(&mom, &dad, output_data)?;
 
         Ok(0)
+    }
+}
+
+// 5.) Eventually Abstract this with derive macro
+impl Verifier for FreeKittyVerifier {
+    type Error = VerifierError;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|i| {
+                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
+                    .expect("We just checked that all inputs were present.")
+                    .payload
+            })
+            .collect();
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <FreeKittyVerifier as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }
 
