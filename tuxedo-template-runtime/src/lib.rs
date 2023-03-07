@@ -30,10 +30,10 @@ use sp_version::RuntimeVersion;
 use serde::{Deserialize, Serialize};
 
 pub mod amoeba;
-mod poe;
-mod runtime_upgrade;
 pub mod kitties;
 pub mod money;
+mod poe;
+mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
@@ -138,9 +138,10 @@ impl Default for GenesisConfig {
 impl BuildStorage for GenesisConfig {
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
         // we have nothing to put into storage in genesis, except this:
-        storage
-            .top
-            .insert(sp_storage::well_known_keys::CODE.into(), WASM_BINARY.unwrap().to_vec());
+        storage.top.insert(
+            sp_storage::well_known_keys::CODE.into(),
+            WASM_BINARY.unwrap().to_vec(),
+        );
 
         for (index, utxo) in self.genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {
@@ -225,8 +226,6 @@ pub enum OuterVerifier {
     Money(money::MoneyVerifier),
     /// Verifies Free Kitty transactions
     FreeKittyVerifier(kitties::FreeKittyVerifier),
-    /// Verifies Paid for Kitty transactions
-    MoneyKittyVerifier(kitties::MoneyKittyVerifier::<kitties::KittyConfig>),
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
@@ -304,9 +303,6 @@ impl Verifier for OuterVerifier {
         Ok(match self {
             Self::Money(money) => money.verify(input_data, output_data)?,
             Self::FreeKittyVerifier(free_breed) => free_breed.verify(input_data, output_data)?,
-            Self::MoneyKittyVerifier(money_breed) => {
-                money_breed.verify(input_data, output_data)?
-            }
             Self::AmoebaMitosis(amoeba_mitosis) => {
                 amoeba_mitosis.verify(input_data, output_data)?
             }
@@ -347,7 +343,6 @@ pub struct Runtime;
 // in a `--dev` node. You may enable more authorities to test more interesting networks, or replace
 // these IDs entirely.
 impl Runtime {
-
     /// Aura authority IDs
     fn aura_authorities() -> Vec<AuraId> {
         use hex_literal::hex;
@@ -376,7 +371,7 @@ impl Runtime {
     fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
         use hex_literal::hex;
         use sp_application_crypto::ByteArray;
-        
+
         [
             // Alice
             hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"),
@@ -392,7 +387,13 @@ impl Runtime {
             // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
         ]
         .iter()
-        .map(|hex| (GrandpaId::from_slice(hex.as_ref()).expect("Valid Grandpa authority hex was provided"), 1))
+        .map(|hex| {
+            (
+                GrandpaId::from_slice(hex.as_ref())
+                    .expect("Valid Grandpa authority hex was provided"),
+                1,
+            )
+        })
         .collect()
     }
 }
@@ -513,63 +514,60 @@ impl_runtime_apis! {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
-	use parity_scale_codec::Encode;
-	use sp_core::hexdisplay::HexDisplay;
-	use sp_core::{H512, testing::SR25519};
-	use sp_keystore::testing::KeyStore;
-	use sp_keystore::{KeystoreExt, SyncCryptoStore};
-	use hex_literal::hex;
+    use super::*;
+    use parity_scale_codec::Encode;
+    use sp_core::testing::SR25519;
+    use sp_keystore::testing::KeyStore;
+    use sp_keystore::{KeystoreExt, SyncCryptoStore};
 
-	use std::sync::Arc;
+    use std::sync::Arc;
 
-	// other random account generated with subkey
-	const SHAWN_PHRASE: &str = "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-	const GENESIS_UTXO_MONEY: [u8; 32] = hex!("79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999");
+    // other random account generated with subkey
+    const SHAWN_PHRASE: &str =
+        "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
 
-	fn new_test_ext() -> sp_io::TestExternalities {
+    fn new_test_ext() -> sp_io::TestExternalities {
+        let keystore = KeyStore::new();
 
-		let keystore = KeyStore::new();
-		let shawn_pub_key =
-			keystore.sr25519_generate_new(SR25519, Some(SHAWN_PHRASE)).unwrap();
+        let t = GenesisConfig::default()
+            .build_storage()
+            .expect("System builds valid default genesis config");
 
-		let mut t = GenesisConfig::default()
-			.build_storage()
-			.expect("System builds valid default genesis config");
+        let mut ext = sp_io::TestExternalities::from(t);
+        ext.register_extension(KeystoreExt(Arc::new(keystore)));
+        ext
+    }
 
-		let mut ext = sp_io::TestExternalities::from(t);
-		ext.register_extension(KeystoreExt(Arc::new(keystore)));
-		ext
-	}
+    #[test]
+    fn utxo_money_test_genesis() {
+        new_test_ext().execute_with(|| {
+            let keystore = KeyStore::new();
+            let shawn_pub_key = keystore
+                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
+                .unwrap();
 
-	#[test]
-	fn utxo_money_test_genesis() {
-		new_test_ext().execute_with(|| {
-			let keystore = KeyStore::new();
-			let shawn_pub_key =
-				keystore.sr25519_generate_new(SR25519, Some(SHAWN_PHRASE)).unwrap();
+            // Grab genesis value from storage and assert it is correct
+            let genesis_utxo = Output {
+                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                    owner_pubkey: shawn_pub_key.into(),
+                }),
+                payload: DynamicallyTypedData {
+                    data: 100u128.encode(),
+                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                },
+            };
 
-			// Grab genesis value from storage and assert it is correct
-			let genesis_utxo = Output {
-				redeemer: OuterRedeemer::SigCheck(SigCheck{
-					owner_pubkey: shawn_pub_key.into()
-				}),
-				payload: DynamicallyTypedData {
-					data: 100u128.encode(),
-					type_id: <money::Coin as UtxoData>::TYPE_ID,
-				},
-			};
-
-			let output_ref = OutputRef {
+            let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
                 index: 0 as u32,
             };
 
-			let encoded_utxo =
-				sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-			let utxo = Output::<OuterRedeemer>::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-			assert_eq!(utxo, genesis_utxo);
-		})
-	}
+            let encoded_utxo =
+                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
+            let utxo = Output::<OuterRedeemer>::decode(&mut &encoded_utxo[..])
+                .expect("Can Decode UTXO correctly");
+            assert_eq!(utxo, genesis_utxo);
+        })
+    }
 }
