@@ -373,6 +373,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
 mod tests {
     use sp_core::H256;
     use sp_io::TestExternalities;
+    use sp_runtime::transaction_validity::ValidTransactionBuilder;
 
     use crate::{verifier::testing::TestVerifier, redeemer::TestRedeemer, types::{Input, Output}, dynamic_typing::{testing::Bogus, UtxoData}};
 
@@ -576,7 +577,35 @@ mod tests {
 
     #[test]
     fn validate_with_pre_existing_output_fails() {
-        todo!()
+        ExternalityBuilder::default()
+            .build()
+            .execute_with(||{
+                // This test requires a transaction to create an output at a location where
+                // an output already exists. Rather than complicate the builder with an additional
+                // method to put an output at a specific location before the test begins, I'll submit
+                // two transactions during the test. The main reason is that doing this serves as
+                // documentation for how this could happen in the wild. Specifically two transactions
+                // that don't have inputs and have the same outputs could make it happen. I initially
+                // couldn't think of how this could happen, so I think giving an example is wise.
+
+                let output = Output {
+                    payload: Bogus.into(),
+                    redeemer: TestRedeemer{ redeems: false },
+                };
+                let tx = TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: vec![output],
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+                // Submit the transaction once and make sure it works
+                let result1 = TestExecutive::apply_tuxedo_transaction(tx.clone());
+                assert!(result1.is_ok());
+
+                // Submit it a second time and make sure it fails
+                let result2 = TestExecutive::validate_tuxedo_transaction(&tx);
+                assert_eq!(result2, Err(UtxoError::PreExistingOutput));
+            });
     }
 
     #[test]
