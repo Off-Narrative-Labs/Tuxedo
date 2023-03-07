@@ -631,7 +631,20 @@ mod tests {
 
     #[test]
     fn validate_with_verifier_error_fails() {
-        todo!()
+        ExternalityBuilder::default()
+            .build()
+            .execute_with(||{
+
+                let tx = TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: Vec::new(),
+                    verifier: TestVerifier{ verifies: false },
+                };
+
+                let vt = TestExecutive::validate_tuxedo_transaction(&tx);
+
+                assert_eq!(vt, Err(UtxoError::VerifierError(())));
+            });
     }
 
 }
