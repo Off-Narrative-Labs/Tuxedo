@@ -225,8 +225,6 @@ pub enum OuterVerifier {
     Money(money::MoneyVerifier),
     /// Verifies Free Kitty transactions
     FreeKittyVerifier(kitties::FreeKittyVerifier),
-    /// Verifies Paid for Kitty transactions
-    MoneyKittyVerifier(kitties::MoneyKittyVerifier::<kitties::KittyConfig>),
     /// Verifies that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Verifies that a single amoeba is simply removed from the state
@@ -304,9 +302,6 @@ impl Verifier for OuterVerifier {
         Ok(match self {
             Self::Money(money) => money.verify(input_data, output_data)?,
             Self::FreeKittyVerifier(free_breed) => free_breed.verify(input_data, output_data)?,
-            Self::MoneyKittyVerifier(money_breed) => {
-                money_breed.verify(input_data, output_data)?
-            }
             Self::AmoebaMitosis(amoeba_mitosis) => {
                 amoeba_mitosis.verify(input_data, output_data)?
             }

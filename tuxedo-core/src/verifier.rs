@@ -5,7 +5,11 @@
 
 use sp_std::fmt::Debug;
 
-use crate::dynamic_typing::DynamicallyTypedData;
+use crate::{
+    Redeemer,
+    types::{Input, Output},
+    dynamic_typing::DynamicallyTypedData,
+};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -26,6 +30,30 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 }
+
+pub trait PowerfulVerifier<R: Redeemer>: Debug + Encode + Decode + Clone {
+    /// the error type that this verifier may return
+    type Error: Debug;
+
+    /// The actual verification logic
+    fn verify(
+        &self,
+        inputs: &[Input],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error>;
+}
+
+// impl PowerfulVerifier for () {
+//     type Error = ();
+
+//     fn verify(
+//         &self,
+//         _inputs: &[Input],
+//         _outputs: &[Output<R>],
+//     ) -> Result<TransactionPriority, Self::Error> {
+//         Ok(0)
+//     }
+// }
 
 // A trivial verifier that verifies everything. Not practical. More for testing
 // and for the sake of making things compile before I get around to writing the
