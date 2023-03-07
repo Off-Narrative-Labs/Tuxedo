@@ -378,51 +378,6 @@ impl Verifier for FreeKittyVerifier {
     }
 }
 
-pub trait KittyConfigTrait {
-    type Money;
-    type MoneyVerifier;
-}
-
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub struct KittyConfig;
-impl KittyConfigTrait for KittyConfig {
-    type Money = Coin;
-    type MoneyVerifier = MoneyVerifier;
-}
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub struct MoneyKittyVerifier<Config>(PhantomData<Config>);
-impl<Config> Verifier for MoneyKittyVerifier<Config>
-where
-    Config: KittyConfigTrait + Clone + Debug
-{
-    type Error = VerifierError;
-    fn verify(
-        &self,
-        input_data: &[DynamicallyTypedData],
-        _output_data: &[DynamicallyTypedData]
-    ) -> Result<TransactionPriority, Self::Error> {
-        // TODO: Verify that there is a spend that happens which covers the cost to breed.
-        // First input and output must be money
-        ensure!(
-            input_data.len() >= 2,
-            Self::Error::MinimumSpendAndBreedNotMet,
-        );
-        // MoneyVerifier::verify(&MoneyVerifier::Spend, &input_data[0], &output_money[0])?;
-
-        // <Config as MoneyVerifier>::verify(&Config::MoneyVerifier::Spend)
-        // TODO: now check if the money is enough and maybe address is correct?
-        Ok(0)
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -436,141 +391,141 @@ mod test {
 
     #[test]
     fn breed_wrong_input_type_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn breed_wrong_output_type_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn inputs_dont_contain_two_parents_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn outputs_dont_contain_all_family_members_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn breed_two_dads_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn breed_two_moms_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn first_input_not_mom_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn second_input_not_dad_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn first_output_not_mom_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn second_output_not_dad_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn third_output_not_child_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn breed_mom_when_she_gave_birth_recently_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn breed_dad_when_he_is_tired_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_mom_breedings_overflow_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_dad_breedings_overflow_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_mom_free_breedings_zero_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_dad_free_breedings_zero_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_new_mom_free_breedings_incorrect_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_new_dad_free_breedings_incorrect_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_new_mom_num_breedings_incorrect_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_new_dad_num_breedings_incorrect_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_new_mom_dna_doesnt_match_old_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_new_dad_dna_doesnt_match_old_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_child_dna_incorrect_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_child_dad_parent_tired_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_child_mom_parent_recently_gave_birth_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_child_free_breedings_incorrect_fails() {
-        todo!();
+        // TODO
     }
 
     #[test]
     fn check_child_num_breedings_non_zero_fails() {
-        todo!();
+        // TODO
     }
 }
