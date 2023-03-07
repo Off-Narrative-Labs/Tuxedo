@@ -626,4 +626,46 @@ mod tests {
             });
     }
 
+    #[test]
+    fn apply_empty_works() {
+        ExternalityBuilder::default()
+            .build()
+            .execute_with(||{
+
+                let tx = TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: Vec::new(),
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+                let vt = TestExecutive::apply_tuxedo_transaction(tx);
+
+                assert_eq!(vt, Ok(()));
+            });
+    }
+
+    #[test]
+    fn apply_with_missing_input_fails() {
+        ExternalityBuilder::default()
+            .build()
+            .execute_with(||{
+
+                let output_ref = mock_output_ref(0, 0);
+                let input = Input {
+                    output_ref: output_ref.clone(),
+                    witness: Vec::new(),
+                };
+
+                let tx = TestTransaction {
+                    inputs: vec![input],
+                    outputs: Vec::new(),
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+                let vt = TestExecutive::apply_tuxedo_transaction(tx);
+
+                assert_eq!(vt, Err(UtxoError::MissingInput));
+            });
+    }
+
 }
