@@ -95,12 +95,23 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             );
         }
 
-        // If any the inputs are missing, we cannot make any more progress
+        // Calculate the tx-pool tags provided by this transaction, which
+        // are just the encoded OutputRefs
+        let provides = (0..transaction.outputs.len()).map(|i| {
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: i as u32,
+                };
+                output_ref.encode()
+            })
+            .collect::<Vec<_>>();
+
+        // If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the verifier
         if !missing_inputs.is_empty() {
             return Ok(ValidTransaction {
                 requires: missing_inputs,
-                provides: transaction.outputs.iter().map(|o| o.encode()).collect(),
+                provides,
                 priority: 0,
                 longevity: TransactionLongevity::max_value(),
                 propagate: true,
@@ -132,11 +143,9 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             .map_err(UtxoError::VerifierError)?;
 
         // Return the valid transaction
-        // TODO in the future we need to prioritize somehow. Perhaps the best strategy
-        // is to have the verifier return a priority
         Ok(ValidTransaction {
             requires: Vec::new(),
-            provides: transaction.outputs.iter().map(|o| o.encode()).collect(),
+            provides,
             priority: 0,
             longevity: TransactionLongevity::max_value(),
             propagate: true,
@@ -475,7 +484,38 @@ mod tests {
 
     #[test]
     fn validate_with_output_works() {
-        todo!()
+        ExternalityBuilder::default()
+            .build()
+            .execute_with(||{
+                let output = Output {
+                    payload: Bogus.into(),
+                    redeemer: TestRedeemer{ redeems: false },
+                };
+                let tx = TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: vec![output],
+                    verifier: TestVerifier{ verifies: true },
+                };
+
+                // This is a real transaction, so we need to calculate a real OutputRef
+                let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: 0,
+                };
+
+                let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
+
+                let expected_result = ValidTransaction {
+                    priority: 0,
+                    requires: Vec::new(),
+                    provides: vec![output_ref.encode()],
+                    longevity: TransactionLongevity::max_value(),
+                    propagate: true,
+                };
+
+                assert_eq!(vt, expected_result);
+            });
     }
 
     #[test]
