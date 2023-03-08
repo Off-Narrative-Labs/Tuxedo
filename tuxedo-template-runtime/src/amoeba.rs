@@ -16,7 +16,7 @@ use sp_std::vec::Vec;
 use tuxedo_core::{
     types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
+    ensure, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
 };
 
 /// An amoeba tracked by our simple Amoeba APP

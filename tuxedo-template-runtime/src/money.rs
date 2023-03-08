@@ -9,7 +9,7 @@ use sp_std::prelude::*;
 use tuxedo_core::{
     types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData}, utxo_set::TransparentUtxoSet,
-    ensure, Verifier, SimpleVerifier, Redeemer,
+    ensure, SimpleVerifier, Redeemer,
 };
 
 // use log::info;
