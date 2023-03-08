@@ -311,7 +311,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
         let state_root =
             <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
-        assert_eq!(*block.header().state_root(), state_root);
+        assert_eq!(*block.header().state_root(), state_root, "state root mismatch");
 
         // Print state for quick debugging
         // let mut key = vec![];
@@ -336,7 +336,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             extrinsics,
             StateVersion::V1,
         );
-        assert_eq!(*block.header().extrinsics_root(), extrinsics_root);
+        assert_eq!(*block.header().extrinsics_root(), extrinsics_root, "extrinsics root mismatch");
     }
 
     // This one is the pool api. It is used to make preliminary checks in the transaction pool
@@ -872,5 +872,30 @@ mod tests {
                 assert!(!sp_io::storage::exists(&HEADER_KEY));
                 assert!(!sp_io::storage::exists(&EXTRINSIC_KEY));
             });
+    }
+
+    #[test]
+    fn execute_empty_block_works() {
+        todo!()
+    }
+
+    #[test]
+    fn execute_block_with_transaction_works() {
+        todo!()
+    }
+
+    #[test]
+    fn execute_block_invalid_transaction_fails() {
+        todo!()
+    }
+
+    #[test]
+    fn execute_block_state_root_mismatch_works() {
+        todo!()
+    }
+
+    #[test]
+    fn execute_block_extrinsic_root_mismatch() {
+        todo!()
     }
 }
