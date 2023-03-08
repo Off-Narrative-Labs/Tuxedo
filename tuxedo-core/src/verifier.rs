@@ -48,8 +48,7 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 // the executive can always just call the Powerful trait.
 impl<T: SimpleVerifier> Verifier for T {
 
-    // When using the blanket implementation, we directly return a UtxoError here
-    // So that we have access to the `RedeemerError` variant
+    // Use the same error type used in the simple implementation.
     type Error = <T as SimpleVerifier>::Error;
 
     fn verify<R: Redeemer>(
