@@ -21,6 +21,9 @@ sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2
 sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 sp-storage = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 
+[dev-dependencies]
+array-bytes = "6.0.0"
+
 [features]
 default = ["std"]
 std = [

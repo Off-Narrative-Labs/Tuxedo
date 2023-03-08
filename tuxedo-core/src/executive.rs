@@ -311,7 +311,11 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
         let state_root =
             <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
-        assert_eq!(*block.header().state_root(), state_root, "state root mismatch");
+        assert_eq!(
+            *block.header().state_root(),
+            state_root,
+            "state root mismatch"
+        );
 
         // Print state for quick debugging
         // let mut key = vec![];
@@ -336,7 +340,11 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             extrinsics,
             StateVersion::V1,
         );
-        assert_eq!(*block.header().extrinsics_root(), extrinsics_root, "extrinsics root mismatch");
+        assert_eq!(
+            *block.header().extrinsics_root(),
+            extrinsics_root,
+            "extrinsics root mismatch"
+        );
     }
 
     // This one is the pool api. It is used to make preliminary checks in the transaction pool
@@ -876,26 +884,118 @@ mod tests {
 
     #[test]
     fn execute_empty_block_works() {
-        todo!()
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: Vec::new(),
+            };
+
+            TestExecutive::execute_block(b);
+        });
     }
 
     #[test]
     fn execute_block_with_transaction_works() {
-        todo!()
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "7ceffb73687cb9af3ad2f9a0c544a216df70894b03da3ceb57ead37bd6b51be0",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: Vec::new(),
+                    verifier: TestVerifier { verifies: true },
+                }],
+            };
+
+            TestExecutive::execute_block(b);
+        });
     }
 
     #[test]
-    fn execute_block_invalid_transaction_fails() {
-        todo!()
+    #[should_panic(expected = "VerifierError(())")]
+    fn execute_block_invalid_transaction() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![TestTransaction {
+                    inputs: Vec::new(),
+                    outputs: Vec::new(),
+                    verifier: TestVerifier { verifies: false },
+                }],
+            };
+
+            TestExecutive::execute_block(b);
+        });
     }
 
     #[test]
-    fn execute_block_state_root_mismatch_works() {
-        todo!()
+    #[should_panic(expected = "state root mismatch")]
+    fn execute_block_state_root_mismatch() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: H256::zero(),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: Vec::new(),
+            };
+
+            TestExecutive::execute_block(b);
+        });
     }
 
     #[test]
+    #[should_panic(expected = "extrinsics root mismatch")]
     fn execute_block_extrinsic_root_mismatch() {
-        todo!()
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: H256::zero(),
+                    digest: Default::default(),
+                },
+                extrinsics: Vec::new(),
+            };
+
+            TestExecutive::execute_block(b);
+        });
     }
 }
