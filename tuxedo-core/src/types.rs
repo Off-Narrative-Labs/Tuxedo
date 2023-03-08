@@ -8,7 +8,6 @@ use sp_core::H256;
 use sp_runtime::traits::Extrinsic;
 use sp_std::vec::Vec;
 
-//
 /// A reference to a output that is expected to exist in the state.
 #[cfg_attr(
     feature = "std",
