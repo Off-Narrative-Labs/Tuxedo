@@ -36,7 +36,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// ID
 		"dev",
 		ChainType::Development,
-		move || GenesisConfig::default(),
+		GenesisConfig::default,
 		// Bootnodes
 		vec![],
 		// Telemetry
@@ -58,7 +58,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// ID
 		"local_testnet",
 		ChainType::Local,
-		move || GenesisConfig::default(),
+		GenesisConfig::default,
 		// Bootnodes
 		vec![],
 		// Telemetry

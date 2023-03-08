@@ -69,10 +69,10 @@ pub struct DynamicallyTypedData {
 /// Using a new type allows strong type disambiguation between bespoke use-cases in which
 /// the same primitive may be stored.
 pub trait UtxoData: Encode + Decode {
-    //TODO this is ugly. But at least I'm not stuck anymore.
+    //TODO Not great that it is up to the runtime dev to enforce uniqueness
+    // Maybe macros can help... Doesn't frame somehow pass info about the string in construct runtime to the pallet-level storage items?
     /// A unique identifier for this type. For now choosing this value and making sure it
     /// really is unique is the problem of the developer. Ideally this would be better.
-    /// Maybe macros... Doesn't frame somehow pass info about the string in construct runtime to the pallet-level storage items?
     const TYPE_ID: [u8; 4];
 }
 
@@ -91,12 +91,28 @@ impl DynamicallyTypedData {
 }
 
 /// Errors that can occur when casting dynamically typed data into strongly typed data.
+#[derive(Debug)]
 pub enum DynamicTypingError {
     /// The data provided was not of the target decoding type.
     WrongType,
     /// Although the types matched, the data could not be decoded with the SCALE codec.
     DecodingFailed,
 }
+
+impl sp_std::fmt::Display for DynamicTypingError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::WrongType => write!(f, "dynamic type does not match extraction target"),
+            Self::DecodingFailed => write!(
+                f,
+                "failed to decode dynamically typed data with scale codec"
+            ),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for DynamicTypingError {}
 
 //TODO, I tried replacing the extract method above with this impl,
 // but it conflicts with something in core, that I don't understand.
@@ -124,7 +140,7 @@ pub mod testing {
     use super::*;
 
     /// A bogus data type used in tests.
-    /// 
+    ///
     /// When writing tests for individual Tuxedo pieces, developers
     /// need to make sure that the piece properly sanitizes the dynamically
     /// typed data that is passed into its verifiers.

@@ -1,0 +1,21 @@
+[package]
+name = "tuxedo-template-wallet"
+version = "1.0.0-dev"
+repository = 'https://github.com/Off-Narrative-Labs/Tuxedo'
+edition = "2021"
+license = "Apache-2.0"
+description = "A simple example / template wallet built for the tuxedo template runtime"
+
+[dependencies]
+runtime = { path = "../tuxedo-template-runtime", package = "tuxedo-template-runtime"}
+tuxedo-core = { path = "../tuxedo-core" }
+
+parity-scale-codec = { version = '3.4.0', default-features = false }
+jsonrpsee = { version = "0.16.2", features = ["http-client"] }
+tokio = { version = "1.25.0", features = ["full"] }
+anyhow = "1.0.69"
+hex = "0.4.3"
+clap = { version = "4.1.8", features = [ "derive"] }
+
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
+sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }

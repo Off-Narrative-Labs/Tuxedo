@@ -23,13 +23,13 @@ use tuxedo_core::{
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-struct AmoebaDetails {
+pub struct AmoebaDetails {
     /// How many generations after the original Eve Amoeba this one is.
     /// When going through mitosis, this number must increase by 1 each time.
-    generation: u32,
+    pub generation: u32,
     /// Four totally arbitrary bytes that each amoeba has. There is literally no
     /// validation on this field whatsoever. I just had an instinct to include a second field.
-    four_bytes: [u8; 4],
+    pub four_bytes: [u8; 4],
 }
 
 impl UtxoData for AmoebaDetails {

@@ -4,7 +4,7 @@
 
 use crate::{
     redeemer::Redeemer,
-    types::{Output, OutputRef},
+    types::{Output, OutputRef}, LOG_TARGET,
 };
 use parity_scale_codec::{Decode, Encode};
 use sp_std::marker::PhantomData;
@@ -30,6 +30,12 @@ impl<R: Redeemer> TransparentUtxoSet<R> {
     /// This will overwrite any utxo that already exists at this OutputRef. It should never be the
     /// case that there are collisions though. Right??
     pub fn store_utxo(output_ref: OutputRef, output: &Output<R>) {
-        sp_io::storage::set(&output_ref.encode(), &output.encode());
+        let key = output_ref.encode();
+        log::debug!(
+            target: LOG_TARGET,
+            "Storing UTXO at key: {:?}",
+            sp_core::hexdisplay::HexDisplay::from(&key)
+        );
+        sp_io::storage::set(&key, &output.encode());
     }
 }

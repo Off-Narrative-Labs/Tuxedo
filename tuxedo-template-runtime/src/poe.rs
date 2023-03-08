@@ -1,6 +1,6 @@
 //! This file represents a simple Proof of Existence application, identical in behavior
-//! to the FRAME tutorial https://docs.substrate.io/tutorials/work-with-pallets/use-macros-in-a-custom-pallet/
-//! Of course, this implementation is based on UTXOs and works with Tuxedo rather than FRAME
+//! to the tutorial https://docs.substrate.io/tutorials/work-with-pallets/use-macros-in-a-custom-pallet/
+//! Of course, this implementation is based on UTXOs and works with Tuxedo rather than FRAME.
 //!
 //! The application allows users to claim the existence of a preimage for a particular hash with a
 //! transaction. Thus, the blockchain network acts as a decentralized notary service. Claims are

@@ -1889,24 +1889,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "frame-metadata"
-version = "15.0.0"
-source = "git+https://github.com/paritytech/frame-metadata/?tag=v15.0.0#d241ab9c1ba89e119263812f963a601be158e661"
-dependencies = [
- "cfg-if",
- "parity-scale-codec",
- "scale-info",
- "serde",
-]
-
-[[package]]
 name = "frame-support"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-03#ad5399644aebc54e32a107ac37ae08e6cd1f0cfb"
 dependencies = [
  "bitflags",
  "environmental",
- "frame-metadata 15.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-metadata",
  "frame-support-procedural",
  "impl-trait-for-tuples",
  "k256",
@@ -1985,39 +1974,6 @@ dependencies = [
  "sp-std",
  "sp-version",
  "sp-weights",
-]
-
-[[package]]
-name = "frameless-runtime"
-version = "1.0.0-dev"
-dependencies = [
- "frame-metadata 15.0.0 (git+https://github.com/paritytech/frame-metadata/?tag=v15.0.0)",
- "hex-literal",
- "log",
- "parity-scale-codec",
- "parity-util-mem",
- "scale-info",
- "serde",
- "sp-api",
- "sp-application-crypto",
- "sp-block-builder",
- "sp-consensus-aura",
- "sp-consensus-grandpa",
- "sp-core",
- "sp-debug-derive",
- "sp-inherents",
- "sp-io",
- "sp-keystore",
- "sp-offchain",
- "sp-runtime",
- "sp-session",
- "sp-std",
- "sp-storage",
- "sp-timestamp",
- "sp-transaction-pool",
- "sp-version",
- "substrate-wasm-builder",
- "tuxedo-core",
 ]
 
 [[package]]
@@ -2523,6 +2479,7 @@ dependencies = [
  "rustls-native-certs",
  "tokio",
  "tokio-rustls",
+ "webpki-roots",
 ]
 
 [[package]]
@@ -2792,6 +2749,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d291e3a5818a2384645fd9756362e6d89cf0541b0b916fa7702ea4a9833608e"
 dependencies = [
  "jsonrpsee-core",
+ "jsonrpsee-http-client",
  "jsonrpsee-proc-macros",
  "jsonrpsee-server",
  "jsonrpsee-types",
@@ -2819,6 +2777,25 @@ dependencies = [
  "serde",
  "serde_json",
  "soketto",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "jsonrpsee-http-client"
+version = "0.16.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc345b0a43c6bc49b947ebeb936e886a419ee3d894421790c969cc56040542ad"
+dependencies = [
+ "async-trait",
+ "hyper",
+ "hyper-rustls",
+ "jsonrpsee-core",
+ "jsonrpsee-types",
+ "rustc-hash",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "tracing",
@@ -3963,7 +3940,6 @@ name = "node-template"
 version = "4.0.0-dev"
 dependencies = [
  "clap",
- "frameless-runtime",
  "jsonrpsee",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
@@ -3993,6 +3969,7 @@ dependencies = [
  "sp-runtime",
  "sp-timestamp",
  "substrate-build-script-utils",
+ "tuxedo-template-runtime",
 ]
 
 [[package]]
@@ -7951,11 +7928,34 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-api",
+ "sp-core",
+ "sp-debug-derive",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-storage",
+]
+
+[[package]]
+name = "tuxedo-template-runtime"
+version = "1.0.0-dev"
+dependencies = [
+ "hex-literal",
+ "log",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-application-crypto",
  "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-consensus-grandpa",
  "sp-core",
  "sp-debug-derive",
  "sp-inherents",
  "sp-io",
+ "sp-keystore",
  "sp-offchain",
  "sp-runtime",
  "sp-session",
@@ -7964,6 +7964,24 @@ dependencies = [
  "sp-timestamp",
  "sp-transaction-pool",
  "sp-version",
+ "substrate-wasm-builder",
+ "tuxedo-core",
+]
+
+[[package]]
+name = "tuxedo-template-wallet"
+version = "1.0.0-dev"
+dependencies = [
+ "anyhow",
+ "clap",
+ "hex",
+ "jsonrpsee",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-runtime",
+ "tokio",
+ "tuxedo-core",
+ "tuxedo-template-runtime",
 ]
 
 [[package]]
