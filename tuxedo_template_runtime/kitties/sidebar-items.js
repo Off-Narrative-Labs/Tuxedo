@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DadKittyStatus","MomKittyStatus","Parent","VerifierError"],"struct":["FreeKittyVerifier","KittyDNA","KittyData","KittyHelpers"]};

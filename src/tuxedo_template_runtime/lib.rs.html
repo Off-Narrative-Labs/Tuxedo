@@ -558,6 +558,19 @@
 <a href="#558" id="558">558</a>
 <a href="#559" id="559">559</a>
 <a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 #[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -590,11 +603,10 @@
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">pub mod </span>amoeba;
+<span class="kw">pub mod </span>kitties;
+<span class="kw">pub mod </span>money;
 <span class="kw">mod </span>poe;
 <span class="kw">mod </span>runtime_upgrade;
-<span class="comment">//TODO kitties piece needs ported for merge
-//mod kitties;
-</span><span class="kw">pub mod </span>money;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
@@ -699,9 +711,10 @@
 </span><span class="kw">impl </span>BuildStorage <span class="kw">for </span>GenesisConfig {
     <span class="kw">fn </span>assimilate_storage(<span class="kw-2">&amp;</span><span class="self">self</span>, storage: <span class="kw-2">&amp;mut </span>Storage) -&gt; <span class="prelude-ty">Result</span>&lt;(), String&gt; {
         <span class="comment">// we have nothing to put into storage in genesis, except this:
-        </span>storage
-            .top
-            .insert(sp_storage::well_known_keys::CODE.into(), WASM_BINARY.unwrap().to_vec());
+        </span>storage.top.insert(
+            sp_storage::well_known_keys::CODE.into(),
+            WASM_BINARY.unwrap().to_vec(),
+        );
 
         <span class="kw">for </span>(index, utxo) <span class="kw">in </span><span class="self">self</span>.genesis_utxos.iter().enumerate() {
             <span class="kw">let </span>output_ref = OutputRef {
@@ -784,6 +797,8 @@
 </span><span class="kw">pub enum </span>OuterVerifier {
     <span class="doccomment">/// Verifies monetary transactions in a basic fungible cryptocurrency
     </span>Money(money::MoneyVerifier),
+    <span class="doccomment">/// Verifies Free Kitty transactions
+    </span>FreeKittyVerifier(kitties::FreeKittyVerifier),
     <span class="doccomment">/// Verifies that an amoeba can split into two new amoebas
     </span>AmoebaMitosis(amoeba::AmoebaMitosis),
     <span class="doccomment">/// Verifies that a single amoeba is simply removed from the state
@@ -807,6 +822,8 @@
 </span><span class="kw">pub enum </span>OuterVerifierError {
     <span class="doccomment">/// Error from the Money piece
     </span>Money(money::VerifierError),
+    <span class="doccomment">/// Error for the Kitties piece
+    </span>Kitty(kitties::VerifierError),
     <span class="doccomment">/// Error from the Amoeba piece
     </span>Amoeba(amoeba::VerifierError),
     <span class="doccomment">/// Error from the PoE piece
@@ -821,6 +838,12 @@
 </span><span class="kw">impl </span>From&lt;money::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
     <span class="kw">fn </span>from(e: money::VerifierError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Money(e)
+    }
+}
+
+<span class="kw">impl </span>From&lt;kitties::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
+    <span class="kw">fn </span>from(e: kitties::VerifierError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Kitty(e)
     }
 }
 
@@ -852,6 +875,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, OuterVerifierError&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
             <span class="self">Self</span>::Money(money) =&gt; money.verify(input_data, output_data)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::FreeKittyVerifier(free_breed) =&gt; free_breed.verify(input_data, output_data)<span class="question-mark">?</span>,
             <span class="self">Self</span>::AmoebaMitosis(amoeba_mitosis) =&gt; {
                 amoeba_mitosis.verify(input_data, output_data)<span class="question-mark">?
             </span>}
@@ -892,7 +916,6 @@
 // in a `--dev` node. You may enable more authorities to test more interesting networks, or replace
 // these IDs entirely.
 </span><span class="kw">impl </span>Runtime {
-
     <span class="doccomment">/// Aura authority IDs
     </span><span class="kw">fn </span>aura_authorities() -&gt; Vec&lt;AuraId&gt; {
         <span class="kw">use </span>hex_literal::hex;
@@ -921,7 +944,7 @@
     </span><span class="kw">fn </span>grandpa_authorities() -&gt; sp_consensus_grandpa::AuthorityList {
         <span class="kw">use </span>hex_literal::hex;
         <span class="kw">use </span>sp_application_crypto::ByteArray;
-        
+
         [
             <span class="comment">// Alice
             </span><span class="macro">hex!</span>(<span class="string">&quot;88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee&quot;</span>),
@@ -937,7 +960,13 @@
             // hex!(&quot;568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5&quot;),
         </span>]
         .iter()
-        .map(|hex| (GrandpaId::from_slice(hex.as_ref()).expect(<span class="string">&quot;Valid Grandpa authority hex was provided&quot;</span>), <span class="number">1</span>))
+        .map(|hex| {
+            (
+                GrandpaId::from_slice(hex.as_ref())
+                    .expect(<span class="string">&quot;Valid Grandpa authority hex was provided&quot;</span>),
+                <span class="number">1</span>,
+            )
+        })
         .collect()
     }
 }
@@ -1058,65 +1087,62 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
-	<span class="kw">use super</span>::<span class="kw-2">*</span>;
-	<span class="kw">use </span>parity_scale_codec::Encode;
-	<span class="kw">use </span>sp_core::hexdisplay::HexDisplay;
-	<span class="kw">use </span>sp_core::{H512, testing::SR25519};
-	<span class="kw">use </span>sp_keystore::testing::KeyStore;
-	<span class="kw">use </span>sp_keystore::{KeystoreExt, SyncCryptoStore};
-	<span class="kw">use </span>hex_literal::hex;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>parity_scale_codec::Encode;
+    <span class="kw">use </span>sp_core::testing::SR25519;
+    <span class="kw">use </span>sp_keystore::testing::KeyStore;
+    <span class="kw">use </span>sp_keystore::{KeystoreExt, SyncCryptoStore};
 
-	<span class="kw">use </span>std::sync::Arc;
+    <span class="kw">use </span>std::sync::Arc;
 
-	<span class="comment">// other random account generated with subkey
-	</span><span class="kw">const </span>SHAWN_PHRASE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;news slush supreme milk chapter athlete soap sausage put clutch what kitten&quot;</span>;
-	<span class="kw">const </span>GENESIS_UTXO_MONEY: [u8; <span class="number">32</span>] = <span class="macro">hex!</span>(<span class="string">&quot;79eabcbd5ef6e958c6a7851b36da07691c19bda1835a08f875aa286911800999&quot;</span>);
+    <span class="comment">// other random account generated with subkey
+    </span><span class="kw">const </span>SHAWN_PHRASE: <span class="kw-2">&amp;</span>str =
+        <span class="string">&quot;news slush supreme milk chapter athlete soap sausage put clutch what kitten&quot;</span>;
 
-	<span class="kw">fn </span>new_test_ext() -&gt; sp_io::TestExternalities {
+    <span class="kw">fn </span>new_test_ext() -&gt; sp_io::TestExternalities {
+        <span class="kw">let </span>keystore = KeyStore::new();
 
-		<span class="kw">let </span>keystore = KeyStore::new();
-		<span class="kw">let </span>shawn_pub_key =
-			keystore.sr25519_generate_new(SR25519, <span class="prelude-val">Some</span>(SHAWN_PHRASE)).unwrap();
+        <span class="kw">let </span>t = GenesisConfig::default()
+            .build_storage()
+            .expect(<span class="string">&quot;System builds valid default genesis config&quot;</span>);
 
-		<span class="kw">let </span><span class="kw-2">mut </span>t = GenesisConfig::default()
-			.build_storage()
-			.expect(<span class="string">&quot;System builds valid default genesis config&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>ext = sp_io::TestExternalities::from(t);
+        ext.register_extension(KeystoreExt(Arc::new(keystore)));
+        ext
+    }
 
-		<span class="kw">let </span><span class="kw-2">mut </span>ext = sp_io::TestExternalities::from(t);
-		ext.register_extension(KeystoreExt(Arc::new(keystore)));
-		ext
-	}
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>utxo_money_test_genesis() {
+        new_test_ext().execute_with(|| {
+            <span class="kw">let </span>keystore = KeyStore::new();
+            <span class="kw">let </span>shawn_pub_key = keystore
+                .sr25519_generate_new(SR25519, <span class="prelude-val">Some</span>(SHAWN_PHRASE))
+                .unwrap();
 
-	<span class="attr">#[test]
-	</span><span class="kw">fn </span>utxo_money_test_genesis() {
-		new_test_ext().execute_with(|| {
-			<span class="kw">let </span>keystore = KeyStore::new();
-			<span class="kw">let </span>shawn_pub_key =
-				keystore.sr25519_generate_new(SR25519, <span class="prelude-val">Some</span>(SHAWN_PHRASE)).unwrap();
+            <span class="comment">// Grab genesis value from storage and assert it is correct
+            </span><span class="kw">let </span>genesis_utxo = Output {
+                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                    owner_pubkey: shawn_pub_key.into(),
+                }),
+                payload: DynamicallyTypedData {
+                    data: <span class="number">100u128</span>.encode(),
+                    type_id: &lt;money::Coin <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
+                },
+            };
 
-			<span class="comment">// Grab genesis value from storage and assert it is correct
-			</span><span class="kw">let </span>genesis_utxo = Output {
-				redeemer: OuterRedeemer::SigCheck(SigCheck{
-					owner_pubkey: shawn_pub_key.into()
-				}),
-				payload: DynamicallyTypedData {
-					data: <span class="number">100u128</span>.encode(),
-					type_id: &lt;money::Coin <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
-				},
-			};
-
-			<span class="kw">let </span>output_ref = OutputRef {
+            <span class="kw">let </span>output_ref = OutputRef {
                 <span class="comment">// Genesis UTXOs don&#39;t come from any real transaction, so just uze the zero hash
                 </span>tx_hash: &lt;Header <span class="kw">as </span>sp_api::HeaderT&gt;::Hash::zero(),
                 index: <span class="number">0 </span><span class="kw">as </span>u32,
             };
 
-			<span class="kw">let </span>encoded_utxo =
-				sp_io::storage::get(<span class="kw-2">&amp;</span>output_ref.encode()).expect(<span class="string">&quot;Retrieve Genesis UTXO&quot;</span>);
-			<span class="kw">let </span>utxo = Output::&lt;OuterRedeemer&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>encoded_utxo[..]).expect(<span class="string">&quot;Can Decode UTXO correctly&quot;</span>);
-			<span class="macro">assert_eq!</span>(utxo, genesis_utxo);
-		})
-	}
+            <span class="kw">let </span>encoded_utxo =
+                sp_io::storage::get(<span class="kw-2">&amp;</span>output_ref.encode()).expect(<span class="string">&quot;Retrieve Genesis UTXO&quot;</span>);
+            <span class="kw">let </span>utxo = Output::&lt;OuterRedeemer&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>encoded_utxo[..])
+                .expect(<span class="string">&quot;Can Decode UTXO correctly&quot;</span>);
+            <span class="macro">assert_eq!</span>(utxo, genesis_utxo);
+        })
+    }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7820b62d2 2023-03-05)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (e3dfeeaa4 2023-03-07)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
