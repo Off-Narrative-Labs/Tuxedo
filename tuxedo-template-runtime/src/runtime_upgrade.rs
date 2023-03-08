@@ -108,28 +108,3 @@ impl SimpleVerifier for RuntimeUpgrade {
         Ok(0)
     }
 }
-
-impl Verifier for RuntimeUpgrade {
-    type Error = VerifierError;
-
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Input],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error> {
-        let input_data: Vec<DynamicallyTypedData> = inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
-        <RuntimeUpgrade as SimpleVerifier>::verify(self, &input_data, &output_data)
-    }
-}

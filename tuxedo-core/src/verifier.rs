@@ -3,7 +3,7 @@
 //!  do not typically calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
 
-use sp_std::fmt::Debug;
+use sp_std::{fmt::Debug, vec::Vec};
 
 use crate::{
     Redeemer,
@@ -38,9 +38,40 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
     /// The actual verification logic
     fn verify<R: Redeemer>(
         &self,
-        inputs: &[Input],
+        inputs: &[Output<R>],
         outputs: &[Output<R>],
     ) -> Result<TransactionPriority, Self::Error>;
+}
+
+// This blanket implementation makes it so that any type that chooses to
+// implement the Simple trait also implements the Powerful trait. This way
+// the executive can always just call the Powerful trait.
+impl<T: SimpleVerifier> Verifier for T {
+
+    // Use the same error type used in the simple implementation.
+    type Error = <T as SimpleVerifier>::Error;
+
+    fn verify<R: Redeemer>(
+        &self,
+        inputs: &[Output<R>],
+        outputs: &[Output<R>],
+    ) -> Result<TransactionPriority, Self::Error> {
+
+        // Extract the input data
+        let input_data: Vec<DynamicallyTypedData> = inputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        // Extract the output data
+        let output_data: Vec<DynamicallyTypedData> = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        // Call the simple verifier
+        SimpleVerifier::verify(self, &input_data, &output_data)
+    }
 }
 
 // impl PowerfulVerifier for () {
