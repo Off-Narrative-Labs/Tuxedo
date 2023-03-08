@@ -296,7 +296,7 @@ impl Verifier for OuterVerifier {
 
     fn verify<R: Redeemer>(
         &self,
-        inputs: &[Input],
+        inputs: &[Output<R>],
         outputs: &[Output<R>],
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {

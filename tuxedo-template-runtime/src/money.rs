@@ -154,31 +154,6 @@ impl SimpleVerifier for MoneyVerifier {
     }
 }
 
-impl Verifier for MoneyVerifier {
-    type Error = VerifierError;
-
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Input],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error> {
-        let input_data: Vec<DynamicallyTypedData> = inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
-        <MoneyVerifier as SimpleVerifier>::verify(self, &input_data, &output_data)
-    }
-}
-
 /// Unit tests for the Money piece
 #[cfg(test)]
 mod test {

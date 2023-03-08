@@ -59,7 +59,9 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         let stripped_encoded = stripped.encode();
 
         // Check that the redeemers of all inputs are satisfied
+        // Keep a Vec of the input utxos for passing to the verifier
         // Keep track of any missing inputs for use in the tagged transaction pool
+        let mut input_utxos = Vec::new();
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<R>::peek_utxo(&input.output_ref) {
@@ -69,6 +71,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
                         .redeem(&stripped_encoded, &input.witness),
                     UtxoError::RedeemerError
                 );
+                input_utxos.push(input_utxo);
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
             }
@@ -127,7 +130,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         // Call the verifier
         transaction
             .verifier
-            .verify(&transaction.inputs, &transaction.outputs)
+            .verify(&input_utxos, &transaction.outputs)
             .map_err(UtxoError::VerifierError)?;
 
         // Return the valid transaction

@@ -111,31 +111,6 @@ impl SimpleVerifier for PoeClaim {
     }
 }
 
-impl Verifier for PoeClaim {
-    type Error = VerifierError;
-
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Input],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error> {
-        let input_data: Vec<DynamicallyTypedData> = inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
-        <PoeClaim as SimpleVerifier>::verify(self, &input_data, &output_data)
-    }
-}
-
 /// A verifier to revoke claims.
 ///
 /// Like the creation verifier, this allows batch revocation.
@@ -165,31 +140,6 @@ impl SimpleVerifier for PoeRevoke {
         }
 
         Ok(0)
-    }
-}
-
-impl Verifier for PoeRevoke {
-    type Error = VerifierError;
-
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Input],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error> {
-        let input_data: Vec<DynamicallyTypedData> = inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
-        <PoeRevoke as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }
 
@@ -228,31 +178,6 @@ impl SimpleVerifier for PoeDispute {
         // Make sure that all other claims have block heights strictly greater than the winner.
 
         //TODO what to do about the redeemers on those losing claims.
-    }
-}
-
-impl Verifier for PoeDispute {
-    type Error = VerifierError;
-
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Input],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error> {
-        let input_data: Vec<DynamicallyTypedData> = inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
-        <PoeDispute as SimpleVerifier>::verify(self, &input_data, &output_data)
     }
 }
 
