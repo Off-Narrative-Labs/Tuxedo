@@ -7,6 +7,8 @@ use sp_std::fmt::Debug;
 
 use crate::dynamic_typing::DynamicallyTypedData;
 use parity_scale_codec::{Decode, Encode};
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A single verifier that a transaction can choose to call. Verifies whether the input
@@ -27,17 +29,45 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
-// A trivial verifier that verifies everything. Not practical. More for testing
-// and for the sake of making things compile before I get around to writing the
-// amoeba nd PoE verifiers
-impl Verifier for () {
-    type Error = ();
+/// Simple verifier for use in unit tests. Not for use in production runtimes.
+#[cfg(feature = "std")]
+pub mod testing {
 
-    fn verify(
-        &self,
-        _input_data: &[DynamicallyTypedData],
-        _output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, ()> {
-        Ok(0)
+    use super::*;
+
+    /// A testing verifier that passes (with zero priority) or not depending on
+    /// the boolean value enclosed.
+    #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, PartialEq, Eq)]
+    pub struct TestVerifier {
+        /// Whether the verifier should pass.
+        pub verifies: bool,
+    }
+
+    impl Verifier for TestVerifier {
+        type Error = ();
+
+        fn verify(
+            &self,
+            _input_data: &[DynamicallyTypedData],
+            _output_data: &[DynamicallyTypedData],
+        ) -> Result<TransactionPriority, ()> {
+            if self.verifies {
+                Ok(0)
+            } else {
+                Err(())
+            }
+        }
+    }
+
+    #[test]
+    fn test_verifier_passes() {
+        let result = TestVerifier { verifies: true }.verify(&[], &[]);
+        assert_eq!(result, Ok(0));
+    }
+
+    #[test]
+    fn test_verifier_fails() {
+        let result = TestVerifier { verifies: false }.verify(&[], &[]);
+        assert_eq!(result, Err(()));
     }
 }
