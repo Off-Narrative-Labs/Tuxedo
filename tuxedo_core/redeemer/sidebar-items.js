@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SigCheck","UpForGrabs"],"trait":["Redeemer"]};
+window.SIDEBAR_ITEMS = {"struct":["SigCheck","TestRedeemer","UpForGrabs"],"trait":["Redeemer"]};

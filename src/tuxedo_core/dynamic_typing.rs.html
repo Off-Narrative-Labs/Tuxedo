@@ -152,6 +152,70 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Dynamic Typing utilities for Tuxedo runtimes
 //!
 //! # Motivation
@@ -245,7 +309,7 @@
 }
 
 <span class="doccomment">/// Errors that can occur when casting dynamically typed data into strongly typed data.
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>DynamicTypingError {
     <span class="doccomment">/// The data provided was not of the target decoding type.
     </span>WrongType,
@@ -293,18 +357,82 @@
 <span class="kw">pub mod </span>testing {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="doccomment">/// A bogus data type used in tests.
+    <span class="doccomment">/// A bogus data type for use in tests.
     ///
     /// When writing tests for individual Tuxedo pieces, developers
     /// need to make sure that the piece properly sanitizes the dynamically
     /// typed data that is passed into its verifiers.
     /// This type is used to represent incorrectly typed data.
-    </span><span class="attr">#[derive(Encode, Decode)]
+    </span><span class="attr">#[derive(Encode, Decode, PartialEq, Eq, Debug)]
     </span><span class="kw">pub struct </span>Bogus;
 
     <span class="kw">impl </span>UtxoData <span class="kw">for </span>Bogus {
         <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;bogs&quot;</span>;
     }
 }
+
+<span class="attr">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>testing::Bogus;
+
+    <span class="doccomment">/// A simple type that implements UtxoData and just wraps a single u8.
+    /// Used to test the extraction logic.
+    </span><span class="attr">#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+    </span><span class="kw">struct </span>Byte(u8);
+
+    <span class="kw">impl </span>UtxoData <span class="kw">for </span>Byte {
+        <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;byte&quot;</span>;
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>extract_works() {
+        <span class="kw">let </span>original_b = Byte(<span class="number">4</span>);
+        <span class="kw">let </span>dynamically_typed_b: DynamicallyTypedData = original_b.clone().into();
+
+        <span class="kw">let </span>extracted_b = dynamically_typed_b.extract::&lt;Byte&gt;();
+
+        <span class="macro">assert_eq!</span>(extracted_b, <span class="prelude-val">Ok</span>(original_b));
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>extract_wrong_type() {
+        <span class="kw">let </span>original_b = Byte(<span class="number">4</span>);
+        <span class="kw">let </span>dynamically_typed_b: DynamicallyTypedData = original_b.clone().into();
+
+        <span class="kw">let </span>extracted_b = dynamically_typed_b.extract::&lt;Bogus&gt;();
+
+        <span class="macro">assert_eq!</span>(extracted_b, <span class="prelude-val">Err</span>(DynamicTypingError::WrongType));
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>extract_decode_fails() {
+        <span class="kw">let </span>original_b = Byte(<span class="number">4</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>dynamically_typed_b: DynamicallyTypedData = original_b.clone().into();
+
+        <span class="comment">// Change the encoded bytes so they no longer decode correctly.
+        </span>dynamically_typed_b.data = Vec::new();
+
+        <span class="kw">let </span>extracted_b = dynamically_typed_b.extract::&lt;Byte&gt;();
+
+        <span class="macro">assert_eq!</span>(extracted_b, <span class="prelude-val">Err</span>(DynamicTypingError::DecodingFailed));
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>display_wrong_type_error() {
+        <span class="kw">let </span>actual = <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, DynamicTypingError::WrongType);
+        <span class="kw">let </span>expected = String::from(<span class="string">&quot;dynamic type does not match extraction target&quot;</span>);
+
+        <span class="macro">assert_eq!</span>(actual, expected);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>display_decoding_failed_error() {
+        <span class="kw">let </span>actual = <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, DynamicTypingError::DecodingFailed);
+        <span class="kw">let </span>expected = String::from(<span class="string">&quot;failed to decode dynamically typed data with scale codec&quot;</span>);
+
+        <span class="macro">assert_eq!</span>(actual, expected);
+    }
+}
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (e3dfeeaa4 2023-03-07)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

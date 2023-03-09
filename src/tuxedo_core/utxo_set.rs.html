@@ -39,13 +39,15 @@
 <a href="#39" id="39">39</a>
 <a href="#40" id="40">40</a>
 <a href="#41" id="41">41</a>
+<a href="#42" id="42">42</a>
 </pre><pre class="rust"><code><span class="doccomment">//! These three functions comprize what I sketched out in the UtxoSet trait in element the other day
 //! For now, this is complicated enough, so I&#39;ll just leave them here. In the future it may be wise to
 //! abstract away the utxo set. Especially if we start doing zk stuff and need the nullifiers.
 
 </span><span class="kw">use crate</span>::{
     redeemer::Redeemer,
-    types::{Output, OutputRef}, LOG_TARGET,
+    types::{Output, OutputRef},
+    LOG_TARGET,
 };
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>sp_std::marker::PhantomData;
@@ -81,4 +83,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (e3dfeeaa4 2023-03-07)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
