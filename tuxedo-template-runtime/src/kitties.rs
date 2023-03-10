@@ -19,14 +19,12 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_runtime::{
-    transaction_validity::TransactionPriority,
-    traits::{BlakeTwo256, Hash as HashT},
-};
-use sp_std::{
-    prelude::*,
-};
 use sp_core::H256;
+use sp_runtime::{
+    traits::{BlakeTwo256, Hash as HashT},
+    transaction_validity::TransactionPriority,
+};
+use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleVerifier,
