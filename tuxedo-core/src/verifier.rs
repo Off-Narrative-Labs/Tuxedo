@@ -76,9 +76,7 @@ impl<T: SimpleVerifier> Verifier for T {
     }
 }
 
-// A trivial verifier that verifies everything. Not practical. More for testing
-// and for the sake of making things compile before I get around to writing the
-// amoeba nd PoE verifiers
+/// Utilities for writing verifier-related unit tests
 #[cfg(feature = "std")]
 pub mod testing {
     use super::*;
