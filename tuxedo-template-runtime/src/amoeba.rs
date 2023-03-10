@@ -60,7 +60,7 @@ pub enum VerifierError {
     TooManyVictims,
     /// No output may be created by amoeba death.
     DeathMayNotCreate,
-    
+
     /// Amoeba mitosis requires exactly two daughter amoebas to be created.
     // Creating more or fewer than that is invalid.
     WrongNumberOfDaughters,
@@ -99,7 +99,10 @@ impl SimpleVerifier for AmoebaMitosis {
             .map_err(|_| VerifierError::BadlyTypedInput)?;
 
         // Make sure there are exactly two daughters.
-        ensure!(output_data.len() == 2, VerifierError::WrongNumberOfDaughters);
+        ensure!(
+            output_data.len() == 2,
+            VerifierError::WrongNumberOfDaughters
+        );
         let first_daughter = output_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| VerifierError::BadlyTypedOutput)?;
@@ -213,10 +216,7 @@ mod test {
         let input_data = Vec::new();
         let output_data = vec![to_spawn.into()];
 
-        assert_eq!(
-            AmoebaCreation.verify(&input_data, &output_data),
-            Ok(0),
-        );
+        assert_eq!(AmoebaCreation.verify(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
@@ -303,10 +303,7 @@ mod test {
         let input_data = vec![mother.into()];
         let output_data = vec![d1.into(), d2.into()];
 
-        assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Ok(0),
-        );
+        assert_eq!(AmoebaMitosis.verify(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
@@ -448,10 +445,7 @@ mod test {
         let input_data = vec![example.into()];
         let output_data = vec![];
 
-        assert_eq!(
-            AmoebaDeath.verify(&input_data, &output_data),
-            Ok(0),
-        );
+        assert_eq!(AmoebaDeath.verify(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
@@ -510,6 +504,4 @@ mod test {
             Err(VerifierError::BadlyTypedInput),
         );
     }
-
-
 }
