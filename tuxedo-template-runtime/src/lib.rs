@@ -302,19 +302,13 @@ impl Verifier for OuterVerifier {
         Ok(match self {
             Self::Money(money) => money.verify(inputs, outputs)?,
             Self::FreeKittyVerifier(free_breed) => free_breed.verify(inputs, outputs)?,
-            Self::AmoebaMitosis(amoeba_mitosis) => {
-                amoeba_mitosis.verify(inputs, outputs)?
-            }
+            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(inputs, outputs)?,
             Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(inputs, outputs)?,
-            Self::AmoebaCreation(amoeba_creation) => {
-                amoeba_creation.verify(inputs, outputs)?
-            }
+            Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(inputs, outputs)?,
             Self::PoeClaim(poe_claim) => poe_claim.verify(inputs, outputs)?,
             Self::PoeRevoke(poe_revoke) => poe_revoke.verify(inputs, outputs)?,
             Self::PoeDispute(poe_dispute) => poe_dispute.verify(inputs, outputs)?,
-            Self::RuntimeUpgrade(runtime_upgrade) => {
-                runtime_upgrade.verify(inputs, outputs)?
-            }
+            Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.verify(inputs, outputs)?,
         })
     }
 }

@@ -5,11 +5,7 @@
 
 use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{
-    Redeemer,
-    types::{Output},
-    dynamic_typing::DynamicallyTypedData,
-};
+use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Redeemer};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -49,7 +45,6 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 // implement the Simple trait also implements the Powerful trait. This way
 // the executive can always just call the Powerful trait.
 impl<T: SimpleVerifier> Verifier for T {
-
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleVerifier>::Error;
 
@@ -58,18 +53,13 @@ impl<T: SimpleVerifier> Verifier for T {
         inputs: &[Output<R>],
         outputs: &[Output<R>],
     ) -> Result<TransactionPriority, Self::Error> {
-
         // Extract the input data
-        let input_data: Vec<DynamicallyTypedData> = inputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
+        let input_data: Vec<DynamicallyTypedData> =
+            inputs.iter().map(|o| o.payload.clone()).collect();
 
         // Extract the output data
-        let output_data: Vec<DynamicallyTypedData> = outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
+        let output_data: Vec<DynamicallyTypedData> =
+            outputs.iter().map(|o| o.payload.clone()).collect();
 
         // Call the simple verifier
         SimpleVerifier::verify(self, &input_data, &output_data)
@@ -107,16 +97,13 @@ pub mod testing {
 
     #[test]
     fn test_verifier_passes() {
-        let result =
-            SimpleVerifier::verify(&TestVerifier { verifies: true }, &[], &[]);
+        let result = SimpleVerifier::verify(&TestVerifier { verifies: true }, &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_verifier_fails() {
-        let result =
-            SimpleVerifier::verify(&TestVerifier { verifies: false }, &[], &[]);
+        let result = SimpleVerifier::verify(&TestVerifier { verifies: false }, &[], &[]);
         assert_eq!(result, Err(()));
     }
 }
-
