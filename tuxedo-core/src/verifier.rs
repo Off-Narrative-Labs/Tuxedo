@@ -109,13 +109,15 @@ pub mod testing {
 
     #[test]
     fn test_verifier_passes() {
-        let result = TestVerifier { verifies: true }.verify(&[], &[]);
+        let result =
+            SimpleVerifier::verify(&TestVerifier { verifies: true }, &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_verifier_fails() {
-        let result = TestVerifier { verifies: false }.verify(&[], &[]);
+        let result =
+            SimpleVerifier::verify(&TestVerifier { verifies: false }, &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

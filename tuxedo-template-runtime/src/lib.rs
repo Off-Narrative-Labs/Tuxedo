@@ -300,20 +300,20 @@ impl Verifier for OuterVerifier {
         outputs: &[Output<R>],
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
-            Self::Money(money) => Verifier::verify(money, inputs, outputs)?,
-            Self::FreeKittyVerifier(free_breed) => Verifier::verify(free_breed, inputs, outputs)?,
+            Self::Money(money) => money.verify(inputs, outputs)?,
+            Self::FreeKittyVerifier(free_breed) => free_breed.verify(inputs, outputs)?,
             Self::AmoebaMitosis(amoeba_mitosis) => {
-                Verifier::verify(amoeba_mitosis, inputs, outputs)?
+                amoeba_mitosis.verify(inputs, outputs)?
             }
-            Self::AmoebaDeath(amoeba_death) => Verifier::verify(amoeba_death, inputs, outputs)?,
+            Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(inputs, outputs)?,
             Self::AmoebaCreation(amoeba_creation) => {
-                Verifier::verify(amoeba_creation, inputs, outputs)?
+                amoeba_creation.verify(inputs, outputs)?
             }
-            Self::PoeClaim(poe_claim) => Verifier::verify(poe_claim, inputs, outputs)?,
-            Self::PoeRevoke(poe_revoke) => Verifier::verify(poe_revoke, inputs, outputs)?,
-            Self::PoeDispute(poe_dispute) => Verifier::verify(poe_dispute, inputs, outputs)?,
+            Self::PoeClaim(poe_claim) => poe_claim.verify(inputs, outputs)?,
+            Self::PoeRevoke(poe_revoke) => poe_revoke.verify(inputs, outputs)?,
+            Self::PoeDispute(poe_dispute) => poe_dispute.verify(inputs, outputs)?,
             Self::RuntimeUpgrade(runtime_upgrade) => {
-                Verifier::verify(runtime_upgrade, inputs, outputs)?
+                runtime_upgrade.verify(inputs, outputs)?
             }
         })
     }
