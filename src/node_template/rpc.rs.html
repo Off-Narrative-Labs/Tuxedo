@@ -64,31 +64,31 @@
 
 <span class="doccomment">/// Full client dependencies.
 </span><span class="kw">pub struct </span>FullDeps&lt;C, P&gt; {
-	<span class="doccomment">/// The client instance to use.
-	</span><span class="kw">pub </span>client: Arc&lt;C&gt;,
-	<span class="doccomment">/// Transaction pool instance.
-	</span><span class="kw">pub </span>pool: Arc&lt;P&gt;,
-	<span class="doccomment">/// Whether to deny unsafe calls
-	</span><span class="kw">pub </span>deny_unsafe: DenyUnsafe,
+    <span class="doccomment">/// The client instance to use.
+    </span><span class="kw">pub </span>client: Arc&lt;C&gt;,
+    <span class="doccomment">/// Transaction pool instance.
+    </span><span class="kw">pub </span>pool: Arc&lt;P&gt;,
+    <span class="doccomment">/// Whether to deny unsafe calls
+    </span><span class="kw">pub </span>deny_unsafe: DenyUnsafe,
 }
 
 <span class="doccomment">/// Instantiate all full RPC extensions.
 </span><span class="kw">pub fn </span>create_full&lt;C, P&gt;(
-	_deps: FullDeps&lt;C, P&gt;,
+    _deps: FullDeps&lt;C, P&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;RpcModule&lt;()&gt;, Box&lt;<span class="kw">dyn </span>std::error::Error + Send + Sync&gt;&gt;
 <span class="kw">where
-	</span>C: ProvideRuntimeApi&lt;Block&gt;,
-	C: HeaderBackend&lt;Block&gt; + HeaderMetadata&lt;Block, Error = BlockChainError&gt; + <span class="lifetime">&#39;static</span>,
-	C: Send + Sync + <span class="lifetime">&#39;static</span>,
-	C::Api: BlockBuilder&lt;Block&gt;,
-	P: TransactionPool + <span class="lifetime">&#39;static</span>,
+    </span>C: ProvideRuntimeApi&lt;Block&gt;,
+    C: HeaderBackend&lt;Block&gt; + HeaderMetadata&lt;Block, Error = BlockChainError&gt; + <span class="lifetime">&#39;static</span>,
+    C: Send + Sync + <span class="lifetime">&#39;static</span>,
+    C::Api: BlockBuilder&lt;Block&gt;,
+    P: TransactionPool + <span class="lifetime">&#39;static</span>,
 {
-	<span class="kw">let </span>module = RpcModule::new(());
-	<span class="comment">// Extend this RPC with a custom API by using the following syntax.
-	// `YourRpcStruct` should have a reference to a client, which is needed
-	// to call into the runtime.
-	// `module.merge(YourRpcTrait::into_rpc(YourRpcStruct::new(ReferenceToClient, ...)))?;`
-	</span><span class="prelude-val">Ok</span>(module)
+    <span class="kw">let </span>module = RpcModule::new(());
+    <span class="comment">// Extend this RPC with a custom API by using the following syntax.
+    // `YourRpcStruct` should have a reference to a client, which is needed
+    // to call into the runtime.
+    // `module.merge(YourRpcTrait::into_rpc(YourRpcStruct::new(ReferenceToClient, ...)))?;`
+    </span><span class="prelude-val">Ok</span>(module)
 }
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="node_template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

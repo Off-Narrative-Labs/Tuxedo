@@ -505,14 +505,6 @@
 <a href="#505" id="505">505</a>
 <a href="#506" id="506">506</a>
 <a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
-<a href="#511" id="511">511</a>
-<a href="#512" id="512">512</a>
-<a href="#513" id="513">513</a>
-<a href="#514" id="514">514</a>
-<a href="#515" id="515">515</a>
 </pre><pre class="rust"><code><span class="doccomment">//! This file represents a simple example Tuxedo piece that tracks amoeba populations.
 //! Amoeba&#39;s can be affected in three ways throughout their lifecycle.
 //! 1. A new amoeba can be created by a creator. This is analogous to divine
@@ -575,7 +567,7 @@
     </span>TooManyVictims,
     <span class="doccomment">/// No output may be created by amoeba death.
     </span>DeathMayNotCreate,
-    
+
     <span class="doccomment">/// Amoeba mitosis requires exactly two daughter amoebas to be created.
     </span><span class="comment">// Creating more or fewer than that is invalid.
     </span>WrongNumberOfDaughters,
@@ -614,7 +606,10 @@
             .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedInput)<span class="question-mark">?</span>;
 
         <span class="comment">// Make sure there are exactly two daughters.
-        </span><span class="macro">ensure!</span>(output_data.len() == <span class="number">2</span>, VerifierError::WrongNumberOfDaughters);
+        </span><span class="macro">ensure!</span>(
+            output_data.len() == <span class="number">2</span>,
+            VerifierError::WrongNumberOfDaughters
+        );
         <span class="kw">let </span>first_daughter = output_data[<span class="number">0</span>]
             .extract::&lt;AmoebaDetails&gt;()
             .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedOutput)<span class="question-mark">?</span>;
@@ -728,10 +723,7 @@
         <span class="kw">let </span>input_data = Vec::new();
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[to_spawn.into()];
 
-        <span class="macro">assert_eq!</span>(
-            AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Ok</span>(<span class="number">0</span>),
-        );
+        <span class="macro">assert_eq!</span>(AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
     }
 
     <span class="attr">#[test]
@@ -818,10 +810,7 @@
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[mother.into()];
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into()];
 
-        <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Ok</span>(<span class="number">0</span>),
-        );
+        <span class="macro">assert_eq!</span>(AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
     }
 
     <span class="attr">#[test]
@@ -963,10 +952,7 @@
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[example.into()];
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
 
-        <span class="macro">assert_eq!</span>(
-            AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Ok</span>(<span class="number">0</span>),
-        );
+        <span class="macro">assert_eq!</span>(AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
     }
 
     <span class="attr">#[test]
@@ -1025,7 +1011,6 @@
             <span class="prelude-val">Err</span>(VerifierError::BadlyTypedInput),
         );
     }
-
-
-}</code></pre></div>
+}
+</code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
