@@ -7,9 +7,8 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
-    types::{Input, Output},
-    dynamic_typing::{DynamicallyTypedData, UtxoData}, utxo_set::TransparentUtxoSet,
-    ensure, SimpleVerifier, Redeemer,
+    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    ensure, SimpleVerifier,
 };
 
 // use log::info;

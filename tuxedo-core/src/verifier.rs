@@ -7,7 +7,7 @@ use sp_std::{fmt::Debug, vec::Vec};
 
 use crate::{
     Redeemer,
-    types::{Input, Output},
+    types::{Output},
     dynamic_typing::DynamicallyTypedData,
 };
 use parity_scale_codec::{Decode, Encode};
@@ -76,24 +76,11 @@ impl<T: SimpleVerifier> Verifier for T {
     }
 }
 
-// impl PowerfulVerifier for () {
-//     type Error = ();
-
-//     fn verify(
-//         &self,
-//         _inputs: &[Input],
-//         _outputs: &[Output<R>],
-//     ) -> Result<TransactionPriority, Self::Error> {
-//         Ok(0)
-//     }
-// }
-
 // A trivial verifier that verifies everything. Not practical. More for testing
 // and for the sake of making things compile before I get around to writing the
 // amoeba nd PoE verifiers
-impl SimpleVerifier for () {
-    type Error = ();
-
+#[cfg(feature = "std")]
+pub mod testing {
     use super::*;
 
     /// A testing verifier that passes (with zero priority) or not depending on
@@ -104,7 +91,7 @@ impl SimpleVerifier for () {
         pub verifies: bool,
     }
 
-    impl Verifier for TestVerifier {
+    impl SimpleVerifier for TestVerifier {
         type Error = ();
 
         fn verify(
@@ -132,3 +119,4 @@ impl SimpleVerifier for () {
         assert_eq!(result, Err(()));
     }
 }
+

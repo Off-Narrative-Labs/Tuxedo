@@ -8,15 +8,11 @@ use sp_runtime::{
 };
 use sp_std::{
     prelude::*,
-    marker::PhantomData,
-    fmt::Debug,
-    vec::Vec,
 };
 use sp_core::H256;
 use tuxedo_core::{
-    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier, SimpleVerifier, Redeemer, utxo_set::TransparentUtxoSet,
+    ensure, SimpleVerifier,
 };
 
 #[cfg_attr(

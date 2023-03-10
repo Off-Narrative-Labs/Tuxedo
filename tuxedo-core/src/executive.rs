@@ -7,7 +7,6 @@
 //! are no duplicate inputs, and that the redeemers are satisfied.
 
 use crate::{
-    dynamic_typing::DynamicallyTypedData,
     ensure,
     redeemer::Redeemer,
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
@@ -120,24 +119,6 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
                 propagate: true,
             });
         }
-
-        // Extract the contained data from each input and output
-        // We do not yet remove anything from the utxo set. That will happen later
-        // iff verification passes
-        // let input_data: Vec<DynamicallyTypedData> = transaction
-        //     .inputs
-        //     .iter()
-        //     .map(|i| {
-        //         TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-        //             .expect("We just checked that all inputs were present.")
-        //             .payload
-        //     })
-        //     .collect();
-        // let output_data: Vec<DynamicallyTypedData> = transaction
-        //     .outputs
-        //     .iter()
-        //     .map(|o| o.payload.clone())
-        //     .collect();
 
         // Call the verifier
         transaction

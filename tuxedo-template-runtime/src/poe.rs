@@ -19,11 +19,9 @@ use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
-use sp_std::vec::Vec;
 use tuxedo_core::{
-    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
+    ensure, SimpleVerifier,
 };
 
 // Notice this type doesn't have to be public. Cool.

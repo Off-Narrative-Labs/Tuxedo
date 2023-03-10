@@ -12,11 +12,9 @@ use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
-use sp_std::vec::Vec;
 use tuxedo_core::{
-    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
+    ensure, SimpleVerifier,
 };
 
 /// An amoeba tracked by our simple Amoeba APP

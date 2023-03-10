@@ -16,7 +16,6 @@ use sp_runtime::{
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
-use sp_std::vec::Vec;
 
 use sp_core::OpaqueMetadata;
 #[cfg(any(feature = "std", test))]
@@ -34,13 +33,11 @@ pub mod kitties;
 pub mod money;
 mod poe;
 mod runtime_upgrade;
-pub mod kitties;
-pub mod money;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     redeemer::{SigCheck, UpForGrabs},
-    types::{Input, Output, Transaction as TuxedoTransaction},
-    Redeemer, Verifier, SimpleVerifier
+    types::{Output, Transaction as TuxedoTransaction},
+    Redeemer, Verifier,
 };
 
 #[cfg(feature = "std")]
@@ -303,8 +300,8 @@ impl Verifier for OuterVerifier {
         outputs: &[Output<R>],
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
-            Self::Money(money) => money.verify(input_data, output_data)?,
-            Self::FreeKittyVerifier(free_breed) => free_breed.verify(input_data, output_data)?,
+            Self::Money(money) => Verifier::verify(money, inputs, outputs)?,
+            Self::FreeKittyVerifier(free_breed) => Verifier::verify(free_breed, inputs, outputs)?,
             Self::AmoebaMitosis(amoeba_mitosis) => {
                 Verifier::verify(amoeba_mitosis, inputs, outputs)?
             }

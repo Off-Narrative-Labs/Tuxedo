@@ -18,9 +18,8 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
-    types::{Input, Output},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier, SimpleVerifier, utxo_set::TransparentUtxoSet, Redeemer,
+    ensure, SimpleVerifier,
 };
 
 /// A reference to a runtime wasm blob. It is just a hash.
