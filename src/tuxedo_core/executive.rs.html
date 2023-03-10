@@ -983,22 +983,6 @@
 <a href="#983" id="983">983</a>
 <a href="#984" id="984">984</a>
 <a href="#985" id="985">985</a>
-<a href="#986" id="986">986</a>
-<a href="#987" id="987">987</a>
-<a href="#988" id="988">988</a>
-<a href="#989" id="989">989</a>
-<a href="#990" id="990">990</a>
-<a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a>
-<a href="#993" id="993">993</a>
-<a href="#994" id="994">994</a>
-<a href="#995" id="995">995</a>
-<a href="#996" id="996">996</a>
-<a href="#997" id="997">997</a>
-<a href="#998" id="998">998</a>
-<a href="#999" id="999">999</a>
-<a href="#1000" id="1000">1000</a>
-<a href="#1001" id="1001">1001</a>
 </pre><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1008,7 +992,6 @@
 //! are no duplicate inputs, and that the redeemers are satisfied.
 
 </span><span class="kw">use crate</span>::{
-    dynamic_typing::DynamicallyTypedData,
     ensure,
     redeemer::Redeemer,
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
@@ -1060,8 +1043,10 @@
         <span class="kw">let </span>stripped_encoded = stripped.encode();
 
         <span class="comment">// Check that the redeemers of all inputs are satisfied
+        // Keep a Vec of the input utxos for passing to the verifier
         // Keep track of any missing inputs for use in the tagged transaction pool
-        </span><span class="kw">let </span><span class="kw-2">mut </span>missing_inputs = Vec::new();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>input_utxos = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>missing_inputs = Vec::new();
         <span class="kw">for </span>input <span class="kw">in </span>transaction.inputs.iter() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(input_utxo) = TransparentUtxoSet::&lt;R&gt;::peek_utxo(<span class="kw-2">&amp;</span>input.output_ref) {
                 <span class="macro">ensure!</span>(
@@ -1070,6 +1055,7 @@
                         .redeem(<span class="kw-2">&amp;</span>stripped_encoded, <span class="kw-2">&amp;</span>input.witness),
                     UtxoError::RedeemerError
                 );
+                input_utxos.push(input_utxo);
             } <span class="kw">else </span>{
                 missing_inputs.push(input.output_ref.clone().encode());
             }
@@ -1119,28 +1105,10 @@
             });
         }
 
-        <span class="comment">// Extract the contained data from each input and output
-        // We do not yet remove anything from the utxo set. That will happen later
-        // iff verification passes
-        </span><span class="kw">let </span>input_data: Vec&lt;DynamicallyTypedData&gt; = transaction
-            .inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::&lt;R&gt;::peek_utxo(<span class="kw-2">&amp;</span>i.output_ref)
-                    .expect(<span class="string">&quot;We just checked that all inputs were present.&quot;</span>)
-                    .payload
-            })
-            .collect();
-        <span class="kw">let </span>output_data: Vec&lt;DynamicallyTypedData&gt; = transaction
-            .outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
         <span class="comment">// Call the verifier
         </span>transaction
             .verifier
-            .verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data)
+            .verify(<span class="kw-2">&amp;</span>input_utxos, <span class="kw-2">&amp;</span>transaction.outputs)
             .map_err(UtxoError::VerifierError)<span class="question-mark">?</span>;
 
         <span class="comment">// Return the valid transaction
@@ -2001,4 +1969,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

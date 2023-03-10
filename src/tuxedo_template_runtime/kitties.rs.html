@@ -560,6 +560,7 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
 </pre><pre class="rust"><code><span class="doccomment">//! An NFT game inspired by cryptokitties.
 //! This is a game which allows for kitties to be bred based on a few factors
 //! 1.) Mom and Tired have to be in a state where they are ready to breed
@@ -577,20 +578,21 @@
 //! There are a only a finite amount of free breedings available before it starts to cost money
 //! to breed kitties.
 //!
-
 </span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>scale_info::TypeInfo;
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>sp_core::H256;
 <span class="kw">use </span>sp_runtime::{
-    traits::{BlakeTwo256, Hash <span class="kw">as </span>HashT},
     transaction_validity::TransactionPriority,
+    traits::{BlakeTwo256, Hash <span class="kw">as </span>HashT},
 };
-<span class="kw">use </span>sp_std::{fmt::Debug, prelude::<span class="kw-2">*</span>};
+<span class="kw">use </span>sp_std::{
+    prelude::<span class="kw-2">*</span>,
+};
+<span class="kw">use </span>sp_core::H256;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 <span class="attr">#[cfg_attr(
@@ -944,7 +946,7 @@
 }
 
 <span class="comment">// 4.) Implement Verifier Trait on my new Verifier
-</span><span class="kw">impl </span>Verifier <span class="kw">for </span>FreeKittyVerifier {
+</span><span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>FreeKittyVerifier {
     <span class="kw">type </span>Error = VerifierError;
     <span class="doccomment">/// Checks:
     ///     - `input_data` is of length 2
@@ -1123,4 +1125,4 @@
     </span>}
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

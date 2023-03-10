@@ -529,7 +529,7 @@
 <span class="kw">use </span>sp_runtime::transaction_validity::TransactionPriority;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 <span class="doccomment">/// An amoeba tracked by our simple Amoeba APP
@@ -599,7 +599,7 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>AmoebaMitosis;
 
-<span class="kw">impl </span>Verifier <span class="kw">for </span>AmoebaMitosis {
+<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>AmoebaMitosis {
     <span class="kw">type </span>Error = VerifierError;
 
     <span class="kw">fn </span>verify(
@@ -653,7 +653,7 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>AmoebaDeath;
 
-<span class="kw">impl </span>Verifier <span class="kw">for </span>AmoebaDeath {
+<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>AmoebaDeath {
     <span class="kw">type </span>Error = VerifierError;
 
     <span class="kw">fn </span>verify(
@@ -689,7 +689,7 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>AmoebaCreation;
 
-<span class="kw">impl </span>Verifier <span class="kw">for </span>AmoebaCreation {
+<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>AmoebaCreation {
     <span class="kw">type </span>Error = VerifierError;
 
     <span class="kw">fn </span>verify(
@@ -1028,4 +1028,4 @@
 
 
 }</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

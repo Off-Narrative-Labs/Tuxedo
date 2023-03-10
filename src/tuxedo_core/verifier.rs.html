@@ -71,14 +71,67 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A verifier is a piece of logic that determines whether a transaction as a whole is valid
 //! and should be committed. Most tuxedo pieces will provide one or more verifiers. Verifiers
 //!  do not typically calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
 
-</span><span class="kw">use </span>sp_std::fmt::Debug;
+</span><span class="kw">use </span>sp_std::{fmt::Debug, vec::Vec};
 
-<span class="kw">use </span><span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData;
+<span class="kw">use crate</span>::{
+    Redeemer,
+    types::{Output},
+    dynamic_typing::DynamicallyTypedData,
+};
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -90,7 +143,7 @@
 /// Additional transient information may be passed to the verifier by including it in the fields
 /// of the verifier struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-</span><span class="kw">pub trait </span>Verifier: Debug + Encode + Decode + Clone {
+</span><span class="kw">pub trait </span>SimpleVerifier: Debug + Encode + Decode + Clone {
     <span class="doccomment">/// The error type that this verifier may return
     </span><span class="kw">type </span>Error: Debug;
 
@@ -102,10 +155,52 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="doccomment">/// Simple verifier for use in unit tests. Not for use in production runtimes.
+<span class="kw">pub trait </span>Verifier: Debug + Encode + Decode + Clone {
+    <span class="doccomment">/// the error type that this verifier may return
+    </span><span class="kw">type </span>Error: Debug;
+
+    <span class="doccomment">/// The actual verification logic
+    </span><span class="kw">fn </span>verify&lt;R: Redeemer&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        inputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
+        outputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt;;
+}
+
+<span class="comment">// This blanket implementation makes it so that any type that chooses to
+// implement the Simple trait also implements the Powerful trait. This way
+// the executive can always just call the Powerful trait.
+</span><span class="kw">impl</span>&lt;T: SimpleVerifier&gt; Verifier <span class="kw">for </span>T {
+
+    <span class="comment">// Use the same error type used in the simple implementation.
+    </span><span class="kw">type </span>Error = &lt;T <span class="kw">as </span>SimpleVerifier&gt;::Error;
+
+    <span class="kw">fn </span>verify&lt;R: Redeemer&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        inputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
+        outputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
+
+        <span class="comment">// Extract the input data
+        </span><span class="kw">let </span>input_data: Vec&lt;DynamicallyTypedData&gt; = inputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <span class="comment">// Extract the output data
+        </span><span class="kw">let </span>output_data: Vec&lt;DynamicallyTypedData&gt; = outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
+        <span class="comment">// Call the simple verifier
+        </span>SimpleVerifier::verify(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data)
+    }
+}
+
+<span class="doccomment">/// Utilities for writing verifier-related unit tests
 </span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">pub mod </span>testing {
-
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="doccomment">/// A testing verifier that passes (with zero priority) or not depending on
@@ -116,7 +211,7 @@
         </span><span class="kw">pub </span>verifies: bool,
     }
 
-    <span class="kw">impl </span>Verifier <span class="kw">for </span>TestVerifier {
+    <span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>TestVerifier {
         <span class="kw">type </span>Error = ();
 
         <span class="kw">fn </span>verify(
@@ -134,15 +229,18 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_verifier_passes() {
-        <span class="kw">let </span>result = TestVerifier { verifies: <span class="bool-val">true </span>}.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>result =
+            SimpleVerifier::verify(<span class="kw-2">&amp;</span>TestVerifier { verifies: <span class="bool-val">true </span>}, <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
         <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Ok</span>(<span class="number">0</span>));
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_verifier_fails() {
-        <span class="kw">let </span>result = TestVerifier { verifies: <span class="bool-val">false </span>}.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
+        <span class="kw">let </span>result =
+            SimpleVerifier::verify(<span class="kw-2">&amp;</span>TestVerifier { verifies: <span class="bool-val">false </span>}, <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
         <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Err</span>(()));
     }
 }
+
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

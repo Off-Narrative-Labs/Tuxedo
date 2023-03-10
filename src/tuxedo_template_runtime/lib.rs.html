@@ -570,7 +570,6 @@
 <a href="#570" id="570">570</a>
 <a href="#571" id="571">571</a>
 <a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
 </pre><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
 #[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -589,7 +588,6 @@
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 <span class="kw">use </span>sp_std::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>sp_std::vec::Vec;
 
 <span class="kw">use </span>sp_core::OpaqueMetadata;
 <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, test))]
@@ -868,26 +866,26 @@
 <span class="kw">impl </span>Verifier <span class="kw">for </span>OuterVerifier {
     <span class="kw">type </span>Error = OuterVerifierError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>verify&lt;R: Redeemer&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
-        output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        inputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
+        outputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, OuterVerifierError&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Money(money) =&gt; money.verify(input_data, output_data)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::FreeKittyVerifier(free_breed) =&gt; free_breed.verify(input_data, output_data)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Money(money) =&gt; money.verify(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::FreeKittyVerifier(free_breed) =&gt; free_breed.verify(inputs, outputs)<span class="question-mark">?</span>,
             <span class="self">Self</span>::AmoebaMitosis(amoeba_mitosis) =&gt; {
-                amoeba_mitosis.verify(input_data, output_data)<span class="question-mark">?
+                amoeba_mitosis.verify(inputs, outputs)<span class="question-mark">?
             </span>}
-            <span class="self">Self</span>::AmoebaDeath(amoeba_death) =&gt; amoeba_death.verify(input_data, output_data)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::AmoebaDeath(amoeba_death) =&gt; amoeba_death.verify(inputs, outputs)<span class="question-mark">?</span>,
             <span class="self">Self</span>::AmoebaCreation(amoeba_creation) =&gt; {
-                amoeba_creation.verify(input_data, output_data)<span class="question-mark">?
+                amoeba_creation.verify(inputs, outputs)<span class="question-mark">?
             </span>}
-            <span class="self">Self</span>::PoeClaim(poe_claim) =&gt; poe_claim.verify(input_data, output_data)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::PoeRevoke(poe_revoke) =&gt; poe_revoke.verify(input_data, output_data)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::PoeDispute(poe_dispute) =&gt; poe_dispute.verify(input_data, output_data)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::PoeClaim(poe_claim) =&gt; poe_claim.verify(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::PoeRevoke(poe_revoke) =&gt; poe_revoke.verify(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::PoeDispute(poe_dispute) =&gt; poe_dispute.verify(inputs, outputs)<span class="question-mark">?</span>,
             <span class="self">Self</span>::RuntimeUpgrade(runtime_upgrade) =&gt; {
-                runtime_upgrade.verify(input_data, output_data)<span class="question-mark">?
+                runtime_upgrade.verify(inputs, outputs)<span class="question-mark">?
             </span>}
         })
     }
@@ -1145,4 +1143,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (900c35403 2023-03-08)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
