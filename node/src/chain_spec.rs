@@ -30,45 +30,45 @@ pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 // }
 
 pub fn development_config() -> Result<ChainSpec, String> {
-	Ok(ChainSpec::from_genesis(
-		// Name
-		"Development",
-		// ID
-		"dev",
-		ChainType::Development,
-		GenesisConfig::default,
-		// Bootnodes
-		vec![],
-		// Telemetry
-		None,
-		// Protocol ID
-		None,
-		None,
-		// Properties
-		None,
-		// Extensions
-		None,
-	))
+    Ok(ChainSpec::from_genesis(
+        // Name
+        "Development",
+        // ID
+        "dev",
+        ChainType::Development,
+        GenesisConfig::default,
+        // Bootnodes
+        vec![],
+        // Telemetry
+        None,
+        // Protocol ID
+        None,
+        None,
+        // Properties
+        None,
+        // Extensions
+        None,
+    ))
 }
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	Ok(ChainSpec::from_genesis(
-		// Name
-		"Local Testnet",
-		// ID
-		"local_testnet",
-		ChainType::Local,
-		GenesisConfig::default,
-		// Bootnodes
-		vec![],
-		// Telemetry
-		None,
-		// Protocol ID
-		None,
-		// Properties
-		None,
-		None,
-		// Extensions
-		None,
-	))
+    Ok(ChainSpec::from_genesis(
+        // Name
+        "Local Testnet",
+        // ID
+        "local_testnet",
+        ChainType::Local,
+        GenesisConfig::default,
+        // Bootnodes
+        vec![],
+        // Telemetry
+        None,
+        // Protocol ID
+        None,
+        // Properties
+        None,
+        None,
+        // Extensions
+        None,
+    ))
 }
