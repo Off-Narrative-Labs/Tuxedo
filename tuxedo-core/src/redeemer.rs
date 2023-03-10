@@ -54,6 +54,22 @@ impl Redeemer for UpForGrabs {
     }
 }
 
+/// A testing redeemer that passes or depending on the enclosed
+/// boolean value.
+#[cfg(feature = "std")]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct TestRedeemer {
+    /// Whether the redeemer should pass
+    pub redeems: bool,
+}
+
+#[cfg(feature = "std")]
+impl Redeemer for TestRedeemer {
+    fn redeem(&self, _simplified_tx: &[u8], _witness: &[u8]) -> bool {
+        self.redeems
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -88,5 +104,17 @@ mod test {
         };
 
         assert!(!sig_check.redeem(simplified_tx, witness));
+    }
+
+    #[test]
+    fn test_redeemer_passes() {
+        let result = TestRedeemer { redeems: true }.redeem(&[], &[]);
+        assert_eq!(result, true);
+    }
+
+    #[test]
+    fn test_redeemer_fails() {
+        let result = TestRedeemer { redeems: false }.redeem(&[], &[]);
+        assert_eq!(result, false);
     }
 }

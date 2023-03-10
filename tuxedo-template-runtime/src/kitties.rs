@@ -18,7 +18,6 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, Verifier, SimpleVerifier, Redeemer, utxo_set::TransparentUtxoSet,
 };
-// use crate::money::{Coin, MoneyVerifier};
 
 #[cfg_attr(
     feature = "std",
@@ -27,7 +26,10 @@ use tuxedo_core::{
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct FreeKittyVerifier;
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum DadKittyStatus {
     #[default]
@@ -35,7 +37,10 @@ pub enum DadKittyStatus {
     Tired,
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MomKittyStatus {
     #[default]
@@ -43,7 +48,10 @@ pub enum MomKittyStatus {
     HadBirthRecently,
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum Parent {
     Mom(MomKittyStatus),
@@ -56,11 +64,17 @@ impl Default for Parent {
     }
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittyDNA(H256);
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf))]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittyData {
     parent: Parent,
@@ -139,19 +153,22 @@ trait Breed {
     fn check_new_family(
         old_mom: &KittyData,
         old_dad: &KittyData,
-        new_family: &[DynamicallyTypedData]
+        new_family: &[DynamicallyTypedData],
     ) -> Result<(), Self::Error>;
     /// Checks if new mom matches the old ones DNA and changes state correctly.
     fn check_new_mom(old_mom: &KittyData, new_mom: &KittyData) -> Result<(), Self::Error>;
     /// Checks if new dad matches the old ones DNA and changes state correctly.
     fn check_new_dad(old_dad: &KittyData, new_dad: &KittyData) -> Result<(), Self::Error>;
     /// Checks if new child DNA is formulated correctly and is initialized to the proper state.
-    fn check_child(new_mom: &KittyData, new_dad: &KittyData, child: &KittyData) -> Result<(), Self::Error>;
+    fn check_child(
+        new_mom: &KittyData,
+        new_dad: &KittyData,
+        child: &KittyData,
+    ) -> Result<(), Self::Error>;
 }
 
 pub struct KittyHelpers;
-impl Breed for KittyHelpers
-{
+impl Breed for KittyHelpers {
     const COST: u128 = 5u128;
     const NUM_FREE_BREEDINGS: u64 = 2u64;
     type Error = VerifierError;
@@ -174,14 +191,14 @@ impl Breed for KittyHelpers
         match &mom.parent {
             Parent::Mom(status) => {
                 if let MomKittyStatus::HadBirthRecently = status {
-                    return Err(Self::Error::MomNotReadyYet)
+                    return Err(Self::Error::MomNotReadyYet);
                 }
-            },
-            Parent::Dad(_) => {
-                return Err(Self::Error::TwoDadsNotValid)
             }
+            Parent::Dad(_) => return Err(Self::Error::TwoDadsNotValid),
         }
-        mom.num_breedings.checked_add(1).ok_or(Self::Error::TooManyBreedingsForKitty)?;
+        mom.num_breedings
+            .checked_add(1)
+            .ok_or(Self::Error::TooManyBreedingsForKitty)?;
         Ok(())
     }
 
@@ -193,14 +210,14 @@ impl Breed for KittyHelpers
         match &dad.parent {
             Parent::Dad(status) => {
                 if let DadKittyStatus::Tired = status {
-                    return Err(Self::Error::DadTooTired)
+                    return Err(Self::Error::DadTooTired);
                 }
-            },
-            Parent::Mom(_) => {
-                return Err(Self::Error::TwoMomsNotValid)
             }
+            Parent::Mom(_) => return Err(Self::Error::TwoMomsNotValid),
         }
-        dad.num_breedings.checked_add(1).ok_or(Self::Error::TooManyBreedingsForKitty)?;
+        dad.num_breedings
+            .checked_add(1)
+            .ok_or(Self::Error::TooManyBreedingsForKitty)?;
         Ok(())
     }
 
@@ -210,8 +227,8 @@ impl Breed for KittyHelpers
     fn check_free_breedings(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error> {
         let mom_breedings = mom.free_breedings;
         let dad_breedings = dad.free_breedings;
-        if (mom_breedings == 0) && (dad_breedings == 0) {
-            return Err(Self::Error::NotEnoughFreeBreedings)
+        if (mom_breedings == 0) || (dad_breedings == 0) {
+            return Err(Self::Error::NotEnoughFreeBreedings);
         }
         Ok(())
     }
@@ -219,13 +236,10 @@ impl Breed for KittyHelpers
     fn check_new_family(
         old_mom: &KittyData,
         old_dad: &KittyData,
-        new_family: &[DynamicallyTypedData]
+        new_family: &[DynamicallyTypedData],
     ) -> Result<(), Self::Error> {
         // Output Side
-        ensure!(
-            new_family.len() == 3,
-            Self::Error::NotEnoughFamilyMembers
-        );
+        ensure!(new_family.len() == 3, Self::Error::NotEnoughFamilyMembers);
         let new_mom = KittyData::try_from(&new_family[0])?;
         let new_dad = KittyData::try_from(&new_family[1])?;
         let child = KittyData::try_from(&new_family[2])?;
@@ -245,9 +259,9 @@ impl Breed for KittyHelpers
         match &new_mom.parent {
             Parent::Mom(status) => {
                 if let MomKittyStatus::RearinToGo = status {
-                    return Err(Self::Error::NewMomIsStillRearinToGo)
+                    return Err(Self::Error::NewMomIsStillRearinToGo);
                 }
-            },
+            }
             Parent::Dad(_) => return Err(Self::Error::TwoDadsNotValid),
         }
 
@@ -277,9 +291,9 @@ impl Breed for KittyHelpers
         match &new_dad.parent {
             Parent::Dad(status) => {
                 if let DadKittyStatus::RearinToGo = status {
-                    return Err(Self::Error::NewDadIsStillRearinToGo)
+                    return Err(Self::Error::NewDadIsStillRearinToGo);
                 }
-            },
+            }
             Parent::Mom(_) => return Err(Self::Error::TwoMomsNotValid),
         }
 
@@ -306,9 +320,17 @@ impl Breed for KittyHelpers
     ///     - If Mom is in RearinToGo
     ///     - If Dad is in RearinToGo
     ///
-    fn check_child(new_mom: &KittyData, new_dad: &KittyData, child: &KittyData) -> Result<(), Self::Error> {
-        let new_dna =
-            BlakeTwo256::hash_of(&(&new_mom.dna, &new_dad.dna, &new_mom.num_breedings, &new_dad.num_breedings));
+    fn check_child(
+        new_mom: &KittyData,
+        new_dad: &KittyData,
+        child: &KittyData,
+    ) -> Result<(), Self::Error> {
+        let new_dna = BlakeTwo256::hash_of(&(
+            &new_mom.dna,
+            &new_dad.dna,
+            &new_mom.num_breedings,
+            &new_dad.num_breedings,
+        ));
 
         ensure!(
             child.dna == KittyDNA(new_dna),
@@ -326,12 +348,12 @@ impl Breed for KittyHelpers
         match &child.parent {
             Parent::Mom(status) => {
                 if let MomKittyStatus::HadBirthRecently = status {
-                    return Err(Self::Error::NewChildIncorrectParentInfo)
+                    return Err(Self::Error::NewChildIncorrectParentInfo);
                 }
-            },
+            }
             Parent::Dad(status) => {
                 if let DadKittyStatus::Tired = status {
-                    return Err(Self::Error::NewChildIncorrectParentInfo)
+                    return Err(Self::Error::NewChildIncorrectParentInfo);
                 }
             }
         }
@@ -342,7 +364,8 @@ impl Breed for KittyHelpers
 impl TryFrom<&DynamicallyTypedData> for KittyData {
     type Error = VerifierError;
     fn try_from(a: &DynamicallyTypedData) -> Result<Self, Self::Error> {
-        a.extract::<KittyData>().map_err(|_| VerifierError::BadlyTyped)
+        a.extract::<KittyData>()
+            .map_err(|_| VerifierError::BadlyTyped)
     }
 }
 
@@ -356,23 +379,17 @@ impl SimpleVerifier for FreeKittyVerifier {
     fn verify(
         &self,
         input_data: &[DynamicallyTypedData],
-        output_data: &[DynamicallyTypedData]
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Input must be a Mom and a Dad
-        ensure!(
-            input_data.len() == 2,
-            Self::Error::TwoParentsDoNotExist
-        );
+        ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
 
         let mom = KittyData::try_from(&input_data[0])?;
         let dad = KittyData::try_from(&input_data[0])?;
         KittyHelpers::can_breed(&mom, &dad)?;
 
         // Output must be Mom, Dad, Child
-        ensure!(
-            output_data.len() == 3,
-            Self::Error::NotEnoughFamilyMembers
-        );
+        ensure!(output_data.len() == 3, Self::Error::NotEnoughFamilyMembers);
 
         KittyHelpers::check_new_family(&mom, &dad, output_data)?;
 
@@ -389,6 +406,146 @@ mod test {
 
     impl UtxoData for Bogus {
         const TYPE_ID: [u8; 4] = *b"bogs";
+    }
+
+    #[test]
+    fn breed_wrong_input_type_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn breed_wrong_output_type_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn inputs_dont_contain_two_parents_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn outputs_dont_contain_all_family_members_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn breed_two_dads_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn breed_two_moms_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn first_input_not_mom_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn second_input_not_dad_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn first_output_not_mom_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn second_output_not_dad_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn third_output_not_child_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn breed_mom_when_she_gave_birth_recently_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn breed_dad_when_he_is_tired_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_mom_breedings_overflow_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_dad_breedings_overflow_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_mom_free_breedings_zero_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_dad_free_breedings_zero_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_new_mom_free_breedings_incorrect_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_new_dad_free_breedings_incorrect_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_new_mom_num_breedings_incorrect_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_new_dad_num_breedings_incorrect_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_new_mom_dna_doesnt_match_old_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_new_dad_dna_doesnt_match_old_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_child_dna_incorrect_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_child_dad_parent_tired_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_child_mom_parent_recently_gave_birth_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_child_free_breedings_incorrect_fails() {
+        // TODO
+    }
+
+    #[test]
+    fn check_child_num_breedings_non_zero_fails() {
+        // TODO
     }
 
     #[test]

@@ -91,7 +91,7 @@ impl DynamicallyTypedData {
 }
 
 /// Errors that can occur when casting dynamically typed data into strongly typed data.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum DynamicTypingError {
     /// The data provided was not of the target decoding type.
     WrongType,
@@ -139,16 +139,80 @@ impl<T: UtxoData> From<T> for DynamicallyTypedData {
 pub mod testing {
     use super::*;
 
-    /// A bogus data type used in tests.
+    /// A bogus data type for use in tests.
     ///
     /// When writing tests for individual Tuxedo pieces, developers
     /// need to make sure that the piece properly sanitizes the dynamically
     /// typed data that is passed into its verifiers.
     /// This type is used to represent incorrectly typed data.
-    #[derive(Encode, Decode)]
+    #[derive(Encode, Decode, PartialEq, Eq, Debug)]
     pub struct Bogus;
 
     impl UtxoData for Bogus {
         const TYPE_ID: [u8; 4] = *b"bogs";
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use testing::Bogus;
+
+    /// A simple type that implements UtxoData and just wraps a single u8.
+    /// Used to test the extraction logic.
+    #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+    struct Byte(u8);
+
+    impl UtxoData for Byte {
+        const TYPE_ID: [u8; 4] = *b"byte";
+    }
+
+    #[test]
+    fn extract_works() {
+        let original_b = Byte(4);
+        let dynamically_typed_b: DynamicallyTypedData = original_b.clone().into();
+
+        let extracted_b = dynamically_typed_b.extract::<Byte>();
+
+        assert_eq!(extracted_b, Ok(original_b));
+    }
+
+    #[test]
+    fn extract_wrong_type() {
+        let original_b = Byte(4);
+        let dynamically_typed_b: DynamicallyTypedData = original_b.clone().into();
+
+        let extracted_b = dynamically_typed_b.extract::<Bogus>();
+
+        assert_eq!(extracted_b, Err(DynamicTypingError::WrongType));
+    }
+
+    #[test]
+    fn extract_decode_fails() {
+        let original_b = Byte(4);
+        let mut dynamically_typed_b: DynamicallyTypedData = original_b.clone().into();
+
+        // Change the encoded bytes so they no longer decode correctly.
+        dynamically_typed_b.data = Vec::new();
+
+        let extracted_b = dynamically_typed_b.extract::<Byte>();
+
+        assert_eq!(extracted_b, Err(DynamicTypingError::DecodingFailed));
+    }
+
+    #[test]
+    fn display_wrong_type_error() {
+        let actual = format!("{}", DynamicTypingError::WrongType);
+        let expected = String::from("dynamic type does not match extraction target");
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn display_decoding_failed_error() {
+        let actual = format!("{}", DynamicTypingError::DecodingFailed);
+        let expected = String::from("failed to decode dynamically typed data with scale codec");
+
+        assert_eq!(actual, expected);
     }
 }

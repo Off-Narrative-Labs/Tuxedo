@@ -81,7 +81,7 @@ pub struct Input {
     pub witness: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum UtxoError<VerifierError> {
     /// This transaction defines the same input multiple times
     DuplicateInput,
@@ -112,4 +112,40 @@ pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
 pub struct Output<R> {
     pub payload: DynamicallyTypedData,
     pub redeemer: R,
+}
+
+#[cfg(test)]
+pub mod tests {
+
+    use crate::{redeemer::UpForGrabs, verifier::testing::TestVerifier};
+
+    use super::*;
+
+    #[test]
+    fn extrinsic_no_signed_payload() {
+        let verifier = TestVerifier { verifies: true };
+        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            verifier,
+        };
+        let e = Transaction::new(tx.clone(), None).unwrap();
+
+        assert_eq!(e, tx);
+        assert_eq!(e.is_signed(), Some(false));
+    }
+
+    #[test]
+    fn extrinsic_is_signed_works() {
+        let verifier = TestVerifier { verifies: true };
+        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction {
+            inputs: Vec::new(),
+            outputs: Vec::new(),
+            verifier,
+        };
+        let e = Transaction::new(tx.clone(), Some(())).unwrap();
+
+        assert_eq!(e, tx);
+        assert_eq!(e.is_signed(), Some(false));
+    }
 }
