@@ -21,7 +21,7 @@ use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 // Notice this type doesn't have to be public. Cool.
@@ -76,7 +76,7 @@ pub enum VerifierError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeClaim;
 
-impl Verifier for PoeClaim {
+impl SimpleVerifier for PoeClaim {
     type Error = VerifierError;
 
     fn verify(
@@ -119,7 +119,7 @@ impl Verifier for PoeClaim {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeRevoke;
 
-impl Verifier for PoeRevoke {
+impl SimpleVerifier for PoeRevoke {
     type Error = VerifierError;
 
     fn verify(
@@ -158,7 +158,7 @@ impl Verifier for PoeRevoke {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeDispute;
 
-impl Verifier for PoeDispute {
+impl SimpleVerifier for PoeDispute {
     type Error = VerifierError;
 
     fn verify(

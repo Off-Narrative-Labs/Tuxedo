@@ -8,7 +8,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 // use log::info;
@@ -78,7 +78,7 @@ pub enum VerifierError {
     ZeroValueCoin,
 }
 
-impl Verifier for MoneyVerifier {
+impl SimpleVerifier for MoneyVerifier {
     type Error = VerifierError;
 
     fn verify(

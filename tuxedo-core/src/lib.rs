@@ -11,12 +11,12 @@ mod executive;
 pub mod redeemer;
 pub mod support_macros;
 pub mod types;
-mod utxo_set;
-mod verifier;
+pub mod utxo_set;
+pub mod verifier;
 
 pub use executive::Executive;
 pub use redeemer::Redeemer;
-pub use verifier::Verifier;
+pub use verifier::{SimpleVerifier, Verifier};
 
 /// A Tuxedo-specific target for diagnostic node log messages
 const LOG_TARGET: &str = "tuxedo-core";

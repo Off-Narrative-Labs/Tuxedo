@@ -16,7 +16,6 @@ use sp_runtime::{
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
-use sp_std::vec::Vec;
 
 use sp_core::OpaqueMetadata;
 #[cfg(any(feature = "std", test))]
@@ -295,26 +294,26 @@ impl From<runtime_upgrade::VerifierError> for OuterVerifierError {
 impl Verifier for OuterVerifier {
     type Error = OuterVerifierError;
 
-    fn verify(
+    fn verify<R: Redeemer>(
         &self,
-        input_data: &[DynamicallyTypedData],
-        output_data: &[DynamicallyTypedData],
+        inputs: &[Output<R>],
+        outputs: &[Output<R>],
     ) -> Result<TransactionPriority, OuterVerifierError> {
         Ok(match self {
-            Self::Money(money) => money.verify(input_data, output_data)?,
-            Self::FreeKittyVerifier(free_breed) => free_breed.verify(input_data, output_data)?,
+            Self::Money(money) => money.verify(inputs, outputs)?,
+            Self::FreeKittyVerifier(free_breed) => free_breed.verify(inputs, outputs)?,
             Self::AmoebaMitosis(amoeba_mitosis) => {
-                amoeba_mitosis.verify(input_data, output_data)?
+                amoeba_mitosis.verify(inputs, outputs)?
             }
-            Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(input_data, output_data)?,
+            Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(inputs, outputs)?,
             Self::AmoebaCreation(amoeba_creation) => {
-                amoeba_creation.verify(input_data, output_data)?
+                amoeba_creation.verify(inputs, outputs)?
             }
-            Self::PoeClaim(poe_claim) => poe_claim.verify(input_data, output_data)?,
-            Self::PoeRevoke(poe_revoke) => poe_revoke.verify(input_data, output_data)?,
-            Self::PoeDispute(poe_dispute) => poe_dispute.verify(input_data, output_data)?,
+            Self::PoeClaim(poe_claim) => poe_claim.verify(inputs, outputs)?,
+            Self::PoeRevoke(poe_revoke) => poe_revoke.verify(inputs, outputs)?,
+            Self::PoeDispute(poe_dispute) => poe_dispute.verify(inputs, outputs)?,
             Self::RuntimeUpgrade(runtime_upgrade) => {
-                runtime_upgrade.verify(input_data, output_data)?
+                runtime_upgrade.verify(inputs, outputs)?
             }
         })
     }

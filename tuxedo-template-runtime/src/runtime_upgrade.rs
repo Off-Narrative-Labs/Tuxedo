@@ -19,7 +19,7 @@ use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 /// A reference to a runtime wasm blob. It is just a hash.
@@ -74,7 +74,7 @@ pub struct RuntimeUpgrade {
     full_wasm: Vec<u8>,
 }
 
-impl Verifier for RuntimeUpgrade {
+impl SimpleVerifier for RuntimeUpgrade {
     type Error = VerifierError;
 
     fn verify(

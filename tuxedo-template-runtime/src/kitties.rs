@@ -15,20 +15,21 @@
 //! There are a only a finite amount of free breedings available before it starts to cost money
 //! to breed kitties.
 //!
-
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_core::H256;
 use sp_runtime::{
-    traits::{BlakeTwo256, Hash as HashT},
     transaction_validity::TransactionPriority,
+    traits::{BlakeTwo256, Hash as HashT},
 };
-use sp_std::{fmt::Debug, prelude::*};
+use sp_std::{
+    prelude::*,
+};
+use sp_core::H256;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 #[cfg_attr(
@@ -382,7 +383,7 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
 }
 
 // 4.) Implement Verifier Trait on my new Verifier
-impl Verifier for FreeKittyVerifier {
+impl SimpleVerifier for FreeKittyVerifier {
     type Error = VerifierError;
     /// Checks:
     ///     - `input_data` is of length 2

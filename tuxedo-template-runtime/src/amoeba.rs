@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, Verifier,
+    ensure, SimpleVerifier,
 };
 
 /// An amoeba tracked by our simple Amoeba APP
@@ -84,7 +84,7 @@ pub enum VerifierError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaMitosis;
 
-impl Verifier for AmoebaMitosis {
+impl SimpleVerifier for AmoebaMitosis {
     type Error = VerifierError;
 
     fn verify(
@@ -138,7 +138,7 @@ impl Verifier for AmoebaMitosis {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaDeath;
 
-impl Verifier for AmoebaDeath {
+impl SimpleVerifier for AmoebaDeath {
     type Error = VerifierError;
 
     fn verify(
@@ -174,7 +174,7 @@ impl Verifier for AmoebaDeath {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaCreation;
 
-impl Verifier for AmoebaCreation {
+impl SimpleVerifier for AmoebaCreation {
     type Error = VerifierError;
 
     fn verify(

@@ -7,7 +7,6 @@
 //! are no duplicate inputs, and that the redeemers are satisfied.
 
 use crate::{
-    dynamic_typing::DynamicallyTypedData,
     ensure,
     redeemer::Redeemer,
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
@@ -59,7 +58,9 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
         let stripped_encoded = stripped.encode();
 
         // Check that the redeemers of all inputs are satisfied
+        // Keep a Vec of the input utxos for passing to the verifier
         // Keep track of any missing inputs for use in the tagged transaction pool
+        let mut input_utxos = Vec::new();
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<R>::peek_utxo(&input.output_ref) {
@@ -69,6 +70,7 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
                         .redeem(&stripped_encoded, &input.witness),
                     UtxoError::RedeemerError
                 );
+                input_utxos.push(input_utxo);
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
             }
@@ -118,28 +120,10 @@ impl<B: BlockT<Extrinsic = Transaction<R, V>>, R: Redeemer, V: Verifier> Executi
             });
         }
 
-        // Extract the contained data from each input and output
-        // We do not yet remove anything from the utxo set. That will happen later
-        // iff verification passes
-        let input_data: Vec<DynamicallyTypedData> = transaction
-            .inputs
-            .iter()
-            .map(|i| {
-                TransparentUtxoSet::<R>::peek_utxo(&i.output_ref)
-                    .expect("We just checked that all inputs were present.")
-                    .payload
-            })
-            .collect();
-        let output_data: Vec<DynamicallyTypedData> = transaction
-            .outputs
-            .iter()
-            .map(|o| o.payload.clone())
-            .collect();
-
         // Call the verifier
         transaction
             .verifier
-            .verify(&input_data, &output_data)
+            .verify(&input_utxos, &transaction.outputs)
             .map_err(UtxoError::VerifierError)?;
 
         // Return the valid transaction
