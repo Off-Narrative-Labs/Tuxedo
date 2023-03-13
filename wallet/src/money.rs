@@ -4,6 +4,7 @@ use crate::{fetch_storage, SpendArgs, KEY_TYPE};
 
 use std::{thread::sleep, time::Duration};
 
+use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
@@ -11,17 +12,24 @@ use runtime::{
     OuterRedeemer, OuterVerifier, Transaction,
 };
 use sc_keystore::LocalKeystore;
-use sp_core::{crypto::Pair as PairT, sr25519::{Pair, Public}, H256};
+use sp_core::{
+    crypto::Pair as PairT,
+    sr25519::{Pair, Public},
+    H256,
+};
 use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::SigCheck,
     types::{Input, Output, OutputRef},
 };
-use anyhow::anyhow;
 
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins(client: &HttpClient, keystore: &LocalKeystore, args: SpendArgs) -> anyhow::Result<()> {
+pub async fn spend_coins(
+    client: &HttpClient,
+    keystore: &LocalKeystore,
+    args: SpendArgs,
+) -> anyhow::Result<()> {
     println!("The args are:: {:?}", args);
 
     // Construct a template Transaction to push coins into later
@@ -73,7 +81,7 @@ pub async fn spend_coins(client: &HttpClient, keystore: &LocalKeystore, args: Sp
                     .sign_with(KEY_TYPE, &public.into(), &stripped_encoded_transaction)
                     .await?
                     .ok_or(anyhow!("Key doesn't exist in keystore"))?
-            },
+            }
             OuterRedeemer::UpForGrabs(_) => Vec::new(),
         };
 

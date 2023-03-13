@@ -77,7 +77,7 @@ enum Command {
     /// Insert a private key into the keystore to later use when signing transactions.
     InsertKey {
         /// Seed phrase of the key to insert.
-        seed: String
+        seed: String,
     },
 }
 
