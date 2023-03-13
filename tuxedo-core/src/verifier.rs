@@ -1,109 +1,120 @@
-//! A verifier is a piece of logic that determines whether a transaction as a whole is valid
-//! and should be committed. Most tuxedo pieces will provide one or more verifiers. Verifiers
-//!  do not typically calculate the correct final state, but rather determine whether the
-//! proposed final state (as specified by the output set) meets the necessary constraints.
+//! A verifier is a piece of logic that determines whether an input can be consumed in a given context.
+//! Because there are multiple reasonable ways to make this decision, we expose a trait to encapsulate
+//! the various options. Each runtime will choose to make one or more verifiers available to its users
+//! and they will be aggregated into an enum. The most common and useful verifiers are included here
+//! with Tuxedo core, but downstream developers are expected to create their own as well.
 
-use sp_std::{fmt::Debug, vec::Vec};
-
-use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Redeemer};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_runtime::transaction_validity::TransactionPriority;
+use sp_core::sr25519::{Public, Signature};
+use sp_core::H256;
+use sp_std::fmt::Debug;
 
-/// A single verifier that a transaction can choose to call. Verifies whether the input
-/// and output data from a transaction meets the codified constraints.
-///
-/// Additional transient information may be passed to the verifier by including it in the fields
-/// of the verifier struct itself. Information passed in this way does not come from state, nor
-/// is it stored in state.
-pub trait SimpleVerifier: Debug + Encode + Decode + Clone {
-    /// The error type that this verifier may return
-    type Error: Debug;
-
-    /// The actual verification logic
-    fn verify(
-        &self,
-        input_data: &[DynamicallyTypedData],
-        output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error>;
-}
-
+/// A means of checking that an output can be verified (aka spent). This check is made on a
+/// per-output basis and neither knows nor cares anything about the validation logic that will
+/// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
+/// we take the entire stripped and serialized transaction as a parameter.
 pub trait Verifier: Debug + Encode + Decode + Clone {
-    /// the error type that this verifier may return
-    type Error: Debug;
-
-    /// The actual verification logic
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Output<R>],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error>;
+    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool;
 }
 
-// This blanket implementation makes it so that any type that chooses to
-// implement the Simple trait also implements the Powerful trait. This way
-// the executive can always just call the Powerful trait.
-impl<T: SimpleVerifier> Verifier for T {
-    // Use the same error type used in the simple implementation.
-    type Error = <T as SimpleVerifier>::Error;
+/// A typical verifier that checks an sr25519 signature
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct SigCheck {
+    pub owner_pubkey: H256,
+}
 
-    fn verify<R: Redeemer>(
-        &self,
-        inputs: &[Output<R>],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, Self::Error> {
-        // Extract the input data
-        let input_data: Vec<DynamicallyTypedData> =
-            inputs.iter().map(|o| o.payload.clone()).collect();
+impl Verifier for SigCheck {
+    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+        let sig = match Signature::try_from(redeemer) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
 
-        // Extract the output data
-        let output_data: Vec<DynamicallyTypedData> =
-            outputs.iter().map(|o| o.payload.clone()).collect();
-
-        // Call the simple verifier
-        SimpleVerifier::verify(self, &input_data, &output_data)
+        sp_io::crypto::sr25519_verify(&sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
     }
 }
 
-/// Utilities for writing verifier-related unit tests
+/// A simple verifier that allows anyone to consume an output at any time
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct UpForGrabs;
+
+impl Verifier for UpForGrabs {
+    fn verify(&self, _simplified_tx: &[u8], _redeemer: &[u8]) -> bool {
+        true
+    }
+}
+
+/// A testing verifier that passes or depending on the enclosed
+/// boolean value.
 #[cfg(feature = "std")]
-pub mod testing {
-    use super::*;
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct TestVerifier {
+    /// Whether the verifier should pass
+    pub verifies: bool,
+}
 
-    /// A testing verifier that passes (with zero priority) or not depending on
-    /// the boolean value enclosed.
-    #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, PartialEq, Eq)]
-    pub struct TestVerifier {
-        /// Whether the verifier should pass.
-        pub verifies: bool,
+#[cfg(feature = "std")]
+impl Verifier for TestVerifier {
+    fn verify(&self, _simplified_tx: &[u8], _witness: &[u8]) -> bool {
+        self.verifies
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use sp_core::{crypto::Pair as _, sr25519::Pair};
+
+    #[test]
+    fn up_for_grabs_always_verifies() {
+        assert!(UpForGrabs.verify(&[], &[]))
     }
 
-    impl SimpleVerifier for TestVerifier {
-        type Error = ();
+    #[test]
+    fn sig_check_with_good_sig() {
+        let pair = Pair::from_entropy(b"entropy_entropy_entropy_entropy!".as_slice(), None).0;
+        let simplified_tx = b"hello world".as_slice();
+        let sig = pair.sign(simplified_tx);
+        let witness: &[u8] = sig.as_ref();
 
-        fn verify(
-            &self,
-            _input_data: &[DynamicallyTypedData],
-            _output_data: &[DynamicallyTypedData],
-        ) -> Result<TransactionPriority, ()> {
-            if self.verifies {
-                Ok(0)
-            } else {
-                Err(())
-            }
-        }
+        let sig_check = SigCheck {
+            owner_pubkey: pair.public().into(),
+        };
+
+        assert!(sig_check.verify(simplified_tx, witness));
+    }
+
+    #[test]
+    fn sig_check_with_bad_sig() {
+        let simplified_tx = b"hello world".as_slice();
+        let witness = b"bogus_signature".as_slice();
+
+        let sig_check = SigCheck {
+            owner_pubkey: H256::zero(),
+        };
+
+        assert!(!sig_check.verify(simplified_tx, witness));
     }
 
     #[test]
     fn test_verifier_passes() {
-        let result = SimpleVerifier::verify(&TestVerifier { verifies: true }, &[], &[]);
-        assert_eq!(result, Ok(0));
+        let result = TestVerifier { verifies: true }.verify(&[], &[]);
+        assert_eq!(result, true);
     }
 
     #[test]
     fn test_verifier_fails() {
-        let result = SimpleVerifier::verify(&TestVerifier { verifies: false }, &[], &[]);
-        assert_eq!(result, Err(()));
+        let result = TestVerifier { verifies: false }.verify(&[], &[]);
+        assert_eq!(result, false);
     }
 }
