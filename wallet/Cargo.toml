@@ -19,3 +19,5 @@ clap = { version = "4.1.8", features = [ "derive"] }
 
 sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
 sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
+sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
+sc-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
