@@ -86,7 +86,10 @@ impl SimpleConstraintChecker for PoeClaim {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no inputs
-        ensure!(input_data.is_empty(), ConstraintCheckerError::WrongNumberInputs);
+        ensure!(
+            input_data.is_empty(),
+            ConstraintCheckerError::WrongNumberInputs
+        );
 
         // For each output, make sure the claimed block height is >= the current block height.
         // If we required exact equality, this would mean that transactors needed to get their transactions
@@ -129,7 +132,10 @@ impl SimpleConstraintChecker for PoeRevoke {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), ConstraintCheckerError::WrongNumberOutputs);
+        ensure!(
+            output_data.is_empty(),
+            ConstraintCheckerError::WrongNumberOutputs
+        );
 
         // Make sure the inputs are properly typed. We don't need to check anything else about them.
         for untyped_input in input_data {

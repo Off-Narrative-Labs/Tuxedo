@@ -35,9 +35,9 @@ mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    verifier::{SigCheck, UpForGrabs},
     types::{Output, Transaction as TuxedoTransaction},
-    Verifier, ConstraintChecker,
+    verifier::{SigCheck, UpForGrabs},
+    ConstraintChecker, Verifier,
 };
 
 #[cfg(feature = "std")]

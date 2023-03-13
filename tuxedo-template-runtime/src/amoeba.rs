@@ -93,7 +93,10 @@ impl SimpleConstraintChecker for AmoebaMitosis {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, ConstraintCheckerError> {
         // Make sure there is exactly one mother.
-        ensure!(input_data.len() == 1, ConstraintCheckerError::WrongNumberOfMothers);
+        ensure!(
+            input_data.len() == 1,
+            ConstraintCheckerError::WrongNumberOfMothers
+        );
         let mother = input_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
@@ -152,7 +155,10 @@ impl SimpleConstraintChecker for AmoebaDeath {
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single victim
         ensure!(!input_data.is_empty(), ConstraintCheckerError::NoVictim);
-        ensure!(input_data.len() == 1, ConstraintCheckerError::TooManyVictims);
+        ensure!(
+            input_data.len() == 1,
+            ConstraintCheckerError::TooManyVictims
+        );
 
         // We don't actually need to check any details of the victim, but we do need to make sure
         // we have the correct type.
@@ -161,7 +167,10 @@ impl SimpleConstraintChecker for AmoebaDeath {
             .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
 
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), ConstraintCheckerError::DeathMayNotCreate);
+        ensure!(
+            output_data.is_empty(),
+            ConstraintCheckerError::DeathMayNotCreate
+        );
 
         Ok(0)
     }
@@ -187,8 +196,14 @@ impl SimpleConstraintChecker for AmoebaCreation {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single created amoeba
-        ensure!(!output_data.is_empty(), ConstraintCheckerError::CreatedNothing);
-        ensure!(output_data.len() == 1, ConstraintCheckerError::CreatedTooMany);
+        ensure!(
+            !output_data.is_empty(),
+            ConstraintCheckerError::CreatedNothing
+        );
+        ensure!(
+            output_data.len() == 1,
+            ConstraintCheckerError::CreatedTooMany
+        );
         let eve = output_data[0]
             .extract::<AmoebaDetails>()
             .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
@@ -197,7 +212,10 @@ impl SimpleConstraintChecker for AmoebaCreation {
         ensure!(eve.generation == 0, ConstraintCheckerError::WrongGeneration);
 
         // Make sure there are no inputs
-        ensure!(input_data.is_empty(), ConstraintCheckerError::CreationMayNotConsume);
+        ensure!(
+            input_data.is_empty(),
+            ConstraintCheckerError::CreationMayNotConsume
+        );
 
         Ok(0)
     }

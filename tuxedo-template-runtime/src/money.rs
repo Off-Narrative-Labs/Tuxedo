@@ -89,7 +89,10 @@ impl SimpleConstraintChecker for MoneyConstraintChecker {
         match &self {
             Self::Spend => {
                 // Check that we are consuming at least one input
-                ensure!(!input_data.is_empty(), ConstraintCheckerError::SpendingNothing);
+                ensure!(
+                    !input_data.is_empty(),
+                    ConstraintCheckerError::SpendingNothing
+                );
 
                 let mut total_input_value: u128 = 0;
                 let mut total_output_value: u128 = 0;
@@ -132,10 +135,16 @@ impl SimpleConstraintChecker for MoneyConstraintChecker {
             }
             Self::Mint => {
                 // Make sure there are no inputs being consumed
-                ensure!(input_data.is_empty(), ConstraintCheckerError::MintingWithInputs);
+                ensure!(
+                    input_data.is_empty(),
+                    ConstraintCheckerError::MintingWithInputs
+                );
 
                 // Make sure there is at least one output being minted
-                ensure!(!output_data.is_empty(), ConstraintCheckerError::MintingNothing);
+                ensure!(
+                    !output_data.is_empty(),
+                    ConstraintCheckerError::MintingNothing
+                );
 
                 // Make sure the outputs are the right type
                 for utxo in output_data {
@@ -243,7 +252,10 @@ mod test {
         let input_data = vec![];
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
-        assert_eq!(MoneyConstraintChecker::Mint.check(&input_data, &output_data), Ok(0),);
+        assert_eq!(
+            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+            Ok(0),
+        );
     }
 
     #[test]

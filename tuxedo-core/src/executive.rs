@@ -7,11 +7,11 @@
 //! are no duplicate inputs, and that the verifiers are satisfied.
 
 use crate::{
+    constraint_checker::ConstraintChecker,
     ensure,
-    verifier::Verifier,
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
-    constraint_checker::ConstraintChecker,
+    verifier::Verifier,
     EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
 };
 use log::info;
@@ -32,7 +32,9 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker> Executive<B, V, C> {
+impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker>
+    Executive<B, V, C>
+{
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
     /// This returns Ok even if some inputs are still missing because the tagged transaction pool can handle that.
@@ -364,10 +366,10 @@ mod tests {
     use sp_runtime::transaction_validity::ValidTransactionBuilder;
 
     use crate::{
-        dynamic_typing::{testing::Bogus, UtxoData},
-        verifier::TestVerifier,
-        types::{Input, Output},
         constraint_checker::testing::TestConstraintChecker,
+        dynamic_typing::{testing::Bogus, UtxoData},
+        types::{Input, Output},
+        verifier::TestVerifier,
     };
 
     use super::*;

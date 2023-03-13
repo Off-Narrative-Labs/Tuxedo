@@ -8,13 +8,13 @@ use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
-    OuterVerifier, OuterConstraintChecker, Transaction,
+    OuterConstraintChecker, OuterVerifier, Transaction,
 };
 use sp_core::{crypto::Pair as PairT, sr25519::Pair};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    verifier::SigCheck,
     types::{Input, Output, OutputRef},
+    verifier::SigCheck,
 };
 
 /// Create and send a transaction that spends coins on the network

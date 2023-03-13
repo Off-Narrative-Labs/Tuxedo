@@ -83,22 +83,34 @@ impl SimpleConstraintChecker for RuntimeUpgrade {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single input that matches the hash of the previous runtime logic
-        ensure!(input_data.len() == 1, ConstraintCheckerError::WrongNumberInputs);
+        ensure!(
+            input_data.len() == 1,
+            ConstraintCheckerError::WrongNumberInputs
+        );
         let consumed = input_data[0]
             .extract::<RuntimeRef>()
             .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
         let outgoing_runtime =
             sp_io::storage::get(CODE).expect("Some runtime code should always be stored");
         let outgoing_hash = sp_io::hashing::blake2_256(&outgoing_runtime);
-        ensure!(consumed.hash == outgoing_hash, ConstraintCheckerError::InputMismatch);
+        ensure!(
+            consumed.hash == outgoing_hash,
+            ConstraintCheckerError::InputMismatch
+        );
 
         // Make sure there is a single output that matches the has of the incoming runtime logic
-        ensure!(output_data.len() == 1, ConstraintCheckerError::WrongNumberOutputs);
+        ensure!(
+            output_data.len() == 1,
+            ConstraintCheckerError::WrongNumberOutputs
+        );
         let created = output_data[0]
             .extract::<RuntimeRef>()
             .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
         let incoming_hash = sp_io::hashing::blake2_256(&self.full_wasm);
-        ensure!(created.hash == incoming_hash, ConstraintCheckerError::OutputMismatch);
+        ensure!(
+            created.hash == incoming_hash,
+            ConstraintCheckerError::OutputMismatch
+        );
 
         // SIDE EFFECT: Write the new wasm to storage
         sp_io::storage::set(CODE, &self.full_wasm);

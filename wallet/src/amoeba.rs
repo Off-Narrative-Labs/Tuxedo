@@ -12,8 +12,8 @@ use runtime::{
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    verifier::UpForGrabs,
     types::{Input, Output, OutputRef},
+    verifier::UpForGrabs,
 };
 
 pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {

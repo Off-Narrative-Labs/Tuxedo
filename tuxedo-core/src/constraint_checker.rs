@@ -97,13 +97,15 @@ pub mod testing {
 
     #[test]
     fn test_checker_passes() {
-        let result = SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[]);
+        let result =
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
-        let result = SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[]);
+        let result =
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

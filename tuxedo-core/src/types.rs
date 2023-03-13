@@ -117,7 +117,7 @@ pub struct Output<V> {
 #[cfg(test)]
 pub mod tests {
 
-    use crate::{verifier::UpForGrabs, constraint_checker::testing::TestConstraintChecker};
+    use crate::{constraint_checker::testing::TestConstraintChecker, verifier::UpForGrabs};
 
     use super::*;
 

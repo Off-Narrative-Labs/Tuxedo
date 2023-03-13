@@ -1,8 +1,8 @@
 //! TODO explanation this type
 
 use crate::{
-    verifier::Verifier,
     types::{Output, OutputRef},
+    verifier::Verifier,
     LOG_TARGET,
 };
 use parity_scale_codec::{Decode, Encode};
