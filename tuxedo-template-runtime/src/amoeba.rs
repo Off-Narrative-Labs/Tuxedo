@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier,
+    ensure, SimpleConstraintChecker,
 };
 
 /// An amoeba tracked by our simple Amoeba APP
@@ -36,9 +36,9 @@ impl UtxoData for AmoebaDetails {
     const TYPE_ID: [u8; 4] = *b"amoe";
 }
 
-/// Reasons that the amoeba verifiers may fail
+/// Reasons that the amoeba constraint checkers may fail
 #[derive(Debug, Eq, PartialEq)]
-pub enum VerifierError {
+pub enum ConstraintCheckerError {
     /// An input data has the wrong type.
     BadlyTypedInput,
     /// An output data has the wrong type.
@@ -72,7 +72,7 @@ pub enum VerifierError {
     WrongGeneration,
 }
 
-/// A verifier for the process of amoeba mitosis
+/// A constraint checker for the process of amoeba mitosis
 /// The mitosis is valid is the following criteria are met
 /// 1. There is exactly one mother amoeba.
 /// 2. There are exactly two daughter amoebas
@@ -84,55 +84,56 @@ pub enum VerifierError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaMitosis;
 
-impl SimpleVerifier for AmoebaMitosis {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for AmoebaMitosis {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, VerifierError> {
+    ) -> Result<TransactionPriority, ConstraintCheckerError> {
         // Make sure there is exactly one mother.
-        ensure!(input_data.len() == 1, VerifierError::WrongNumberOfMothers);
+        ensure!(input_data.len() == 1, ConstraintCheckerError::WrongNumberOfMothers);
         let mother = input_data[0]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedInput)?;
+            .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
 
         // Make sure there are exactly two daughters.
         ensure!(
             output_data.len() == 2,
-            VerifierError::WrongNumberOfDaughters
+            ConstraintCheckerError::WrongNumberOfDaughters
         );
         let first_daughter = output_data[0]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedOutput)?;
+            .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
         let second_daughter = output_data[1]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedOutput)?;
+            .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
 
         // Make sure the generations are correct
         ensure!(
             first_daughter.generation == mother.generation + 1,
-            VerifierError::WrongGeneration
+            ConstraintCheckerError::WrongGeneration
         );
         ensure!(
             second_daughter.generation == mother.generation + 1,
-            VerifierError::WrongGeneration
+            ConstraintCheckerError::WrongGeneration
         );
 
         //TODO Figure out how to calculate priority.
-        // Best priority idea so far. We have a verifier, PriorityVerifierWrapper<Inner: Verifier>(u8)
+        // Best priority idea so far. We have a constraint checker,
+        // PriorityConstraintCheckerWrapper<Inner: ConstraintChecker>(u8)
         // where you pass it the a number of inputs. It will take those first n inputs for itself, and assume
-        // they are coins in some native currency. Then it will call the inner verifier with the remaining input
-        // and if the inner verifier succeeds, it will prioritize based on the tip given in the first few inputs.
+        // they are coins in some native currency. Then it will call the inner constraint checker with the remaining input
+        // and if the inner constraint checker succeeds, it will prioritize based on the tip given in the first few inputs.
         // Such a wrapper should live with the money piece, and thus returning 0 here is fine.
         Ok(0)
     }
 }
 
-/// A verifier for simple death of an amoeba.
+/// A constraint checker for simple death of an amoeba.
 ///
-/// Any amoeba can be killed by providing it as the sole input to this verifier. No
+/// Any amoeba can be killed by providing it as the sole input to this constraint checker. No
 /// new outputs are ever created.
 #[cfg_attr(
     feature = "std",
@@ -141,34 +142,34 @@ impl SimpleVerifier for AmoebaMitosis {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaDeath;
 
-impl SimpleVerifier for AmoebaDeath {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for AmoebaDeath {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single victim
-        ensure!(!input_data.is_empty(), VerifierError::NoVictim);
-        ensure!(input_data.len() == 1, VerifierError::TooManyVictims);
+        ensure!(!input_data.is_empty(), ConstraintCheckerError::NoVictim);
+        ensure!(input_data.len() == 1, ConstraintCheckerError::TooManyVictims);
 
         // We don't actually need to check any details of the victim, but we do need to make sure
         // we have the correct type.
         let _victim = input_data[0]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedInput)?;
+            .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
 
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), VerifierError::DeathMayNotCreate);
+        ensure!(output_data.is_empty(), ConstraintCheckerError::DeathMayNotCreate);
 
         Ok(0)
     }
 }
 
-/// A verifier for simple creation of an amoeba.
+/// A constraint checker for simple creation of an amoeba.
 ///
-/// A new amoeba can be created by providing it as the sole output to this verifier. No
+/// A new amoeba can be created by providing it as the sole output to this constraint checker. No
 /// inputs are ever consumed.
 #[cfg_attr(
     feature = "std",
@@ -177,26 +178,26 @@ impl SimpleVerifier for AmoebaDeath {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaCreation;
 
-impl SimpleVerifier for AmoebaCreation {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for AmoebaCreation {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single created amoeba
-        ensure!(!output_data.is_empty(), VerifierError::CreatedNothing);
-        ensure!(output_data.len() == 1, VerifierError::CreatedTooMany);
+        ensure!(!output_data.is_empty(), ConstraintCheckerError::CreatedNothing);
+        ensure!(output_data.len() == 1, ConstraintCheckerError::CreatedTooMany);
         let eve = output_data[0]
             .extract::<AmoebaDetails>()
-            .map_err(|_| VerifierError::BadlyTypedOutput)?;
+            .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
 
         // Make sure the newly created amoeba has generation 0
-        ensure!(eve.generation == 0, VerifierError::WrongGeneration);
+        ensure!(eve.generation == 0, ConstraintCheckerError::WrongGeneration);
 
         // Make sure there are no inputs
-        ensure!(input_data.is_empty(), VerifierError::CreationMayNotConsume);
+        ensure!(input_data.is_empty(), ConstraintCheckerError::CreationMayNotConsume);
 
         Ok(0)
     }
@@ -216,7 +217,7 @@ mod test {
         let input_data = Vec::new();
         let output_data = vec![to_spawn.into()];
 
-        assert_eq!(AmoebaCreation.verify(&input_data, &output_data), Ok(0),);
+        assert_eq!(AmoebaCreation.check(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
@@ -229,8 +230,8 @@ mod test {
         let output_data = vec![to_spawn.into()];
 
         assert_eq!(
-            AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::WrongGeneration),
+            AmoebaCreation.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::WrongGeneration),
         );
     }
 
@@ -244,8 +245,8 @@ mod test {
         let output_data = vec![example.into()];
 
         assert_eq!(
-            AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::CreationMayNotConsume),
+            AmoebaCreation.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::CreationMayNotConsume),
         );
     }
 
@@ -255,8 +256,8 @@ mod test {
         let output_data = vec![Bogus.into()];
 
         assert_eq!(
-            AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTypedOutput),
+            AmoebaCreation.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTypedOutput),
         );
     }
 
@@ -270,8 +271,8 @@ mod test {
         let output_data = vec![to_spawn.clone().into(), to_spawn.into()];
 
         assert_eq!(
-            AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::CreatedTooMany),
+            AmoebaCreation.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::CreatedTooMany),
         );
     }
 
@@ -281,8 +282,8 @@ mod test {
         let output_data = Vec::new();
 
         assert_eq!(
-            AmoebaCreation.verify(&input_data, &output_data),
-            Err(VerifierError::CreatedNothing),
+            AmoebaCreation.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::CreatedNothing),
         );
     }
 
@@ -303,7 +304,7 @@ mod test {
         let input_data = vec![mother.into()];
         let output_data = vec![d1.into(), d2.into()];
 
-        assert_eq!(AmoebaMitosis.verify(&input_data, &output_data), Ok(0),);
+        assert_eq!(AmoebaMitosis.check(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
@@ -324,8 +325,8 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongGeneration),
+            AmoebaMitosis.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::WrongGeneration),
         );
     }
 
@@ -344,8 +345,8 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTypedInput),
+            AmoebaMitosis.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTypedInput),
         );
     }
 
@@ -363,8 +364,8 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOfMothers),
+            AmoebaMitosis.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::WrongNumberOfMothers),
         );
     }
 
@@ -383,8 +384,8 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTypedOutput),
+            AmoebaMitosis.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTypedOutput),
         );
     }
 
@@ -403,8 +404,8 @@ mod test {
         let output_data = vec![d1.into()];
 
         assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOfDaughters),
+            AmoebaMitosis.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::WrongNumberOfDaughters),
         );
     }
 
@@ -431,8 +432,8 @@ mod test {
         let output_data = vec![d1.into(), d2.into(), d3.into()];
 
         assert_eq!(
-            AmoebaMitosis.verify(&input_data, &output_data),
-            Err(VerifierError::WrongNumberOfDaughters),
+            AmoebaMitosis.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::WrongNumberOfDaughters),
         );
     }
 
@@ -445,7 +446,7 @@ mod test {
         let input_data = vec![example.into()];
         let output_data = vec![];
 
-        assert_eq!(AmoebaDeath.verify(&input_data, &output_data), Ok(0),);
+        assert_eq!(AmoebaDeath.check(&input_data, &output_data), Ok(0),);
     }
 
     #[test]
@@ -454,8 +455,8 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::NoVictim),
+            AmoebaDeath.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::NoVictim),
         );
     }
 
@@ -473,8 +474,8 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::TooManyVictims),
+            AmoebaDeath.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::TooManyVictims),
         );
     }
 
@@ -488,8 +489,8 @@ mod test {
         let output_data = vec![example.into()];
 
         assert_eq!(
-            AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::DeathMayNotCreate),
+            AmoebaDeath.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::DeathMayNotCreate),
         );
     }
 
@@ -500,8 +501,8 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            AmoebaDeath.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTypedInput),
+            AmoebaDeath.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTypedInput),
         );
     }
 }

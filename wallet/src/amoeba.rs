@@ -8,11 +8,11 @@ use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
     amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
-    OuterRedeemer, Transaction,
+    OuterVerifier, Transaction,
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    redeemer::UpForGrabs,
+    verifier::UpForGrabs,
     types::{Input, Output, OutputRef},
 };
 
@@ -26,9 +26,9 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
         inputs: Vec::new(),
         outputs: vec![Output {
             payload: eve.into(),
-            redeemer: UpForGrabs.into(),
+            verifier: UpForGrabs.into(),
         }],
-        verifier: AmoebaCreation.into(),
+        checker: AmoebaCreation.into(),
     };
 
     // Calculate the OutputRef which also serves as the storage location
@@ -47,7 +47,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Check that the amoeba is in storage and print its details
-    let eve_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&eve_ref, client)
+    let eve_from_storage: AmoebaDetails = fetch_storage::<OuterVerifier>(&eve_ref, client)
         .await?
         .payload
         .extract()?;
@@ -65,19 +65,19 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     let mitosis_tx = Transaction {
         inputs: vec![Input {
             output_ref: eve_ref,
-            witness: Vec::new(),
+            redeemer: Vec::new(),
         }],
         outputs: vec![
             Output {
                 payload: cain.into(),
-                redeemer: UpForGrabs.into(),
+                verifier: UpForGrabs.into(),
             },
             Output {
                 payload: able.into(),
-                redeemer: UpForGrabs.into(),
+                verifier: UpForGrabs.into(),
             },
         ],
-        verifier: AmoebaMitosis.into(),
+        checker: AmoebaMitosis.into(),
     };
 
     // Calculate the two OutputRefs for the daughters
@@ -104,7 +104,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     sleep(Duration::from_secs(3));
 
     // Check that the daughters are in storage and print their details
-    let cain_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&cain_ref, client)
+    let cain_from_storage: AmoebaDetails = fetch_storage::<OuterVerifier>(&cain_ref, client)
         .await?
         .payload
         .extract()?;
@@ -112,7 +112,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
         "Cain Amoeba retrieved from storage: {:?}",
         cain_from_storage
     );
-    let able_from_storage: AmoebaDetails = fetch_storage::<OuterRedeemer>(&able_ref, client)
+    let able_from_storage: AmoebaDetails = fetch_storage::<OuterVerifier>(&able_ref, client)
         .await?
         .payload
         .extract()?;

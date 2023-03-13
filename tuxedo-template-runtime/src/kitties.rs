@@ -27,7 +27,7 @@ use sp_runtime::{
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier,
+    ensure, SimpleConstraintChecker,
 };
 
 #[cfg_attr(
@@ -35,7 +35,7 @@ use tuxedo_core::{
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub struct FreeKittyVerifier;
+pub struct FreeKittyConstraintChecker;
 
 #[cfg_attr(
     feature = "std",
@@ -103,7 +103,7 @@ impl UtxoData for KittyData {
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub enum VerifierError {
+pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
@@ -151,7 +151,7 @@ trait Breed {
     /// Number of free breedings a kitty will have.
     const NUM_FREE_BREEDINGS: u64;
     /// Error type for all Kitty errors.
-    type Error: Into<VerifierError>;
+    type Error: Into<ConstraintCheckerError>;
     /// Check if the two parents (Mom, Dad) proposed are capable of breeding.
     fn can_breed(mom: &KittyData, dad: &KittyData) -> Result<(), Self::Error>;
     /// Checks if mom is in the correct state and capable of breeding.
@@ -182,7 +182,7 @@ pub struct KittyHelpers;
 impl Breed for KittyHelpers {
     const COST: u128 = 5u128;
     const NUM_FREE_BREEDINGS: u64 = 2u64;
-    type Error = VerifierError;
+    type Error = ConstraintCheckerError;
     /// Checks:
     ///     - Mom can breed
     ///     - Dad can breed
@@ -373,21 +373,20 @@ impl Breed for KittyHelpers {
 }
 
 impl TryFrom<&DynamicallyTypedData> for KittyData {
-    type Error = VerifierError;
+    type Error = ConstraintCheckerError;
     fn try_from(a: &DynamicallyTypedData) -> Result<Self, Self::Error> {
         a.extract::<KittyData>()
-            .map_err(|_| VerifierError::BadlyTyped)
+            .map_err(|_| ConstraintCheckerError::BadlyTyped)
     }
 }
 
-// 4.) Implement Verifier Trait on my new Verifier
-impl SimpleVerifier for FreeKittyVerifier {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for FreeKittyConstraintChecker {
+    type Error = ConstraintCheckerError;
     /// Checks:
     ///     - `input_data` is of length 2
     ///     - `output_data` is of length 3
     ///
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],

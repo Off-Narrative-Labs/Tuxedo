@@ -7,13 +7,13 @@ use std::{thread::sleep, time::Duration};
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{
-    money::{Coin, MoneyVerifier},
-    OuterRedeemer, OuterVerifier, Transaction,
+    money::{Coin, MoneyConstraintChecker},
+    OuterVerifier, OuterConstraintChecker, Transaction,
 };
 use sp_core::{crypto::Pair as PairT, sr25519::Pair};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    redeemer::SigCheck,
+    verifier::SigCheck,
     types::{Input, Output, OutputRef},
 };
 
@@ -26,7 +26,7 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     let mut transaction = Transaction {
         inputs: Vec::new(),
         outputs: Vec::new(),
-        verifier: OuterVerifier::Money(MoneyVerifier::Spend),
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
     };
 
     // Make sure each input decodes and is present in storage, and then push to transaction.
@@ -35,7 +35,7 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
         print_coin_from_storage(&output_ref, client).await?;
         transaction.inputs.push(Input {
             output_ref,
-            witness: vec![], // We will sign the total transaction so this should be empty
+            redeemer: vec![], // We will sign the total transaction so this should be empty
         });
     }
 
@@ -43,7 +43,7 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::new(*amount).into(),
-            redeemer: OuterRedeemer::SigCheck(SigCheck {
+            verifier: OuterVerifier::SigCheck(SigCheck {
                 owner_pubkey: provided_pair.public().into(),
             }),
         };
@@ -53,12 +53,12 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     // Create a signature over the entire transaction
     // TODO this will need to generalize. We will need to loop through the inputs
     // producing the signature for whichever owner it is, or even more generally,
-    // producing the witness for whichever redeemer it is.
+    // producing the verifier for whichever verifier it is.
     let signature = provided_pair.sign(&transaction.encode());
 
     // Iterate back through the inputs putting the signature in place.
     for input in &mut transaction.inputs {
-        input.witness = signature.encode();
+        input.redeemer = signature.encode();
     }
 
     // Send the transaction
@@ -92,7 +92,7 @@ pub async fn print_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
 ) -> anyhow::Result<()> {
-    let utxo = fetch_storage::<OuterRedeemer>(output_ref, client).await?;
+    let utxo = fetch_storage::<OuterVerifier>(output_ref, client).await?;
     let coin_in_storage: Coin = utxo.payload.extract()?;
 
     print!(
@@ -101,11 +101,11 @@ pub async fn print_coin_from_storage(
         coin_in_storage.0
     );
 
-    match utxo.redeemer {
-        OuterRedeemer::SigCheck(sig_check) => {
+    match utxo.verifier {
+        OuterVerifier::SigCheck(sig_check) => {
             println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
         }
-        OuterRedeemer::UpForGrabs(_) => println!("that can be spent by anyone"),
+        OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
     }
 
     Ok(())
