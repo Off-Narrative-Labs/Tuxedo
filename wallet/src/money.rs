@@ -12,11 +12,7 @@ use runtime::{
     OuterRedeemer, OuterVerifier, Transaction,
 };
 use sc_keystore::LocalKeystore;
-use sp_core::{
-    crypto::Pair as PairT,
-    sr25519::{Pair, Public},
-    H256,
-};
+use sp_core::{sr25519::Public, H256};
 use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{

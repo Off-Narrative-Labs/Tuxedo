@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use anyhow::anyhow;
 use clap::{ArgAction::Append, Args, Parser, Subcommand};
-use hex::ToHex;
 use jsonrpsee::{
     core::client::ClientT,
     http_client::{HttpClient, HttpClientBuilder},
@@ -116,7 +115,9 @@ async fn main() -> anyhow::Result<()> {
         // This only inserts it into memory. That should be fine for the example key since it can always be
         // re-inserted on each new run. But for user-provided keys, we want them to be persisted.
         // Hopefully insert_unknown will make that happen.
-        keystore.sr25519_generate_new(KEY_TYPE, Some(SHAWN_PHRASE));
+        keystore
+            .sr25519_generate_new(KEY_TYPE, Some(SHAWN_PHRASE))
+            .map_err(|e| anyhow!("{:?}", e))?;
     }
 
     // Setup jsonrpsee and endpoint-related information.
@@ -134,7 +135,9 @@ async fn main() -> anyhow::Result<()> {
         Command::InsertKey { seed } => {
             // We need to provide a public key to the keystore manually, so let's calculate it.
             let public_key = Pair::from_phrase(&seed, None)?.0.public();
-            keystore.insert_unknown(KEY_TYPE, &seed, public_key.as_ref());
+            keystore
+                .insert_unknown(KEY_TYPE, &seed, public_key.as_ref())
+                .map_err(|e| anyhow!("{:?}", e))?;
             Ok(())
         }
     }
