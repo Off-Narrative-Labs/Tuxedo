@@ -3,6 +3,7 @@
 //! the various options. Each runtime will choose to make one or more verifiers available to its users
 //! and they will be aggregated into an enum. The most common and useful verifiers are included here
 //! with Tuxedo core, but downstream developers are expected to create their own as well.
+//!
 
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
