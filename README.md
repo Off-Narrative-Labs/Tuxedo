@@ -120,7 +120,7 @@ Then, in a separate terminal, experiment with the PoC wallet.
 ./target/release/tuxedo-template-wallet --help
 
 # Confirm that a 100 token genesis utxo is present in storage
-./target/release/tuxedo-template-wallet verify-coin000000000000000000000000000000000000000000000000000000000000000000000000
+./target/release/tuxedo-template-wallet verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
 
   000000000000000000000000000000000000000000000000000000000000000000000000:
     Found coin worth 100 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
@@ -174,7 +174,7 @@ docker run --network host ghcr.io/off-narrative-labs/tuxedo --dev
 docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet --help
 
 # Use the PoC wallet to confirm that a 100 token genesis utxo is present in storage
-docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet verify-coin verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
 
   000000000000000000000000000000000000000000000000000000000000000000000000:
     Found coin worth 100 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
