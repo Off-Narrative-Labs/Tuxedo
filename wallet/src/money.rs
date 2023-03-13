@@ -39,12 +39,17 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
         });
     }
 
+    // Convert the recipient into H256 type
+    let mut recipient_pubkey_bytes: [u8; 32] = [0; 32];
+    hex::decode_to_slice(args.recipient, &mut recipient_pubkey_bytes as &mut [u8])?;
+    let recipient_pubkey = H256::from(recipient_pubkey_bytes);
+
     // Construct each output and then push to the transactions
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::new(*amount).into(),
             redeemer: OuterRedeemer::SigCheck(SigCheck {
-                owner_pubkey: provided_pair.public().into(),
+                owner_pubkey: recipient_pubkey,
             }),
         };
         transaction.outputs.push(output);
