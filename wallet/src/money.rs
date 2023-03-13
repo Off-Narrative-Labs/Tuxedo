@@ -1,6 +1,6 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{fetch_storage, SpendArgs};
+use crate::{fetch_storage, SpendArgs, KEY_TYPE};
 
 use std::{thread::sleep, time::Duration};
 
@@ -10,17 +10,19 @@ use runtime::{
     money::{Coin, MoneyVerifier},
     OuterRedeemer, OuterVerifier, Transaction,
 };
-use sp_core::{crypto::Pair as PairT, sr25519::Pair};
+use sc_keystore::LocalKeystore;
+use sp_core::{crypto::Pair as PairT, sr25519::{Pair, Public}, H256};
+use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::SigCheck,
     types::{Input, Output, OutputRef},
 };
+use anyhow::anyhow;
 
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result<()> {
+pub async fn spend_coins(client: &HttpClient, keystore: &LocalKeystore, args: SpendArgs) -> anyhow::Result<()> {
     println!("The args are:: {:?}", args);
-    let (provided_pair, _) = Pair::from_phrase(&args.seed, None)?;
 
     // Construct a template Transaction to push coins into later
     let mut transaction = Transaction {
@@ -55,15 +57,28 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
         transaction.outputs.push(output);
     }
 
-    // Create a signature over the entire transaction
-    // TODO this will need to generalize. We will need to loop through the inputs
-    // producing the signature for whichever owner it is, or even more generally,
-    // producing the witness for whichever redeemer it is.
-    let signature = provided_pair.sign(&transaction.encode());
+    // Keep a copy of the stripped encoded transaction for signing purposes
+    let stripped_encoded_transaction = transaction.clone().encode();
 
-    // Iterate back through the inputs putting the signature in place.
+    // Iterate back through the inputs, signing, and putting the signatures in place.
     for input in &mut transaction.inputs {
-        input.witness = signature.encode();
+        // Fetch the output from storage
+        let utxo = fetch_storage::<OuterRedeemer>(&input.output_ref, client).await?;
+
+        // Construct the proof that it can be consumed
+        let witness = match utxo.redeemer {
+            OuterRedeemer::SigCheck(SigCheck { owner_pubkey }) => {
+                let public = Public::from_h256(owner_pubkey);
+                keystore
+                    .sign_with(KEY_TYPE, &public.into(), &stripped_encoded_transaction)
+                    .await?
+                    .ok_or(anyhow!("Key doesn't exist in keystore"))?
+            },
+            OuterRedeemer::UpForGrabs(_) => Vec::new(),
+        };
+
+        // insert the proof
+        input.witness = witness;
     }
 
     // Send the transaction
