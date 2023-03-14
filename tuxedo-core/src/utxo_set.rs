@@ -1,4 +1,8 @@
-//! TODO explanation this type
+//! For now this is a higher level description of the default UTXO set features which Tuxedo
+//! chooses to use. Future UTXO sets could take a different form especially
+//! if being used for Zero-Knowledge. In the future it may likely be abstracted into a trait
+//! to support various UTXO set types.
+//!
 
 use crate::{
     types::{Output, OutputRef},

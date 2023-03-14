@@ -11,7 +11,8 @@ use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
-/// A single constraint checker that a transaction can choose to call. Checks whether the input
+
+/// A simplified constraint checker that a transaction can choose to call. Checks whether the input
 /// and output data from a transaction meets the codified constraints.
 ///
 /// Additional transient information may be passed to the constraint checker by including it in the fields
@@ -29,6 +30,15 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
+/// A single constraint checker that a transaction can choose to call. Checks whether the input
+/// and output data from a transaction meets the codified constraints.
+///
+/// This full ConstraintChecker should only be used if there is more that a piece wants to do such
+/// as check the verifier information in some unique way.
+///
+/// Additional transient information may be passed to the constraint checker by including it in the fields
+/// of the constraint checker struct itself. Information passed in this way does not come from state, nor
+/// is it stored in state.
 pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
     /// the error type that this constraint checker may return
     type Error: Debug;
