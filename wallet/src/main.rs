@@ -10,7 +10,7 @@ use jsonrpsee::{
 use parity_scale_codec::{Decode, Encode};
 use tuxedo_core::{
     types::{Output, OutputRef},
-    Redeemer,
+    Verifier,
 };
 
 mod amoeba;
@@ -105,10 +105,10 @@ async fn main() -> anyhow::Result<()> {
 }
 
 /// Fetch an output from chain storage given an OutputRef
-pub async fn fetch_storage<R: Redeemer>(
+pub async fn fetch_storage<V: Verifier>(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<Output<R>> {
+) -> anyhow::Result<Output<V>> {
     let ref_hex = hex::encode(output_ref.encode());
     let params = rpc_params![ref_hex];
     let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;

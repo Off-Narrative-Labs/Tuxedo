@@ -4,15 +4,16 @@
 //!
 //! The application allows users to claim the existence of a preimage for a particular hash with a
 //! transaction. Thus, the blockchain network acts as a decentralized notary service. Claims are
-//! stored in the state, and can be "revoked" from the state later, although the witness to the original
+//! stored in the state, and can be "revoked" from the state later, although the redeemer to the original
 //! claim will always remain in the history of the blockchain.
 //!
 //! The main design deviation from the FRAME PoE pallet is the means by which redundant claims are settled.
 //! In FRAME, the exact storage location of each claim is known globally, whereas in the UTXO model, all state
 //! is local. This means that when a new claim is registered, it is not possible to efficiently check that the
-//! same claim has not already been registered. Instead there is a verifier to boot subsequent redundant claims
-//! when they are discovered. This difference is analogous to the difference between recorded and registered
-//! land https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
+//! same claim has not already been registered. Instead there is a constraint checker
+//! to boot subsequent redundant claims when they are discovered. This difference is analogous to
+//! the difference between recorded and registered land
+//! https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
 
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
@@ -21,7 +22,7 @@ use sp_core::H256;
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier,
+    ensure, SimpleConstraintChecker,
 };
 
 // Notice this type doesn't have to be public. Cool.
@@ -41,17 +42,17 @@ impl UtxoData for ClaimData {
     const TYPE_ID: [u8; 4] = *b"poe_";
 }
 
-/// Errors that can occur when verifying PoE Transactions
+/// Errors that can occur when checking PoE Transactions
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum VerifierError {
+pub enum ConstraintCheckerError {
     // Ughhh again with these common errors.
-    /// Wrong number of inputs were provided to the verifier.
+    /// Wrong number of inputs were provided to the constraint checker.
     WrongNumberInputs,
-    /// Wrong number of outputs were provided to the verifier.
+    /// Wrong number of outputs were provided to the constraint checker.
     WrongNumberOutputs,
     /// An input data has the wrong type.
     BadlyTypedInput,
@@ -64,9 +65,9 @@ pub enum VerifierError {
     EffectiveHeightInPast,
 }
 
-/// A verifier to create claims.
+/// A constraint checker to create claims.
 ///
-/// This verifier allows the creation of many claims in a single operation
+/// This constraint checker allows the creation of many claims in a single operation
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
 #[cfg_attr(
@@ -76,16 +77,19 @@ pub enum VerifierError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeClaim;
 
-impl SimpleVerifier for PoeClaim {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for PoeClaim {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no inputs
-        ensure!(input_data.is_empty(), VerifierError::WrongNumberInputs);
+        ensure!(
+            input_data.is_empty(),
+            ConstraintCheckerError::WrongNumberInputs
+        );
 
         // For each output, make sure the claimed block height is >= the current block height.
         // If we required exact equality, this would mean that transactors needed to get their transactions
@@ -95,13 +99,13 @@ impl SimpleVerifier for PoeClaim {
         for untyped_output in output_data {
             let output = untyped_output
                 .extract::<ClaimData>()
-                .map_err(|_| VerifierError::BadlyTypedOutput)?;
+                .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
             ensure!(
                 //TODO we're grabbing the block height function directly from
                 // the runtime level. This needs to be made available through some
                 // kind of config.
                 output.effective_height >= crate::Executive::block_height(),
-                VerifierError::EffectiveHeightInPast
+                ConstraintCheckerError::EffectiveHeightInPast
             );
         }
 
@@ -109,9 +113,9 @@ impl SimpleVerifier for PoeClaim {
     }
 }
 
-/// A verifier to revoke claims.
+/// A constraint checker to revoke claims.
 ///
-/// Like the creation verifier, this allows batch revocation.
+/// Like the creation constraint checker, this allows batch revocation.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -119,36 +123,39 @@ impl SimpleVerifier for PoeClaim {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeRevoke;
 
-impl SimpleVerifier for PoeRevoke {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for PoeRevoke {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), VerifierError::WrongNumberOutputs);
+        ensure!(
+            output_data.is_empty(),
+            ConstraintCheckerError::WrongNumberOutputs
+        );
 
-        // Make sure the inputs are properly typed. We don't need to verify anything else about them.
+        // Make sure the inputs are properly typed. We don't need to check anything else about them.
         for untyped_input in input_data {
             let _ = untyped_input
                 .extract::<ClaimData>()
-                .map_err(|_| VerifierError::BadlyTypedInput);
+                .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
         }
 
         Ok(0)
     }
 }
 
-/// A verifier that resolves claim disputes by keeping whichever claim came first.
+/// A constraint checker that resolves claim disputes by keeping whichever claim came first.
 ///
 /// TODO this will work much more elegantly once peek is implemented. We only need to peek at the
 /// older winning claim because it will remain in state afterwards.
 ///
-/// TODO what shall we do about the redeemer? Each claimer may have given their claim a redeemer
-/// such that their own private signature. Perhaps there should be a way for a verifier to override
-/// the redeemer logic? This is a concrete case where the verifier redeemer separation is not ideal.
+/// TODO what shall we do about the verifier? Each claimer may have given their claim a verifier
+/// such that their own private signature. Perhaps there should be a way for a constraint checker to override
+/// the verifier logic? This is a concrete case where the constraint checker verifier separation is not ideal.
 /// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
 /// but we want to authorized signer to come from the a different part of state.
 #[cfg_attr(
@@ -158,10 +165,10 @@ impl SimpleVerifier for PoeRevoke {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeDispute;
 
-impl SimpleVerifier for PoeDispute {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for PoeDispute {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         _input_data: &[DynamicallyTypedData],
         _output_data: &[DynamicallyTypedData],
@@ -175,7 +182,7 @@ impl SimpleVerifier for PoeDispute {
 
         // Make sure that all other claims have block heights strictly greater than the winner.
 
-        //TODO what to do about the redeemers on those losing claims.
+        //TODO what to do about the verifiers on those losing claims.
     }
 }
 
@@ -183,14 +190,14 @@ impl SimpleVerifier for PoeDispute {
 mod brainstorm {
     /// One workable solution to the problem above is modifying the core transaction structure to something like this
     struct Transaction {
-        /// A classic input that is consumed from the utxo set. Its redeemer must be satisfied for the tx to be valid
+        /// A classic input that is consumed from the utxo set. Its verifier must be satisfied for the tx to be valid
         redemptions: Vec<InputRef>,
-        /// Similar to a redemption, this is an input that is consumed from the utxo set, but its redeemer need not be satisfied
+        /// Similar to a redemption, this is an input that is consumed from the utxo set, but its verifier need not be satisfied
         /// In the Poe case above, the losing claims that came later would be evictions.
         evictions: Vec<InputRef>,
         /// Similar to an input, but it is not consumed. This is a way to read pre-existing state without removing it from the utxo set
         /// this also indicates when transaction are not competing for state despite reading the same state, and thus commute.
-        /// TBD whether it makes sense to have a redeemer check. My gut instinct is no redeemer check, but it needs more careful thought.
+        /// TBD whether it makes sense to have a verifier check. My gut instinct is no verifier check, but it needs more careful thought.
         peeks: Vec<InputRef>,
         /// Newly created pieces of state to be added to the utxo set.
         outputs: Vec<Output>,

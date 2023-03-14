@@ -35,9 +35,9 @@ mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    redeemer::{SigCheck, UpForGrabs},
     types::{Output, Transaction as TuxedoTransaction},
-    Redeemer, Verifier,
+    verifier::{SigCheck, UpForGrabs},
+    ConstraintChecker, Verifier,
 };
 
 #[cfg(feature = "std")]
@@ -104,7 +104,7 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-    pub genesis_utxos: Vec<Output<OuterRedeemer>>,
+    pub genesis_utxos: Vec<Output<OuterVerifier>>,
 }
 
 impl Default for GenesisConfig {
@@ -117,7 +117,7 @@ impl Default for GenesisConfig {
         // Initial Config just for a Money UTXO
         GenesisConfig {
             genesis_utxos: vec![Output {
-                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                verifier: OuterVerifier::SigCheck(SigCheck {
                     owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
                 }),
                 payload: DynamicallyTypedData {
@@ -155,11 +155,11 @@ impl BuildStorage for GenesisConfig {
     }
 }
 
-pub type Transaction = TuxedoTransaction<OuterRedeemer, OuterVerifier>;
+pub type Transaction = TuxedoTransaction<OuterVerifier, OuterConstraintChecker>;
 pub type BlockNumber = u32;
 pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, Transaction>;
-pub type Executive = tuxedo_core::Executive<Block, OuterRedeemer, OuterVerifier>;
+pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
 
 impl sp_runtime::traits::GetNodeBlockType for Runtime {
     type NodeBlock = opaque::Block;
@@ -173,35 +173,35 @@ impl sp_runtime::traits::GetRuntimeBlockType for Runtime {
 const BLOCK_TIME: u64 = 3000;
 
 //TODO this should be implemented by the aggregation macro I guess
-/// A redeemer checks that an individual input can be consumed. For example that it is signed properly
+/// A verifier checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum OuterRedeemer {
+pub enum OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
 }
 
 //TODO this should be implemented by the aggregation macro I guess
-impl Redeemer for OuterRedeemer {
-    fn redeem(&self, simplified_tx: &[u8], witness: &[u8]) -> bool {
+impl Verifier for OuterVerifier {
+    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
         match self {
-            Self::SigCheck(sig_check) => sig_check.redeem(simplified_tx, witness),
-            Self::UpForGrabs(up_for_grabs) => up_for_grabs.redeem(simplified_tx, witness),
+            Self::SigCheck(sig_check) => sig_check.verify(simplified_tx, redeemer),
+            Self::UpForGrabs(up_for_grabs) => up_for_grabs.verify(simplified_tx, redeemer),
         }
     }
 }
 
-impl From<UpForGrabs> for OuterRedeemer {
+impl From<UpForGrabs> for OuterVerifier {
     fn from(value: UpForGrabs) -> Self {
         Self::UpForGrabs(value)
     }
 }
 
-impl From<SigCheck> for OuterRedeemer {
+impl From<SigCheck> for OuterVerifier {
     fn from(value: SigCheck) -> Self {
         Self::SigCheck(value)
     }
@@ -212,30 +212,30 @@ impl From<SigCheck> for OuterRedeemer {
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
 //TODO this should be implemented by the aggregation macro I guess
-/// A verifier is a piece of logic that can be used to check a transaction.
-/// For any given Tuxedo runtime there is a finite set of such verifiers.
+/// A constraint checker is a piece of logic that can be used to check a transaction.
+/// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum OuterVerifier {
-    /// Verifies monetary transactions in a basic fungible cryptocurrency
-    Money(money::MoneyVerifier),
-    /// Verifies Free Kitty transactions
-    FreeKittyVerifier(kitties::FreeKittyVerifier),
-    /// Verifies that an amoeba can split into two new amoebas
+pub enum OuterConstraintChecker {
+    /// Checks monetary transactions in a basic fungible cryptocurrency
+    Money(money::MoneyConstraintChecker),
+    /// Checks Free Kitty transactions
+    FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
+    /// Checks that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
-    /// Verifies that a single amoeba is simply removed from the state
+    /// Checks that a single amoeba is simply removed from the state
     AmoebaDeath(amoeba::AmoebaDeath),
-    /// Verifies that a single amoeba is simply created from the void... and it is good
+    /// Checks that a single amoeba is simply created from the void... and it is good
     AmoebaCreation(amoeba::AmoebaCreation),
-    /// Verifies that new valid proofs of existence are claimed
+    /// Checks that new valid proofs of existence are claimed
     PoeClaim(poe::PoeClaim),
-    /// Verifies that proofs of existence are revoked.
+    /// Checks that proofs of existence are revoked.
     PoeRevoke(poe::PoeRevoke),
-    /// Verifies that one winning claim came earlier than all the other claims, and thus
+    /// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
     /// Upgrade the Wasm Runtime
@@ -245,81 +245,81 @@ pub enum OuterVerifier {
 /// An aggregated error type with a variant for each tuxedo piece
 /// TODO This should probably be macro generated
 #[derive(Debug)]
-pub enum OuterVerifierError {
+pub enum OuterConstraintCheckerError {
     /// Error from the Money piece
-    Money(money::VerifierError),
+    Money(money::ConstraintCheckerError),
     /// Error for the Kitties piece
-    Kitty(kitties::VerifierError),
+    Kitty(kitties::ConstraintCheckerError),
     /// Error from the Amoeba piece
-    Amoeba(amoeba::VerifierError),
+    Amoeba(amoeba::ConstraintCheckerError),
     /// Error from the PoE piece
-    Poe(poe::VerifierError),
+    Poe(poe::ConstraintCheckerError),
     /// Error from the Runtime Upgrade piece
-    RuntimeUpgrade(runtime_upgrade::VerifierError),
+    RuntimeUpgrade(runtime_upgrade::ConstraintCheckerError),
 }
 
 // We impl conversions from each of the inner error types to the outer error type.
 // This should also be done by a macro
 
-impl From<money::VerifierError> for OuterVerifierError {
-    fn from(e: money::VerifierError) -> Self {
+impl From<money::ConstraintCheckerError> for OuterConstraintCheckerError {
+    fn from(e: money::ConstraintCheckerError) -> Self {
         Self::Money(e)
     }
 }
 
-impl From<kitties::VerifierError> for OuterVerifierError {
-    fn from(e: kitties::VerifierError) -> Self {
+impl From<kitties::ConstraintCheckerError> for OuterConstraintCheckerError {
+    fn from(e: kitties::ConstraintCheckerError) -> Self {
         Self::Kitty(e)
     }
 }
 
-impl From<amoeba::VerifierError> for OuterVerifierError {
-    fn from(e: amoeba::VerifierError) -> Self {
+impl From<amoeba::ConstraintCheckerError> for OuterConstraintCheckerError {
+    fn from(e: amoeba::ConstraintCheckerError) -> Self {
         Self::Amoeba(e)
     }
 }
 
-impl From<poe::VerifierError> for OuterVerifierError {
-    fn from(e: poe::VerifierError) -> Self {
+impl From<poe::ConstraintCheckerError> for OuterConstraintCheckerError {
+    fn from(e: poe::ConstraintCheckerError) -> Self {
         Self::Poe(e)
     }
 }
 
-impl From<runtime_upgrade::VerifierError> for OuterVerifierError {
-    fn from(e: runtime_upgrade::VerifierError) -> Self {
+impl From<runtime_upgrade::ConstraintCheckerError> for OuterConstraintCheckerError {
+    fn from(e: runtime_upgrade::ConstraintCheckerError) -> Self {
         Self::RuntimeUpgrade(e)
     }
 }
 
-impl Verifier for OuterVerifier {
-    type Error = OuterVerifierError;
+impl ConstraintChecker for OuterConstraintChecker {
+    type Error = OuterConstraintCheckerError;
 
-    fn verify<R: Redeemer>(
+    fn check<V: Verifier>(
         &self,
-        inputs: &[Output<R>],
-        outputs: &[Output<R>],
-    ) -> Result<TransactionPriority, OuterVerifierError> {
+        inputs: &[Output<V>],
+        outputs: &[Output<V>],
+    ) -> Result<TransactionPriority, OuterConstraintCheckerError> {
         Ok(match self {
-            Self::Money(money) => money.verify(inputs, outputs)?,
-            Self::FreeKittyVerifier(free_breed) => free_breed.verify(inputs, outputs)?,
-            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.verify(inputs, outputs)?,
-            Self::AmoebaDeath(amoeba_death) => amoeba_death.verify(inputs, outputs)?,
-            Self::AmoebaCreation(amoeba_creation) => amoeba_creation.verify(inputs, outputs)?,
-            Self::PoeClaim(poe_claim) => poe_claim.verify(inputs, outputs)?,
-            Self::PoeRevoke(poe_revoke) => poe_revoke.verify(inputs, outputs)?,
-            Self::PoeDispute(poe_dispute) => poe_dispute.verify(inputs, outputs)?,
-            Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.verify(inputs, outputs)?,
+            Self::Money(money) => money.check(inputs, outputs)?,
+            Self::FreeKittyConstraintChecker(free_breed) => free_breed.check(inputs, outputs)?,
+            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.check(inputs, outputs)?,
+            Self::AmoebaDeath(amoeba_death) => amoeba_death.check(inputs, outputs)?,
+            Self::AmoebaCreation(amoeba_creation) => amoeba_creation.check(inputs, outputs)?,
+            Self::PoeClaim(poe_claim) => poe_claim.check(inputs, outputs)?,
+            Self::PoeRevoke(poe_revoke) => poe_revoke.check(inputs, outputs)?,
+            Self::PoeDispute(poe_dispute) => poe_dispute.check(inputs, outputs)?,
+            Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.check(inputs, outputs)?,
         })
     }
 }
 
-impl From<AmoebaCreation> for OuterVerifier {
+impl From<AmoebaCreation> for OuterConstraintChecker {
     fn from(value: AmoebaCreation) -> Self {
         Self::AmoebaCreation(value)
     }
 }
 
-impl From<AmoebaMitosis> for OuterVerifier {
+impl From<AmoebaMitosis> for OuterConstraintChecker {
     fn from(value: AmoebaMitosis) -> Self {
         Self::AmoebaMitosis(value)
     }
@@ -541,7 +541,7 @@ mod tests {
 
             // Grab genesis value from storage and assert it is correct
             let genesis_utxo = Output {
-                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                verifier: OuterVerifier::SigCheck(SigCheck {
                     owner_pubkey: shawn_pub_key.into(),
                 }),
                 payload: DynamicallyTypedData {
@@ -558,7 +558,7 @@ mod tests {
 
             let encoded_utxo =
                 sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-            let utxo = Output::<OuterRedeemer>::decode(&mut &encoded_utxo[..])
+            let utxo = Output::<OuterVerifier>::decode(&mut &encoded_utxo[..])
                 .expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_utxo);
         })

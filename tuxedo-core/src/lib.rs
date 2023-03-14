@@ -8,15 +8,16 @@
 
 pub mod dynamic_typing;
 mod executive;
-pub mod redeemer;
+
+pub mod constraint_checker;
 pub mod support_macros;
 pub mod types;
 pub mod utxo_set;
 pub mod verifier;
 
+pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
-pub use redeemer::Redeemer;
-pub use verifier::{SimpleVerifier, Verifier};
+pub use verifier::Verifier;
 
 /// A Tuxedo-specific target for diagnostic node log messages
 const LOG_TARGET: &str = "tuxedo-core";

@@ -8,18 +8,18 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier,
+    ensure, SimpleConstraintChecker,
 };
 
 // use log::info;
 
-/// The main verifier for the money piece. Allows spending and minting tokens.
+/// The main constraint checker for the money piece. Allows spending and minting tokens.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub enum MoneyVerifier {
+pub enum MoneyConstraintChecker {
     /// A typical spend transaction where some coins are consumed and others are created.
     /// Input value must exceed output value. The difference is burned and reflected in the
     /// transaction's priority.
@@ -49,13 +49,13 @@ impl UtxoData for Coin {
     const TYPE_ID: [u8; 4] = *b"coin";
 }
 
-/// Errors that can occur when verifying money transactions.
+/// Errors that can occur when checking money transactions.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-pub enum VerifierError {
+pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
@@ -78,10 +78,10 @@ pub enum VerifierError {
     ZeroValueCoin,
 }
 
-impl SimpleVerifier for MoneyVerifier {
-    type Error = VerifierError;
+impl SimpleConstraintChecker for MoneyConstraintChecker {
+    type Error = ConstraintCheckerError;
 
-    fn verify(
+    fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
@@ -89,7 +89,10 @@ impl SimpleVerifier for MoneyVerifier {
         match &self {
             Self::Spend => {
                 // Check that we are consuming at least one input
-                ensure!(!input_data.is_empty(), VerifierError::SpendingNothing);
+                ensure!(
+                    !input_data.is_empty(),
+                    ConstraintCheckerError::SpendingNothing
+                );
 
                 let mut total_input_value: u128 = 0;
                 let mut total_output_value: u128 = 0;
@@ -98,27 +101,27 @@ impl SimpleVerifier for MoneyVerifier {
                 for input in input_data {
                     let utxo_value = input
                         .extract::<Coin>()
-                        .map_err(|_| VerifierError::BadlyTyped)?
+                        .map_err(|_| ConstraintCheckerError::BadlyTyped)?
                         .0;
                     total_input_value = total_input_value
                         .checked_add(utxo_value)
-                        .ok_or(VerifierError::ValueOverflow)?;
+                        .ok_or(ConstraintCheckerError::ValueOverflow)?;
                 }
 
                 for utxo in output_data {
                     let utxo_value = utxo
                         .extract::<Coin>()
-                        .map_err(|_| VerifierError::BadlyTyped)?
+                        .map_err(|_| ConstraintCheckerError::BadlyTyped)?
                         .0;
-                    ensure!(utxo_value > 0, VerifierError::ZeroValueCoin);
+                    ensure!(utxo_value > 0, ConstraintCheckerError::ZeroValueCoin);
                     total_output_value = total_output_value
                         .checked_add(utxo_value)
-                        .ok_or(VerifierError::ValueOverflow)?;
+                        .ok_or(ConstraintCheckerError::ValueOverflow)?;
                 }
 
                 ensure!(
                     total_output_value <= total_input_value,
-                    VerifierError::OutputsExceedInputs
+                    ConstraintCheckerError::OutputsExceedInputs
                 );
 
                 // Priority is based on how many token are burned
@@ -132,18 +135,24 @@ impl SimpleVerifier for MoneyVerifier {
             }
             Self::Mint => {
                 // Make sure there are no inputs being consumed
-                ensure!(input_data.is_empty(), VerifierError::MintingWithInputs);
+                ensure!(
+                    input_data.is_empty(),
+                    ConstraintCheckerError::MintingWithInputs
+                );
 
                 // Make sure there is at least one output being minted
-                ensure!(!output_data.is_empty(), VerifierError::MintingNothing);
+                ensure!(
+                    !output_data.is_empty(),
+                    ConstraintCheckerError::MintingNothing
+                );
 
                 // Make sure the outputs are the right type
                 for utxo in output_data {
                     let utxo_value = utxo
                         .extract::<Coin>()
-                        .map_err(|_| VerifierError::BadlyTyped)?
+                        .map_err(|_| ConstraintCheckerError::BadlyTyped)?
                         .0;
-                    ensure!(utxo_value > 0, VerifierError::ZeroValueCoin);
+                    ensure!(utxo_value > 0, ConstraintCheckerError::ZeroValueCoin);
                 }
 
                 // No priority for minting
@@ -166,7 +175,7 @@ mod test {
         let expected_priority = 1u64;
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
             Ok(expected_priority),
         );
     }
@@ -177,8 +186,8 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into(), Coin(0).into()]; // total 1164;
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
-            Err(VerifierError::ZeroValueCoin),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::ZeroValueCoin),
         );
     }
 
@@ -189,7 +198,7 @@ mod test {
         let expected_priority = 12u64;
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
             Ok(expected_priority),
         );
     }
@@ -200,8 +209,8 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
-            Err(VerifierError::SpendingNothing),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::SpendingNothing),
         );
     }
 
@@ -211,8 +220,8 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTyped),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTyped),
         );
     }
 
@@ -222,8 +231,8 @@ mod test {
         let output_data = vec![Bogus.into()];
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTyped),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTyped),
         );
     }
 
@@ -233,8 +242,8 @@ mod test {
         let output_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
 
         assert_eq!(
-            MoneyVerifier::Spend.verify(&input_data, &output_data),
-            Err(VerifierError::OutputsExceedInputs),
+            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::OutputsExceedInputs),
         );
     }
 
@@ -243,7 +252,10 @@ mod test {
         let input_data = vec![];
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
-        assert_eq!(MoneyVerifier::Mint.verify(&input_data, &output_data), Ok(0),);
+        assert_eq!(
+            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+            Ok(0),
+        );
     }
 
     #[test]
@@ -252,8 +264,8 @@ mod test {
         let output_data = vec![Coin(0).into()];
 
         assert_eq!(
-            MoneyVerifier::Mint.verify(&input_data, &output_data),
-            Err(VerifierError::ZeroValueCoin),
+            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::ZeroValueCoin),
         );
     }
 
@@ -263,8 +275,8 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyVerifier::Mint.verify(&input_data, &output_data),
-            Err(VerifierError::MintingWithInputs),
+            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::MintingWithInputs),
         );
     }
 
@@ -274,8 +286,8 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            MoneyVerifier::Mint.verify(&input_data, &output_data),
-            Err(VerifierError::MintingNothing),
+            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::MintingNothing),
         );
     }
 
@@ -285,8 +297,8 @@ mod test {
         let output_data = vec![Coin(10).into(), Bogus.into()];
 
         assert_eq!(
-            MoneyVerifier::Mint.verify(&input_data, &output_data),
-            Err(VerifierError::BadlyTyped),
+            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+            Err(ConstraintCheckerError::BadlyTyped),
         );
     }
 }
