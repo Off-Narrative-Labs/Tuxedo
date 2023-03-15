@@ -68,7 +68,7 @@ enum Command {
 
     /// Verify that a particular coin exists in storage. Show its value and owner.
     VerifyCoin {
-        /// A hex-encoded output reference (non 0x prefixed for now)
+        /// A hex-encoded output reference
         ref_string: String,
     },
 
@@ -192,10 +192,8 @@ pub async fn fetch_storage<R: Redeemer>(
     let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
 
     let response_hex = rpc_response?
-        .ok_or(anyhow!("New coin can be retrieved from storage"))?
-        .chars()
-        .skip(2) // skipping 0x
-        .collect::<String>();
+        .ok_or(anyhow!("Data cannot be retrieved from storage"))?;
+    let response_hex = strip_0x_prefix(&response_hex);
     let response_bytes = hex::decode(response_hex)?;
     let utxo = Output::decode(&mut &response_bytes[..])?;
 
@@ -204,10 +202,15 @@ pub async fn fetch_storage<R: Redeemer>(
 
 /// Parse a string into an H256 that represents a public key
 pub fn pubkey_h256_from_string(s: &str) -> Result<H256, clap::Error> {
-    //TODO check for a 0x prefix
+    let s = strip_0x_prefix(s);
 
     let mut pubkey_bytes: [u8; 32] = [0; 32];
     hex::decode_to_slice(s, &mut pubkey_bytes as &mut [u8])
         .map_err(|_| clap::Error::new(clap::error::ErrorKind::ValueValidation))?;
     Ok(H256::from(pubkey_bytes))
+}
+
+/// Takes a string and checks for a 0x prefix. Returns a string without a 0x prefix.
+fn strip_0x_prefix(s: &str) -> &str {
+    if &s[..2] == "0x" { &s[2..] } else { s }
 }
