@@ -11,13 +11,17 @@ use jsonrpsee::{
 };
 use parity_scale_codec::{Decode, Encode};
 use sp_keystore::SyncCryptoStore;
-use sp_runtime::{KeyTypeId, CryptoTypeId};
+use sp_runtime::{CryptoTypeId, KeyTypeId};
 use tuxedo_core::{
     types::{Output, OutputRef},
     Redeemer,
 };
 
-use sp_core::{crypto::{Pair as PairT, CryptoTypePublicPair}, sr25519::Pair, H256};
+use sp_core::{
+    crypto::{CryptoTypePublicPair, Pair as PairT},
+    sr25519::Pair,
+    H256,
+};
 
 mod amoeba;
 mod money;
@@ -41,7 +45,11 @@ const SHAWN_PHRASE: &str =
 
 /// A default pubkey for receiving outputs when none is provided
 /// Corresponds to the default seed phrase
-const SHAWN_PUB_KEY: H256 = H256(hex_literal::hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67"));
+const SHAWN_PUB_KEY: H256 = H256(hex_literal::hex!(
+    "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67"
+));
+// const SHAWN_PUB_KEY: &str =
+//     "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67";
 
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
@@ -69,7 +77,8 @@ enum Command {
     /// Verify that a particular coin exists in storage. Show its value and owner.
     VerifyCoin {
         /// A hex-encoded output reference
-        ref_string: String,
+        #[arg(value_parser = output_ref_from_string)]
+        output_ref: OutputRef,
     },
 
     /// Spend some coins. For now, all outputs go to the same recipient.
@@ -88,25 +97,25 @@ enum Command {
     /// WARNING! This will permanently delete the private key information. Make sure your
     /// keys are backed up somewhere safe.
     RemoveKey {
-        /// The public key to remove (non 0x prefixed for now)
+        /// The public key to remove
         #[arg(value_parser = pubkey_h256_from_string)]
         pub_key: H256,
-    }
+    },
 }
 
 #[derive(Debug, Args)]
 pub struct SpendArgs {
+    //TODO Figure out how to allow optional 0x prefix here.
     /// An input to be consumed by this transaction. This argument may be specified multiple times.
-    /// They must all be coins and, for now, must all be owned by the same signer.
-    #[arg(long, short)]
-    input: Vec<String>,
+    /// They must all be coins.
+    #[arg(long, short, value_parser = output_ref_from_string)]
+    input: Vec<OutputRef>,
 
     // Jesus m-fkin christ. It took me a literal hour to dig through docs and github to find
     // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html which finally showed
     // how to specify a custom parsing function
-    /// Hex encoded address (sr25519 pubkey) of the recipient (non 0x prefixed for now)
-    /// Generate with subkey, or use Shawn's: d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
-    #[arg(long, short, default_value_t = SHAWN_PUB_KEY, value_parser = pubkey_h256_from_string)]
+    /// Hex encoded address (sr25519 pubkey) of the recipient
+    #[arg(long, short, /*default_value_t = SHAWN_PUB_KEY,*/ value_parser = pubkey_h256_from_string)]
     recipient: H256,
 
     // The `action = Append` allows us to accept the same value multiple times.
@@ -144,8 +153,7 @@ async fn main() -> anyhow::Result<()> {
     // Dispatch to proper subcommand
     match cli.command {
         Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
-        Command::VerifyCoin { ref_string } => {
-            let output_ref = OutputRef::decode(&mut &hex::decode(ref_string)?[..])?;
+        Command::VerifyCoin { output_ref } => {
             money::print_coin_from_storage(&output_ref, &client).await
         }
         Command::SpendCoins(args) => money::spend_coins(&client, &keystore, args).await,
@@ -167,8 +175,9 @@ async fn main() -> anyhow::Result<()> {
                     // Here we filter out just the sr25519 variant so we don't print duplicates.
                     if t == CryptoTypeId(*b"sr25") {
                         Some(public)
+                    } else {
+                        None
                     }
-                    else {None}
                 })
                 .for_each(|pubkey| {
                     println!("key: 0x{}", hex::encode(pubkey));
@@ -191,8 +200,7 @@ pub async fn fetch_storage<R: Redeemer>(
     let params = rpc_params![ref_hex];
     let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
 
-    let response_hex = rpc_response?
-        .ok_or(anyhow!("Data cannot be retrieved from storage"))?;
+    let response_hex = rpc_response?.ok_or(anyhow!("Data cannot be retrieved from storage"))?;
     let response_hex = strip_0x_prefix(&response_hex);
     let response_bytes = hex::decode(response_hex)?;
     let utxo = Output::decode(&mut &response_bytes[..])?;
@@ -201,7 +209,7 @@ pub async fn fetch_storage<R: Redeemer>(
 }
 
 /// Parse a string into an H256 that represents a public key
-pub fn pubkey_h256_from_string(s: &str) -> Result<H256, clap::Error> {
+fn pubkey_h256_from_string(s: &str) -> Result<H256, clap::Error> {
     let s = strip_0x_prefix(s);
 
     let mut pubkey_bytes: [u8; 32] = [0; 32];
@@ -210,7 +218,21 @@ pub fn pubkey_h256_from_string(s: &str) -> Result<H256, clap::Error> {
     Ok(H256::from(pubkey_bytes))
 }
 
+/// Parse an output ref from a string
+fn output_ref_from_string(s: &str) -> Result<OutputRef, clap::Error> {
+    let s = strip_0x_prefix(s);
+    let bytes =
+        hex::decode(s).map_err(|_| clap::Error::new(clap::error::ErrorKind::ValueValidation))?;
+
+    OutputRef::decode(&mut &bytes[..])
+        .map_err(|_| clap::Error::new(clap::error::ErrorKind::ValueValidation))
+}
+
 /// Takes a string and checks for a 0x prefix. Returns a string without a 0x prefix.
 fn strip_0x_prefix(s: &str) -> &str {
-    if &s[..2] == "0x" { &s[2..] } else { s }
+    if &s[..2] == "0x" {
+        &s[2..]
+    } else {
+        s
+    }
 }
