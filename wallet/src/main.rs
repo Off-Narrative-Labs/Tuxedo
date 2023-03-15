@@ -11,13 +11,13 @@ use jsonrpsee::{
 };
 use parity_scale_codec::{Decode, Encode};
 use sp_keystore::SyncCryptoStore;
-use sp_runtime::KeyTypeId;
+use sp_runtime::{KeyTypeId, CryptoTypeId};
 use tuxedo_core::{
     types::{Output, OutputRef},
     Redeemer,
 };
 
-use sp_core::{crypto::Pair as PairT, sr25519::Pair};
+use sp_core::{crypto::{Pair as PairT, CryptoTypePublicPair}, sr25519::Pair, H256};
 
 mod amoeba;
 mod money;
@@ -80,6 +80,18 @@ enum Command {
         /// Seed phrase of the key to insert.
         seed: String,
     },
+
+    /// Show public information about all the keys in the keystore.
+    ShowKeys,
+
+    /// Remove a specific key from the keystore.
+    /// WARNING! This will permanently delete the private key information. Make sure your
+    /// keys are backed up somewhere safe.
+    RemoveKey {
+        /// The public key to remove (non 0x prefixed for now)
+        #[arg(value_parser = pubkey_h256_from_string)]
+        pub_key: H256,
+    }
 }
 
 #[derive(Debug, Args)]
@@ -145,6 +157,27 @@ async fn main() -> anyhow::Result<()> {
                 .insert_unknown(KEY_TYPE, &seed, public_key.as_ref())
                 .map_err(|e| anyhow!("{:?}", e))?;
             Ok(())
+        }
+        Command::ShowKeys => {
+            keystore
+                .keys(KEY_TYPE)?
+                .into_iter()
+                .filter_map(|CryptoTypePublicPair(t, public)| {
+                    // Since we insert with `insert_unknown`, each key is inserted three times.
+                    // Here we filter out just the sr25519 variant so we don't print duplicates.
+                    if t == CryptoTypeId(*b"sr25") {
+                        Some(public)
+                    }
+                    else {None}
+                })
+                .for_each(|pubkey| {
+                    println!("key: 0x{}", hex::encode(pubkey));
+                });
+
+            Ok(())
+        }
+        Command::RemoveKey { pub_key } => {
+            todo!()
         }
     }
 }
