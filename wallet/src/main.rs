@@ -121,7 +121,6 @@ pub struct SpendArgs {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    println!("!!!!!!!!{}!!!!!!", SHAWN_PUB_KEY);
     // Parse command line args
     let cli = Cli::parse();
 
@@ -180,6 +179,11 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Command::RemoveKey { pub_key } => {
+            // The keystore doesn't provide an API for removing keys, so we
+            // remove them from the filesystem directly
+            let filename = format!("0x{}{}", hex::encode(KEY_TYPE.0), hex::encode(pub_key.0));
+
+            println!("The filename is {}", filename);
             todo!()
         }
     }
