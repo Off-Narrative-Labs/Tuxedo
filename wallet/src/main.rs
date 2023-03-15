@@ -25,8 +25,10 @@ mod money;
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
+//TODO figure out how Substrate node chooses its default path, and mimic that.
+// https://doc.rust-lang.org/std/env/fn.home_dir.html exists but is deprecated.
 /// The default path for the keystore that stores the keys for signing transactions
-const DEFAULT_DATA_PATH: &str = "/local/share/tuxedo-template-wallet";
+const DEFAULT_DATA_PATH: &str = "~/.local/share/tuxedo-template-wallet";
 
 /// A KeyTypeId to use in the keystore for Tuxedo transactions. We'll use this everywhere
 /// until it becomes clear that there si a reason to use multiple of them
@@ -135,6 +137,7 @@ async fn main() -> anyhow::Result<()> {
         Command::InsertKey { seed } => {
             // We need to provide a public key to the keystore manually, so let's calculate it.
             let public_key = Pair::from_phrase(&seed, None)?.0.public();
+            println!("The generated public key is {:?}", public_key);
             keystore
                 .insert_unknown(KEY_TYPE, &seed, public_key.as_ref())
                 .map_err(|e| anyhow!("{:?}", e))?;
