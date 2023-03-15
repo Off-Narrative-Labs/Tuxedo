@@ -37,7 +37,7 @@ pub async fn spend_coins(
 
     // Make sure each input decodes and is present in storage, and then push to transaction.
     for output_ref in &args.input {
-        print_coin_from_storage(&output_ref, client).await?;
+        print_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
             output_ref: output_ref.clone(),
             witness: vec![], // We will sign the total transaction so this should be empty
