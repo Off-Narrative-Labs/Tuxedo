@@ -11,7 +11,6 @@ use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
-
 /// A simplified constraint checker that a transaction can choose to call. Checks whether the input
 /// and output data from a transaction meets the codified constraints.
 ///
