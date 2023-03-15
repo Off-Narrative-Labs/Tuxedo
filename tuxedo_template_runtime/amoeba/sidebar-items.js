@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["VerifierError"],"struct":["AmoebaCreation","AmoebaDeath","AmoebaDetails","AmoebaMitosis"]};
+window.SIDEBAR_ITEMS = {"enum":["ConstraintCheckerError"],"struct":["AmoebaCreation","AmoebaDeath","AmoebaDetails","AmoebaMitosis"]};

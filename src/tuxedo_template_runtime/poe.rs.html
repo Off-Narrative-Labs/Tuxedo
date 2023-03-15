@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/poe.rs`."><title>poe.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7b4f48927 2023-03-12)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/poe.rs`."><title>poe.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (171693274 2023-03-14)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -201,21 +201,29 @@
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
 </pre><pre class="rust"><code><span class="doccomment">//! This file represents a simple Proof of Existence application, identical in behavior
 //! to the tutorial https://docs.substrate.io/tutorials/work-with-pallets/use-macros-in-a-custom-pallet/
 //! Of course, this implementation is based on UTXOs and works with Tuxedo rather than FRAME.
 //!
 //! The application allows users to claim the existence of a preimage for a particular hash with a
 //! transaction. Thus, the blockchain network acts as a decentralized notary service. Claims are
-//! stored in the state, and can be &quot;revoked&quot; from the state later, although the witness to the original
+//! stored in the state, and can be &quot;revoked&quot; from the state later, although the redeemer to the original
 //! claim will always remain in the history of the blockchain.
 //!
 //! The main design deviation from the FRAME PoE pallet is the means by which redundant claims are settled.
 //! In FRAME, the exact storage location of each claim is known globally, whereas in the UTXO model, all state
 //! is local. This means that when a new claim is registered, it is not possible to efficiently check that the
-//! same claim has not already been registered. Instead there is a verifier to boot subsequent redundant claims
-//! when they are discovered. This difference is analogous to the difference between recorded and registered
-//! land https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
+//! same claim has not already been registered. Instead there is a constraint checker
+//! to boot subsequent redundant claims when they are discovered. This difference is analogous to
+//! the difference between recorded and registered land
+//! https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
 
 </span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -224,7 +232,7 @@
 <span class="kw">use </span>sp_runtime::transaction_validity::TransactionPriority;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier,
+    ensure, SimpleConstraintChecker,
 };
 
 <span class="comment">// Notice this type doesn&#39;t have to be public. Cool.
@@ -244,17 +252,17 @@
     <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;poe_&quot;</span>;
 }
 
-<span class="doccomment">/// Errors that can occur when verifying PoE Transactions
+<span class="doccomment">/// Errors that can occur when checking PoE Transactions
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-</span><span class="kw">pub enum </span>VerifierError {
+</span><span class="kw">pub enum </span>ConstraintCheckerError {
     <span class="comment">// Ughhh again with these common errors.
-    </span><span class="doccomment">/// Wrong number of inputs were provided to the verifier.
+    </span><span class="doccomment">/// Wrong number of inputs were provided to the constraint checker.
     </span>WrongNumberInputs,
-    <span class="doccomment">/// Wrong number of outputs were provided to the verifier.
+    <span class="doccomment">/// Wrong number of outputs were provided to the constraint checker.
     </span>WrongNumberOutputs,
     <span class="doccomment">/// An input data has the wrong type.
     </span>BadlyTypedInput,
@@ -267,9 +275,9 @@
     </span>EffectiveHeightInPast,
 }
 
-<span class="doccomment">/// A verifier to create claims.
+<span class="doccomment">/// A constraint checker to create claims.
 ///
-/// This verifier allows the creation of many claims in a single operation
+/// This constraint checker allows the creation of many claims in a single operation
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
 </span><span class="attr">#[cfg_attr(
@@ -279,16 +287,19 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>PoeClaim;
 
-<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>PoeClaim {
-    <span class="kw">type </span>Error = VerifierError;
+<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>PoeClaim {
+    <span class="kw">type </span>Error = ConstraintCheckerError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
         <span class="comment">// Make sure there are no inputs
-        </span><span class="macro">ensure!</span>(input_data.is_empty(), VerifierError::WrongNumberInputs);
+        </span><span class="macro">ensure!</span>(
+            input_data.is_empty(),
+            ConstraintCheckerError::WrongNumberInputs
+        );
 
         <span class="comment">// For each output, make sure the claimed block height is &gt;= the current block height.
         // If we required exact equality, this would mean that transactors needed to get their transactions
@@ -298,13 +309,13 @@
         </span><span class="kw">for </span>untyped_output <span class="kw">in </span>output_data {
             <span class="kw">let </span>output = untyped_output
                 .extract::&lt;ClaimData&gt;()
-                .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedOutput)<span class="question-mark">?</span>;
+                .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedOutput)<span class="question-mark">?</span>;
             <span class="macro">ensure!</span>(
                 <span class="comment">//TODO we&#39;re grabbing the block height function directly from
                 // the runtime level. This needs to be made available through some
                 // kind of config.
                 </span>output.effective_height &gt;= <span class="kw">crate</span>::Executive::block_height(),
-                VerifierError::EffectiveHeightInPast
+                ConstraintCheckerError::EffectiveHeightInPast
             );
         }
 
@@ -312,9 +323,9 @@
     }
 }
 
-<span class="doccomment">/// A verifier to revoke claims.
+<span class="doccomment">/// A constraint checker to revoke claims.
 ///
-/// Like the creation verifier, this allows batch revocation.
+/// Like the creation constraint checker, this allows batch revocation.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -322,36 +333,39 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>PoeRevoke;
 
-<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>PoeRevoke {
-    <span class="kw">type </span>Error = VerifierError;
+<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>PoeRevoke {
+    <span class="kw">type </span>Error = ConstraintCheckerError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
         <span class="comment">// Make sure there are no outputs
-        </span><span class="macro">ensure!</span>(output_data.is_empty(), VerifierError::WrongNumberOutputs);
+        </span><span class="macro">ensure!</span>(
+            output_data.is_empty(),
+            ConstraintCheckerError::WrongNumberOutputs
+        );
 
-        <span class="comment">// Make sure the inputs are properly typed. We don&#39;t need to verify anything else about them.
+        <span class="comment">// Make sure the inputs are properly typed. We don&#39;t need to check anything else about them.
         </span><span class="kw">for </span>untyped_input <span class="kw">in </span>input_data {
             <span class="kw">let _ </span>= untyped_input
                 .extract::&lt;ClaimData&gt;()
-                .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedInput);
+                .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedInput);
         }
 
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
 }
 
-<span class="doccomment">/// A verifier that resolves claim disputes by keeping whichever claim came first.
+<span class="doccomment">/// A constraint checker that resolves claim disputes by keeping whichever claim came first.
 ///
 /// TODO this will work much more elegantly once peek is implemented. We only need to peek at the
 /// older winning claim because it will remain in state afterwards.
 ///
-/// TODO what shall we do about the redeemer? Each claimer may have given their claim a redeemer
-/// such that their own private signature. Perhaps there should be a way for a verifier to override
-/// the redeemer logic? This is a concrete case where the verifier redeemer separation is not ideal.
+/// TODO what shall we do about the verifier? Each claimer may have given their claim a verifier
+/// such that their own private signature. Perhaps there should be a way for a constraint checker to override
+/// the verifier logic? This is a concrete case where the constraint checker verifier separation is not ideal.
 /// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
 /// but we want to authorized signer to come from the a different part of state.
 </span><span class="attr">#[cfg_attr(
@@ -361,10 +375,10 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>PoeDispute;
 
-<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>PoeDispute {
-    <span class="kw">type </span>Error = VerifierError;
+<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>PoeDispute {
+    <span class="kw">type </span>Error = ConstraintCheckerError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         _output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
@@ -378,7 +392,7 @@
 
         // Make sure that all other claims have block heights strictly greater than the winner.
 
-        //TODO what to do about the redeemers on those losing claims.
+        //TODO what to do about the verifiers on those losing claims.
     </span>}
 }
 
@@ -386,14 +400,14 @@
 </span><span class="kw">mod </span>brainstorm {
     <span class="doccomment">/// One workable solution to the problem above is modifying the core transaction structure to something like this
     </span><span class="kw">struct </span>Transaction {
-        <span class="doccomment">/// A classic input that is consumed from the utxo set. Its redeemer must be satisfied for the tx to be valid
+        <span class="doccomment">/// A classic input that is consumed from the utxo set. Its verifier must be satisfied for the tx to be valid
         </span>redemptions: Vec&lt;InputRef&gt;,
-        <span class="doccomment">/// Similar to a redemption, this is an input that is consumed from the utxo set, but its redeemer need not be satisfied
+        <span class="doccomment">/// Similar to a redemption, this is an input that is consumed from the utxo set, but its verifier need not be satisfied
         /// In the Poe case above, the losing claims that came later would be evictions.
         </span>evictions: Vec&lt;InputRef&gt;,
         <span class="doccomment">/// Similar to an input, but it is not consumed. This is a way to read pre-existing state without removing it from the utxo set
         /// this also indicates when transaction are not competing for state despite reading the same state, and thus commute.
-        /// TBD whether it makes sense to have a redeemer check. My gut instinct is no redeemer check, but it needs more careful thought.
+        /// TBD whether it makes sense to have a verifier check. My gut instinct is no verifier check, but it needs more careful thought.
         </span>peeks: Vec&lt;InputRef&gt;,
         <span class="doccomment">/// Newly created pieces of state to be added to the utxo set.
         </span>outputs: Vec&lt;Output&gt;,

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/types.rs`."><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7b4f48927 2023-03-12)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/types.rs`."><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (171693274 2023-03-14)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -177,10 +177,10 @@
 /// Each transaction consumes some UTXOs (the inputs) and creates some new ones (the outputs).
 ///
 /// The Transaction type is generic over two orthogonal pieces of validation logic:
-/// 1. Redeemers - A redeemer checks that an individual input may be consumed. A typical example
-///    of a redeemer is checking that there is a signature by the proper owner. Other examples
+/// 1. Verifier - A verifier checks that an individual input may be consumed. A typical example
+///    of a verifier is checking that there is a signature by the proper owner. Other examples
 ///    may be that anyone can consume the input or no one can, or that a proof of work is required.
-/// 2. Verifiers - A verifier checks that the transaction as a whole meets a set of requirements.
+/// 2. ConstraintCheckers - A constraint checker checks that the transaction as a whole meets a set of requirements.
 ///    For example, that the total output value of a cryptocurrency transaction does not exceed its
 ///    input value. Or that a cryptokitty was created with the correct genetic material from its parents.
 ///
@@ -191,20 +191,20 @@
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-</span><span class="kw">pub struct </span>Transaction&lt;R, V&gt; {
+</span><span class="kw">pub struct </span>Transaction&lt;V, C&gt; {
     <span class="kw">pub </span>inputs: Vec&lt;Input&gt;,
     <span class="comment">//Todo peeks: Vec&lt;Input&gt;,
-    </span><span class="kw">pub </span>outputs: Vec&lt;Output&lt;R&gt;&gt;,
-    <span class="kw">pub </span>verifier: V,
+    </span><span class="kw">pub </span>outputs: Vec&lt;Output&lt;V&gt;&gt;,
+    <span class="kw">pub </span>checker: C,
 }
 
 <span class="comment">// We must implement this Extrinsic trait to use our Transaction type as the Block&#39;s Transaction type
 // See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
 //
 // This trait&#39;s design has a preference for transactions that will have a single signature over the
-// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound
-// , so we do a minimal implementation.
-</span><span class="kw">impl</span>&lt;R, V&gt; Extrinsic <span class="kw">for </span>Transaction&lt;R, V&gt; {
+// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
+// so we do a minimal implementation.
+</span><span class="kw">impl</span>&lt;V, C&gt; Extrinsic <span class="kw">for </span>Transaction&lt;V, C&gt; {
     <span class="kw">type </span>Call = <span class="self">Self</span>;
     <span class="kw">type </span>SignaturePayload = ();
 
@@ -229,21 +229,21 @@
     <span class="doccomment">/// a reference to the output being consumed
     </span><span class="kw">pub </span>output_ref: OutputRef,
     <span class="comment">// Eg the signature
-    </span><span class="kw">pub </span>witness: Vec&lt;u8&gt;,
+    </span><span class="kw">pub </span>redeemer: Vec&lt;u8&gt;,
 }
 
 <span class="attr">#[derive(Debug, PartialEq, Eq)]
-</span><span class="kw">pub enum </span>UtxoError&lt;VerifierError&gt; {
+</span><span class="kw">pub enum </span>UtxoError&lt;ConstraintCheckerError&gt; {
     <span class="doccomment">/// This transaction defines the same input multiple times
     </span>DuplicateInput,
     <span class="doccomment">/// This transaction defines an output that already existed in the UTXO set
     </span>PreExistingOutput,
-    <span class="doccomment">/// The verifier errored.
-    </span>VerifierError(VerifierError),
-    <span class="doccomment">/// The Redeemer errored.
-    /// TODO determine whether it is useful to relay an inner error from the redeemer.
+    <span class="doccomment">/// The contraint checker errored.
+    </span>ConstraintCheckerError(ConstraintCheckerError),
+    <span class="doccomment">/// The Verifier errored.
+    /// TODO determine whether it is useful to relay an inner error from the verifier.
     /// So far, I haven&#39;t seen a case, although it seems reasonable to think there might be one.
-    </span>RedeemerError,
+    </span>VerifierError,
     <span class="doccomment">/// One or more of the inputs required by this transaction is not present in the UTXO set
     </span>MissingInput,
 }
@@ -252,7 +252,7 @@
 </span><span class="kw">pub type </span>DispatchResult&lt;VerifierError&gt; = <span class="prelude-ty">Result</span>&lt;(), UtxoError&lt;VerifierError&gt;&gt;;
 
 <span class="doccomment">/// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
-/// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
+/// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
 </span><span class="attr">#[cfg_attr(
@@ -260,25 +260,25 @@
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-</span><span class="kw">pub struct </span>Output&lt;R&gt; {
+</span><span class="kw">pub struct </span>Output&lt;V&gt; {
     <span class="kw">pub </span>payload: DynamicallyTypedData,
-    <span class="kw">pub </span>redeemer: R,
+    <span class="kw">pub </span>verifier: V,
 }
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">pub mod </span>tests {
 
-    <span class="kw">use crate</span>::{redeemer::UpForGrabs, verifier::testing::TestVerifier};
+    <span class="kw">use crate</span>::{constraint_checker::testing::TestConstraintChecker, verifier::UpForGrabs};
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>extrinsic_no_signed_payload() {
-        <span class="kw">let </span>verifier = TestVerifier { verifies: <span class="bool-val">true </span>};
-        <span class="kw">let </span>tx: Transaction&lt;UpForGrabs, TestVerifier&gt; = Transaction {
+        <span class="kw">let </span>checker = TestConstraintChecker { checks: <span class="bool-val">true </span>};
+        <span class="kw">let </span>tx: Transaction&lt;UpForGrabs, TestConstraintChecker&gt; = Transaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
-            verifier,
+            checker,
         };
         <span class="kw">let </span>e = Transaction::new(tx.clone(), <span class="prelude-val">None</span>).unwrap();
 
@@ -288,11 +288,11 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>extrinsic_is_signed_works() {
-        <span class="kw">let </span>verifier = TestVerifier { verifies: <span class="bool-val">true </span>};
-        <span class="kw">let </span>tx: Transaction&lt;UpForGrabs, TestVerifier&gt; = Transaction {
+        <span class="kw">let </span>checker = TestConstraintChecker { checks: <span class="bool-val">true </span>};
+        <span class="kw">let </span>tx: Transaction&lt;UpForGrabs, TestConstraintChecker&gt; = Transaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
-            verifier,
+            checker,
         };
         <span class="kw">let </span>e = Transaction::new(tx.clone(), <span class="prelude-val">Some</span>(())).unwrap();
 

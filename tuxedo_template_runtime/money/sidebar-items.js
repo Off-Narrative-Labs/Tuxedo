@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MoneyVerifier","VerifierError"],"struct":["Coin"]};
+window.SIDEBAR_ITEMS = {"enum":["ConstraintCheckerError","MoneyConstraintChecker"],"struct":["Coin"]};

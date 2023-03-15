@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DadKittyStatus","MomKittyStatus","Parent","VerifierError"],"struct":["FreeKittyVerifier","KittyDNA","KittyData","KittyHelpers"]};
+window.SIDEBAR_ITEMS = {"enum":["ConstraintCheckerError","DadKittyStatus","MomKittyStatus","Parent"],"struct":["FreeKittyConstraintChecker","KittyDNA","KittyData","KittyHelpers"]};

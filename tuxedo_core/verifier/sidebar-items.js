@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["testing"],"trait":["SimpleVerifier","Verifier"]};
+window.SIDEBAR_ITEMS = {"struct":["SigCheck","TestVerifier","UpForGrabs"],"trait":["Verifier"]};

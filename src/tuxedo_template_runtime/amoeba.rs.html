@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/amoeba.rs`."><title>amoeba.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7b4f48927 2023-03-12)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/amoeba.rs`."><title>amoeba.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (171693274 2023-03-14)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -505,6 +505,25 @@
 <a href="#505" id="505">505</a>
 <a href="#506" id="506">506</a>
 <a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
 </pre><pre class="rust"><code><span class="doccomment">//! This file represents a simple example Tuxedo piece that tracks amoeba populations.
 //! Amoeba&#39;s can be affected in three ways throughout their lifecycle.
 //! 1. A new amoeba can be created by a creator. This is analogous to divine
@@ -521,7 +540,7 @@
 <span class="kw">use </span>sp_runtime::transaction_validity::TransactionPriority;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleVerifier,
+    ensure, SimpleConstraintChecker,
 };
 
 <span class="doccomment">/// An amoeba tracked by our simple Amoeba APP
@@ -543,9 +562,9 @@
     <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;amoe&quot;</span>;
 }
 
-<span class="doccomment">/// Reasons that the amoeba verifiers may fail
+<span class="doccomment">/// Reasons that the amoeba constraint checkers may fail
 </span><span class="attr">#[derive(Debug, Eq, PartialEq)]
-</span><span class="kw">pub enum </span>VerifierError {
+</span><span class="kw">pub enum </span>ConstraintCheckerError {
     <span class="doccomment">/// An input data has the wrong type.
     </span>BadlyTypedInput,
     <span class="doccomment">/// An output data has the wrong type.
@@ -579,7 +598,7 @@
     </span>WrongGeneration,
 }
 
-<span class="doccomment">/// A verifier for the process of amoeba mitosis
+<span class="doccomment">/// A constraint checker for the process of amoeba mitosis
 /// The mitosis is valid is the following criteria are met
 /// 1. There is exactly one mother amoeba.
 /// 2. There are exactly two daughter amoebas
@@ -591,55 +610,59 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>AmoebaMitosis;
 
-<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>AmoebaMitosis {
-    <span class="kw">type </span>Error = VerifierError;
+<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>AmoebaMitosis {
+    <span class="kw">type </span>Error = ConstraintCheckerError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, VerifierError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, ConstraintCheckerError&gt; {
         <span class="comment">// Make sure there is exactly one mother.
-        </span><span class="macro">ensure!</span>(input_data.len() == <span class="number">1</span>, VerifierError::WrongNumberOfMothers);
+        </span><span class="macro">ensure!</span>(
+            input_data.len() == <span class="number">1</span>,
+            ConstraintCheckerError::WrongNumberOfMothers
+        );
         <span class="kw">let </span>mother = input_data[<span class="number">0</span>]
             .extract::&lt;AmoebaDetails&gt;()
-            .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedInput)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedInput)<span class="question-mark">?</span>;
 
         <span class="comment">// Make sure there are exactly two daughters.
         </span><span class="macro">ensure!</span>(
             output_data.len() == <span class="number">2</span>,
-            VerifierError::WrongNumberOfDaughters
+            ConstraintCheckerError::WrongNumberOfDaughters
         );
         <span class="kw">let </span>first_daughter = output_data[<span class="number">0</span>]
             .extract::&lt;AmoebaDetails&gt;()
-            .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedOutput)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedOutput)<span class="question-mark">?</span>;
         <span class="kw">let </span>second_daughter = output_data[<span class="number">1</span>]
             .extract::&lt;AmoebaDetails&gt;()
-            .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedOutput)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedOutput)<span class="question-mark">?</span>;
 
         <span class="comment">// Make sure the generations are correct
         </span><span class="macro">ensure!</span>(
             first_daughter.generation == mother.generation + <span class="number">1</span>,
-            VerifierError::WrongGeneration
+            ConstraintCheckerError::WrongGeneration
         );
         <span class="macro">ensure!</span>(
             second_daughter.generation == mother.generation + <span class="number">1</span>,
-            VerifierError::WrongGeneration
+            ConstraintCheckerError::WrongGeneration
         );
 
         <span class="comment">//TODO Figure out how to calculate priority.
-        // Best priority idea so far. We have a verifier, PriorityVerifierWrapper&lt;Inner: Verifier&gt;(u8)
+        // Best priority idea so far. We have a constraint checker,
+        // PriorityConstraintCheckerWrapper&lt;Inner: ConstraintChecker&gt;(u8)
         // where you pass it the a number of inputs. It will take those first n inputs for itself, and assume
-        // they are coins in some native currency. Then it will call the inner verifier with the remaining input
-        // and if the inner verifier succeeds, it will prioritize based on the tip given in the first few inputs.
+        // they are coins in some native currency. Then it will call the inner constraint checker with the remaining input
+        // and if the inner constraint checker succeeds, it will prioritize based on the tip given in the first few inputs.
         // Such a wrapper should live with the money piece, and thus returning 0 here is fine.
         </span><span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
 }
 
-<span class="doccomment">/// A verifier for simple death of an amoeba.
+<span class="doccomment">/// A constraint checker for simple death of an amoeba.
 ///
-/// Any amoeba can be killed by providing it as the sole input to this verifier. No
+/// Any amoeba can be killed by providing it as the sole input to this constraint checker. No
 /// new outputs are ever created.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
@@ -648,34 +671,40 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>AmoebaDeath;
 
-<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>AmoebaDeath {
-    <span class="kw">type </span>Error = VerifierError;
+<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>AmoebaDeath {
+    <span class="kw">type </span>Error = ConstraintCheckerError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
         <span class="comment">// Make sure there is a single victim
-        </span><span class="macro">ensure!</span>(!input_data.is_empty(), VerifierError::NoVictim);
-        <span class="macro">ensure!</span>(input_data.len() == <span class="number">1</span>, VerifierError::TooManyVictims);
+        </span><span class="macro">ensure!</span>(!input_data.is_empty(), ConstraintCheckerError::NoVictim);
+        <span class="macro">ensure!</span>(
+            input_data.len() == <span class="number">1</span>,
+            ConstraintCheckerError::TooManyVictims
+        );
 
         <span class="comment">// We don&#39;t actually need to check any details of the victim, but we do need to make sure
         // we have the correct type.
         </span><span class="kw">let </span>_victim = input_data[<span class="number">0</span>]
             .extract::&lt;AmoebaDetails&gt;()
-            .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedInput)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedInput)<span class="question-mark">?</span>;
 
         <span class="comment">// Make sure there are no outputs
-        </span><span class="macro">ensure!</span>(output_data.is_empty(), VerifierError::DeathMayNotCreate);
+        </span><span class="macro">ensure!</span>(
+            output_data.is_empty(),
+            ConstraintCheckerError::DeathMayNotCreate
+        );
 
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
 }
 
-<span class="doccomment">/// A verifier for simple creation of an amoeba.
+<span class="doccomment">/// A constraint checker for simple creation of an amoeba.
 ///
-/// A new amoeba can be created by providing it as the sole output to this verifier. No
+/// A new amoeba can be created by providing it as the sole output to this constraint checker. No
 /// inputs are ever consumed.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
@@ -684,26 +713,35 @@
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 </span><span class="kw">pub struct </span>AmoebaCreation;
 
-<span class="kw">impl </span>SimpleVerifier <span class="kw">for </span>AmoebaCreation {
-    <span class="kw">type </span>Error = VerifierError;
+<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>AmoebaCreation {
+    <span class="kw">type </span>Error = ConstraintCheckerError;
 
-    <span class="kw">fn </span>verify(
+    <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
         <span class="comment">// Make sure there is a single created amoeba
-        </span><span class="macro">ensure!</span>(!output_data.is_empty(), VerifierError::CreatedNothing);
-        <span class="macro">ensure!</span>(output_data.len() == <span class="number">1</span>, VerifierError::CreatedTooMany);
+        </span><span class="macro">ensure!</span>(
+            !output_data.is_empty(),
+            ConstraintCheckerError::CreatedNothing
+        );
+        <span class="macro">ensure!</span>(
+            output_data.len() == <span class="number">1</span>,
+            ConstraintCheckerError::CreatedTooMany
+        );
         <span class="kw">let </span>eve = output_data[<span class="number">0</span>]
             .extract::&lt;AmoebaDetails&gt;()
-            .map_err(|<span class="kw">_</span>| VerifierError::BadlyTypedOutput)<span class="question-mark">?</span>;
+            .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTypedOutput)<span class="question-mark">?</span>;
 
         <span class="comment">// Make sure the newly created amoeba has generation 0
-        </span><span class="macro">ensure!</span>(eve.generation == <span class="number">0</span>, VerifierError::WrongGeneration);
+        </span><span class="macro">ensure!</span>(eve.generation == <span class="number">0</span>, ConstraintCheckerError::WrongGeneration);
 
         <span class="comment">// Make sure there are no inputs
-        </span><span class="macro">ensure!</span>(input_data.is_empty(), VerifierError::CreationMayNotConsume);
+        </span><span class="macro">ensure!</span>(
+            input_data.is_empty(),
+            ConstraintCheckerError::CreationMayNotConsume
+        );
 
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
@@ -723,7 +761,7 @@
         <span class="kw">let </span>input_data = Vec::new();
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[to_spawn.into()];
 
-        <span class="macro">assert_eq!</span>(AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
+        <span class="macro">assert_eq!</span>(AmoebaCreation.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
     }
 
     <span class="attr">#[test]
@@ -736,8 +774,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[to_spawn.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::WrongGeneration),
+            AmoebaCreation.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::WrongGeneration),
         );
     }
 
@@ -751,8 +789,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[example.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::CreationMayNotConsume),
+            AmoebaCreation.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::CreationMayNotConsume),
         );
     }
 
@@ -762,8 +800,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Bogus.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::BadlyTypedOutput),
+            AmoebaCreation.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTypedOutput),
         );
     }
 
@@ -777,8 +815,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[to_spawn.clone().into(), to_spawn.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::CreatedTooMany),
+            AmoebaCreation.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::CreatedTooMany),
         );
     }
 
@@ -788,8 +826,8 @@
         <span class="kw">let </span>output_data = Vec::new();
 
         <span class="macro">assert_eq!</span>(
-            AmoebaCreation.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::CreatedNothing),
+            AmoebaCreation.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::CreatedNothing),
         );
     }
 
@@ -810,7 +848,7 @@
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[mother.into()];
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into()];
 
-        <span class="macro">assert_eq!</span>(AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
+        <span class="macro">assert_eq!</span>(AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
     }
 
     <span class="attr">#[test]
@@ -831,8 +869,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::WrongGeneration),
+            AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::WrongGeneration),
         );
     }
 
@@ -851,8 +889,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::BadlyTypedInput),
+            AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTypedInput),
         );
     }
 
@@ -870,8 +908,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::WrongNumberOfMothers),
+            AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::WrongNumberOfMothers),
         );
     }
 
@@ -890,8 +928,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::BadlyTypedOutput),
+            AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTypedOutput),
         );
     }
 
@@ -910,8 +948,8 @@
         </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::WrongNumberOfDaughters),
+            AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::WrongNumberOfDaughters),
         );
     }
 
@@ -938,8 +976,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[d1.into(), d2.into(), d3.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaMitosis.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::WrongNumberOfDaughters),
+            AmoebaMitosis.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::WrongNumberOfDaughters),
         );
     }
 
@@ -952,7 +990,7 @@
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[example.into()];
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
 
-        <span class="macro">assert_eq!</span>(AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
+        <span class="macro">assert_eq!</span>(AmoebaDeath.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data), <span class="prelude-val">Ok</span>(<span class="number">0</span>),);
     }
 
     <span class="attr">#[test]
@@ -961,8 +999,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::NoVictim),
+            AmoebaDeath.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::NoVictim),
         );
     }
 
@@ -980,8 +1018,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::TooManyVictims),
+            AmoebaDeath.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::TooManyVictims),
         );
     }
 
@@ -995,8 +1033,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[example.into()];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::DeathMayNotCreate),
+            AmoebaDeath.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::DeathMayNotCreate),
         );
     }
 
@@ -1007,8 +1045,8 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
 
         <span class="macro">assert_eq!</span>(
-            AmoebaDeath.verify(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
-            <span class="prelude-val">Err</span>(VerifierError::BadlyTypedInput),
+            AmoebaDeath.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTypedInput),
         );
     }
 }

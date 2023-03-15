@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7b4f48927 2023-03-12)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (171693274 2023-03-14)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -983,17 +983,19 @@
 <a href="#983" id="983">983</a>
 <a href="#984" id="984">984</a>
 <a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
 </pre><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
 //! It has functions that implement the Core, BlockBuilder, and TxPool runtime APIs.
 //!
 //! It does all the reusable verification of UTXO transactions such as checking that there
-//! are no duplicate inputs, and that the redeemers are satisfied.
+//! are no duplicate inputs, and that the verifiers are satisfied.
 
 </span><span class="kw">use crate</span>::{
+    constraint_checker::ConstraintChecker,
     ensure,
-    redeemer::Redeemer,
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
@@ -1015,16 +1017,18 @@
 
 <span class="doccomment">/// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
-</span><span class="kw">pub struct </span>Executive&lt;B, R, V&gt;(PhantomData&lt;(B, R, V)&gt;);
+</span><span class="kw">pub struct </span>Executive&lt;B, V, C&gt;(PhantomData&lt;(B, V, C)&gt;);
 
-<span class="kw">impl</span>&lt;B: BlockT&lt;Extrinsic = Transaction&lt;R, V&gt;&gt;, R: Redeemer, V: Verifier&gt; Executive&lt;B, R, V&gt; {
+<span class="kw">impl</span>&lt;B: BlockT&lt;Extrinsic = Transaction&lt;V, C&gt;&gt;, V: Verifier, C: ConstraintChecker&gt;
+    Executive&lt;B, V, C&gt;
+{
     <span class="doccomment">/// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
     /// This returns Ok even if some inputs are still missing because the tagged transaction pool can handle that.
     /// We later check that there are no missing inputs in `apply_tuxedo_transaction`
     </span><span class="kw">pub fn </span>validate_tuxedo_transaction(
-        transaction: <span class="kw-2">&amp;</span>Transaction&lt;R, V&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;ValidTransaction, UtxoError&lt;V::Error&gt;&gt; {
+        transaction: <span class="kw-2">&amp;</span>Transaction&lt;V, C&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;ValidTransaction, UtxoError&lt;C::Error&gt;&gt; {
         <span class="comment">// Make sure there are no duplicate inputs
         </span>{
             <span class="kw">let </span>input_set: BTreeSet&lt;<span class="kw">_</span>&gt; = transaction.inputs.iter().map(|o| o.encode()).collect();
@@ -1034,26 +1038,26 @@
             );
         }
 
-        <span class="comment">// Build the stripped transaction (with the witnesses stripped) and encode it
-        // This will be passed to the redeemers
+        <span class="comment">// Build the stripped transaction (with the redeemers stripped) and encode it
+        // This will be passed to the verifiers
         </span><span class="kw">let </span><span class="kw-2">mut </span>stripped = transaction.clone();
         <span class="kw">for </span>input <span class="kw">in </span>stripped.inputs.iter_mut() {
-            input.witness = Vec::new();
+            input.redeemer = Vec::new();
         }
         <span class="kw">let </span>stripped_encoded = stripped.encode();
 
-        <span class="comment">// Check that the redeemers of all inputs are satisfied
-        // Keep a Vec of the input utxos for passing to the verifier
+        <span class="comment">// Check that the verifiers of all inputs are satisfied
+        // Keep a Vec of the input utxos for passing to the constraint checker
         // Keep track of any missing inputs for use in the tagged transaction pool
         </span><span class="kw">let </span><span class="kw-2">mut </span>input_utxos = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>missing_inputs = Vec::new();
         <span class="kw">for </span>input <span class="kw">in </span>transaction.inputs.iter() {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(input_utxo) = TransparentUtxoSet::&lt;R&gt;::peek_utxo(<span class="kw-2">&amp;</span>input.output_ref) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(input_utxo) = TransparentUtxoSet::&lt;V&gt;::peek_utxo(<span class="kw-2">&amp;</span>input.output_ref) {
                 <span class="macro">ensure!</span>(
                     input_utxo
-                        .redeemer
-                        .redeem(<span class="kw-2">&amp;</span>stripped_encoded, <span class="kw-2">&amp;</span>input.witness),
-                    UtxoError::RedeemerError
+                        .verifier
+                        .verify(<span class="kw-2">&amp;</span>stripped_encoded, <span class="kw-2">&amp;</span>input.redeemer),
+                    UtxoError::VerifierError
                 );
                 input_utxos.push(input_utxo);
             } <span class="kw">else </span>{
@@ -1076,7 +1080,7 @@
             );
 
             <span class="macro">ensure!</span>(
-                TransparentUtxoSet::&lt;R&gt;::peek_utxo(<span class="kw-2">&amp;</span>output_ref).is_none(),
+                TransparentUtxoSet::&lt;V&gt;::peek_utxo(<span class="kw-2">&amp;</span>output_ref).is_none(),
                 UtxoError::PreExistingOutput
             );
         }
@@ -1094,7 +1098,7 @@
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
         <span class="comment">// If any of the inputs are missing, we cannot make any more progress
-        // If they are all present, we may proceed to call the verifier
+        // If they are all present, we may proceed to call the constraint checker
         </span><span class="kw">if </span>!missing_inputs.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ValidTransaction {
                 requires: missing_inputs,
@@ -1105,11 +1109,11 @@
             });
         }
 
-        <span class="comment">// Call the verifier
+        <span class="comment">// Call the constraint checker
         </span>transaction
-            .verifier
-            .verify(<span class="kw-2">&amp;</span>input_utxos, <span class="kw-2">&amp;</span>transaction.outputs)
-            .map_err(UtxoError::VerifierError)<span class="question-mark">?</span>;
+            .checker
+            .check(<span class="kw-2">&amp;</span>input_utxos, <span class="kw-2">&amp;</span>transaction.outputs)
+            .map_err(UtxoError::ConstraintCheckerError)<span class="question-mark">?</span>;
 
         <span class="comment">// Return the valid transaction
         </span><span class="prelude-val">Ok</span>(ValidTransaction {
@@ -1123,8 +1127,8 @@
 
     <span class="doccomment">/// Does full verification and application of tuxedo transactions.
     /// Most of the validation happens in the call to `validate_tuxedo_transaction`.
-    /// Once those chekcs are done we make sure there are no missing inputs and then update storage.
-    </span><span class="kw">pub fn </span>apply_tuxedo_transaction(transaction: Transaction&lt;R, V&gt;) -&gt; DispatchResult&lt;V::Error&gt; {
+    /// Once those checks are done we make sure there are no missing inputs and then update storage.
+    </span><span class="kw">pub fn </span>apply_tuxedo_transaction(transaction: Transaction&lt;V, C&gt;) -&gt; DispatchResult&lt;C::Error&gt; {
         <span class="macro">log::debug!</span>(
             target: LOG_TARGET,
             <span class="string">&quot;applying tuxedo transaction {:?}&quot;</span>,
@@ -1152,10 +1156,10 @@
     /// This function does absolutely no validation. It assumes that the transaction
     /// has already passed validation. Changes proposed by the transaction are written
     /// blindly to storage.
-    </span><span class="kw">fn </span>update_storage(transaction: Transaction&lt;R, V&gt;) {
-        <span class="comment">// Remove redeemed UTXOs
+    </span><span class="kw">fn </span>update_storage(transaction: Transaction&lt;V, C&gt;) {
+        <span class="comment">// Remove verified UTXOs
         </span><span class="kw">for </span>input <span class="kw">in </span><span class="kw-2">&amp;</span>transaction.inputs {
-            TransparentUtxoSet::&lt;R&gt;::consume_utxo(<span class="kw-2">&amp;</span>input.output_ref);
+            TransparentUtxoSet::&lt;V&gt;::consume_utxo(<span class="kw-2">&amp;</span>input.output_ref);
         }
 
         <span class="macro">log::debug!</span>(
@@ -1169,7 +1173,7 @@
                 tx_hash: BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>transaction.encode()),
                 index: index <span class="kw">as </span>u32,
             };
-            TransparentUtxoSet::&lt;R&gt;::store_utxo(output_ref, output);
+            TransparentUtxoSet::&lt;V&gt;::store_utxo(output_ref, output);
         }
     }
 
@@ -1349,18 +1353,18 @@
     <span class="kw">use </span>sp_runtime::transaction_validity::ValidTransactionBuilder;
 
     <span class="kw">use crate</span>::{
+        constraint_checker::testing::TestConstraintChecker,
         dynamic_typing::{testing::Bogus, UtxoData},
-        redeemer::TestRedeemer,
         types::{Input, Output},
-        verifier::testing::TestVerifier,
+        verifier::TestVerifier,
     };
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">type </span>TestTransaction = Transaction&lt;TestRedeemer, TestVerifier&gt;;
+    <span class="kw">type </span>TestTransaction = Transaction&lt;TestVerifier, TestConstraintChecker&gt;;
     <span class="kw">pub type </span>TestHeader = sp_runtime::generic::Header&lt;u32, BlakeTwo256&gt;;
     <span class="kw">pub type </span>TestBlock = sp_runtime::generic::Block&lt;TestHeader, TestTransaction&gt;;
-    <span class="kw">pub type </span>TestExecutive = Executive&lt;TestBlock, TestRedeemer, TestVerifier&gt;;
+    <span class="kw">pub type </span>TestExecutive = Executive&lt;TestBlock, TestVerifier, TestConstraintChecker&gt;;
 
     <span class="doccomment">/// Construct a mock OutputRef from a transaction number and index in that transaction.
     ///
@@ -1379,7 +1383,7 @@
     <span class="doccomment">/// Builds test externalities using a minimal builder pattern.
     </span><span class="attr">#[derive(Default)]
     </span><span class="kw">struct </span>ExternalityBuilder {
-        utxos: Vec&lt;(OutputRef, Output&lt;TestRedeemer&gt;)&gt;,
+        utxos: Vec&lt;(OutputRef, Output&lt;TestVerifier&gt;)&gt;,
         pre_header: <span class="prelude-ty">Option</span>&lt;TestHeader&gt;,
         noted_extrinsics: Vec&lt;Vec&lt;u8&gt;&gt;,
     }
@@ -1393,18 +1397,18 @@
         ///
         /// For the Outputs themselves, this function accepts payloads of any type that
         /// can be represented as DynamicallyTypedData, and a boolean about whether the
-        /// redeemer should succeed or not.
+        /// verifier should succeed or not.
         </span><span class="kw">fn </span>with_utxo&lt;T: UtxoData&gt;(
             <span class="kw-2">mut </span><span class="self">self</span>,
             tx_num: u32,
             index: u32,
             payload: T,
-            redeems: bool,
+            verifies: bool,
         ) -&gt; <span class="self">Self </span>{
             <span class="kw">let </span>output_ref = mock_output_ref(tx_num, index);
             <span class="kw">let </span>output = Output {
                 payload: payload.into(),
-                redeemer: TestRedeemer { redeems },
+                verifier: TestVerifier { verifies },
             };
             <span class="self">self</span>.utxos.push((output_ref, output));
             <span class="self">self
@@ -1475,7 +1479,7 @@
         <span class="kw">let </span>tx = TestTransaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
-            verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+            checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
         };
 
         <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
@@ -1494,13 +1498,13 @@
                 <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref,
-                    witness: Vec::new(),
+                    redeemer: Vec::new(),
                 };
 
                 <span class="kw">let </span>tx = TestTransaction {
                     inputs: <span class="macro">vec!</span>[input],
                     outputs: Vec::new(),
-                    verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
                 };
 
                 <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
@@ -1516,12 +1520,12 @@
         ExternalityBuilder::default().build().execute_with(|| {
             <span class="kw">let </span>output = Output {
                 payload: Bogus.into(),
-                redeemer: TestRedeemer { redeems: <span class="bool-val">false </span>},
+                verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
             };
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: <span class="macro">vec!</span>[output],
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="comment">// This is a real transaction, so we need to calculate a real OutputRef
@@ -1544,13 +1548,13 @@
             <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
             <span class="kw">let </span>input = Input {
                 output_ref: output_ref.clone(),
-                witness: Vec::new(),
+                redeemer: Vec::new(),
             };
 
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: <span class="macro">vec!</span>[input],
                 outputs: Vec::new(),
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
@@ -1572,13 +1576,13 @@
                 <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref,
-                    witness: Vec::new(),
+                    redeemer: Vec::new(),
                 };
 
                 <span class="kw">let </span>tx = TestTransaction {
                     inputs: <span class="macro">vec!</span>[input.clone(), input],
                     outputs: Vec::new(),
-                    verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
                 };
 
                 <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
@@ -1596,18 +1600,18 @@
                 <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref,
-                    witness: Vec::new(),
+                    redeemer: Vec::new(),
                 };
 
                 <span class="kw">let </span>tx = TestTransaction {
                     inputs: <span class="macro">vec!</span>[input],
                     outputs: Vec::new(),
-                    verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
                 };
 
                 <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
-                <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Err</span>(UtxoError::RedeemerError));
+                <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Err</span>(UtxoError::VerifierError));
             });
     }
 
@@ -1624,12 +1628,12 @@
 
             </span><span class="kw">let </span>output = Output {
                 payload: Bogus.into(),
-                redeemer: TestRedeemer { redeems: <span class="bool-val">false </span>},
+                verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
             };
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: <span class="macro">vec!</span>[output],
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="comment">// Submit the transaction once and make sure it works
@@ -1648,12 +1652,12 @@
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: Vec::new(),
-                verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">false </span>},
             };
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
-            <span class="macro">assert_eq!</span>(vt, <span class="prelude-val">Err</span>(UtxoError::VerifierError(())));
+            <span class="macro">assert_eq!</span>(vt, <span class="prelude-val">Err</span>(UtxoError::ConstraintCheckerError(())));
         });
     }
 
@@ -1663,7 +1667,7 @@
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: Vec::new(),
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
@@ -1678,13 +1682,13 @@
             <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
             <span class="kw">let </span>input = Input {
                 output_ref: output_ref.clone(),
-                witness: Vec::new(),
+                redeemer: Vec::new(),
             };
 
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: <span class="macro">vec!</span>[input],
                 outputs: Vec::new(),
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
@@ -1702,13 +1706,13 @@
                 <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref: output_ref.clone(),
-                    witness: Vec::new(),
+                    redeemer: Vec::new(),
                 };
 
                 <span class="kw">let </span>tx = TestTransaction {
                     inputs: <span class="macro">vec!</span>[input],
                     outputs: Vec::new(),
-                    verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
                 };
 
                 <span class="comment">// Commit the tx to storage
@@ -1724,13 +1728,13 @@
         ExternalityBuilder::default().build().execute_with(|| {
             <span class="kw">let </span>output = Output {
                 payload: Bogus.into(),
-                redeemer: TestRedeemer { redeems: <span class="bool-val">false </span>},
+                verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
             };
 
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: <span class="macro">vec!</span>[output.clone()],
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
@@ -1776,7 +1780,7 @@
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: Vec::new(),
-                verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
             };
 
             <span class="kw">let </span>apply_result = TestExecutive::apply_extrinsic(tx.clone());
@@ -1799,7 +1803,7 @@
             <span class="kw">let </span>tx = TestTransaction {
                 inputs: Vec::new(),
                 outputs: Vec::new(),
-                verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
+                checker: TestConstraintChecker { checks: <span class="bool-val">false </span>},
             };
 
             <span class="kw">let </span>apply_result = TestExecutive::apply_extrinsic(tx.clone());
@@ -1891,7 +1895,7 @@
                 extrinsics: <span class="macro">vec!</span>[TestTransaction {
                     inputs: Vec::new(),
                     outputs: Vec::new(),
-                    verifier: TestVerifier { verifies: <span class="bool-val">true </span>},
+                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
                 }],
             };
 
@@ -1900,7 +1904,7 @@
     }
 
     <span class="attr">#[test]
-    #[should_panic(expected = <span class="string">&quot;VerifierError(())&quot;</span>)]
+    #[should_panic(expected = <span class="string">&quot;ConstraintCheckerError(())&quot;</span>)]
     </span><span class="kw">fn </span>execute_block_invalid_transaction() {
         ExternalityBuilder::default().build().execute_with(|| {
             <span class="kw">let </span>b = TestBlock {
@@ -1918,7 +1922,7 @@
                 extrinsics: <span class="macro">vec!</span>[TestTransaction {
                     inputs: Vec::new(),
                     outputs: Vec::new(),
-                    verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
+                    checker: TestConstraintChecker { checks: <span class="bool-val">false </span>},
                 }],
             };
 

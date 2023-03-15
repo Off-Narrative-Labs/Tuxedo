@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["SigCheck","TestRedeemer","UpForGrabs"],"trait":["Redeemer"]};

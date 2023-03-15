@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (7b4f48927 2023-03-12)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (171693274 2023-03-14)" data-search-js="search-d1bc581867fd0849.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-9184409068f70b79.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f5a2577c5297a973.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_runtime/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -601,9 +601,9 @@
 <span class="kw">mod </span>runtime_upgrade;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    redeemer::{SigCheck, UpForGrabs},
     types::{Output, Transaction <span class="kw">as </span>TuxedoTransaction},
-    Redeemer, Verifier,
+    verifier::{SigCheck, UpForGrabs},
+    ConstraintChecker, Verifier,
 };
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -670,7 +670,7 @@
 
 <span class="attr">#[cfg_attr(feature = <span class="string">&quot;std&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>GenesisConfig {
-    <span class="kw">pub </span>genesis_utxos: Vec&lt;Output&lt;OuterRedeemer&gt;&gt;,
+    <span class="kw">pub </span>genesis_utxos: Vec&lt;Output&lt;OuterVerifier&gt;&gt;,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>GenesisConfig {
@@ -683,7 +683,7 @@
         <span class="comment">// Initial Config just for a Money UTXO
         </span>GenesisConfig {
             genesis_utxos: <span class="macro">vec!</span>[Output {
-                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                verifier: OuterVerifier::SigCheck(SigCheck {
                     owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
                 }),
                 payload: DynamicallyTypedData {
@@ -721,11 +721,11 @@
     }
 }
 
-<span class="kw">pub type </span>Transaction = TuxedoTransaction&lt;OuterRedeemer, OuterVerifier&gt;;
+<span class="kw">pub type </span>Transaction = TuxedoTransaction&lt;OuterVerifier, OuterConstraintChecker&gt;;
 <span class="kw">pub type </span>BlockNumber = u32;
 <span class="kw">pub type </span>Header = sp_runtime::generic::Header&lt;BlockNumber, BlakeTwo256&gt;;
 <span class="kw">pub type </span>Block = sp_runtime::generic::Block&lt;Header, Transaction&gt;;
-<span class="kw">pub type </span>Executive = tuxedo_core::Executive&lt;Block, OuterRedeemer, OuterVerifier&gt;;
+<span class="kw">pub type </span>Executive = tuxedo_core::Executive&lt;Block, OuterVerifier, OuterConstraintChecker&gt;;
 
 <span class="kw">impl </span>sp_runtime::traits::GetNodeBlockType <span class="kw">for </span>Runtime {
     <span class="kw">type </span>NodeBlock = opaque::Block;
@@ -739,35 +739,35 @@
 </span><span class="kw">const </span>BLOCK_TIME: u64 = <span class="number">3000</span>;
 
 <span class="comment">//TODO this should be implemented by the aggregation macro I guess
-</span><span class="doccomment">/// A redeemer checks that an individual input can be consumed. For example that it is signed properly
+</span><span class="doccomment">/// A verifier checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-</span><span class="kw">pub enum </span>OuterRedeemer {
+</span><span class="kw">pub enum </span>OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
 }
 
 <span class="comment">//TODO this should be implemented by the aggregation macro I guess
-</span><span class="kw">impl </span>Redeemer <span class="kw">for </span>OuterRedeemer {
-    <span class="kw">fn </span>redeem(<span class="kw-2">&amp;</span><span class="self">self</span>, simplified_tx: <span class="kw-2">&amp;</span>[u8], witness: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
+</span><span class="kw">impl </span>Verifier <span class="kw">for </span>OuterVerifier {
+    <span class="kw">fn </span>verify(<span class="kw-2">&amp;</span><span class="self">self</span>, simplified_tx: <span class="kw-2">&amp;</span>[u8], redeemer: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::SigCheck(sig_check) =&gt; sig_check.redeem(simplified_tx, witness),
-            <span class="self">Self</span>::UpForGrabs(up_for_grabs) =&gt; up_for_grabs.redeem(simplified_tx, witness),
+            <span class="self">Self</span>::SigCheck(sig_check) =&gt; sig_check.verify(simplified_tx, redeemer),
+            <span class="self">Self</span>::UpForGrabs(up_for_grabs) =&gt; up_for_grabs.verify(simplified_tx, redeemer),
         }
     }
 }
 
-<span class="kw">impl </span>From&lt;UpForGrabs&gt; <span class="kw">for </span>OuterRedeemer {
+<span class="kw">impl </span>From&lt;UpForGrabs&gt; <span class="kw">for </span>OuterVerifier {
     <span class="kw">fn </span>from(value: UpForGrabs) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::UpForGrabs(value)
     }
 }
 
-<span class="kw">impl </span>From&lt;SigCheck&gt; <span class="kw">for </span>OuterRedeemer {
+<span class="kw">impl </span>From&lt;SigCheck&gt; <span class="kw">for </span>OuterVerifier {
     <span class="kw">fn </span>from(value: SigCheck) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::SigCheck(value)
     }
@@ -778,30 +778,30 @@
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
 //TODO this should be implemented by the aggregation macro I guess
-</span><span class="doccomment">/// A verifier is a piece of logic that can be used to check a transaction.
-/// For any given Tuxedo runtime there is a finite set of such verifiers.
+</span><span class="doccomment">/// A constraint checker is a piece of logic that can be used to check a transaction.
+/// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 </span><span class="attr">#[cfg_attr(
     feature = <span class="string">&quot;std&quot;</span>,
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-</span><span class="kw">pub enum </span>OuterVerifier {
-    <span class="doccomment">/// Verifies monetary transactions in a basic fungible cryptocurrency
-    </span>Money(money::MoneyVerifier),
-    <span class="doccomment">/// Verifies Free Kitty transactions
-    </span>FreeKittyVerifier(kitties::FreeKittyVerifier),
-    <span class="doccomment">/// Verifies that an amoeba can split into two new amoebas
+</span><span class="kw">pub enum </span>OuterConstraintChecker {
+    <span class="doccomment">/// Checks monetary transactions in a basic fungible cryptocurrency
+    </span>Money(money::MoneyConstraintChecker),
+    <span class="doccomment">/// Checks Free Kitty transactions
+    </span>FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
+    <span class="doccomment">/// Checks that an amoeba can split into two new amoebas
     </span>AmoebaMitosis(amoeba::AmoebaMitosis),
-    <span class="doccomment">/// Verifies that a single amoeba is simply removed from the state
+    <span class="doccomment">/// Checks that a single amoeba is simply removed from the state
     </span>AmoebaDeath(amoeba::AmoebaDeath),
-    <span class="doccomment">/// Verifies that a single amoeba is simply created from the void... and it is good
+    <span class="doccomment">/// Checks that a single amoeba is simply created from the void... and it is good
     </span>AmoebaCreation(amoeba::AmoebaCreation),
-    <span class="doccomment">/// Verifies that new valid proofs of existence are claimed
+    <span class="doccomment">/// Checks that new valid proofs of existence are claimed
     </span>PoeClaim(poe::PoeClaim),
-    <span class="doccomment">/// Verifies that proofs of existence are revoked.
+    <span class="doccomment">/// Checks that proofs of existence are revoked.
     </span>PoeRevoke(poe::PoeRevoke),
-    <span class="doccomment">/// Verifies that one winning claim came earlier than all the other claims, and thus
+    <span class="doccomment">/// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     </span>PoeDispute(poe::PoeDispute),
     <span class="doccomment">/// Upgrade the Wasm Runtime
@@ -811,81 +811,81 @@
 <span class="doccomment">/// An aggregated error type with a variant for each tuxedo piece
 /// TODO This should probably be macro generated
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>OuterVerifierError {
+</span><span class="kw">pub enum </span>OuterConstraintCheckerError {
     <span class="doccomment">/// Error from the Money piece
-    </span>Money(money::VerifierError),
+    </span>Money(money::ConstraintCheckerError),
     <span class="doccomment">/// Error for the Kitties piece
-    </span>Kitty(kitties::VerifierError),
+    </span>Kitty(kitties::ConstraintCheckerError),
     <span class="doccomment">/// Error from the Amoeba piece
-    </span>Amoeba(amoeba::VerifierError),
+    </span>Amoeba(amoeba::ConstraintCheckerError),
     <span class="doccomment">/// Error from the PoE piece
-    </span>Poe(poe::VerifierError),
+    </span>Poe(poe::ConstraintCheckerError),
     <span class="doccomment">/// Error from the Runtime Upgrade piece
-    </span>RuntimeUpgrade(runtime_upgrade::VerifierError),
+    </span>RuntimeUpgrade(runtime_upgrade::ConstraintCheckerError),
 }
 
 <span class="comment">// We impl conversions from each of the inner error types to the outer error type.
 // This should also be done by a macro
 
-</span><span class="kw">impl </span>From&lt;money::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
-    <span class="kw">fn </span>from(e: money::VerifierError) -&gt; <span class="self">Self </span>{
+</span><span class="kw">impl </span>From&lt;money::ConstraintCheckerError&gt; <span class="kw">for </span>OuterConstraintCheckerError {
+    <span class="kw">fn </span>from(e: money::ConstraintCheckerError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Money(e)
     }
 }
 
-<span class="kw">impl </span>From&lt;kitties::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
-    <span class="kw">fn </span>from(e: kitties::VerifierError) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>From&lt;kitties::ConstraintCheckerError&gt; <span class="kw">for </span>OuterConstraintCheckerError {
+    <span class="kw">fn </span>from(e: kitties::ConstraintCheckerError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Kitty(e)
     }
 }
 
-<span class="kw">impl </span>From&lt;amoeba::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
-    <span class="kw">fn </span>from(e: amoeba::VerifierError) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>From&lt;amoeba::ConstraintCheckerError&gt; <span class="kw">for </span>OuterConstraintCheckerError {
+    <span class="kw">fn </span>from(e: amoeba::ConstraintCheckerError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Amoeba(e)
     }
 }
 
-<span class="kw">impl </span>From&lt;poe::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
-    <span class="kw">fn </span>from(e: poe::VerifierError) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>From&lt;poe::ConstraintCheckerError&gt; <span class="kw">for </span>OuterConstraintCheckerError {
+    <span class="kw">fn </span>from(e: poe::ConstraintCheckerError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Poe(e)
     }
 }
 
-<span class="kw">impl </span>From&lt;runtime_upgrade::VerifierError&gt; <span class="kw">for </span>OuterVerifierError {
-    <span class="kw">fn </span>from(e: runtime_upgrade::VerifierError) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>From&lt;runtime_upgrade::ConstraintCheckerError&gt; <span class="kw">for </span>OuterConstraintCheckerError {
+    <span class="kw">fn </span>from(e: runtime_upgrade::ConstraintCheckerError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::RuntimeUpgrade(e)
     }
 }
 
-<span class="kw">impl </span>Verifier <span class="kw">for </span>OuterVerifier {
-    <span class="kw">type </span>Error = OuterVerifierError;
+<span class="kw">impl </span>ConstraintChecker <span class="kw">for </span>OuterConstraintChecker {
+    <span class="kw">type </span>Error = OuterConstraintCheckerError;
 
-    <span class="kw">fn </span>verify&lt;R: Redeemer&gt;(
+    <span class="kw">fn </span>check&lt;V: Verifier&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        inputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
-        outputs: <span class="kw-2">&amp;</span>[Output&lt;R&gt;],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, OuterVerifierError&gt; {
+        inputs: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
+        outputs: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, OuterConstraintCheckerError&gt; {
         <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Money(money) =&gt; money.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::FreeKittyVerifier(free_breed) =&gt; free_breed.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::AmoebaMitosis(amoeba_mitosis) =&gt; amoeba_mitosis.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::AmoebaDeath(amoeba_death) =&gt; amoeba_death.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::AmoebaCreation(amoeba_creation) =&gt; amoeba_creation.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::PoeClaim(poe_claim) =&gt; poe_claim.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::PoeRevoke(poe_revoke) =&gt; poe_revoke.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::PoeDispute(poe_dispute) =&gt; poe_dispute.verify(inputs, outputs)<span class="question-mark">?</span>,
-            <span class="self">Self</span>::RuntimeUpgrade(runtime_upgrade) =&gt; runtime_upgrade.verify(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::Money(money) =&gt; money.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::FreeKittyConstraintChecker(free_breed) =&gt; free_breed.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::AmoebaMitosis(amoeba_mitosis) =&gt; amoeba_mitosis.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::AmoebaDeath(amoeba_death) =&gt; amoeba_death.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::AmoebaCreation(amoeba_creation) =&gt; amoeba_creation.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::PoeClaim(poe_claim) =&gt; poe_claim.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::PoeRevoke(poe_revoke) =&gt; poe_revoke.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::PoeDispute(poe_dispute) =&gt; poe_dispute.check(inputs, outputs)<span class="question-mark">?</span>,
+            <span class="self">Self</span>::RuntimeUpgrade(runtime_upgrade) =&gt; runtime_upgrade.check(inputs, outputs)<span class="question-mark">?</span>,
         })
     }
 }
 
-<span class="kw">impl </span>From&lt;AmoebaCreation&gt; <span class="kw">for </span>OuterVerifier {
+<span class="kw">impl </span>From&lt;AmoebaCreation&gt; <span class="kw">for </span>OuterConstraintChecker {
     <span class="kw">fn </span>from(value: AmoebaCreation) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::AmoebaCreation(value)
     }
 }
 
-<span class="kw">impl </span>From&lt;AmoebaMitosis&gt; <span class="kw">for </span>OuterVerifier {
+<span class="kw">impl </span>From&lt;AmoebaMitosis&gt; <span class="kw">for </span>OuterConstraintChecker {
     <span class="kw">fn </span>from(value: AmoebaMitosis) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::AmoebaMitosis(value)
     }
@@ -1107,7 +1107,7 @@
 
             <span class="comment">// Grab genesis value from storage and assert it is correct
             </span><span class="kw">let </span>genesis_utxo = Output {
-                redeemer: OuterRedeemer::SigCheck(SigCheck {
+                verifier: OuterVerifier::SigCheck(SigCheck {
                     owner_pubkey: shawn_pub_key.into(),
                 }),
                 payload: DynamicallyTypedData {
@@ -1124,7 +1124,7 @@
 
             <span class="kw">let </span>encoded_utxo =
                 sp_io::storage::get(<span class="kw-2">&amp;</span>output_ref.encode()).expect(<span class="string">&quot;Retrieve Genesis UTXO&quot;</span>);
-            <span class="kw">let </span>utxo = Output::&lt;OuterRedeemer&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>encoded_utxo[..])
+            <span class="kw">let </span>utxo = Output::&lt;OuterVerifier&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>encoded_utxo[..])
                 .expect(<span class="string">&quot;Can Decode UTXO correctly&quot;</span>);
             <span class="macro">assert_eq!</span>(utxo, genesis_utxo);
         })
