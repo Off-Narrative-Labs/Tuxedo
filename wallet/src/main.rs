@@ -43,13 +43,7 @@ const KEY_TYPE: KeyTypeId = KeyTypeId(*b"_tux");
 const SHAWN_PHRASE: &str =
     "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
 
-/// A default pubkey for receiving outputs when none is provided
-/// Corresponds to the default seed phrase
-const SHAWN_PUB_KEY: H256 = H256(hex_literal::hex!(
-    "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67"
-));
-// const SHAWN_PUB_KEY: &str =
-//     "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67";
+const SHAWN_PUB_KEY: &str = "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67";
 
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
@@ -114,7 +108,7 @@ pub struct SpendArgs {
     // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html which finally showed
     // how to specify a custom parsing function
     /// Hex encoded address (sr25519 pubkey) of the recipient
-    #[arg(long, short, /*default_value_t = SHAWN_PUB_KEY,*/ value_parser = pubkey_h256_from_string)]
+    #[arg(long, short, value_parser = pubkey_h256_from_string, default_value = SHAWN_PUB_KEY)]
     recipient: H256,
 
     // The `action = Append` allows us to accept the same value multiple times.
@@ -127,6 +121,7 @@ pub struct SpendArgs {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    println!("!!!!!!!!{}!!!!!!", SHAWN_PUB_KEY);
     // Parse command line args
     let cli = Cli::parse();
 
