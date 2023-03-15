@@ -105,7 +105,6 @@ enum Command {
 
 #[derive(Debug, Args)]
 pub struct SpendArgs {
-    //TODO Figure out how to allow optional 0x prefix here.
     /// An input to be consumed by this transaction. This argument may be specified multiple times.
     /// They must all be coins.
     #[arg(long, short, value_parser = output_ref_from_string)]
