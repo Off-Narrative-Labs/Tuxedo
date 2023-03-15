@@ -30,13 +30,13 @@ If the Tuxedo piece has any custom data types, they must be declared by implemen
 
 ### Defining Transaction Constraints
 
-All Tuxedo pieces will define one or more sets of constraints that a transaction must satisfy to be valid. This is done through a [dedicated trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/trait.Verifier.html) (whose name will be changed very soon and is therefore not mentioned in this Readme). Unlike the accounts model, the Tuxedo piece is not responsible for calculating the final state after the transaction. Rather, the final state is passed in as the transaction's output set. The piece only verifies that the appropriate constraints are met. For example, it may check that in an on-chain chess game, the input piece really is allowed to move to the location specified in the output. In a more classic example, it will check that the tokens being spent are of greater or equal value to the tokens being created.
+All Tuxedo pieces will define one or more sets of constraints that a transaction must satisfy to be valid. This is done through a [`ConstraintChecker` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/constraint_checker/trait.ConstraintChecker.html). Unlike the accounts model, the Tuxedo piece is not responsible for calculating the final state after the transaction. Rather, the final state is passed in as the transaction's output set. The piece only checks that the appropriate constraints are met. For example, it may check that in an on-chain chess game, the input piece really is allowed to move to the location specified in the output. In a more classic example, it will check that the tokens being spent are of greater or equal value to the tokens being created.
 
-### Declaring Redemption Logic
+### Declaring Verification Logic
 
-Each individual UTXO in the UTXO set is protected by a piece of associated logic that determines when it may be spent. This logic is defined in the [`Redeemer` Trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/redeemer/trait.Redeemer.html). The most classic example is that the UTXO is owned by a particular public key and the transaction must be signed by that key in order to unlock the input. Other examples also exist, such as, the UTXO may be claimable by anyone, or by nobody at all, or it may require a valid proof or work to be consumed.
+Each individual UTXO in the UTXO set is protected by a piece of associated logic that determines when it may be spent. This logic is defined in the [`Verifier` Trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/trait.Verifier.html). The most classic example is that the UTXO is owned by a particular public key and the transaction must be signed by that key in order to unlock the input. Other examples also exist, such as, the UTXO may be claimable by anyone, or by nobody at all, or it may require a valid proof or work to be consumed.
 
-Tuxedo core provides the most common redemption logic already, so it is uncommon that individual pieces need to add custom redemption logic, but the possibility exists none-the-less.
+Tuxedo core provides the most common verification logic already, so it is uncommon that individual pieces need to add custom verification logic, but the possibility exists none-the-less.
 
 ### Note on Unit Testing
 
