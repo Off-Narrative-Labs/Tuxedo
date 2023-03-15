@@ -41,7 +41,7 @@ const SHAWN_PHRASE: &str =
 
 /// A default pubkey for receiving outputs when none is provided
 /// Corresponds to the default seed phrase
-const SHAWN_PUB_KEY: &str = "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67";
+const SHAWN_PUB_KEY: H256 = H256(hex_literal::hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67"));
 
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
@@ -89,10 +89,13 @@ pub struct SpendArgs {
     #[arg(long, short)]
     input: Vec<String>,
 
+    // Jesus m-fkin christ. It took me a literal hour to dig through docs and github to find
+    // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html which finally showed
+    // how to specify a custom parsing function
     /// Hex encoded address (sr25519 pubkey) of the recipient (non 0x prefixed for now)
     /// Generate with subkey, or use Shawn's: d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
-    #[arg(long, short, default_value_t = SHAWN_PUB_KEY.to_string())]
-    recipient: String,
+    #[arg(long, short, default_value_t = SHAWN_PUB_KEY, value_parser = pubkey_h256_from_string)]
+    recipient: H256,
 
     // The `action = Append` allows us to accept the same value multiple times.
     /// An output amount. For the transaction to be valid, the outputs must add up to less than
@@ -164,4 +167,14 @@ pub async fn fetch_storage<R: Redeemer>(
     let utxo = Output::decode(&mut &response_bytes[..])?;
 
     Ok(utxo)
+}
+
+/// Parse a string into an H256 that represents a public key
+pub fn pubkey_h256_from_string(s: &str) -> Result<H256, clap::Error> {
+    //TODO check for a 0x prefix
+
+    let mut pubkey_bytes: [u8; 32] = [0; 32];
+    hex::decode_to_slice(s, &mut pubkey_bytes as &mut [u8])
+        .map_err(|_| clap::Error::new(clap::error::ErrorKind::ValueValidation))?;
+    Ok(H256::from(pubkey_bytes))
 }

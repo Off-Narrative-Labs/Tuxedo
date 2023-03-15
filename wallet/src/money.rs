@@ -12,7 +12,7 @@ use runtime::{
     OuterRedeemer, OuterVerifier, Transaction,
 };
 use sc_keystore::LocalKeystore;
-use sp_core::{sr25519::Public, H256};
+use sp_core::sr25519::Public;
 use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
@@ -45,17 +45,12 @@ pub async fn spend_coins(
         });
     }
 
-    // Convert the recipient into H256 type
-    let mut recipient_pubkey_bytes: [u8; 32] = [0; 32];
-    hex::decode_to_slice(args.recipient, &mut recipient_pubkey_bytes as &mut [u8])?;
-    let recipient_pubkey = H256::from(recipient_pubkey_bytes);
-
     // Construct each output and then push to the transactions
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::new(*amount).into(),
             redeemer: OuterRedeemer::SigCheck(SigCheck {
-                owner_pubkey: recipient_pubkey,
+                owner_pubkey: args.recipient,
             }),
         };
         transaction.outputs.push(output);
