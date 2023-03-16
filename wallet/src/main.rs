@@ -29,7 +29,11 @@ mod money;
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
-//TODO figure out how Substrate node chooses its default path, and mimic that.
+// TODO Get an OS appropriate path like Substrate does using `directories` crate
+// https://docs.rs/directories/latest/directories/struct.ProjectDirs.html
+// https://github.com/paritytech/substrate/blob/master/client/service/src/config.rs#L319
+// https://github.com/paritytech/substrate/blob/master/client/cli/src/config.rs#L489
+
 // https://doc.rust-lang.org/std/env/fn.home_dir.html exists but is deprecated.
 /// The default path for the keystore that stores the keys for signing transactions
 const DEFAULT_DATA_PATH: &str = "~/.local/share/tuxedo-template-wallet";
