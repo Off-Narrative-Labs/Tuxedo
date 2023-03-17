@@ -43,6 +43,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         transaction: &Transaction<V, C>,
     ) -> Result<ValidTransaction, UtxoError<C::Error>> {
         // Make sure there are no duplicate inputs
+        // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
             let input_set: BTreeSet<_> = transaction.inputs.iter().map(|o| o.encode()).collect();
             ensure!(
@@ -75,6 +76,18 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
                 input_utxos.push(input_utxo);
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
+            }
+        }
+
+        // Make a Vec of the peek utxos for passing to the constraint checker
+        // Keep track of any missing peeks for use in the tagged transaction pool
+        // Use the same vec as previously to keep track of missing peeks
+        let mut peek_utxos = Vec::new();
+        for output_ref in transaction.peeks.iter() {
+            if let Some(peek_utxo) = TransparentUtxoSet::<V>::peek_utxo(output_ref) {
+                peek_utxos.push(peek_utxo);
+            } else {
+                missing_inputs.push(output_ref.encode());
             }
         }
 
@@ -125,7 +138,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &transaction.outputs)
+            .check(&input_utxos, &peek_utxos, &transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
@@ -152,7 +165,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
         let valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
 
-        // If there are still missing inputs, so we cannot execute this,
+        // If there are still missing inputs, we cannot execute this,
         // although it would be valid in the pool
         ensure!(
             valid_transaction.requires.is_empty(),
