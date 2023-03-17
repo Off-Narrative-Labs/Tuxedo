@@ -8,16 +8,16 @@ use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
-    money::{Coin, MoneyVerifier},
-    OuterRedeemer, OuterVerifier, Transaction,
+    money::{Coin, MoneyConstraintChecker},
+    OuterConstraintChecker, OuterVerifier, Transaction,
 };
 use sc_keystore::LocalKeystore;
 use sp_core::sr25519::Public;
 use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    redeemer::SigCheck,
     types::{Input, Output, OutputRef},
+    verifier::SigCheck,
 };
 
 /// Create and send a transaction that spends coins on the network
@@ -32,7 +32,7 @@ pub async fn spend_coins(
     let mut transaction = Transaction {
         inputs: Vec::new(),
         outputs: Vec::new(),
-        verifier: OuterVerifier::Money(MoneyVerifier::Spend),
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
     };
 
     // Make sure each input decodes and is present in storage, and then push to transaction.
@@ -40,7 +40,7 @@ pub async fn spend_coins(
         print_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
             output_ref: output_ref.clone(),
-            witness: vec![], // We will sign the total transaction so this should be empty
+            redeemer: vec![], // We will sign the total transaction so this should be empty
         });
     }
 
@@ -48,7 +48,7 @@ pub async fn spend_coins(
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::new(*amount).into(),
-            redeemer: OuterRedeemer::SigCheck(SigCheck {
+            verifier: OuterVerifier::SigCheck(SigCheck {
                 owner_pubkey: args.recipient,
             }),
         };
@@ -61,22 +61,22 @@ pub async fn spend_coins(
     // Iterate back through the inputs, signing, and putting the signatures in place.
     for input in &mut transaction.inputs {
         // Fetch the output from storage
-        let utxo = fetch_storage::<OuterRedeemer>(&input.output_ref, client).await?;
+        let utxo = fetch_storage::<OuterVerifier>(&input.output_ref, client).await?;
 
         // Construct the proof that it can be consumed
-        let witness = match utxo.redeemer {
-            OuterRedeemer::SigCheck(SigCheck { owner_pubkey }) => {
+        let redeemer = match utxo.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 let public = Public::from_h256(owner_pubkey);
                 keystore
                     .sign_with(KEY_TYPE, &public.into(), &stripped_encoded_transaction)
                     .await?
                     .ok_or(anyhow!("Key doesn't exist in keystore"))?
             }
-            OuterRedeemer::UpForGrabs(_) => Vec::new(),
+            OuterVerifier::UpForGrabs(_) => Vec::new(),
         };
 
         // insert the proof
-        input.witness = witness;
+        input.redeemer = redeemer;
     }
 
     // Send the transaction
@@ -110,7 +110,7 @@ pub async fn print_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
 ) -> anyhow::Result<()> {
-    let utxo = fetch_storage::<OuterRedeemer>(output_ref, client).await?;
+    let utxo = fetch_storage::<OuterVerifier>(output_ref, client).await?;
     let coin_in_storage: Coin = utxo.payload.extract()?;
 
     print!(
@@ -119,11 +119,11 @@ pub async fn print_coin_from_storage(
         coin_in_storage.0
     );
 
-    match utxo.redeemer {
-        OuterRedeemer::SigCheck(sig_check) => {
+    match utxo.verifier {
+        OuterVerifier::SigCheck(sig_check) => {
             println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
         }
-        OuterRedeemer::UpForGrabs(_) => println!("that can be spent by anyone"),
+        OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
     }
 
     Ok(())

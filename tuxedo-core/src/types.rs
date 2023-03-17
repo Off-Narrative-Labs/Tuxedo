@@ -26,10 +26,10 @@ pub struct OutputRef {
 /// Each transaction consumes some UTXOs (the inputs) and creates some new ones (the outputs).
 ///
 /// The Transaction type is generic over two orthogonal pieces of validation logic:
-/// 1. Redeemers - A redeemer checks that an individual input may be consumed. A typical example
-///    of a redeemer is checking that there is a signature by the proper owner. Other examples
+/// 1. Verifier - A verifier checks that an individual input may be consumed. A typical example
+///    of a verifier is checking that there is a signature by the proper owner. Other examples
 ///    may be that anyone can consume the input or no one can, or that a proof of work is required.
-/// 2. Verifiers - A verifier checks that the transaction as a whole meets a set of requirements.
+/// 2. ConstraintCheckers - A constraint checker checks that the transaction as a whole meets a set of requirements.
 ///    For example, that the total output value of a cryptocurrency transaction does not exceed its
 ///    input value. Or that a cryptokitty was created with the correct genetic material from its parents.
 ///
@@ -40,20 +40,20 @@ pub struct OutputRef {
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct Transaction<R, V> {
+pub struct Transaction<V, C> {
     pub inputs: Vec<Input>,
     //Todo peeks: Vec<Input>,
-    pub outputs: Vec<Output<R>>,
-    pub verifier: V,
+    pub outputs: Vec<Output<V>>,
+    pub checker: C,
 }
 
 // We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
 // See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
 //
 // This trait's design has a preference for transactions that will have a single signature over the
-// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound
-// , so we do a minimal implementation.
-impl<R, V> Extrinsic for Transaction<R, V> {
+// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
+// so we do a minimal implementation.
+impl<V, C> Extrinsic for Transaction<V, C> {
     type Call = Self;
     type SignaturePayload = ();
 
@@ -78,21 +78,21 @@ pub struct Input {
     /// a reference to the output being consumed
     pub output_ref: OutputRef,
     // Eg the signature
-    pub witness: Vec<u8>,
+    pub redeemer: Vec<u8>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum UtxoError<VerifierError> {
+pub enum UtxoError<ConstraintCheckerError> {
     /// This transaction defines the same input multiple times
     DuplicateInput,
     /// This transaction defines an output that already existed in the UTXO set
     PreExistingOutput,
-    /// The verifier errored.
-    VerifierError(VerifierError),
-    /// The Redeemer errored.
-    /// TODO determine whether it is useful to relay an inner error from the redeemer.
+    /// The contraint checker errored.
+    ConstraintCheckerError(ConstraintCheckerError),
+    /// The Verifier errored.
+    /// TODO determine whether it is useful to relay an inner error from the verifier.
     /// So far, I haven't seen a case, although it seems reasonable to think there might be one.
-    RedeemerError,
+    VerifierError,
     /// One or more of the inputs required by this transaction is not present in the UTXO set
     MissingInput,
 }
@@ -101,7 +101,7 @@ pub enum UtxoError<VerifierError> {
 pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
 
 /// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
-/// the redeemer is checked, strongly typed data will be extracted and passed to the verifier.
+/// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
 #[cfg_attr(
@@ -109,25 +109,25 @@ pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub struct Output<R> {
+pub struct Output<V> {
     pub payload: DynamicallyTypedData,
-    pub redeemer: R,
+    pub verifier: V,
 }
 
 #[cfg(test)]
 pub mod tests {
 
-    use crate::{redeemer::UpForGrabs, verifier::testing::TestVerifier};
+    use crate::{constraint_checker::testing::TestConstraintChecker, verifier::UpForGrabs};
 
     use super::*;
 
     #[test]
     fn extrinsic_no_signed_payload() {
-        let verifier = TestVerifier { verifies: true };
-        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction {
+        let checker = TestConstraintChecker { checks: true };
+        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
-            verifier,
+            checker,
         };
         let e = Transaction::new(tx.clone(), None).unwrap();
 
@@ -137,11 +137,11 @@ pub mod tests {
 
     #[test]
     fn extrinsic_is_signed_works() {
-        let verifier = TestVerifier { verifies: true };
-        let tx: Transaction<UpForGrabs, TestVerifier> = Transaction {
+        let checker = TestConstraintChecker { checks: true };
+        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             outputs: Vec::new(),
-            verifier,
+            checker,
         };
         let e = Transaction::new(tx.clone(), Some(())).unwrap();
 
