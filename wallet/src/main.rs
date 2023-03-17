@@ -124,7 +124,7 @@ async fn main() -> anyhow::Result<()> {
     // Setup the keystore.
     let data_path = cli.data_path.unwrap_or_else(default_data_path);
     let keystore_path = data_path.join("keystore");
-    let keystore = sc_keystore::LocalKeystore::open(keystore_path, None)?;
+    let keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), None)?;
 
     // If the keystore is empty, insert the example Shawn key so example transactions can be signed.
     if keystore.keys(KEY_TYPE)?.is_empty() {
@@ -178,10 +178,23 @@ async fn main() -> anyhow::Result<()> {
         Command::RemoveKey { pub_key } => {
             // The keystore doesn't provide an API for removing keys, so we
             // remove them from the filesystem directly
-            let filename = format!("0x{}{}", hex::encode(KEY_TYPE.0), hex::encode(pub_key.0));
+            let filename = format!("{}{}", hex::encode(KEY_TYPE.0), hex::encode(pub_key.0));
+            let path = keystore_path.join(filename);
 
-            println!("The filename is {}", filename);
-            todo!()
+            println!("CAUTION!!! About permanently remove {pub_key}. This action CANNOT BE REVERSED. Type \"proceed\" to confirm deletion.");
+
+            let mut confirmation = String::new();
+            std::io::stdin()
+                .read_line(&mut confirmation)
+                .expect("Failed to read line");
+
+            if confirmation.trim() == "proceed" {
+                std::fs::remove_file(path)?;
+            } else {
+                println!("Deletion aborted. That was close.")
+            }
+
+            Ok(())
         }
     }
 }
