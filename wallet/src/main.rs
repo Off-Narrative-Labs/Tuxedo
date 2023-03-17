@@ -122,7 +122,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     // Setup the keystore.
-    let data_path = PathBuf::from(cli.data_path.unwrap_or_else(default_data_path));
+    let data_path = cli.data_path.unwrap_or_else(default_data_path);
     let keystore_path = data_path.join("keystore");
     let keystore = sc_keystore::LocalKeystore::open(keystore_path, None)?;
 
@@ -240,7 +240,7 @@ fn default_data_path() -> PathBuf {
     // Application developers may want to put actual qualifiers or organization here
     let qualifier = "";
     let organization = "";
-    let application = env!("CARGO_PKG_NAME").into();
+    let application = env!("CARGO_PKG_NAME");
 
     directories::ProjectDirs::from(qualifier, organization, application)
         .expect("app directories exist on all supported platforms; qed")
