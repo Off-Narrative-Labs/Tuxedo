@@ -84,6 +84,7 @@ impl SimpleConstraintChecker for MoneyConstraintChecker {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        _peeks:  &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {

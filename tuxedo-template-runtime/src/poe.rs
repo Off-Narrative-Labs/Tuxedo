@@ -83,6 +83,7 @@ impl SimpleConstraintChecker for PoeClaim {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        _peeks:  &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no inputs
@@ -129,6 +130,7 @@ impl SimpleConstraintChecker for PoeRevoke {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        _peeks:  &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no outputs
@@ -171,6 +173,7 @@ impl SimpleConstraintChecker for PoeDispute {
     fn check(
         &self,
         _input_data: &[DynamicallyTypedData],
+        _peeks:  &[DynamicallyTypedData],
         _output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         todo!("implement this once we have at least peeks and maybe evictions")
