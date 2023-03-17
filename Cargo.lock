@@ -7981,6 +7981,7 @@ version = "1.0.0-dev"
 dependencies = [
  "anyhow",
  "clap",
+ "directories",
  "hex",
  "hex-literal",
  "jsonrpsee",

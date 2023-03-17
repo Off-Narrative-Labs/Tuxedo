@@ -29,15 +29,6 @@ mod money;
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
-// TODO Get an OS appropriate path like Substrate does using `directories` crate
-// https://docs.rs/directories/latest/directories/struct.ProjectDirs.html
-// https://github.com/paritytech/substrate/blob/master/client/service/src/config.rs#L319
-// https://github.com/paritytech/substrate/blob/master/client/cli/src/config.rs#L489
-
-// https://doc.rust-lang.org/std/env/fn.home_dir.html exists but is deprecated.
-/// The default path for the keystore that stores the keys for signing transactions
-const DEFAULT_DATA_PATH: &str = "~/.local/share/tuxedo-template-wallet";
-
 /// A KeyTypeId to use in the keystore for Tuxedo transactions. We'll use this everywhere
 /// until it becomes clear that there si a reason to use multiple of them
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"_tux");
@@ -57,10 +48,12 @@ struct Cli {
     /// RPC endpoint of the node that this wallet will connect to
     endpoint: String,
 
-    #[arg(long, short, default_value_t = DEFAULT_DATA_PATH.to_string())]
+    #[arg(long, short)]
     /// Path where to the wallet data is stored. Wallet data is just keystore at the moment,
     /// but will contain a local database of UTXOs in the future.
-    data_path: String,
+    ///
+    /// Default value is platform specific
+    data_path: Option<PathBuf>,
 
     #[command(subcommand)]
     command: Command,
@@ -129,7 +122,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     // Setup the keystore.
-    let data_path = PathBuf::from(cli.data_path);
+    let data_path = PathBuf::from(cli.data_path.unwrap_or_else(default_data_path));
     let keystore_path = data_path.join("keystore");
     let keystore = sc_keystore::LocalKeystore::open(keystore_path, None)?;
 
@@ -237,4 +230,20 @@ fn strip_0x_prefix(s: &str) -> &str {
     } else {
         s
     }
+}
+
+/// Generate the platform-specific default data path for the wallet
+fn default_data_path() -> PathBuf {
+    // This uses the directories crate.
+    // https://docs.rs/directories/latest/directories/struct.ProjectDirs.html
+
+    // Application developers may want to put actual qualifiers or organization here
+    let qualifier = "";
+    let organization = "";
+    let application = env!("CARGO_PKG_NAME").into();
+
+    directories::ProjectDirs::from(qualifier, organization, application)
+        .expect("app directories exist on all supported platforms; qed")
+        .config_dir()
+        .into()
 }
