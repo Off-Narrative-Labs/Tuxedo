@@ -89,7 +89,7 @@ enum Command {
     /// keys are backed up somewhere safe.
     RemoveKey {
         /// The public key to remove
-        #[arg(value_parser = pubkey_h256_from_string)]
+        #[arg(value_parser = h256_from_string)]
         pub_key: H256,
     },
 }
@@ -105,7 +105,7 @@ pub struct SpendArgs {
     // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html which finally showed
     // how to specify a custom parsing function
     /// Hex encoded address (sr25519 pubkey) of the recipient
-    #[arg(long, short, value_parser = pubkey_h256_from_string, default_value = SHAWN_PUB_KEY)]
+    #[arg(long, short, value_parser = h256_from_string, default_value = SHAWN_PUB_KEY)]
     recipient: H256,
 
     // The `action = Append` allows us to accept the same value multiple times.
@@ -217,13 +217,13 @@ pub async fn fetch_storage<V: Verifier>(
 }
 
 /// Parse a string into an H256 that represents a public key
-fn pubkey_h256_from_string(s: &str) -> Result<H256, clap::Error> {
+fn h256_from_string(s: &str) -> Result<H256, clap::Error> {
     let s = strip_0x_prefix(s);
 
-    let mut pubkey_bytes: [u8; 32] = [0; 32];
-    hex::decode_to_slice(s, &mut pubkey_bytes as &mut [u8])
+    let mut bytes: [u8; 32] = [0; 32];
+    hex::decode_to_slice(s, &mut bytes as &mut [u8])
         .map_err(|_| clap::Error::new(clap::error::ErrorKind::ValueValidation))?;
-    Ok(H256::from(pubkey_bytes))
+    Ok(H256::from(bytes))
 }
 
 /// Parse an output ref from a string
