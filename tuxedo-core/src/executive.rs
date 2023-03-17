@@ -660,7 +660,7 @@ mod tests {
     }
 
     #[test]
-    fn validate_with_verifier_error_fails() {
+    fn validate_with_constraint_error_fails() {
         ExternalityBuilder::default().build().execute_with(|| {
             let tx = TestTransaction {
                 inputs: Vec::new(),
