@@ -542,6 +542,11 @@ mod tests {
     }
 
     #[test]
+    fn validate_with_peek_works() {
+        todo!()
+    }
+
+    #[test]
     fn validate_with_output_works() {
         ExternalityBuilder::default().build().execute_with(|| {
             let output = Output {
@@ -594,6 +599,11 @@ mod tests {
     }
 
     #[test]
+    fn validate_with_missing_peek_works() {
+        todo!()
+    }
+
+    #[test]
     fn validate_with_duplicate_input_fails() {
         ExternalityBuilder::default()
             .with_utxo(0, 0, Bogus, false)
@@ -615,6 +625,11 @@ mod tests {
 
                 assert_eq!(result, Err(UtxoError::DuplicateInput));
             });
+    }
+
+    #[test]
+    fn validate_with_duplicate_peek_works() {
+        todo!()
     }
 
     #[test]
@@ -721,6 +736,11 @@ mod tests {
 
             assert_eq!(vt, Err(UtxoError::MissingInput));
         });
+    }
+
+    #[test]
+    fn apply_with_missing_peek_fails() {
+        todo!()
     }
 
     #[test]
