@@ -41,9 +41,13 @@ pub struct OutputRef {
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<V, C> {
+    /// Existing state to be read and consumed from storage
     pub inputs: Vec<Input>,
-    //Todo peeks: Vec<Input>,
+    /// Existing state to be read, but not consumed, from storage
+    pub peeks: Vec<OutputRef>,
+    /// New state to be placed into storage
     pub outputs: Vec<Output<V>>,
+    /// Which piece of constraint checking logic is used to determine whether this transaction is valid
     pub checker: C,
 }
 
@@ -126,6 +130,7 @@ pub mod tests {
         let checker = TestConstraintChecker { checks: true };
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
+            peeks: Vec::new(),
             outputs: Vec::new(),
             checker,
         };
@@ -140,6 +145,7 @@ pub mod tests {
         let checker = TestConstraintChecker { checks: true };
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
+            peeks: Vec::new(),
             outputs: Vec::new(),
             checker,
         };
