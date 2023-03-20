@@ -26,6 +26,7 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
         &self,
         input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
+        eviction_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 }
@@ -48,6 +49,7 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
         &self,
         inputs: &[Output<V>],
         peeks: &[Output<V>],
+        evictions: &[Output<V>],
         outputs: &[Output<V>],
     ) -> Result<TransactionPriority, Self::Error>;
 }
@@ -63,6 +65,7 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
         &self,
         inputs: &[Output<V>],
         peeks: &[Output<V>],
+        evictions: &[Output<V>],
         outputs: &[Output<V>],
     ) -> Result<TransactionPriority, Self::Error> {
         // Extract the input data
@@ -72,13 +75,17 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
         // Extract the peek data
         let peek_data: Vec<DynamicallyTypedData> =
             peeks.iter().map(|o| o.payload.clone()).collect();
+        
+        // Extract the eviction data
+        let eviction_data: Vec<DynamicallyTypedData> =
+            evictions.iter().map(|o| o.payload.clone()).collect();
 
         // Extract the output data
         let output_data: Vec<DynamicallyTypedData> =
             outputs.iter().map(|o| o.payload.clone()).collect();
 
         // Call the simple constraint checker
-        SimpleConstraintChecker::check(self, &input_data, &peek_data, &output_data)
+        SimpleConstraintChecker::check(self, &input_data, &peek_data, &eviction_data, &output_data)
     }
 }
 
@@ -102,6 +109,7 @@ pub mod testing {
             &self,
             _input_data: &[DynamicallyTypedData],
             _peek_data: &[DynamicallyTypedData],
+            _eviction_data: &[DynamicallyTypedData],
             _output_data: &[DynamicallyTypedData],
         ) -> Result<TransactionPriority, ()> {
             if self.checks {
@@ -115,14 +123,14 @@ pub mod testing {
     #[test]
     fn test_checker_passes() {
         let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
         let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

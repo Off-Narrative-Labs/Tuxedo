@@ -45,6 +45,10 @@ pub struct Transaction<V, C> {
     pub inputs: Vec<Input>,
     /// Existing state to be read, but not consumed, from storage
     pub peeks: Vec<OutputRef>,
+    /// Existing state to be read and forcefully consumed from storage
+    /// Evictions are consumed without requiring a redeemer that satisfies the verifier
+    /// Evictions are used for cleaning up old or unnecessary state
+    pub evictions: Vec<OutputRef>,
     /// New state to be placed into storage
     pub outputs: Vec<Output<V>>,
     /// Which piece of constraint checking logic is used to determine whether this transaction is valid
@@ -131,6 +135,7 @@ pub mod tests {
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
+            evictions: Vec::new(),
             outputs: Vec::new(),
             checker,
         };
@@ -146,6 +151,7 @@ pub mod tests {
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
+            evictions: Vec::new(),
             outputs: Vec::new(),
             checker,
         };

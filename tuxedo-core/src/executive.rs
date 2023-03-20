@@ -91,6 +91,17 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             }
         }
 
+        // Make a Vec of the eviction utxos for passing to the constraint checker
+        // Keep track of any missing evictions for use in the pool. Same vec as previously
+        let mut eviction_utxos = Vec::new();
+        for output_ref in transaction.evictions.iter() {
+            if let Some(eviction_utxo) = TransparentUtxoSet::<V>::peek_utxo(output_ref) {
+                eviction_utxos.push(eviction_utxo);
+            } else {
+                missing_inputs.push(output_ref.encode());
+            }
+        }
+
         // Make sure no outputs already exist in storage
         let tx_hash = BlakeTwo256::hash_of(&transaction.encode());
         for index in 0..transaction.outputs.len() {
@@ -138,7 +149,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &peek_utxos, &transaction.outputs)
+            .check(&input_utxos, &peek_utxos, &eviction_utxos, &transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
@@ -186,6 +197,11 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Remove verified UTXOs
         for input in &transaction.inputs {
             TransparentUtxoSet::<V>::consume_utxo(&input.output_ref);
+        }
+
+        // Remove the evicted UTXOs
+        for eviction in &transaction.evictions {
+            TransparentUtxoSet::<V>::consume_utxo(eviction);
         }
 
         log::debug!(
@@ -411,6 +427,7 @@ mod tests {
     struct TestTransactionBuilder {
         inputs: Vec<Input>,
         peeks: Vec<OutputRef>,
+        evictions: Vec<OutputRef>,
         outputs: Vec<Output<TestVerifier>>,
     }
 
@@ -425,6 +442,11 @@ mod tests {
             self
         }
 
+        fn with_eviction(mut self, eviction: OutputRef) -> Self {
+            self.evictions.push(eviction);
+            self
+        }
+
         fn with_output(mut self, output: Output<TestVerifier>) -> Self {
             self.outputs.push(output);
             self
@@ -434,6 +456,7 @@ mod tests {
             TestTransaction {
                 inputs: self.inputs,
                 peeks: self.peeks,
+                evictions: self.evictions,
                 outputs: self.outputs,
                 checker: TestConstraintChecker {
                     checks: should_check,
@@ -591,6 +614,11 @@ mod tests {
     }
 
     #[test]
+    fn validate_with_eviction_works() {
+        todo!()
+    }
+
+    #[test]
     fn validate_with_output_works() {
         ExternalityBuilder::default().build().execute_with(|| {
             let output = Output {
@@ -658,6 +686,11 @@ mod tests {
     }
 
     #[test]
+    fn validate_with_missing_eviction_works() {
+        todo!()
+    }
+
+    #[test]
     fn validate_with_duplicate_input_fails() {
         let output_ref = mock_output_ref(0, 0);
 
@@ -703,6 +736,11 @@ mod tests {
 
                 assert_eq!(vt, expected_result);
             });
+    }
+
+    #[test]
+    fn validate_with_duplicate_eviction_works() {
+        todo!("This should give an error. Can't evict twice.")
     }
 
     #[test]
@@ -814,6 +852,11 @@ mod tests {
     }
 
     #[test]
+    fn apply_with_missing_eviction_fails() {
+        todo!()
+    }
+
+    #[test]
     fn update_storage_consumes_input() {
         let output_ref = mock_output_ref(0, 0);
 
@@ -836,6 +879,11 @@ mod tests {
                 // Check whether the Input is still in storage
                 assert!(!sp_io::storage::exists(&output_ref.encode()));
             });
+    }
+
+    #[test]
+    fn update_storage_consumes_eviction() {
+        todo!()
     }
 
     #[test]
