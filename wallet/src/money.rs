@@ -106,6 +106,7 @@ pub async fn print_coin_from_storage(
             println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
         }
         OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
+        OuterVerifier::ThresholdMultiSignature(_) => println!("ThresholdMultiSign TODO!"),
     }
 
     Ok(())

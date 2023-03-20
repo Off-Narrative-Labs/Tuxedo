@@ -62,8 +62,11 @@ impl Verifier for UpForGrabs {
 /// guarded by this verifier. A valid redeemer must supply valid signatures by at least
 /// `threshold` of the signatories. If the threshold is greater than the number of signatories
 /// the input can never be consumed.
-#[cfg(feature = "std")]
-#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(
+    feature = "std",
+    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
+)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct ThresholdMultiSignature {
     /// The minimum number of valid signatures needed to consume this input
     pub threshold: u8,
@@ -80,8 +83,8 @@ impl ThresholdMultiSignature {
     }
 }
 
-#[cfg(feature = "std")]
-#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// Combination of a signature plus and index so that the signer can specify which
 /// index this signature pertains too of the available signatories for a `ThresholdMultiSignature`
 pub struct SignatureAndIndex {
