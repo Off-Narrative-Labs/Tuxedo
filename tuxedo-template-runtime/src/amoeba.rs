@@ -238,7 +238,7 @@ mod test {
         let input_data = Vec::new();
         let output_data = vec![to_spawn.into()];
 
-        assert_eq!(AmoebaCreation.check(&input_data, &output_data), Ok(0),);
+        assert_eq!(AmoebaCreation.check(&input_data, &[], &output_data), Ok(0),);
     }
 
     #[test]
@@ -251,7 +251,7 @@ mod test {
         let output_data = vec![to_spawn.into()];
 
         assert_eq!(
-            AmoebaCreation.check(&input_data, &output_data),
+            AmoebaCreation.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::WrongGeneration),
         );
     }
@@ -266,7 +266,7 @@ mod test {
         let output_data = vec![example.into()];
 
         assert_eq!(
-            AmoebaCreation.check(&input_data, &output_data),
+            AmoebaCreation.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::CreationMayNotConsume),
         );
     }
@@ -277,7 +277,7 @@ mod test {
         let output_data = vec![Bogus.into()];
 
         assert_eq!(
-            AmoebaCreation.check(&input_data, &output_data),
+            AmoebaCreation.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::BadlyTypedOutput),
         );
     }
@@ -292,7 +292,7 @@ mod test {
         let output_data = vec![to_spawn.clone().into(), to_spawn.into()];
 
         assert_eq!(
-            AmoebaCreation.check(&input_data, &output_data),
+            AmoebaCreation.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::CreatedTooMany),
         );
     }
@@ -303,7 +303,7 @@ mod test {
         let output_data = Vec::new();
 
         assert_eq!(
-            AmoebaCreation.check(&input_data, &output_data),
+            AmoebaCreation.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::CreatedNothing),
         );
     }
@@ -325,7 +325,7 @@ mod test {
         let input_data = vec![mother.into()];
         let output_data = vec![d1.into(), d2.into()];
 
-        assert_eq!(AmoebaMitosis.check(&input_data, &output_data), Ok(0),);
+        assert_eq!(AmoebaMitosis.check(&input_data, &[], &output_data), Ok(0),);
     }
 
     #[test]
@@ -346,7 +346,7 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.check(&input_data, &output_data),
+            AmoebaMitosis.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::WrongGeneration),
         );
     }
@@ -366,7 +366,7 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.check(&input_data, &output_data),
+            AmoebaMitosis.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::BadlyTypedInput),
         );
     }
@@ -385,7 +385,7 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.check(&input_data, &output_data),
+            AmoebaMitosis.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::WrongNumberOfMothers),
         );
     }
@@ -405,7 +405,7 @@ mod test {
         let output_data = vec![d1.into(), d2.into()];
 
         assert_eq!(
-            AmoebaMitosis.check(&input_data, &output_data),
+            AmoebaMitosis.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::BadlyTypedOutput),
         );
     }
@@ -425,7 +425,7 @@ mod test {
         let output_data = vec![d1.into()];
 
         assert_eq!(
-            AmoebaMitosis.check(&input_data, &output_data),
+            AmoebaMitosis.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::WrongNumberOfDaughters),
         );
     }
@@ -453,7 +453,7 @@ mod test {
         let output_data = vec![d1.into(), d2.into(), d3.into()];
 
         assert_eq!(
-            AmoebaMitosis.check(&input_data, &output_data),
+            AmoebaMitosis.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::WrongNumberOfDaughters),
         );
     }
@@ -467,7 +467,7 @@ mod test {
         let input_data = vec![example.into()];
         let output_data = vec![];
 
-        assert_eq!(AmoebaDeath.check(&input_data, &output_data), Ok(0),);
+        assert_eq!(AmoebaDeath.check(&input_data, &[], &output_data), Ok(0),);
     }
 
     #[test]
@@ -476,7 +476,7 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            AmoebaDeath.check(&input_data, &output_data),
+            AmoebaDeath.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::NoVictim),
         );
     }
@@ -495,7 +495,7 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            AmoebaDeath.check(&input_data, &output_data),
+            AmoebaDeath.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::TooManyVictims),
         );
     }
@@ -510,7 +510,7 @@ mod test {
         let output_data = vec![example.into()];
 
         assert_eq!(
-            AmoebaDeath.check(&input_data, &output_data),
+            AmoebaDeath.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::DeathMayNotCreate),
         );
     }
@@ -522,7 +522,7 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            AmoebaDeath.check(&input_data, &output_data),
+            AmoebaDeath.check(&input_data, &[], &output_data),
             Err(ConstraintCheckerError::BadlyTypedInput),
         );
     }
