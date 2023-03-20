@@ -30,7 +30,7 @@ mod money;
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
 /// A KeyTypeId to use in the keystore for Tuxedo transactions. We'll use this everywhere
-/// until it becomes clear that there si a reason to use multiple of them
+/// until it becomes clear that there is a reason to use multiple of them
 const KEY_TYPE: KeyTypeId = KeyTypeId(*b"_tux");
 
 /// A default seed phrase for signing inputs when none is provided
@@ -49,7 +49,7 @@ struct Cli {
     endpoint: String,
 
     #[arg(long, short)]
-    /// Path where to the wallet data is stored. Wallet data is just keystore at the moment,
+    /// Path where the wallet data is stored. Wallet data is just keystore at the moment,
     /// but will contain a local database of UTXOs in the future.
     ///
     /// Default value is platform specific
@@ -101,9 +101,8 @@ pub struct SpendArgs {
     #[arg(long, short, value_parser = output_ref_from_string)]
     input: Vec<OutputRef>,
 
-    // Jesus m-fkin christ. It took me a literal hour to dig through docs and github to find
-    // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html which finally showed
-    // how to specify a custom parsing function
+    // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html
+    // shows how to specify a custom parsing function
     /// Hex encoded address (sr25519 pubkey) of the recipient
     #[arg(long, short, value_parser = h256_from_string, default_value = SHAWN_PUB_KEY)]
     recipient: H256,
