@@ -993,7 +993,7 @@ mod tests {
                         "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        "7ceffb73687cb9af3ad2f9a0c544a216df70894b03da3ceb57ead37bd6b51be0",
+                        "367027fa247a01cda117851f4a6404622eacaf276c5592221e59d2004f994c7c",
                     ),
                     digest: Default::default(),
                 },
