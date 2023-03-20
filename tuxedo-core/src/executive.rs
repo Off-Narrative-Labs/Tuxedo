@@ -98,9 +98,8 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
                 UtxoError::PreExistingOutput
             );
 
-            let output = transaction.outputs[index];
             ensure!(
-                output.verifier.ensure_verifier_data_is_valid(),
+                transaction.outputs[index].verifier.ensure_verifier_data_is_valid(),
                 UtxoError::InvalidVerifierIncludedInOutput
             );
         }
