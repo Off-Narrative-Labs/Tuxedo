@@ -10,9 +10,10 @@ use parity_scale_codec::{Decode, Encode};
 use serde::{Deserialize, Serialize};
 use sp_core::sr25519::{Public, Signature};
 use sp_core::H256;
-use sp_std::fmt::Debug;
-use sp_std::collections::btree_set::BTreeSet;
 use sp_std::collections::btree_map::BTreeMap;
+use sp_std::collections::btree_set::BTreeSet;
+use sp_std::fmt::Debug;
+use sp_std::vec::Vec;
 
 /// A means of checking that an output can be verified (aka spent). This check is made on a
 /// per-output basis and neither knows nor cares anything about the validation logic that will
@@ -114,7 +115,8 @@ impl Verifier for ThresholdMultiSignature {
         }
 
         {
-            let set: BTreeMap<u8, Signature> = sigs.iter()
+            let set: BTreeMap<u8, Signature> = sigs
+                .iter()
                 .map(|sig_and_index| (sig_and_index.index, sig_and_index.signature.clone()))
                 .collect();
 
@@ -123,10 +125,16 @@ impl Verifier for ThresholdMultiSignature {
             }
         }
 
-        let valid_sigs: Vec<_> = sigs.iter().map(|sig| {
-            sp_io::crypto::sr25519_verify(&sig.signature, simplified_tx, &Public::from_h256(self.signatories[sig.index as usize]));
-        })
-        .collect();
+        let valid_sigs: Vec<_> = sigs
+            .iter()
+            .map(|sig| {
+                sp_io::crypto::sr25519_verify(
+                    &sig.signature,
+                    simplified_tx,
+                    &Public::from_h256(self.signatories[sig.index as usize]),
+                );
+            })
+            .collect();
 
         valid_sigs.len() >= self.threshold.into()
     }
@@ -176,17 +184,23 @@ mod test {
     fn threshold_multisig_with_enough_sigs_passes() {
         let pairs: Vec<_> = (1..3)
             .map(|i| {
-                Pair::from_entropy(format!("entropy_entropy_entropy_entropy{}", i).as_bytes(), None).0
+                Pair::from_entropy(
+                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
+                    None,
+                )
+                .0
             })
             .collect();
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
         let simplified_tx = b"hello_world".as_slice();
-        let sigs: Vec<_> = pairs.iter()
+        let sigs: Vec<_> = pairs
+            .iter()
             .enumerate()
-            .map(|(i, p)| {
-                SignatureAndIndex { signature: p.sign(simplified_tx), index: i.try_into().unwrap() }
+            .map(|(i, p)| SignatureAndIndex {
+                signature: p.sign(simplified_tx),
+                index: i.try_into().unwrap(),
             })
             .collect();
 
@@ -203,17 +217,23 @@ mod test {
     fn threshold_multisig_not_enough_sigs_fails() {
         let pairs: Vec<_> = (1..3)
             .map(|i| {
-                Pair::from_entropy(format!("entropy_entropy_entropy_entropy{}", i).as_bytes(), None).0
+                Pair::from_entropy(
+                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
+                    None,
+                )
+                .0
             })
             .collect();
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
         let simplified_tx = b"hello_world".as_slice();
-        let sigs: Vec<_> = pairs.iter()
+        let sigs: Vec<_> = pairs
+            .iter()
             .enumerate()
-            .map(|(i, p)| {
-                SignatureAndIndex { signature: p.sign(simplified_tx), index: i.try_into().unwrap() }
+            .map(|(i, p)| SignatureAndIndex {
+                signature: p.sign(simplified_tx),
+                index: i.try_into().unwrap(),
             })
             .collect();
 
@@ -230,7 +250,11 @@ mod test {
     fn threshold_multisig_replay_sig_attack_fails() {
         let pairs: Vec<_> = (1..3)
             .map(|i| {
-                Pair::from_entropy(format!("entropy_entropy_entropy_entropy{}", i).as_bytes(), None).0
+                Pair::from_entropy(
+                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
+                    None,
+                )
+                .0
             })
             .collect();
 
@@ -239,8 +263,14 @@ mod test {
         let simplified_tx = b"hello_world".as_slice();
 
         let sigs: Vec<SignatureAndIndex> = vec![
-            SignatureAndIndex{ signature: pairs[0].sign(simplified_tx), index: 0.try_into().unwrap() },
-            SignatureAndIndex{ signature: pairs[0].sign(simplified_tx), index: 0.try_into().unwrap() }
+            SignatureAndIndex {
+                signature: pairs[0].sign(simplified_tx),
+                index: 0.try_into().unwrap(),
+            },
+            SignatureAndIndex {
+                signature: pairs[0].sign(simplified_tx),
+                index: 0.try_into().unwrap(),
+            },
         ];
 
         let redeemer: &[u8] = &sigs.encode()[..];
@@ -256,21 +286,25 @@ mod test {
     fn threshold_multisig_has_duplicate_signatories_fails() {
         let pairs: Vec<_> = (1..3)
             .map(|i| {
-                Pair::from_entropy(format!("entropy_entropy_entropy_entropy{}", i).as_bytes(), None).0
+                Pair::from_entropy(
+                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
+                    None,
+                )
+                .0
             })
             .collect();
 
-        let signatories: Vec<H256> = vec![
-            H256::from(pairs[0].public()),
-            H256::from(pairs[0].public())
-        ];
+        let signatories: Vec<H256> =
+            vec![H256::from(pairs[0].public()), H256::from(pairs[0].public())];
 
         let simplified_tx = b"hello_world".as_slice();
 
-        let sigs: Vec<_> = pairs.iter()
+        let sigs: Vec<_> = pairs
+            .iter()
             .enumerate()
-            .map(|(i, p)| {
-                SignatureAndIndex { signature: p.sign(simplified_tx), index: i.try_into().unwrap() }
+            .map(|(i, p)| SignatureAndIndex {
+                signature: p.sign(simplified_tx),
+                index: i.try_into().unwrap(),
             })
             .collect();
         let redeemer: &[u8] = &sigs.encode()[..];
@@ -291,7 +325,7 @@ mod test {
 
         let threshold_multisig = ThresholdMultiSignature {
             threshold: 3,
-            signatories: vec![]
+            signatories: vec![],
         };
 
         assert!(!threshold_multisig.verify(b"bogus_message".as_slice(), bogus.encode().as_slice()))

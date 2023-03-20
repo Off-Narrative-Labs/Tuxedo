@@ -36,8 +36,8 @@ mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     types::{Output, Transaction as TuxedoTransaction},
-    verifier::{SigCheck, UpForGrabs},
-    ConstraintChecker, Verifier,
+    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
+    ConstraintChecker, SignatureAndIndex, Verifier,
 };
 
 #[cfg(feature = "std")]
@@ -183,6 +183,7 @@ const BLOCK_TIME: u64 = 3000;
 pub enum OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
+    ThresholdMultiSignature(ThresholdMultiSignature),
 }
 
 //TODO this should be implemented by the aggregation macro I guess
@@ -191,6 +192,9 @@ impl Verifier for OuterVerifier {
         match self {
             Self::SigCheck(sig_check) => sig_check.verify(simplified_tx, redeemer),
             Self::UpForGrabs(up_for_grabs) => up_for_grabs.verify(simplified_tx, redeemer),
+            Self::ThresholdMultiSignature(threshold_multisig) => {
+                threshold_multisig.verify(simplified_tx, redeemer)
+            }
         }
     }
 }
@@ -204,6 +208,12 @@ impl From<UpForGrabs> for OuterVerifier {
 impl From<SigCheck> for OuterVerifier {
     fn from(value: SigCheck) -> Self {
         Self::SigCheck(value)
+    }
+}
+
+impl From<ThresholdMultiSignature> for OuterVerifier {
+    fn from(value: ThresholdMultiSignature) -> Self {
+        Self::ThresholdMultiSignature(value)
     }
 }
 
