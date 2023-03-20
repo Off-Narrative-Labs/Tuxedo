@@ -302,14 +302,20 @@ impl ConstraintChecker for OuterConstraintChecker {
     ) -> Result<TransactionPriority, OuterConstraintCheckerError> {
         Ok(match self {
             Self::Money(money) => money.check(inputs, peeks, outputs)?,
-            Self::FreeKittyConstraintChecker(free_breed) => free_breed.check(inputs, peeks, outputs)?,
+            Self::FreeKittyConstraintChecker(free_breed) => {
+                free_breed.check(inputs, peeks, outputs)?
+            }
             Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.check(inputs, peeks, outputs)?,
             Self::AmoebaDeath(amoeba_death) => amoeba_death.check(inputs, peeks, outputs)?,
-            Self::AmoebaCreation(amoeba_creation) => amoeba_creation.check(inputs, peeks, outputs)?,
+            Self::AmoebaCreation(amoeba_creation) => {
+                amoeba_creation.check(inputs, peeks, outputs)?
+            }
             Self::PoeClaim(poe_claim) => poe_claim.check(inputs, peeks, outputs)?,
             Self::PoeRevoke(poe_revoke) => poe_revoke.check(inputs, peeks, outputs)?,
             Self::PoeDispute(poe_dispute) => poe_dispute.check(inputs, peeks, outputs)?,
-            Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.check(inputs, peeks, outputs)?,
+            Self::RuntimeUpgrade(runtime_upgrade) => {
+                runtime_upgrade.check(inputs, peeks, outputs)?
+            }
         })
     }
 }

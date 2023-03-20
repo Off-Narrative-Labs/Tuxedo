@@ -90,7 +90,7 @@ impl SimpleConstraintChecker for AmoebaMitosis {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
-        _peeks:  &[DynamicallyTypedData],
+        _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, ConstraintCheckerError> {
         // Make sure there is exactly one mother.
@@ -152,7 +152,7 @@ impl SimpleConstraintChecker for AmoebaDeath {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
-        _peeks:  &[DynamicallyTypedData],
+        _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single victim
@@ -195,7 +195,7 @@ impl SimpleConstraintChecker for AmoebaCreation {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
-        _peeks:  &[DynamicallyTypedData],
+        _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single created amoeba

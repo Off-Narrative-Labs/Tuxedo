@@ -389,7 +389,7 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
-        _peeks:  &[DynamicallyTypedData],
+        _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Input must be a Mom and a Dad
