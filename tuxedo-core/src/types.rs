@@ -95,6 +95,8 @@ pub enum UtxoError<ConstraintCheckerError> {
     VerifierError,
     /// One or more of the inputs required by this transaction is not present in the UTXO set
     MissingInput,
+    /// One or more of the Outputs contains a verifier that is not self consistent
+    InvalidVerifierIncludedInOutput,
 }
 
 /// The Result of dispatching a UTXO transaction.

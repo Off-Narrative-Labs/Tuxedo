@@ -17,7 +17,15 @@ use sp_std::fmt::Debug;
 /// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
 /// we take the entire stripped and serialized transaction as a parameter.
 pub trait Verifier: Debug + Encode + Decode + Clone {
+    /// Perform the actual verification and determine whether the output can be spent.
     fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool;
+
+    /// This method is run at the time when new UTXOs are being added to the state.
+    /// This allows the verifier to enforce constraints about the data provided.
+    /// For example, in a multisig, it can enforce that there are no duplicate signatories.
+    fn ensure_verifier_data_is_valid(&self) -> bool {
+        true
+    }
 }
 
 /// A typical verifier that checks an sr25519 signature

@@ -79,6 +79,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         }
 
         // Make sure no outputs already exist in storage
+        // and that the new outputs have valid verifiers
         let tx_hash = BlakeTwo256::hash_of(&transaction.encode());
         for index in 0..transaction.outputs.len() {
             let output_ref = OutputRef {
@@ -95,6 +96,12 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             ensure!(
                 TransparentUtxoSet::<V>::peek_utxo(&output_ref).is_none(),
                 UtxoError::PreExistingOutput
+            );
+
+            let output = transaction.outputs[index];
+            ensure!(
+                output.verifier.ensure_verifier_data_is_valid(),
+                UtxoError::InvalidVerifierIncludedInOutput
             );
         }
 
