@@ -406,6 +406,40 @@ mod tests {
         }
     }
 
+    /// Builder pattern for test transactions.
+    #[derive(Default)]
+    struct TestTransactionBuilder {
+        inputs: Vec<Input>,
+        peeks: Vec<OutputRef>,
+        outputs: Vec<Output<TestVerifier>>,
+    }
+
+    impl TestTransactionBuilder {
+        fn with_input(mut self, input: Input) -> Self {
+            self.inputs.push(input);
+            self
+        }
+
+        fn with_peek(mut self, peek: OutputRef) -> Self {
+            self.peeks.push(peek);
+            self
+        }
+
+        fn with_output(mut self, output: Output<TestVerifier>) -> Self {
+            self.outputs.push(output);
+            self
+        }
+
+        fn build(self, should_check: bool) -> TestTransaction {
+            TestTransaction {
+                inputs: self.inputs,
+                peeks: self.peeks,
+                outputs: self.outputs,
+                checker: TestConstraintChecker { checks: should_check },
+            }
+        }
+    }
+
     /// Builds test externalities using a minimal builder pattern.
     #[derive(Default)]
     struct ExternalityBuilder {
