@@ -452,20 +452,18 @@ mod tests {
         /// Add the given Utxo to the storage.
         ///
         /// There are no real transactions to calculate OutputRefs so instead we
-        /// provide a transaction number (a simple u32), and an index in that transaction,
-        /// (also a u32). From this information, a mock output ref is constructed.
+        /// provide an output ref as a parameter. See the function `mock_output_ref`
+        /// for a convenient way to construct testing output refs.
         ///
         /// For the Outputs themselves, this function accepts payloads of any type that
         /// can be represented as DynamicallyTypedData, and a boolean about whether the
         /// verifier should succeed or not.
         fn with_utxo<T: UtxoData>(
             mut self,
-            tx_num: u32,
-            index: u32,
+            output_ref: OutputRef,
             payload: T,
             verifies: bool,
         ) -> Self {
-            let output_ref = mock_output_ref(tx_num, index);
             let output = Output {
                 payload: payload.into(),
                 verifier: TestVerifier { verifies },
