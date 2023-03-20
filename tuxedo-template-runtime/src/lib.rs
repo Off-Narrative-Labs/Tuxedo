@@ -37,7 +37,7 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     types::{Output, Transaction as TuxedoTransaction},
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
-    ConstraintChecker, SignatureAndIndex, Verifier,
+    ConstraintChecker, Verifier,
 };
 
 #[cfg(feature = "std")]
