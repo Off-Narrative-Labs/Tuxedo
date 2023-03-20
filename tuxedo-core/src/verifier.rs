@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use sp_core::sr25519::{Public, Signature};
 use sp_core::H256;
 use sp_std::fmt::Debug;
+use sp_std::collections::btree_set::BTreeSet;
+use sp_std::collections::btree_map::BTreeMap;
 
 /// A means of checking that an output can be verified (aka spent). This check is made on a
 /// per-output basis and neither knows nor cares anything about the validation logic that will
@@ -55,6 +57,69 @@ impl Verifier for UpForGrabs {
     }
 }
 
+/// A Threshold multisignature. Some number of member signatories collectively own inputs
+/// guarded by this verifier. A valid redeemer must supply valid signatures by at least
+/// `threshold` of the signatories. If the threshold is greater than the number of signatories
+/// the input can never be consumed.
+#[cfg(feature = "std")]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct ThresholdMultiSignature {
+    /// The minimum number of valid signatures needed to consume this input
+    pub threshold: u8,
+    /// All the member signatories, some (or all depending on the threshold) of whom must
+    /// produce signatures over the transaction that will consume this input.
+    pub signatories: Vec<H256>,
+}
+
+#[cfg(feature = "std")]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+/// Combination of a signature plus and index so that the signer can specify which
+/// index this signature pertains too of the available signatories for a `ThresholdMultiSignature`
+pub struct SignatureAndIndex {
+    /// The signature of the signer
+    pub signature: Signature,
+    /// The index of this signer in the signatory vector
+    pub index: u8,
+}
+
+impl Verifier for ThresholdMultiSignature {
+    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+        let sigs = match Vec::<SignatureAndIndex>::decode(&mut &redeemer[..]) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+
+        if sigs.len() < self.threshold.into() {
+            return false;
+        }
+
+        {
+            // Check range of indicies
+            let index_out_of_bounds = sigs.iter().any(|sig| sig.index as usize >= sigs.len());
+            if index_out_of_bounds {
+                return false;
+            }
+        }
+
+        {
+            let set: BTreeMap<usize, SignatureAndIndex> = sigs.iter().enumerate()
+                .map(|(i, sig)| (i, sig.clone()))
+                .collect();
+
+            if set.len() < sigs.len() {
+                return false;
+            }
+        }
+
+        let valid_sigs: Vec<_> = sigs.iter().map(|sig| {
+            sp_io::crypto::sr25519_verify(&sig.signature, simplified_tx, &Public::from_h256(self.signatories[sig.index as usize]));
+        })
+        .collect();
+
+        valid_sigs.len() >= self.threshold.into()
+    }
+}
+
 /// A testing verifier that passes or depending on the enclosed
 /// boolean value.
 #[cfg(feature = "std")]
@@ -66,7 +131,7 @@ pub struct TestVerifier {
 
 #[cfg(feature = "std")]
 impl Verifier for TestVerifier {
-    fn verify(&self, _simplified_tx: &[u8], _witness: &[u8]) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], _redeemer: &[u8]) -> bool {
         self.verifies
     }
 }
@@ -86,25 +151,91 @@ mod test {
         let pair = Pair::from_entropy(b"entropy_entropy_entropy_entropy!".as_slice(), None).0;
         let simplified_tx = b"hello world".as_slice();
         let sig = pair.sign(simplified_tx);
-        let witness: &[u8] = sig.as_ref();
+        let redeemer: &[u8] = sig.as_ref();
 
         let sig_check = SigCheck {
             owner_pubkey: pair.public().into(),
         };
 
-        assert!(sig_check.verify(simplified_tx, witness));
+        assert!(sig_check.verify(simplified_tx, redeemer));
+    }
+
+    #[test]
+    fn threshold_multisig_with_enough_sigs() {
+        // Create a vec of pairs
+        let pairs: Vec<_> = (1..3)
+            .map(|i| {
+                Pair::from_entropy(format!("entropy_entropy_entropy_entropy{}", i).as_bytes(), None).0
+            })
+            .collect();
+        let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
+        let simplified_tx = b"hello_world".as_slice();
+        let sigs: Vec<_> = pairs.iter()
+            .enumerate()
+            .map(|(i, p)| {
+                SignatureAndIndex { signature: p.sign(simplified_tx), index: i.try_into().unwrap() }
+            })
+            .collect();
+        let redeemer: &[u8] = &sigs.encode()[..];
+
+        let threshold_multisig = ThresholdMultiSignature {
+            threshold: 2,
+            signatories,
+        };
+
+        assert!(threshold_multisig.verify(simplified_tx, redeemer));
+    }
+
+    #[test]
+    fn threshold_multisig_not_enough_sigs_fails() {
+        let pairs: Vec<_> = (1..3)
+            .map(|i| {
+                Pair::from_entropy(format!("entropy_entropy_entropy_entropy{}", i).as_bytes(), None).0
+            })
+            .collect();
+        let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
+        let simplified_tx = b"hello_world".as_slice();
+        let sigs: Vec<_> = pairs.iter()
+            .enumerate()
+            .map(|(i, p)| {
+                SignatureAndIndex { signature: p.sign(simplified_tx), index: i.try_into().unwrap() }
+            })
+            .collect();
+        let redeemer: &[u8] = &sigs.encode()[..];
+
+        let threshold_multisig = ThresholdMultiSignature {
+            threshold: 3,
+            signatories,
+        };
+
+        assert!(!threshold_multisig.verify(simplified_tx, redeemer));
+    }
+
+    #[test]
+    fn threshold_multisig_wrong_bad_sig_fails() {
+        // Give a bad signature which will cause verify to vail
+    }
+
+    #[test]
+    fn threshold_multisig_replay_sig_attack_fails() {
+        // put the same valid signature in here multiple times
+    }
+
+    #[test]
+    fn threshold_multisig_bad_redeemer_type_fails() {
+        // give a bogus redeemer type which will cause the decode to fail
     }
 
     #[test]
     fn sig_check_with_bad_sig() {
         let simplified_tx = b"hello world".as_slice();
-        let witness = b"bogus_signature".as_slice();
+        let redeemer = b"bogus_signature".as_slice();
 
         let sig_check = SigCheck {
             owner_pubkey: H256::zero(),
         };
 
-        assert!(!sig_check.verify(simplified_tx, witness));
+        assert!(!sig_check.verify(simplified_tx, redeemer));
     }
 
     #[test]
