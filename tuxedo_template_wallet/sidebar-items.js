@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ENDPOINT","SHAWN_PHRASE","SHAWN_PUB_KEY"],"enum":["Command"],"fn":["fetch_storage","main"],"mod":["amoeba","money"],"opaque":[""],"static":["DEFAULT_VALUE"],"struct":["Cli","SpendArgs"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ENDPOINT","KEY_TYPE","SHAWN_PHRASE","SHAWN_PUB_KEY"],"enum":["Command"],"fn":["default_data_path","fetch_storage","h256_from_string","main","output_ref_from_string","strip_0x_prefix"],"mod":["amoeba","money"],"opaque":[""],"static":["DEFAULT_VALUE"],"struct":["Cli","SpendArgs"]};
