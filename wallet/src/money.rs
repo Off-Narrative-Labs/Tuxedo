@@ -1,16 +1,19 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{fetch_storage, SpendArgs};
+use crate::{fetch_storage, SpendArgs, KEY_TYPE};
 
 use std::{thread::sleep, time::Duration};
 
+use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
     OuterConstraintChecker, OuterVerifier, Transaction,
 };
-use sp_core::{crypto::Pair as PairT, sr25519::Pair};
+use sc_keystore::LocalKeystore;
+use sp_core::sr25519::Public;
+use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef},
@@ -18,9 +21,12 @@ use tuxedo_core::{
 };
 
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result<()> {
+pub async fn spend_coins(
+    client: &HttpClient,
+    keystore: &LocalKeystore,
+    args: SpendArgs,
+) -> anyhow::Result<()> {
     println!("The args are:: {:?}", args);
-    let (provided_pair, _) = Pair::from_phrase(&args.seed, None)?;
 
     // Construct a template Transaction to push coins into later
     let mut transaction = Transaction {
@@ -30,11 +36,10 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     };
 
     // Make sure each input decodes and is present in storage, and then push to transaction.
-    for input in &args.input {
-        let output_ref = OutputRef::decode(&mut &hex::decode(input)?[..])?;
-        print_coin_from_storage(&output_ref, client).await?;
+    for output_ref in &args.input {
+        print_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
-            output_ref,
+            output_ref: output_ref.clone(),
             redeemer: vec![], // We will sign the total transaction so this should be empty
         });
     }
@@ -44,21 +49,34 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
         let output = Output {
             payload: Coin::new(*amount).into(),
             verifier: OuterVerifier::SigCheck(SigCheck {
-                owner_pubkey: provided_pair.public().into(),
+                owner_pubkey: args.recipient,
             }),
         };
         transaction.outputs.push(output);
     }
 
-    // Create a signature over the entire transaction
-    // TODO this will need to generalize. We will need to loop through the inputs
-    // producing the signature for whichever owner it is, or even more generally,
-    // producing the verifier for whichever verifier it is.
-    let signature = provided_pair.sign(&transaction.encode());
+    // Keep a copy of the stripped encoded transaction for signing purposes
+    let stripped_encoded_transaction = transaction.clone().encode();
 
-    // Iterate back through the inputs putting the signature in place.
+    // Iterate back through the inputs, signing, and putting the signatures in place.
     for input in &mut transaction.inputs {
-        input.redeemer = signature.encode();
+        // Fetch the output from storage
+        let utxo = fetch_storage::<OuterVerifier>(&input.output_ref, client).await?;
+
+        // Construct the proof that it can be consumed
+        let redeemer = match utxo.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+                let public = Public::from_h256(owner_pubkey);
+                keystore
+                    .sign_with(KEY_TYPE, &public.into(), &stripped_encoded_transaction)
+                    .await?
+                    .ok_or(anyhow!("Key doesn't exist in keystore"))?
+            }
+            OuterVerifier::UpForGrabs(_) => Vec::new(),
+        };
+
+        // insert the proof
+        input.redeemer = redeemer;
     }
 
     // Send the transaction

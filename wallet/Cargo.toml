@@ -15,7 +15,11 @@ jsonrpsee = { version = "0.16.2", features = ["http-client"] }
 tokio = { version = "1.25.0", features = ["full"] }
 anyhow = "1.0.69"
 hex = "0.4.3"
+hex-literal = "0.3.4"
 clap = { version = "4.1.8", features = [ "derive"] }
+directories = "4.0.1"
 
 sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
 sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
+sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
+sc-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
