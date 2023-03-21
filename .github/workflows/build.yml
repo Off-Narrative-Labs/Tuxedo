@@ -24,8 +24,8 @@ jobs:
           toolchain: nightly
           target: wasm32-unknown-unknown
           override: true
-      # - name: Rust Cache
-      #   uses: Swatinem/rust-cache@v1
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         with:
           command: check
@@ -45,8 +45,8 @@ jobs:
           toolchain: nightly
           target: wasm32-unknown-unknown
           override: true
-      # - name: Rust Cache
-      #   uses: Swatinem/rust-cache@v1
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -67,8 +67,8 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
       - run: rustup component add rustfmt
-      # - name: Rust Cache
-      #   uses: Swatinem/rust-cache@v1
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
@@ -90,8 +90,8 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
       - run: rustup component add clippy
-      # - name: Rust Cache
-      #   uses: Swatinem/rust-cache@v1
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
