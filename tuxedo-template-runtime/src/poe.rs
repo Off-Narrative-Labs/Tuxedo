@@ -209,7 +209,7 @@ impl SimpleConstraintChecker for PoeDispute {
         );
         let winner: ClaimData = peek_data[1]
             .extract()
-            .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+            .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
 
         // Check the winner against the losers.
         // 1. All losers claim the same hash as the winner.
@@ -217,7 +217,7 @@ impl SimpleConstraintChecker for PoeDispute {
         for untyped_loser in eviction_data {
             let loser: ClaimData = untyped_loser
                 .extract()
-                .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+                .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
             ensure!(
                 winner.claim == loser.claim,
                 ConstraintCheckerError::DisputedClaimsNotForSameHash
