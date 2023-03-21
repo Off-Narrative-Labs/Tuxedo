@@ -85,6 +85,7 @@ impl SimpleConstraintChecker for MoneyConstraintChecker {
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
+        _evictions: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {
@@ -176,7 +177,7 @@ mod test {
         let expected_priority = 1u64;
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Ok(expected_priority),
         );
     }
@@ -187,7 +188,7 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into(), Coin(0).into()]; // total 1164;
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::ZeroValueCoin),
         );
     }
@@ -199,7 +200,7 @@ mod test {
         let expected_priority = 12u64;
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Ok(expected_priority),
         );
     }
@@ -210,7 +211,7 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::SpendingNothing),
         );
     }
@@ -221,7 +222,7 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::BadlyTyped),
         );
     }
@@ -232,7 +233,7 @@ mod test {
         let output_data = vec![Bogus.into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::BadlyTyped),
         );
     }
@@ -243,7 +244,7 @@ mod test {
         let output_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Spend.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::OutputsExceedInputs),
         );
     }
@@ -254,7 +255,7 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Mint.check(&input_data, &[], &[], &output_data),
             Ok(0),
         );
     }
@@ -265,7 +266,7 @@ mod test {
         let output_data = vec![Coin(0).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Mint.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::ZeroValueCoin),
         );
     }
@@ -276,7 +277,7 @@ mod test {
         let output_data = vec![Coin(10).into(), Coin(1).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Mint.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::MintingWithInputs),
         );
     }
@@ -287,7 +288,7 @@ mod test {
         let output_data = vec![];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Mint.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::MintingNothing),
         );
     }
@@ -298,7 +299,7 @@ mod test {
         let output_data = vec![Coin(10).into(), Bogus.into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &[], &output_data),
+            MoneyConstraintChecker::Mint.check(&input_data, &[], &[], &output_data),
             Err(ConstraintCheckerError::BadlyTyped),
         );
     }

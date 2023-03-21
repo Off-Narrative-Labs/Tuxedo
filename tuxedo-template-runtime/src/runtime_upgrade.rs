@@ -81,6 +81,7 @@ impl SimpleConstraintChecker for RuntimeUpgrade {
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
+        _evictions: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single input that matches the hash of the previous runtime logic
