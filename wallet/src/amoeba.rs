@@ -25,6 +25,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     let spawn_tx = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
+        evictions: Vec::new(),
         outputs: vec![Output {
             payload: eve.into(),
             verifier: UpForGrabs.into(),
@@ -69,6 +70,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
             redeemer: Vec::new(),
         }],
         peeks: Vec::new(),
+        evictions: Vec::new(),
         outputs: vec![
             Output {
                 payload: cain.into(),

@@ -26,6 +26,7 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     let mut transaction = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
+        evictions: Vec::new(),
         outputs: Vec::new(),
         checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
     };
