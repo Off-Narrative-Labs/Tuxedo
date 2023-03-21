@@ -73,6 +73,7 @@ pub async fn spend_coins(
                     .ok_or(anyhow!("Key doesn't exist in keystore"))?
             }
             OuterVerifier::UpForGrabs(_) => Vec::new(),
+            OuterVerifier::ThresholdMultiSignature(_) => todo!(),
         };
 
         // insert the proof
