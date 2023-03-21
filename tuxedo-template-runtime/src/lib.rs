@@ -306,14 +306,20 @@ impl ConstraintChecker for OuterConstraintChecker {
             Self::FreeKittyConstraintChecker(free_breed) => {
                 free_breed.check(inputs, peeks, evictions, outputs)?
             }
-            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.check(inputs, peeks, evictions, outputs)?,
-            Self::AmoebaDeath(amoeba_death) => amoeba_death.check(inputs, peeks, evictions, outputs)?,
+            Self::AmoebaMitosis(amoeba_mitosis) => {
+                amoeba_mitosis.check(inputs, peeks, evictions, outputs)?
+            }
+            Self::AmoebaDeath(amoeba_death) => {
+                amoeba_death.check(inputs, peeks, evictions, outputs)?
+            }
             Self::AmoebaCreation(amoeba_creation) => {
                 amoeba_creation.check(inputs, peeks, evictions, outputs)?
             }
             Self::PoeClaim(poe_claim) => poe_claim.check(inputs, peeks, evictions, outputs)?,
             Self::PoeRevoke(poe_revoke) => poe_revoke.check(inputs, peeks, evictions, outputs)?,
-            Self::PoeDispute(poe_dispute) => poe_dispute.check(inputs, peeks, evictions, outputs)?,
+            Self::PoeDispute(poe_dispute) => {
+                poe_dispute.check(inputs, peeks, evictions, outputs)?
+            }
             Self::RuntimeUpgrade(runtime_upgrade) => {
                 runtime_upgrade.check(inputs, peeks, evictions, outputs)?
             }

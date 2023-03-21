@@ -75,7 +75,7 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
         // Extract the peek data
         let peek_data: Vec<DynamicallyTypedData> =
             peeks.iter().map(|o| o.payload.clone()).collect();
-        
+
         // Extract the eviction data
         let eviction_data: Vec<DynamicallyTypedData> =
             evictions.iter().map(|o| o.payload.clone()).collect();
@@ -122,15 +122,25 @@ pub mod testing {
 
     #[test]
     fn test_checker_passes() {
-        let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[], &[]);
+        let result = SimpleConstraintChecker::check(
+            &TestConstraintChecker { checks: true },
+            &[],
+            &[],
+            &[],
+            &[],
+        );
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
-        let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[], &[]);
+        let result = SimpleConstraintChecker::check(
+            &TestConstraintChecker { checks: false },
+            &[],
+            &[],
+            &[],
+            &[],
+        );
         assert_eq!(result, Err(()));
     }
 }

@@ -149,7 +149,12 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &peek_utxos, &eviction_utxos, &transaction.outputs)
+            .check(
+                &input_utxos,
+                &peek_utxos,
+                &eviction_utxos,
+                &transaction.outputs,
+            )
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction

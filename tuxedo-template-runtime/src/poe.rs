@@ -187,23 +187,45 @@ impl SimpleConstraintChecker for PoeDispute {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there are no inputs to be normally consumed
-        ensure!(input_data.is_empty(), ConstraintCheckerError::DisputeWithInput);
+        ensure!(
+            input_data.is_empty(),
+            ConstraintCheckerError::DisputeWithInput
+        );
 
         // Make sure there are no outputs to be created
-        ensure!(output_data.is_empty(), ConstraintCheckerError::DisputeWithOutput);
+        ensure!(
+            output_data.is_empty(),
+            ConstraintCheckerError::DisputeWithOutput
+        );
 
         // Make sure there is exactly one peek: the claim that will be retained.
-        ensure!(!peek_data.is_empty(), ConstraintCheckerError::DisputeWithNoPeek);
-        ensure!(peek_data.len() == 1, ConstraintCheckerError::DisputeWithMultiplePeeks);
-        let winner: ClaimData = peek_data[1].extract().map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+        ensure!(
+            !peek_data.is_empty(),
+            ConstraintCheckerError::DisputeWithNoPeek
+        );
+        ensure!(
+            peek_data.len() == 1,
+            ConstraintCheckerError::DisputeWithMultiplePeeks
+        );
+        let winner: ClaimData = peek_data[1]
+            .extract()
+            .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
 
         // Check the winner against the losers.
         // 1. All losers claim the same hash as the winner.
         // 2. All losers have effective block heights strictly greater than the winner.
         for untyped_loser in eviction_data {
-            let loser: ClaimData = untyped_loser.extract().map_err(|_| ConstraintCheckerError::BadlyTypedInput);
-            ensure!(winner.claim == loser.claim, ConstraintCheckerError::DisputedClaimsNotForSameHash);
-            ensure!(winner.effective_height > loser.effective_height, ConstraintCheckerError::DisputeSettledIncorrectly);
+            let loser: ClaimData = untyped_loser
+                .extract()
+                .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+            ensure!(
+                winner.claim == loser.claim,
+                ConstraintCheckerError::DisputedClaimsNotForSameHash
+            );
+            ensure!(
+                winner.effective_height > loser.effective_height,
+                ConstraintCheckerError::DisputeSettledIncorrectly
+            );
         }
 
         Ok(0)
