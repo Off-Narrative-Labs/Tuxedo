@@ -63,6 +63,24 @@ pub enum ConstraintCheckerError {
     /// The effective height of this claim is in the past,
     /// So the claim cannot be created.
     EffectiveHeightInPast,
+
+    /// Disputes should not have any normal inputs.
+    DisputeWithInput,
+    /// Disputes should not have any normal outputs; they only clean up storage; not create it.
+    DisputeWithOutput,
+    /// Disputes need to have exactly one peek which is the winner of the dispute.
+    /// This dispute did not have that peek.
+    DisputeWithNoPeek,
+    /// Disputes need to have exactly one peek which is the winner of the dispute.
+    /// This dispute had multiple such peeks
+    DisputeWithMultiplePeeks,
+    /// Disputes should have at least one eviction which are the losers of the dispute.
+    /// This dispute did not have that eviction.
+    DisputeWithNoEvictions,
+    /// This dispute tries to evict claims that are not for the same hash as the winner.
+    DisputedClaimsNotForSameHash,
+    /// This dispute does not have the oldest claim as the winner and is, therefore, invalid.
+    DisputeSettledIncorrectly,
 }
 
 /// A constraint checker to create claims.
@@ -151,15 +169,6 @@ impl SimpleConstraintChecker for PoeRevoke {
 }
 
 /// A constraint checker that resolves claim disputes by keeping whichever claim came first.
-///
-/// TODO this will work much more elegantly once peek is implemented. We only need to peek at the
-/// older winning claim because it will remain in state afterwards.
-///
-/// TODO what shall we do about the verifier? Each claimer may have given their claim a verifier
-/// such that their own private signature. Perhaps there should be a way for a constraint checker to override
-/// the verifier logic? This is a concrete case where the constraint checker verifier separation is not ideal.
-/// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
-/// but we want to authorized signer to come from the a different part of state.
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
@@ -172,42 +181,31 @@ impl SimpleConstraintChecker for PoeDispute {
 
     fn check(
         &self,
-        _input_data: &[DynamicallyTypedData],
-        _peeks: &[DynamicallyTypedData],
-        _output_data: &[DynamicallyTypedData],
+        input_data: &[DynamicallyTypedData],
+        peek_data: &[DynamicallyTypedData],
+        eviction_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        todo!("implement this once we have at least peeks and maybe evictions")
+        // Make sure there are no inputs to be normally consumed
+        ensure!(input_data.is_empty(), ConstraintCheckerError::DisputeWithInput);
 
-        // Make sure there is at least one input (once peek is ready, it will become a peek)
-        // This first input (or only peek) is the claim that will be retained.
+        // Make sure there are no outputs to be created
+        ensure!(output_data.is_empty(), ConstraintCheckerError::DisputeWithOutput);
 
-        // Make sure that all other inputs, claim the same hash as the winner.
+        // Make sure there is exactly one peek: the claim that will be retained.
+        ensure!(!peek_data.is_empty(), ConstraintCheckerError::DisputeWithNoPeek);
+        ensure!(peek_data.len() == 1, ConstraintCheckerError::DisputeWithMultiplePeeks);
+        let winner: ClaimData = peek_data[1].extract().map_err(|_| ConstraintCheckerError::BadlyTypedInput);
 
-        // Make sure that all other claims have block heights strictly greater than the winner.
+        // Check the winner against the losers.
+        // 1. All losers claim the same hash as the winner.
+        // 2. All losers have effective block heights strictly greater than the winner.
+        for untyped_loser in eviction_data {
+            let loser: ClaimData = untyped_loser.extract().map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+            ensure!(winner.claim == loser.claim, ConstraintCheckerError::DisputedClaimsNotForSameHash);
+            ensure!(winner.effective_height > loser.effective_height, ConstraintCheckerError::DisputeSettledIncorrectly);
+        }
 
-        //TODO what to do about the verifiers on those losing claims.
+        Ok(0)
     }
-}
-
-#[allow(dead_code)]
-mod brainstorm {
-    /// One workable solution to the problem above is modifying the core transaction structure to something like this
-    struct Transaction {
-        /// A classic input that is consumed from the utxo set. Its verifier must be satisfied for the tx to be valid
-        redemptions: Vec<InputRef>,
-        /// Similar to a redemption, this is an input that is consumed from the utxo set, but its verifier need not be satisfied
-        /// In the Poe case above, the losing claims that came later would be evictions.
-        evictions: Vec<InputRef>,
-        /// Similar to an input, but it is not consumed. This is a way to read pre-existing state without removing it from the utxo set
-        /// this also indicates when transaction are not competing for state despite reading the same state, and thus commute.
-        /// TBD whether it makes sense to have a verifier check. My gut instinct is no verifier check, but it needs more careful thought.
-        peeks: Vec<InputRef>,
-        /// Newly created pieces of state to be added to the utxo set.
-        outputs: Vec<Output>,
-    }
-
-    // Aliases so my sketch above compiles
-    type InputRef = ();
-    type Output = ();
-    use sp_std::vec::Vec;
 }
