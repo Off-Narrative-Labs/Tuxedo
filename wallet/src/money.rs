@@ -10,7 +10,7 @@ use runtime::{
     money::{Coin, MoneyVerifier},
     OuterRedeemer, OuterVerifier, Transaction,
 };
-use sp_core::{crypto::Pair as PairT, sr25519::Pair};
+use sp_core::{crypto::Pair as PairT, sr25519::Pair, H256};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     redeemer::SigCheck,
