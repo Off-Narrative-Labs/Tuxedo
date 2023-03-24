@@ -113,18 +113,32 @@ impl Default for GenesisConfig {
 
         const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
+        const ANDREW_PUB_KEY_BYTES: [u8; 32] =
+            hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
 
         // Initial Config just for a Money UTXO
         GenesisConfig {
-            genesis_utxos: vec![Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
-                    owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                }),
-                payload: DynamicallyTypedData {
-                    data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+            genesis_utxos: vec![
+                Output {
+                    verifier: OuterVerifier::SigCheck(SigCheck {
+                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
+                    }),
+                    payload: DynamicallyTypedData {
+                        data: 100u128.encode(),
+                        type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    },
                 },
-            }],
+                Output {
+                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
+                        threshold: 1,
+                        signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
+                    }),
+                    payload: DynamicallyTypedData {
+                        data: 100u128.encode(),
+                        type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    },
+                },
+            ],
         }
 
         // TODO: Initial UTXO for Kitties
@@ -528,6 +542,8 @@ mod tests {
     // other random account generated with subkey
     const SHAWN_PHRASE: &str =
         "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+    const ANDREW_PHRASE: &str =
+        "monkey happy total rib lumber scrap guide photo country online rose diet";
 
     fn new_test_ext() -> sp_io::TestExternalities {
         let keystore = KeyStore::new();
@@ -571,6 +587,42 @@ mod tests {
             let utxo = Output::<OuterVerifier>::decode(&mut &encoded_utxo[..])
                 .expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_utxo);
+        })
+    }
+
+    #[test]
+    fn utxo_money_multi_sig_genesis_test() {
+        new_test_ext().execute_with(|| {
+            let keystore = KeyStore::new();
+            let shawn_pub_key = keystore
+                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
+                .unwrap();
+            let andrew_pub_key = keystore
+                .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
+                .unwrap();
+
+            let genesis_multi_sig_utxo = Output {
+                verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
+                    threshold: 1,
+                    signatories: vec![shawn_pub_key.into(), andrew_pub_key.into()],
+                }),
+                payload: DynamicallyTypedData {
+                    data: 100u128.encode(),
+                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                },
+            };
+
+            let output_ref = OutputRef {
+                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                index: 1 as u32,
+            };
+
+            let encoded_utxo =
+                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis MultiSig UTXO");
+            let utxo = Output::<OuterVerifier>::decode(&mut &encoded_utxo[..])
+                .expect("Can Decode UTXO correctly");
+            assert_eq!(utxo, genesis_multi_sig_utxo);
         })
     }
 }

@@ -17,7 +17,7 @@ use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef},
-    verifier::SigCheck,
+    verifier::{SigCheck, ThresholdMultiSignature},
 };
 
 /// Create and send a transaction that spends coins on the network
@@ -125,7 +125,17 @@ pub async fn print_coin_from_storage(
             println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
         }
         OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
-        OuterVerifier::ThresholdMultiSignature(_) => println!("ThresholdMultiSign TODO!"),
+        OuterVerifier::ThresholdMultiSignature(multi_sig) => {
+            let string_sigs: Vec<_> = multi_sig
+                .signatories
+                .iter()
+                .map(|sig| format!("0x{}", hex::encode(sig)))
+                .collect();
+            println!(
+                "Owned by {:?}, with a threshold of {} sigs necessary",
+                string_sigs, multi_sig.threshold
+            );
+        }
     }
 
     Ok(())
