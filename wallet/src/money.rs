@@ -17,7 +17,7 @@ use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef},
-    verifier::{SigCheck, ThresholdMultiSignature},
+    verifier::SigCheck,
 };
 
 /// Create and send a transaction that spends coins on the network
