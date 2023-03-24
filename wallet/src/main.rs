@@ -165,8 +165,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Command::GenerateKey { password } => {
-            let pass = password.as_ref().map(|s| s.as_str());
-            let (pair, phrase, _) = Pair::generate_with_phrase(pass);
+            let (pair, phrase, _) = Pair::generate_with_phrase(password.as_deref());
             println!("Generated public key is {:?}", pair.public());
             println!("Generated Phrase is {}", phrase);
             keystore
