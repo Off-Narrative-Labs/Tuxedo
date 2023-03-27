@@ -25,6 +25,7 @@ use sp_core::{
 
 mod amoeba;
 mod money;
+mod sync;
 
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
@@ -98,6 +99,9 @@ enum Command {
         #[arg(value_parser = h256_from_string)]
         pub_key: H256,
     },
+
+    /// Synchronizes the wallet up to the tip of the chain, and does nothing else.
+    SyncOnly,
 }
 
 #[derive(Debug, Args)]
@@ -126,9 +130,12 @@ async fn main() -> anyhow::Result<()> {
     // Parse command line args
     let cli = Cli::parse();
 
-    // Setup the keystore.
+    // Setup the data paths.
     let data_path = cli.data_path.unwrap_or_else(default_data_path);
     let keystore_path = data_path.join("keystore");
+    let db_path = data_path.join("wallet_database");
+
+    // Setup the keystore
     let keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), None)?;
 
     // If the keystore is empty, insert the example Shawn key so example transactions can be signed.
@@ -146,6 +153,86 @@ async fn main() -> anyhow::Result<()> {
     // Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
     let client = HttpClientBuilder::default().build(cli.endpoint)?;
+
+
+    // Setup the sled database which tracks the block hashes the wallet is aware of as
+    // well as the UTXOs owned by the keys in this wallet.
+
+    // Open the database
+    let db = sled::open(db_path).expect("Database path should exist");
+    // println!("{:?}", db);
+
+    // This "blocks" table is a mapping from block number to block hash.
+    let wallet_blocks_tree = db.open_tree("blocks").expect("should be able to open blocks tree from sled db.");
+    let num_blocks = wallet_blocks_tree.len();
+    println!("Number of entries in blocks table: {num_blocks}");
+
+    // If there are no blocks yet, read the genesis block from the node.
+    if num_blocks == 0 {
+        println!("Found empty database.");
+
+        let node_genesis = sync::node_get_block_hash(0, &client).await?;
+
+        println!("Initializing fresh sync from genesis {:?}", node_genesis);
+        wallet_blocks_tree.insert(0u32.encode(), node_genesis.encode())?;
+    }
+
+    let num_blocks = wallet_blocks_tree.len();
+    println!("Number of entries in blocks table: {num_blocks}");
+
+    // initialize loop vars
+    let mut height = 0u32;
+    let mut wallet_hash = H256::repeat_byte(0);
+    let mut node_hash = Some(H256::repeat_byte(16));
+
+    // Check the most recent block hash known to the wallet
+    let (height_ivec, hash_ivec) = wallet_blocks_tree.last()?.expect("db was initialized with at least one value");
+    height = u32::decode(&mut &height_ivec[..])?;
+    wallet_hash = H256::decode(&mut &hash_ivec[..])?;
+
+    // Check the node's hash at that block
+    node_hash = sync::node_get_block_hash(height, &client).await?;
+
+    // There may have been a re-org since the last time the node synced. So we loop backwards from the
+    // best height the wallet knows about checking whether the wallet knows the same block as the node.
+    // If not, we roll this block back on the wallet's local db, and then check the next ancestor.
+    // When the wallet and the node agree on the best block, the wallet can re-sync following the node.
+    // In the best case, where there is no re-org, this loop will execute zero times.
+    while Some(wallet_hash) != node_hash {
+        println!("Reorg Divergence at height {height}. Wallet: {wallet_hash:?}. Node: {node_hash:?}.");
+        
+        // Remove the invalid
+        // TODO make this a function called eg roll back block.
+        // The function will also rewind blocks once it is available.
+        wallet_blocks_tree.remove(height.encode())?;
+
+        // Check the most recent block hash known to the wallet
+        let (height_ivec, hash_ivec) = wallet_blocks_tree.last()?.expect("db was initialized with at least one value");
+        height = u32::decode(&mut &height_ivec[..])?;
+        wallet_hash = H256::decode(&mut &hash_ivec[..])?;
+
+        // Check the node's hash at that block
+        node_hash = sync::node_get_block_hash(height, &client).await?;
+    }
+
+    // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
+    for height in height.. {
+        let hash = sync::node_get_block_hash(height, &client).await?.unwrap_or(H256::zero());
+
+        // Eventually we will need the block in order to apply its transactions
+        //let block = sync::node_get_block(hash, &client).await?;
+
+        // Add the new block info
+        // TODO make this a helper function
+        // which also applies the new blocks
+        wallet_blocks_tree.insert(height.encode(), hash.encode())?;
+    }
+    
+    // Now for good measure, print out the entire blocks table.
+    for x in wallet_blocks_tree.iter() {
+        println!("{:?}", x);
+    }
+
 
     // Dispatch to proper subcommand
     match cli.command {
@@ -213,6 +300,7 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
+        Command::SyncOnly => Ok(()),
     }
 }
 
@@ -234,7 +322,7 @@ pub async fn fetch_storage<V: Verifier>(
 }
 
 /// Parse a string into an H256 that represents a public key
-fn h256_from_string(s: &str) -> Result<H256, clap::Error> {
+pub(crate) fn h256_from_string(s: &str) -> anyhow::Result<H256> {
     let s = strip_0x_prefix(s);
 
     let mut bytes: [u8; 32] = [0; 32];
