@@ -81,6 +81,12 @@ enum Command {
         seed: String,
     },
 
+    /// Generate a private key using either some or no password and insert into the keystore
+    GenerateKey {
+        /// Initialize a public/private key pair with a password
+        password: Option<String>,
+    },
+
     /// Show public information about all the keys in the keystore.
     ShowKeys,
 
@@ -144,6 +150,7 @@ async fn main() -> anyhow::Result<()> {
     // Dispatch to proper subcommand
     match cli.command {
         Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
+        // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
         Command::VerifyCoin { output_ref } => {
             money::print_coin_from_storage(&output_ref, &client).await
         }
@@ -154,6 +161,15 @@ async fn main() -> anyhow::Result<()> {
             println!("The generated public key is {:?}", public_key);
             keystore
                 .insert_unknown(KEY_TYPE, &seed, public_key.as_ref())
+                .map_err(|e| anyhow!("{:?}", e))?;
+            Ok(())
+        }
+        Command::GenerateKey { password } => {
+            let (pair, phrase, _) = Pair::generate_with_phrase(password.as_deref());
+            println!("Generated public key is {:?}", pair.public());
+            println!("Generated Phrase is {}", phrase);
+            keystore
+                .insert_unknown(KEY_TYPE, phrase.as_ref(), pair.public().as_ref())
                 .map_err(|e| anyhow!("{:?}", e))?;
             Ok(())
         }
