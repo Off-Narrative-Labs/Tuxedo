@@ -136,27 +136,17 @@ fn unapply_block() {
 /// Typed helper to get the node's full block at a particular hash
 pub async fn node_get_block(hash: H256, client: &HttpClient) -> anyhow::Result<Option<Block>> {
     println!("in node get block with hash {hash:?}");
-    let s = hex::encode(hash.0.encode());
+    let s = hex::encode(hash.0);
     println!("s in {s}");
     let params = rpc_params![s];
     println!("about to send request for block with params {params:?}");
-    
-    // TODO WTF!? Why isnt this RPC call working? This callworks on the cli both with and without the 0x prefix
-    // curl http://127.0.0.1:9933 -H "Content-Type:application/json;charset=utf-8" -d '{"jsonrpc":"2.0", "id":1, "method":"chain_getBlock", "params": ["0x505914d65fcf1049e630441127ca8cba338ff7f048a06508e2f987514125d481"]}'
-    // {"jsonrpc":"2.0","result":{"block":{"header":{"parentHash":"0x3b761bd2ff69f4fe670c0f0911b6de1d83ee615830aed0693421f9d95fcde6e3","number":"0x1","stateRoot":"0x55a6d4664a0bccd89e68e60b7de8644121ce03094fb0caa13a84490ab396191c","extrinsicsRoot":"0x03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314","digest":{"logs":["0x0661757261203ac5602100000000","0x05617572610101c6dcdb663e80f4d02c07f0d2266b24339a514e3e41c155e65eae978ec051e64d1978f647c12a6c2022feb2b9e2c7e1959ed1fb849b1cb2294dab729f4942248e"]}},"extrinsics":[]},"justifications":null},"id":1}
 
-    let rpc_response: Result<Option<String>, _> = client.request("chain_getBlock", params).await;
+    let rpc_response: Option<serde_json::Value> = client.request("chain_getBlock", params).await?;
 
-
-    match rpc_response {
-        Ok(Some(s)) => {
-            println!("ok some {s}");
-            let bytes = hex::decode(s).expect("Chain should provide valid hex to decode.");
-            let b =Block::decode(&mut &bytes[..]).expect("scale decoding of block should work");
-            Ok(Some(b))
-        },
-        Ok(None) => {println!("ok none"); Ok(None)},
-        Err(e) => {println!("%%%Error: {e:?}"); panic!()},
-    }
+    Ok(
+        rpc_response
+        .and_then(|value| value.get("block").cloned())
+        .and_then(|maybe_block| serde_json::from_value(maybe_block).unwrap_or(None))
+    )
 }
 

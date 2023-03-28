@@ -160,10 +160,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Read node's genesis block.
     let node_genesis = sync::node_get_block_hash(0, &client).await?.expect("node should be able to return some genesis hash");
+    println!("Genesis block::{:?}", node_genesis);
 
     // Open the database
     let db = sled::open(db_path).expect("Database path should exist");
-    // println!("{:?}", db);
+    println!("DB after first opening::{:?}", db);
 
     // This "blocks" table is a mapping from block number to block hash.
     let wallet_blocks_tree = db.open_tree("blocks").expect("should be able to open blocks tree from sled db.");
@@ -236,6 +237,7 @@ async fn main() -> anyhow::Result<()> {
         println!("Forward syncing height {height}, hash {hash:?}");
 
         // Fetch the entire block in order to apply its transactions
+        std::thread::sleep(std::time::Duration::from_millis(4000));
         let block = sync::node_get_block(hash, &client).await?.expect("Node should be able to return a block whose hash it already returned");
         println!("Got block");
 
