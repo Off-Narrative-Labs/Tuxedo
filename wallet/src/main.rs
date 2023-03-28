@@ -188,9 +188,9 @@ async fn main() -> anyhow::Result<()> {
     println!("Number of entries in blocks table: {num_blocks}");
 
     // initialize loop vars
-    let mut height = 0u32;
-    let mut wallet_hash = H256::repeat_byte(0);
-    let mut node_hash = Some(H256::repeat_byte(16));
+    let mut height:u32;
+    let mut wallet_hash: H256;
+    let mut node_hash: Option<H256>;
 
     // Check the most recent block hash known to the wallet
     let (height_ivec, hash_ivec) = wallet_blocks_tree.last()?.expect("db was initialized with at least one value");
@@ -232,16 +232,15 @@ async fn main() -> anyhow::Result<()> {
     node_hash = sync::node_get_block_hash(height, &client).await?;
 
     // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
-   while node_hash.is_some() {
-        println!("Forward syncing height {height}, hash {node_hash:?}");
+   while let Some(hash) = node_hash  {
+        println!("Forward syncing height {height}, hash {hash:?}");
 
-        // Eventually we will need the block in order to apply its transactions
-        //let block = sync::node_get_block(hash, &client).await?;
+        // Fetch the entire block in order to apply its transactions
+        let block = sync::node_get_block(hash, &client).await?.expect("Node should be able to return a block whose hash it already returned");
+        println!("Got block");
 
-        // Add the new block info
-        // TODO make this a helper function
-        // which also applies the new blocks
-        wallet_blocks_tree.insert(height.encode(), node_hash.unwrap().encode())?;
+        // Apply the new block
+        sync::apply_block(&db, block, hash, &keystore).await?;
 
         height += 1;
 
@@ -251,12 +250,12 @@ async fn main() -> anyhow::Result<()> {
     println!("Done with forward sync up to {}", height - 1);
 
     // Now for good measure, print out the entire blocks table.
-    for result in wallet_blocks_tree.iter() {
-        let (height_ivec, hash_ivec) = result?;
-        height = u32::decode(&mut &height_ivec[..])?;
-        wallet_hash = H256::decode(&mut &hash_ivec[..])?;
-        println!("{height:?}: {wallet_hash:?}");
-    }
+    // for result in wallet_blocks_tree.iter() {
+    //     let (height_ivec, hash_ivec) = result?;
+    //     height = u32::decode(&mut &height_ivec[..])?;
+    //     wallet_hash = H256::decode(&mut &hash_ivec[..])?;
+    //     println!("{height:?}: {wallet_hash:?}");
+    // }
 
 
     // Dispatch to proper subcommand
