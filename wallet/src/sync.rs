@@ -1,5 +1,13 @@
 //! This module is responsible for syncing the wallet's local database of blocks
 //! and owned UTXOs to the canonical database reported by the node.
+//! 
+//! ## Schema
+//! 
+//! There are 4 tables in the database
+//! BlockHashes     block_number:u32 => block_hash:H256
+//! Blocks          block_hash:H256 => block:Block
+//! UnspentOutputs  output_ref => (owner_pubkey, amount)
+//! SpentOutputs    output_ref => (owner_pubkey, amount)
 
 use parity_scale_codec::{Decode, Encode};
 use sc_keystore::LocalKeystore;
@@ -7,6 +15,7 @@ use sled::{Db};
 use sp_core::H256;
 use sp_keystore::CryptoStore;
 use tuxedo_core::{verifier::SigCheck, types::{OutputRef, Input}};
+use sp_runtime::traits::{BlakeTwo256, Hash};
 use crate::KEY_TYPE;
 
 use super::h256_from_string;
@@ -15,18 +24,7 @@ use jsonrpsee::{
     http_client::{HttpClient},
     rpc_params,
 };
-use runtime::{Block, Transaction, OuterVerifier, money::Coin};
-
-//TODO this type alias should be public in the Runtime
-type Output = tuxedo_core::types::Output<OuterVerifier>;
-
-/// Typed helper to get the Node's block hash at a particular height
-pub async fn node_get_block_hash(height: u32, client: &HttpClient) -> anyhow::Result<Option<H256>> {
-    let params = rpc_params![Some(height)];
-    let rpc_response: Option<String> = client.request("chain_getBlockHash", params).await?;
-    let maybe_hash = rpc_response.map(|s| h256_from_string(&s).unwrap());
-    Ok(maybe_hash)
-}
+use runtime::{Block, Transaction, OuterVerifier, money::Coin, Output};
 
 /// Apply a block to the local database
 pub(crate) async fn apply_block(db: &Db, b: Block, block_hash: H256, keystore: &LocalKeystore) -> anyhow::Result<()> {
@@ -46,14 +44,10 @@ pub(crate) async fn apply_block(db: &Db, b: Block, block_hash: H256, keystore: &
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
 async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -> anyhow::Result<()> {
-    let tx_hash = H256::zero();//TODO calculate this.
+    let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
-    let unspent_tree = db.open_tree("unspent_outputs")?;
-    let spent_tree = db.open_tree("spent_outputs")?;
-
     println!("about to insert new outputs");
-
     // Insert all new outputs
     for (index, output) in tx.outputs.iter().enumerate() {
         match output {
@@ -64,7 +58,7 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
 
                 // For now the wallet only supports simple coins, so skip anything else
                 let amount = match payload.extract::<Coin>() {
-                    Ok(amount) => amount,
+                    Ok(Coin(amount)) => amount,
                     Err(_) => continue,
                 };
 
@@ -72,13 +66,9 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
                     tx_hash,
                     index: index as u32,
                 };
-                
-                // Add it to the user's personal mapping
-                let user_tree = db.open_tree(owner_pubkey)?;
-                user_tree.insert(output_ref.encode(), amount.encode())?;
 
                 // Add it to the global unspent_outputs table
-                unspent_tree.insert(output_ref.encode(), (owner_pubkey, amount).encode())?;
+                add_unspent_output(db, &output_ref, owner_pubkey, &amount)?;
             }
             v => {
                 println!("Not recording output with verifier {v:?}");
@@ -89,64 +79,53 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
     println!("about to spend all inputs");
     // Spend all the inputs
     for Input{ output_ref, .. } in tx.inputs {
-        let Some(ivec) = unspent_tree.remove(output_ref.encode())? else { continue };
-
-        let (owner, amount) = <(H256, u128)>::decode(&mut &ivec[..])?;
-
-        spent_tree.insert(output_ref.encode(), (owner, amount).encode())?;
-
-        let user_tree = db.open_tree(owner)?;
-        user_tree.remove(output_ref.encode())?;
-
+        spend_output(db, &output_ref)?;
     }
 
     Ok(())
 }
 
 /// Add a new output to the database updating all tables.
-fn add_new_output(output_ref: OutputRef, ) {
+fn add_unspent_output(db: &Db, output_ref: &OutputRef, owner_pubkey: &H256, amount: &u128) -> anyhow::Result<()> {
+    let unspent_tree = db.open_tree("unspent_outputs")?;
+    unspent_tree.insert(output_ref.encode(), (owner_pubkey, amount).encode())?;
 
+    Ok(())
 }
 
 /// Remove an output from the database updating all tables.
-fn remove_unspent_output() {
+fn remove_unspent_output(db: &Db, output_ref: &OutputRef)  -> anyhow::Result<()> {
+    let unspent_tree = db.open_tree("unspent_outputs")?;
 
+    todo!()
 }
 
 /// Mark an existing output as spent. This does not purge all record of the output from the db
-fn spend_output() {
+fn spend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
+    let unspent_tree = db.open_tree("unspent_outputs")?;
+    let spent_tree = db.open_tree("spent_outputs")?;
 
+    let Some(ivec) = unspent_tree.remove(output_ref.encode())? else { return Ok(())};
+    let (owner, amount) = <(H256, u128)>::decode(&mut &ivec[..])?;
+    spent_tree.insert(output_ref.encode(), (owner, amount).encode())?;
+
+    Ok(())
 }
 
 /// Mark an output that was previously marked as spent back as unspent.
-fn unspend_output() {
+fn unspend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
+    let unspent_tree = db.open_tree("unspent_outputs")?;
+    let spent_tree = db.open_tree("spent_outputs")?;
 
+    todo!()
 }
 
 /// Docs TODO
-fn unapply_transaction() {
-
+fn unapply_transaction() -> anyhow::Result<()> {
+    todo!()
 }
 
 /// Docs TODO
-fn unapply_block() {
-
+pub(crate) async fn unapply_block() -> anyhow::Result<()> {
+    todo!()
 }
-
-/// Typed helper to get the node's full block at a particular hash
-pub async fn node_get_block(hash: H256, client: &HttpClient) -> anyhow::Result<Option<Block>> {
-    println!("in node get block with hash {hash:?}");
-    let s = hex::encode(hash.0);
-    println!("s in {s}");
-    let params = rpc_params![s];
-    println!("about to send request for block with params {params:?}");
-
-    let rpc_response: Option<serde_json::Value> = client.request("chain_getBlock", params).await?;
-
-    Ok(
-        rpc_response
-        .and_then(|value| value.get("block").cloned())
-        .and_then(|maybe_block| serde_json::from_value(maybe_block).unwrap_or(None))
-    )
-}
-
