@@ -160,11 +160,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Read node's genesis block.
     let node_genesis = sync::node_get_block_hash(0, &client).await?.expect("node should be able to return some genesis hash");
-    println!("Genesis block::{:?}", node_genesis);
+    println!("Node's Genesis block::{:?}", node_genesis);
 
     // Open the database
     let db = sled::open(db_path).expect("Database path should exist");
-    println!("DB after first opening::{:?}", db);
+    // println!("DB after first opening::{:?}", db);
 
     // This "blocks" table is a mapping from block number to block hash.
     let wallet_blocks_tree = db.open_tree("blocks").expect("should be able to open blocks tree from sled db.");
@@ -180,6 +180,7 @@ async fn main() -> anyhow::Result<()> {
         // There are database blocks, so do a quick precheck to make sure they use the same genesis block.
         let wallet_genesis_ivec = wallet_blocks_tree.get(0.encode())?.expect("We know there are some blocks, so there should be a 0th block.");
         let wallet_genesis = H256::decode(&mut &wallet_genesis_ivec[..])?;
+        println!("In else clause wallet: {wallet_genesis:?}, node: {node_genesis:?}");
         if node_genesis != wallet_genesis {
             Err(anyhow!("Node reports a different genesis block than wallet. Wallet: {wallet_genesis:?}. Node: {node_genesis:?}. Aborting all operations"))?;
         }
@@ -189,19 +190,12 @@ async fn main() -> anyhow::Result<()> {
     println!("Number of entries in blocks table: {num_blocks}");
 
     // initialize loop vars
-    let mut height:u32;
-    let mut wallet_hash: H256;
-    let mut node_hash: Option<H256>;
+    let mut height:u32 = num_blocks as u32 - 1;
+    let hash_ivec = wallet_blocks_tree.get(height.encode())?.expect("block should be present");
+    let mut wallet_hash: H256 = H256::decode(&mut &hash_ivec[..])?;
+    let mut node_hash: Option<H256> = sync::node_get_block_hash(height, &client).await?;
 
-    // Check the most recent block hash known to the wallet
-    let (height_ivec, hash_ivec) = wallet_blocks_tree.last()?.expect("db was initialized with at least one value");
-    height = u32::decode(&mut &height_ivec[..])?;
-    wallet_hash = H256::decode(&mut &hash_ivec[..])?;
-
-    // Check the node's hash at that block
-    node_hash = sync::node_get_block_hash(height, &client).await?;
-
-    println!("about to start looping. wallet: {wallet_hash:?}. node: {node_hash:?}");
+    println!("About to revert 0 or more blocks. wallet: {wallet_hash:?}. node: {node_hash:?}");
 
     // There may have been a re-org since the last time the node synced. So we loop backwards from the
     // best height the wallet knows about checking whether the wallet knows the same block as the node.
@@ -209,20 +203,27 @@ async fn main() -> anyhow::Result<()> {
     // When the wallet and the node agree on the best block, the wallet can re-sync following the node.
     // In the best case, where there is no re-org, this loop will execute zero times.
     while Some(wallet_hash) != node_hash {
-        //TODO might need to manually decrement height here
         println!("Reorg Divergence at height {height}. Wallet: {wallet_hash:?}. Node: {node_hash:?}.");
         
+        // Fetch the entire block in order to un-apply its transactions
+        // TODO we shouldn't rely on the node storing these old blocks. We
+        // need to store them locally, or at least store the minimal info needed
+        // to unapply it.
+        // For now we assume the node still knows about these old blocks.
+        // Eventually the wallet could consider storing entire blocks locally for
+        // the sake of unapplying them.
+        // let _block = sync::node_get_block(wallet_hash, &client).await?.expect("Node should be able to return a block that the wallet previously synced");
+        // println!("Got block to un_apply");
+
         // Remove the invalid
         // TODO make this a function called eg roll back block.
         // The function will also rewind blocks once it is available.
         wallet_blocks_tree.remove(height.encode())?;
 
-        // Check the most recent block hash known to the wallet
-        let (height_ivec, hash_ivec) = wallet_blocks_tree.last()?.expect("db was initialized with at least one value");
-        height = u32::decode(&mut &height_ivec[..])?;
+        // Update for the next iteration
+        height -= 1;
+        let hash_ivec = wallet_blocks_tree.get(height.encode())?.expect("block should be present");
         wallet_hash = H256::decode(&mut &hash_ivec[..])?;
-
-        // Check the node's hash at that block
         node_hash = sync::node_get_block_hash(height, &client).await?;
     }
 
@@ -237,7 +238,6 @@ async fn main() -> anyhow::Result<()> {
         println!("Forward syncing height {height}, hash {hash:?}");
 
         // Fetch the entire block in order to apply its transactions
-        std::thread::sleep(std::time::Duration::from_millis(4000));
         let block = sync::node_get_block(hash, &client).await?.expect("Node should be able to return a block whose hash it already returned");
         println!("Got block");
 
