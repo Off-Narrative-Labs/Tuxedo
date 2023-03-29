@@ -35,7 +35,7 @@ mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    types::{Transaction as TuxedoTransaction},
+    types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
     ConstraintChecker, Verifier,
 };
@@ -585,8 +585,7 @@ mod tests {
 
             let encoded_utxo =
                 sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-            let utxo = Output::decode(&mut &encoded_utxo[..])
-                .expect("Can Decode UTXO correctly");
+            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_utxo);
         })
     }
@@ -621,8 +620,7 @@ mod tests {
 
             let encoded_utxo =
                 sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis MultiSig UTXO");
-            let utxo = Output::decode(&mut &encoded_utxo[..])
-                .expect("Can Decode UTXO correctly");
+            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_multi_sig_utxo);
         })
     }

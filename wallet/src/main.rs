@@ -25,8 +25,8 @@ use sp_core::{
 
 mod amoeba;
 mod money;
-mod sync;
 mod rpc;
+mod sync;
 
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
@@ -156,19 +156,27 @@ async fn main() -> anyhow::Result<()> {
     let client = HttpClientBuilder::default().build(cli.endpoint)?;
 
     // Read node's genesis block.
-    let node_genesis_hash = rpc::node_get_block_hash(0, &client).await?.expect("node should be able to return some genesis hash");
-    let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client).await?.expect("node should be able to return some genesis block");
+    let node_genesis_hash = rpc::node_get_block_hash(0, &client)
+        .await?
+        .expect("node should be able to return some genesis hash");
+    let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client)
+        .await?
+        .expect("node should be able to return some genesis block");
     println!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
     let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
 
-    let num_blocks = sync::height(&db)?.expect("db should be initialized automatically when opening.");
+    let num_blocks =
+        sync::height(&db)?.expect("db should be initialized automatically when opening.");
     println!("Number of blocks in the db: {num_blocks}");
 
     // Synchronize the wallet with attached node.
     sync::synchronize(&db, &client, &keystore).await?;
-    println!("Wallet database synchronized with node to height {:?}", sync::height(&db));
+    println!(
+        "Wallet database synchronized with node to height {:?}",
+        sync::height(&db)
+    );
 
     // TODO make this a helper function too
     // Now for good measure, print out the entire blocks table.
@@ -178,7 +186,6 @@ async fn main() -> anyhow::Result<()> {
     //     wallet_hash = H256::decode(&mut &hash_ivec[..])?;
     //     println!("{height:?}: {wallet_hash:?}");
     // }
-
 
     // Dispatch to proper subcommand
     match cli.command {

@@ -1,10 +1,10 @@
 //! This module is responsible for maintaining the wallet's local database of blocks
 //! and owned UTXOs to the canonical database reported by the node.
-//! 
+//!
 //! It is backed by a sled database
-//! 
+//!
 //! ## Schema
-//! 
+//!
 //! There are 4 tables in the database
 //! BlockHashes     block_number:u32 => block_hash:H256
 //! Blocks          block_hash:H256 => block:Block
@@ -13,20 +13,21 @@
 
 use std::path::PathBuf;
 
+use crate::{rpc, KEY_TYPE};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sc_keystore::LocalKeystore;
-use sled::{Db};
+use sled::Db;
 use sp_core::H256;
 use sp_keystore::CryptoStore;
-use tuxedo_core::{verifier::SigCheck, types::{OutputRef, Input}};
 use sp_runtime::traits::{BlakeTwo256, Hash};
-use crate::{KEY_TYPE, rpc};
-
-use jsonrpsee::{
-    http_client::{HttpClient},
+use tuxedo_core::{
+    types::{Input, OutputRef},
+    verifier::SigCheck,
 };
-use runtime::{Block, Transaction, OuterVerifier, money::Coin, Output};
+
+use jsonrpsee::http_client::HttpClient;
+use runtime::{money::Coin, Block, OuterVerifier, Output, Transaction};
 
 /// The identifier for the blocks tree in the db.
 const BLOCKS: &str = "blocks";
@@ -41,14 +42,17 @@ const UNSPENT: &str = "unspent";
 const SPENT: &str = "spent";
 
 /// Open a database at the given location intended for the given genesis block.
-/// 
+///
 /// If the database is already populated, make sure it is based on the expected genesis
 /// If an empty database is opened, it is initialized with the expected genesis hash and genesis block
-pub(crate) fn open_db(db_path: PathBuf, expected_genesis_hash: H256, expected_genesis_block: Block) -> anyhow::Result<Db> {
-    
+pub(crate) fn open_db(
+    db_path: PathBuf,
+    expected_genesis_hash: H256,
+    expected_genesis_block: Block,
+) -> anyhow::Result<Db> {
     //TODO figure out why this assertion fails.
     //assert_eq!(BlakeTwo256::hash_of(&expected_genesis_block.encode()), expected_genesis_hash, "expected block hash does not match expected block");
-    
+
     let db = sled::open(db_path)?;
 
     // Open the tables we'll need
@@ -58,23 +62,31 @@ pub(crate) fn open_db(db_path: PathBuf, expected_genesis_hash: H256, expected_ge
     // If the database is already populated, just make sure it is for the same genesis block
     if height(&db)?.is_some() {
         // There are database blocks, so do a quick precheck to make sure they use the same genesis block.
-        let wallet_genesis_ivec = wallet_block_hashes_tree.get(0.encode())?.expect("We know there are some blocks, so there should be a 0th block.");
+        let wallet_genesis_ivec = wallet_block_hashes_tree
+            .get(0.encode())?
+            .expect("We know there are some blocks, so there should be a 0th block.");
         let wallet_genesis_hash = H256::decode(&mut &wallet_genesis_ivec[..])?;
         println!("Found existing database.");
         if expected_genesis_hash != wallet_genesis_hash {
             println!("Wallet's genesis does not match expected. Aborting database opening.");
             return Err(anyhow!("Node reports a different genesis block than wallet. Wallet: {wallet_genesis_hash:?}. Expected: {expected_genesis_hash:?}. Aborting all operations"));
         }
-        return Ok(db)
+        return Ok(db);
     }
 
     // If there are no local blocks yet, initialize the tables
     println!("Found empty database.");
-    println!("Initializing fresh sync from genesis {:?}", expected_genesis_hash);
+    println!(
+        "Initializing fresh sync from genesis {:?}",
+        expected_genesis_hash
+    );
 
     // Update both tables
     wallet_block_hashes_tree.insert(0u32.encode(), expected_genesis_hash.encode())?;
-    wallet_blocks_tree.insert(expected_genesis_hash.encode(), expected_genesis_block.encode())?;
+    wallet_blocks_tree.insert(
+        expected_genesis_hash.encode(),
+        expected_genesis_block.encode(),
+    )?;
 
     Ok(db)
 }
@@ -84,13 +96,18 @@ pub(crate) fn open_db(db_path: PathBuf, expected_genesis_hash: H256, expected_ge
 /// Synchronize the local database to the database of the running node.
 /// The wallet entirely trusts the data the node feeds it. In the bigger
 /// picture, that means run your own (light) node.
-pub(crate) async fn synchronize(db: &Db, client: &HttpClient, keystore: &LocalKeystore) -> anyhow::Result<()> {
+pub(crate) async fn synchronize(
+    db: &Db,
+    client: &HttpClient,
+    keystore: &LocalKeystore,
+) -> anyhow::Result<()> {
     println!("Synchronizing wallet with node.");
 
     // Start the algorithm at the height that the wallet currently thinks is best.
     // Fetch the block hash at that height from both the wallet's local db and the node
-    let mut height:u32 = height(db)?.ok_or(anyhow!("tried to sync an uninitialized database"))?;
-    let mut wallet_hash = get_block_hash(db, height)?.expect("Local database should have a block hash at the height reported as best");
+    let mut height: u32 = height(db)?.ok_or(anyhow!("tried to sync an uninitialized database"))?;
+    let mut wallet_hash = get_block_hash(db, height)?
+        .expect("Local database should have a block hash at the height reported as best");
     let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, &client).await?;
 
     // There may have been a re-org since the last time the node synced. So we loop backwards from the
@@ -100,12 +117,13 @@ pub(crate) async fn synchronize(db: &Db, client: &HttpClient, keystore: &LocalKe
     // In the best case, where there is no re-org, this loop will execute zero times.
     while Some(wallet_hash) != node_hash {
         println!("Divergence at height {height}. Node reports block: {node_hash:?}. Reverting wallet block: {wallet_hash:?}.");
-        
+
         unapply_highest_block(db).await?;
 
         // Update for the next iteration
         height -= 1;
-        wallet_hash = get_block_hash(db, height)?.expect("Local database should have a block hash at the height reported as best");
+        wallet_hash = get_block_hash(db, height)?
+            .expect("Local database should have a block hash at the height reported as best");
         node_hash = rpc::node_get_block_hash(height, &client).await?;
     }
 
@@ -116,12 +134,14 @@ pub(crate) async fn synchronize(db: &Db, client: &HttpClient, keystore: &LocalKe
     node_hash = rpc::node_get_block_hash(height, &client).await?;
 
     // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
-    while let Some(hash) = node_hash  {
+    while let Some(hash) = node_hash {
         println!("Forward syncing height {height}, hash {hash:?}");
 
         // Fetch the entire block in order to apply its transactions
-        let block = rpc::node_get_block(hash, &client).await?.expect("Node should be able to return a block whose hash it already returned");
-        
+        let block = rpc::node_get_block(hash, &client)
+            .await?
+            .expect("Node should be able to return a block whose hash it already returned");
+
         // Apply the new block
         apply_block(&db, block, hash, &keystore).await?;
 
@@ -129,14 +149,14 @@ pub(crate) async fn synchronize(db: &Db, client: &HttpClient, keystore: &LocalKe
 
         node_hash = rpc::node_get_block_hash(height, &client).await?;
     }
-    
+
     println!("Done with forward sync up to {}", height - 1);
 
     Ok(())
 }
 
 /// Gets the block hash from the local database given a block height. Similar the Node's RPC.
-/// 
+///
 /// Some if the block exists, None if the block does not exist.
 pub(crate) fn get_block_hash(db: &Db, height: u32) -> anyhow::Result<Option<H256>> {
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
@@ -162,7 +182,12 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
 }
 
 /// Apply a block to the local database
-pub(crate) async fn apply_block(db: &Db, b: Block, block_hash: H256, keystore: &LocalKeystore) -> anyhow::Result<()> {
+pub(crate) async fn apply_block(
+    db: &Db,
+    b: Block,
+    block_hash: H256,
+    keystore: &LocalKeystore,
+) -> anyhow::Result<()> {
     // Write the hash to the block_hashes table
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     wallet_block_hashes_tree.insert(b.header.number.encode(), block_hash.encode())?;
@@ -177,12 +202,15 @@ pub(crate) async fn apply_block(db: &Db, b: Block, block_hash: H256, keystore: &
     }
 
     Ok(())
-
 }
 
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
-async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -> anyhow::Result<()> {
+async fn apply_transaction(
+    db: &Db,
+    tx: Transaction,
+    keystore: &LocalKeystore,
+) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
@@ -191,10 +219,12 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
     for (index, output) in tx.outputs.iter().enumerate() {
         match output {
             Output {
-                verifier: OuterVerifier::SigCheck(SigCheck{owner_pubkey}),
+                verifier: OuterVerifier::SigCheck(SigCheck { owner_pubkey }),
                 payload,
-            } if keystore.has_keys(&[(owner_pubkey.encode(), KEY_TYPE)]).await => {
-
+            } if keystore
+                .has_keys(&[(owner_pubkey.encode(), KEY_TYPE)])
+                .await =>
+            {
                 // For now the wallet only supports simple coins, so skip anything else
                 let amount = match payload.extract::<Coin>() {
                     Ok(Coin(amount)) => amount,
@@ -217,7 +247,7 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
 
     println!("about to spend all inputs");
     // Spend all the inputs
-    for Input{ output_ref, .. } in tx.inputs {
+    for Input { output_ref, .. } in tx.inputs {
         spend_output(db, &output_ref)?;
     }
 
@@ -225,7 +255,12 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
 }
 
 /// Add a new output to the database updating all tables.
-fn add_unspent_output(db: &Db, output_ref: &OutputRef, owner_pubkey: &H256, amount: &u128) -> anyhow::Result<()> {
+fn add_unspent_output(
+    db: &Db,
+    output_ref: &OutputRef,
+    owner_pubkey: &H256,
+    amount: &u128,
+) -> anyhow::Result<()> {
     let unspent_tree = db.open_tree(UNSPENT)?;
     unspent_tree.insert(output_ref.encode(), (owner_pubkey, amount).encode())?;
 
@@ -233,7 +268,7 @@ fn add_unspent_output(db: &Db, output_ref: &OutputRef, owner_pubkey: &H256, amou
 }
 
 /// Remove an output from the database updating all tables.
-fn remove_unspent_output(db: &Db, output_ref: &OutputRef)  -> anyhow::Result<()> {
+fn remove_unspent_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
     let unspent_tree = db.open_tree(UNSPENT)?;
 
     unspent_tree.remove(output_ref.encode())?;
@@ -269,7 +304,6 @@ fn unspend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
 /// Run a transaction backwards against a database. Mark all of the Inputs
 /// as unspent, and drop all of the outputs.
 fn unapply_transaction(db: &Db, tx: &Transaction) -> anyhow::Result<()> {
-    
     // Loop through the inputs moving each from spent to unspent
     for Input { output_ref, .. } in &tx.inputs {
         unspend_output(db, output_ref)?;
@@ -307,28 +341,27 @@ pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
     let Some(ivec) = wallet_blocks_tree.remove(hash.encode())? else {
         return Err(anyhow!("Block was not present in db but block hash was. DB is corrupted."));
     };
-       
+
     let block = Block::decode(&mut &ivec[..])?;
 
     // Loop through the transactions in reverse order calling unapply
     for tx in block.extrinsics.iter().rev() {
-        unapply_transaction(db, tx )?;
+        unapply_transaction(db, tx)?;
     }
 
     Ok(block)
 }
 
 /// Get the block height that the wallet is currently synced to
-/// 
+///
 /// None means the db is not yet initialized with a genesis block
 pub(crate) fn height(db: &Db) -> anyhow::Result<Option<u32>> {
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     let num_blocks = wallet_block_hashes_tree.len();
-    
+
     Ok(if num_blocks == 0 {
-            None
-        } else {
-            Some(num_blocks as u32 - 1 )
-        }
-    )
+        None
+    } else {
+        Some(num_blocks as u32 - 1)
+    })
 }
