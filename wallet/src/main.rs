@@ -164,36 +164,15 @@ async fn main() -> anyhow::Result<()> {
     println!("Node's Genesis block::{:?}", node_genesis);
 
     // Open the database
-    let db = sled::open(db_path).expect("Database path should exist");
+    let db = sync::open_db(db_path, node_genesis, &client)?;
     // println!("DB after first opening::{:?}", db);
 
-    // This "blocks" table is a mapping from block number to block hash.
-    let wallet_blocks_tree = db.open_tree("blocks").expect("should be able to open blocks tree from sled db.");
-    let num_blocks = wallet_blocks_tree.len();
-    println!("Number of entries in blocks table: {num_blocks}");
-
-    // If there are no local blocks yet, read the genesis block from the node.
-    if wallet_blocks_tree.is_empty() {
-        println!("Found empty database.");
-        println!("Initializing fresh sync from genesis {:?}", node_genesis);
-        wallet_blocks_tree.insert(0u32.encode(), node_genesis.encode())?;
-    } else {
-        // There are database blocks, so do a quick precheck to make sure they use the same genesis block.
-        let wallet_genesis_ivec = wallet_blocks_tree.get(0.encode())?.expect("We know there are some blocks, so there should be a 0th block.");
-        let wallet_genesis = H256::decode(&mut &wallet_genesis_ivec[..])?;
-        println!("In else clause wallet: {wallet_genesis:?}, node: {node_genesis:?}");
-        if node_genesis != wallet_genesis {
-            Err(anyhow!("Node reports a different genesis block than wallet. Wallet: {wallet_genesis:?}. Node: {node_genesis:?}. Aborting all operations"))?;
-        }
-    }
-
-    let num_blocks = wallet_blocks_tree.len();
-    println!("Number of entries in blocks table: {num_blocks}");
+    let num_blocks = sync::height(&db)?;
+    println!("Number of blocks in the db: {num_blocks}");
 
     // initialize loop vars
     let mut height:u32 = num_blocks as u32 - 1;
-    let hash_ivec = wallet_blocks_tree.get(height.encode())?.expect("block should be present");
-    let mut wallet_hash: H256 = H256::decode(&mut &hash_ivec[..])?;
+    let mut wallet_hash: H256 = sync::get_block(height)?;
     let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, &client).await?;
 
     println!("About to revert 0 or more blocks. wallet: {wallet_hash:?}. node: {node_hash:?}");
