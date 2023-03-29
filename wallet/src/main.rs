@@ -141,7 +141,7 @@ async fn main() -> anyhow::Result<()> {
 
     // If the keystore is empty, insert the example Shawn key so example transactions can be signed.
     if keystore.keys(KEY_TYPE)?.is_empty() {
-        println!("Keystore wsa empty. Inserting example key for THIS SESSION ONLY");
+        println!("Keystore was empty. Inserting example key for THIS SESSION ONLY");
 
         // This only inserts it into memory. That should be fine for the example key since it can always be
         // re-inserted on each new run. But for user-provided keys, we want them to be persisted.
