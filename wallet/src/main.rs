@@ -165,7 +165,7 @@ async fn main() -> anyhow::Result<()> {
     let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
     // println!("DB after first opening::{:?}", db);
 
-    let num_blocks = sync::height(&db)?;
+    let num_blocks = sync::height(&db)?.expect("db should be initialized automatically when opening.");
     println!("Number of blocks in the db: {num_blocks}");
 
     // Synchronize the wallet with attached node.

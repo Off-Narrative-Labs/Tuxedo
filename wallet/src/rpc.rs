@@ -17,12 +17,9 @@ pub async fn node_get_block_hash(height: u32, client: &HttpClient) -> anyhow::Re
 
 /// Typed helper to get the node's full block at a particular hash
 pub async fn node_get_block(hash: H256, client: &HttpClient) -> anyhow::Result<Option<Block>> {
-    println!("in node get block with hash {hash:?}");
     let s = hex::encode(hash.0);
-    println!("s in {s}");
     let params = rpc_params![s];
-    println!("about to send request for block with params {params:?}");
-
+    
     let rpc_response: Option<serde_json::Value> = client.request("chain_getBlock", params).await?;
 
     Ok(
