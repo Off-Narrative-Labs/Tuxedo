@@ -1,6 +1,6 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{fetch_storage, SpendArgs, KEY_TYPE};
+use crate::{fetch_storage, sync, SpendArgs, KEY_TYPE};
 
 use std::{thread::sleep, time::Duration};
 
@@ -12,6 +12,7 @@ use runtime::{
     OuterConstraintChecker, OuterVerifier, Transaction,
 };
 use sc_keystore::LocalKeystore;
+use sled::Db;
 use sp_core::sr25519::Public;
 use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
@@ -22,6 +23,7 @@ use tuxedo_core::{
 
 /// Create and send a transaction that spends coins on the network
 pub async fn spend_coins(
+    db: &Db,
     client: &HttpClient,
     keystore: &LocalKeystore,
     args: SpendArgs,
@@ -35,16 +37,8 @@ pub async fn spend_coins(
         checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
     };
 
-    // Make sure each input decodes and is present in storage, and then push to transaction.
-    for output_ref in &args.input {
-        print_coin_from_storage(output_ref, client).await?;
-        transaction.inputs.push(Input {
-            output_ref: output_ref.clone(),
-            redeemer: vec![], // We will sign the total transaction so this should be empty
-        });
-    }
-
     // Construct each output and then push to the transactions
+    let mut total_output_amount = 0;
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::new(*amount).into(),
@@ -52,7 +46,35 @@ pub async fn spend_coins(
                 owner_pubkey: args.recipient,
             }),
         };
+        total_output_amount += amount;
         transaction.outputs.push(output);
+    }
+
+    // The total input set will consist or any manually chosen inputs
+    // plus any automatically chosen to make the input amount high enough
+    let mut total_input_amount = 0;
+    let mut all_input_refs = args.input;
+    for output_ref in &all_input_refs {
+        let (_owner_pubkey, amount) = sync::get_unspent(db, output_ref)?.ok_or(anyhow!(
+            "user-specified output ref not found in local database"
+        ))?;
+        total_input_amount += amount;
+    }
+    //TODO filtering on a specific sender
+    while total_input_amount < total_output_amount {
+        let (output_ref, _owner_pubkey, amount) = sync::get_arbitrary_unspent(db)?;
+        all_input_refs.push(output_ref);
+        total_input_amount += amount;
+    }
+
+    // Make sure each input decodes and is still present in the node's storage,
+    // and then push to transaction.
+    for output_ref in &all_input_refs {
+        print_coin_from_storage(output_ref, client).await?;
+        transaction.inputs.push(Input {
+            output_ref: output_ref.clone(),
+            redeemer: vec![], // We will sign the total transaction so this should be empty
+        });
     }
 
     // Keep a copy of the stripped encoded transaction for signing purposes

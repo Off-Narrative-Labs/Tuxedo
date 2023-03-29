@@ -112,6 +112,11 @@ pub struct SpendArgs {
     #[arg(long, short, value_parser = output_ref_from_string)]
     input: Vec<OutputRef>,
 
+    // /// All inputs to the transaction will be from this same sender.
+    // /// When not specified, inputs from any owner are chosen indiscriminantly
+    // #[arg(long, short, value_parser = h256_from_string)]
+    // sender: Option<H256>,
+
     // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html
     // shows how to specify a custom parsing function
     /// Hex encoded address (sr25519 pubkey) of the recipient
@@ -189,7 +194,7 @@ async fn main() -> anyhow::Result<()> {
         Command::VerifyCoin { output_ref } => {
             money::print_coin_from_storage(&output_ref, &client).await
         }
-        Command::SpendCoins(args) => money::spend_coins(&client, &keystore, args).await,
+        Command::SpendCoins(args) => money::spend_coins(&db, &client, &keystore, args).await,
         Command::InsertKey { seed } => {
             // We need to provide a public key to the keystore manually, so let's calculate it.
             let public_key = Pair::from_phrase(&seed, None)?.0.public();

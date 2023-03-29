@@ -155,6 +155,31 @@ pub(crate) async fn synchronize(
     Ok(())
 }
 
+/// Gets the owner and amount associated with an output ref from the unspent table
+///
+/// Some if the output ref exists, None if it doesn't
+pub(crate) fn get_unspent(db: &Db, output_ref: &OutputRef) -> anyhow::Result<Option<(H256, u128)>> {
+    let wallet_unspent_tree = db.open_tree(UNSPENT)?;
+    let Some(ivec) = wallet_unspent_tree.get(output_ref.encode())? else {
+        return Ok(None);
+    };
+
+    Ok(Some(<(H256, u128)>::decode(&mut &ivec[..])?))
+}
+
+/// Picks an arbitrary unspent output out of the database for spending
+pub(crate) fn get_arbitrary_unspent(db: &Db) -> anyhow::Result<(OutputRef, H256, u128)> {
+    let wallet_unspent_tree = db.open_tree(UNSPENT)?;
+    let Some((output_ref_ivec, owner_amount_ivec)) = wallet_unspent_tree.first()? else {
+        return Err(anyhow!("No more unspent outputs in database"));
+    };
+
+    let output_ref = OutputRef::decode(&mut &output_ref_ivec[..])?;
+    let (owner_pubkey, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
+
+    Ok((output_ref, owner_pubkey, amount))
+}
+
 /// Gets the block hash from the local database given a block height. Similar the Node's RPC.
 ///
 /// Some if the block exists, None if the block does not exist.
@@ -366,7 +391,6 @@ pub(crate) fn height(db: &Db) -> anyhow::Result<Option<u32>> {
     })
 }
 
-
 /// Debugging use. Print out the entire block_hashes tree.
 pub(crate) fn print_block_hashes_tree(db: &Db) -> anyhow::Result<()> {
     for height in 0..height(db)?.unwrap() {
@@ -378,8 +402,8 @@ pub(crate) fn print_block_hashes_tree(db: &Db) -> anyhow::Result<()> {
 }
 
 /// Debugging use. Print the entire unspent outputs tree.
-pub(crate) fn print_unspent_tree (db: &Db) -> anyhow::Result<()> {
-    let wallet_unspent_tree = db.open_tree(UNSPENT)?; 
+pub(crate) fn print_unspent_tree(db: &Db) -> anyhow::Result<()> {
+    let wallet_unspent_tree = db.open_tree(UNSPENT)?;
     for x in wallet_unspent_tree.iter() {
         let (output_ref_ivec, owner_amount_ivec) = x?;
         let output_ref = hex::encode(output_ref_ivec);

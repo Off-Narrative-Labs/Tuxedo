@@ -88,8 +88,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 
             debug!(
                 target: LOG_TARGET,
-                "Checking for pre-existing output {:?}",
-                output_ref
+                "Checking for pre-existing output {:?}", output_ref
             );
 
             ensure!(
@@ -144,8 +143,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     pub fn apply_tuxedo_transaction(transaction: Transaction<V, C>) -> DispatchResult<C::Error> {
         debug!(
             target: LOG_TARGET,
-            "applying tuxedo transaction {:?}",
-            transaction
+            "applying tuxedo transaction {:?}", transaction
         );
 
         // Re-do the pre-checks. These should have been done in the pool, but we can't
@@ -177,8 +175,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 
         debug!(
             target: LOG_TARGET,
-            "Transaction before updating storage {:?}",
-            transaction
+            "Transaction before updating storage {:?}", transaction
         );
         // Write the newly created utxos
         for (index, output) in transaction.outputs.iter().enumerate() {
