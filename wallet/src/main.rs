@@ -159,11 +159,9 @@ async fn main() -> anyhow::Result<()> {
     let node_genesis_hash = rpc::node_get_block_hash(0, &client).await?.expect("node should be able to return some genesis hash");
     let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client).await?.expect("node should be able to return some genesis block");
     println!("Node's Genesis block::{:?}", node_genesis_hash);
-    println!("{:?}", node_genesis_block);
 
     // Open the local database
     let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
-    // println!("DB after first opening::{:?}", db);
 
     let num_blocks = sync::height(&db)?.expect("db should be initialized automatically when opening.");
     println!("Number of blocks in the db: {num_blocks}");

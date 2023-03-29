@@ -289,15 +289,15 @@ fn unapply_transaction(db: &Db, tx: &Transaction) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Docs TODO
+/// Unapply the best block that the wallet currently knows about
 pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
     let wallet_blocks_tree = db.open_tree(BLOCKS)?;
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
 
     // Find the best height
-    let height = height(db)?;
+    let height = height(db)?.ok_or(anyhow!("Cannot unapply block from uninitialized database"))?;
 
-    // Take the hash from the blockhashes tables
+    // Take the hash from the block_hashes tables
     let Some(ivec) = wallet_block_hashes_tree.remove(height.encode())? else {
         return Err(anyhow!("No block hash found at height reported as best. DB is inconsistent."))
     };
