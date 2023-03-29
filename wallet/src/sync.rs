@@ -28,6 +28,18 @@ use jsonrpsee::{
 };
 use runtime::{Block, Transaction, OuterVerifier, money::Coin, Output};
 
+/// The identifier for the blocks tree in the db.
+const BLOCKS: &str = "blocks";
+
+/// The identifier for the block_hashes tree in the db.
+const BLOCK_HASHES: &str = "block_hashes";
+
+/// The identifier for the unspent tree in the db.
+const UNSPENT: &str = "unspent";
+
+/// The identifier for the spent tree in the db.
+const SPENT: &str = "spent";
+
 /// Open a database at the given location intended for the given genesis block.
 /// 
 /// If the database is already populated, make sure it is based on the expected genesis
@@ -39,7 +51,7 @@ pub(crate) fn open_db(db_path: PathBuf, expected_genesis_hash: H256, expected_ge
     let db = sled::open(db_path)?;
 
     // Open the tables we'll need
-    let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
+    let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     let wallet_blocks_tree = db.open_tree("blocks")?;
 
     // If the database is already populated, just make sure it is for the same genesis block
@@ -127,7 +139,7 @@ pub(crate) async fn synchronize(db: &Db, client: &HttpClient, keystore: &LocalKe
 /// 
 /// Some if the block exists, None if the block does not exist.
 pub(crate) fn get_block_hash(db: &Db, height: u32) -> anyhow::Result<Option<H256>> {
-    let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
+    let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     let Some(ivec) = wallet_block_hashes_tree.get(height.encode())? else {
         return Ok(None);
     };
@@ -139,7 +151,7 @@ pub(crate) fn get_block_hash(db: &Db, height: u32) -> anyhow::Result<Option<H256
 
 /// Gets the block from the local database given a block hash. Similar to the Node's RPC.
 pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
-    let wallet_blocks_tree = db.open_tree("blocks")?;
+    let wallet_blocks_tree = db.open_tree(BLOCKS)?;
     let Some(ivec) = wallet_blocks_tree.get(hash.encode())? else {
         return Ok(None);
     };
@@ -151,12 +163,12 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
 
 /// Apply a block to the local database
 pub(crate) async fn apply_block(db: &Db, b: Block, block_hash: H256, keystore: &LocalKeystore) -> anyhow::Result<()> {
-    // Write the hash to the block_hashess table
-    let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
+    // Write the hash to the block_hashes table
+    let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     wallet_block_hashes_tree.insert(b.header.number.encode(), block_hash.encode())?;
 
     // Write the block to the blocks table
-    let wallet_blocks_tree = db.open_tree("blocks")?;
+    let wallet_blocks_tree = db.open_tree(BLOCKS)?;
     wallet_blocks_tree.insert(block_hash.encode(), b.encode())?;
 
     // Iterate through each transaction
@@ -214,7 +226,7 @@ async fn apply_transaction(db: &Db, tx: Transaction, keystore: &LocalKeystore) -
 
 /// Add a new output to the database updating all tables.
 fn add_unspent_output(db: &Db, output_ref: &OutputRef, owner_pubkey: &H256, amount: &u128) -> anyhow::Result<()> {
-    let unspent_tree = db.open_tree("unspent_outputs")?;
+    let unspent_tree = db.open_tree(UNSPENT)?;
     unspent_tree.insert(output_ref.encode(), (owner_pubkey, amount).encode())?;
 
     Ok(())
@@ -222,7 +234,7 @@ fn add_unspent_output(db: &Db, output_ref: &OutputRef, owner_pubkey: &H256, amou
 
 /// Remove an output from the database updating all tables.
 fn remove_unspent_output(db: &Db, output_ref: &OutputRef)  -> anyhow::Result<()> {
-    let unspent_tree = db.open_tree("unspent_outputs")?;
+    let unspent_tree = db.open_tree(UNSPENT)?;
 
     unspent_tree.remove(output_ref.encode())?;
 
@@ -232,8 +244,8 @@ fn remove_unspent_output(db: &Db, output_ref: &OutputRef)  -> anyhow::Result<()>
 /// Mark an existing output as spent. This does not purge all record of the output from the db.
 /// It just moves the record from the unspent table to the spent table
 fn spend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
-    let unspent_tree = db.open_tree("unspent_outputs")?;
-    let spent_tree = db.open_tree("spent_outputs")?;
+    let unspent_tree = db.open_tree(UNSPENT)?;
+    let spent_tree = db.open_tree(SPENT)?;
 
     let Some(ivec) = unspent_tree.remove(output_ref.encode())? else { return Ok(())};
     let (owner, amount) = <(H256, u128)>::decode(&mut &ivec[..])?;
@@ -244,8 +256,8 @@ fn spend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
 
 /// Mark an output that was previously spent back as unspent.
 fn unspend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
-    let unspent_tree = db.open_tree("unspent_outputs")?;
-    let spent_tree = db.open_tree("spent_outputs")?;
+    let unspent_tree = db.open_tree(UNSPENT)?;
+    let spent_tree = db.open_tree(SPENT)?;
 
     let Some(ivec) = spent_tree.remove(output_ref.encode())? else { return Ok(())};
     let (owner, amount) = <(H256, u128)>::decode(&mut &ivec[..])?;
@@ -279,10 +291,8 @@ fn unapply_transaction(db: &Db, tx: &Transaction) -> anyhow::Result<()> {
 
 /// Docs TODO
 pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
-    let wallet_blocks_tree = db.open_tree("blocks")
-        .expect("should be able to open blocks tree from sled db.");
-    let wallet_block_hashes_tree = db.open_tree("block_hashes")
-        .expect("should be able to open block hashes tree from sled db.");
+    let wallet_blocks_tree = db.open_tree(BLOCKS)?;
+    let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
 
     // Find the best height
     let height = height(db)?;
@@ -310,7 +320,7 @@ pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
 
 /// Get the block height that the wallet is currently synced to
 pub(crate) fn height(db: &Db) -> anyhow::Result<u32> {
-    let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
+    let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     let num_blocks = wallet_block_hashes_tree.len() - 1;
     Ok(num_blocks as u32)
 }
