@@ -155,82 +155,24 @@ async fn main() -> anyhow::Result<()> {
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
     let client = HttpClientBuilder::default().build(cli.endpoint)?;
 
-
-    // Setup the sled database which tracks the block hashes the wallet is aware of as
-    // well as the UTXOs owned by the keys in this wallet.
-
     // Read node's genesis block.
-    let node_genesis = rpc::node_get_block_hash(0, &client).await?.expect("node should be able to return some genesis hash");
-    println!("Node's Genesis block::{:?}", node_genesis);
+    let node_genesis_hash = rpc::node_get_block_hash(0, &client).await?.expect("node should be able to return some genesis hash");
+    let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client).await?.expect("node should be able to return some genesis block");
+    println!("Node's Genesis block::{:?}", node_genesis_hash);
+    println!("{:?}", node_genesis_block);
 
-    // Open the database
-    let db = sync::open_db(db_path, node_genesis, &client)?;
+    // Open the local database
+    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
     // println!("DB after first opening::{:?}", db);
 
     let num_blocks = sync::height(&db)?;
     println!("Number of blocks in the db: {num_blocks}");
 
-    // initialize loop vars
-    let mut height:u32 = num_blocks as u32 - 1;
-    let mut wallet_hash: H256 = sync::get_block(height)?;
-    let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, &client).await?;
+    // Synchronize the wallet with attached node.
+    sync::synchronize(&db, &client, &keystore).await?;
+    println!("Wallet database synchronized with node to height {:?}", sync::height(&db));
 
-    println!("About to revert 0 or more blocks. wallet: {wallet_hash:?}. node: {node_hash:?}");
-
-    // There may have been a re-org since the last time the node synced. So we loop backwards from the
-    // best height the wallet knows about checking whether the wallet knows the same block as the node.
-    // If not, we roll this block back on the wallet's local db, and then check the next ancestor.
-    // When the wallet and the node agree on the best block, the wallet can re-sync following the node.
-    // In the best case, where there is no re-org, this loop will execute zero times.
-    while Some(wallet_hash) != node_hash {
-        println!("Reorg Divergence at height {height}. Wallet: {wallet_hash:?}. Node: {node_hash:?}.");
-        
-        // Fetch the entire block in order to un-apply its transactions
-        // TODO we shouldn't rely on the node storing these old blocks. We
-        // need to store them locally, or at least store the minimal info needed
-        // to unapply it.
-        // For now we assume the node still knows about these old blocks.
-        // Eventually the wallet could consider storing entire blocks locally for
-        // the sake of unapplying them.
-        // let _block = rpc::node_get_block(wallet_hash, &client).await?.expect("Node should be able to return a block that the wallet previously synced");
-        // println!("Got block to un_apply");
-
-        // Remove the invalid
-        // TODO make this a function called eg roll back block.
-        // The function will also rewind blocks once it is available.
-        wallet_blocks_tree.remove(height.encode())?;
-
-        // Update for the next iteration
-        height -= 1;
-        let hash_ivec = wallet_blocks_tree.get(height.encode())?.expect("block should be present");
-        wallet_hash = H256::decode(&mut &hash_ivec[..])?;
-        node_hash = rpc::node_get_block_hash(height, &client).await?;
-    }
-
-    // Orphaned blocks (if any) have been discarded at this point.
-    // So we prepare our variables for forward syncing.
-    println!("Resyncing from common ancestor {node_hash:?} - {wallet_hash:?}");
-    height += 1;
-    node_hash = rpc::node_get_block_hash(height, &client).await?;
-
-    // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
-   while let Some(hash) = node_hash  {
-        println!("Forward syncing height {height}, hash {hash:?}");
-
-        // Fetch the entire block in order to apply its transactions
-        let block = rpc::node_get_block(hash, &client).await?.expect("Node should be able to return a block whose hash it already returned");
-        println!("Got block");
-
-        // Apply the new block
-        sync::apply_block(&db, block, hash, &keystore).await?;
-
-        height += 1;
-
-        node_hash = rpc::node_get_block_hash(height, &client).await?;
-    }
-    
-    println!("Done with forward sync up to {}", height - 1);
-
+    // TODO make this a helper function too
     // Now for good measure, print out the entire blocks table.
     // for result in wallet_blocks_tree.iter() {
     //     let (height_ivec, hash_ivec) = result?;

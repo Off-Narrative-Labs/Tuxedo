@@ -1,5 +1,7 @@
-//! This module is responsible for syncing the wallet's local database of blocks
+//! This module is responsible for maintaining the wallet's local database of blocks
 //! and owned UTXOs to the canonical database reported by the node.
+//! 
+//! It is backed by a sled database
 //! 
 //! ## Schema
 //! 
@@ -19,13 +21,10 @@ use sp_core::H256;
 use sp_keystore::CryptoStore;
 use tuxedo_core::{verifier::SigCheck, types::{OutputRef, Input}};
 use sp_runtime::traits::{BlakeTwo256, Hash};
-use crate::KEY_TYPE;
+use crate::{KEY_TYPE, rpc};
 
-use super::h256_from_string;
 use jsonrpsee::{
-    core::client::ClientT,
     http_client::{HttpClient},
-    rpc_params,
 };
 use runtime::{Block, Transaction, OuterVerifier, money::Coin, Output};
 
@@ -33,7 +32,10 @@ use runtime::{Block, Transaction, OuterVerifier, money::Coin, Output};
 /// 
 /// If the database is already populated, make sure it is based on the expected genesis
 /// If an empty database is opened, it is initialized with the expected genesis hash and genesis block
-pub(crate) async fn open_db(db_path: PathBuf, expected_genesis: H256, client: &HttpClient) -> anyhow::Result<Db> {
+pub(crate) fn open_db(db_path: PathBuf, expected_genesis_hash: H256, expected_genesis_block: Block) -> anyhow::Result<Db> {
+    
+    assert_eq!(BlakeTwo256::hash_of(&expected_genesis_block.encode()), expected_genesis_hash, "expected block hash does not match expected block");
+    
     let db = sled::open(db_path)?;
 
     // Open the tables we'll need
@@ -44,44 +46,117 @@ pub(crate) async fn open_db(db_path: PathBuf, expected_genesis: H256, client: &H
     if height(&db)? != 0 {
         // There are database blocks, so do a quick precheck to make sure they use the same genesis block.
         let wallet_genesis_ivec = wallet_block_hashes_tree.get(0.encode())?.expect("We know there are some blocks, so there should be a 0th block.");
-        let wallet_genesis = H256::decode(&mut &wallet_genesis_ivec[..])?;
+        let wallet_genesis_hash = H256::decode(&mut &wallet_genesis_ivec[..])?;
         println!("Found existing database.");
-        if expected_genesis != wallet_genesis {
+        if expected_genesis_hash != wallet_genesis_hash {
             println!("Wallet's genesis does not match expected. Aborting database opening.");
-            println!("wallet: {wallet_genesis:?}, expected: {expected_genesis:?}");
-            return Err(anyhow!("Node reports a different genesis block than wallet. Wallet: {wallet_genesis:?}. Expected: {expected_genesis:?}. Aborting all operations"));
+            return Err(anyhow!("Node reports a different genesis block than wallet. Wallet: {wallet_genesis_hash:?}. Expected: {expected_genesis_hash:?}. Aborting all operations"));
         }
         return Ok(db)
     }
 
     // If there are no local blocks yet, initialize the tables
     println!("Found empty database.");
-    println!("Initializing fresh sync from genesis {:?}", expected_genesis);
-
-    // TODO better not to pull the block straight from the node here,
-    // but instead have a callback to get the genesis block if needed.
-    let genesis_block = crate::rpc::node_get_block(expected_genesis, client).await?;
+    println!("Initializing fresh sync from genesis {:?}", expected_genesis_hash);
 
     // Update both tables
-    wallet_block_hashes_tree.insert(0u32.encode(), expected_genesis.encode())?;
-    wallet_blocks_tree.insert(expected_genesis.encode(), genesis_block.encode());
+    wallet_block_hashes_tree.insert(0u32.encode(), expected_genesis_hash.encode())?;
+    wallet_blocks_tree.insert(expected_genesis_hash.encode(), expected_genesis_block.encode())?;
 
     Ok(db)
 }
 
-/// Gets the block hash from the block height. Similar the Node's RPC.
-pub(crate) fn get_block(height: u32) -> anyhow::Result<H256> {
-    todo!()
+//TODO don't take the keystore as a param here. Instead take a filter function
+// that determines which utxos are relevant.
+/// Synchronize the local database to the database of the running node.
+/// The wallet entirely trusts the data the node feeds it. In the bigger
+/// picture, that means run your own (light) node.
+pub(crate) async fn synchronize(db: &Db, client: &HttpClient, keystore: &LocalKeystore) -> anyhow::Result<()> {
+    println!("Synchronizing wallet with node.");
+
+    // Start the algorithm at the height that the wallet currently thinks is best.
+    // Fetch the block hash at that height from both the wallet's local db and the node
+    let mut height:u32 = height(db)?;
+    let mut wallet_hash = get_block_hash(db, height)?.expect("Local database should have a block hash at the height reported as best");
+    let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, &client).await?;
+
+    // There may have been a re-org since the last time the node synced. So we loop backwards from the
+    // best height the wallet knows about checking whether the wallet knows the same block as the node.
+    // If not, we roll this block back on the wallet's local db, and then check the next ancestor.
+    // When the wallet and the node agree on the best block, the wallet can re-sync following the node.
+    // In the best case, where there is no re-org, this loop will execute zero times.
+    while Some(wallet_hash) != node_hash {
+        println!("Divergence at height {height}. Node reports block: {node_hash:?}. Reverting wallet block: {wallet_hash:?}.");
+        
+        unapply_highest_block(db).await?;
+
+        // Update for the next iteration
+        height -= 1;
+        wallet_hash = get_block_hash(db, height)?.expect("Local database should have a block hash at the height reported as best");
+        node_hash = rpc::node_get_block_hash(height, &client).await?;
+    }
+
+    // Orphaned blocks (if any) have been discarded at this point.
+    // So we prepare our variables for forward syncing.
+    println!("Resyncing from common ancestor {node_hash:?} - {wallet_hash:?}");
+    height += 1;
+    node_hash = rpc::node_get_block_hash(height, &client).await?;
+
+    // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
+    while let Some(hash) = node_hash  {
+        println!("Forward syncing height {height}, hash {hash:?}");
+
+        // Fetch the entire block in order to apply its transactions
+        let block = rpc::node_get_block(hash, &client).await?.expect("Node should be able to return a block whose hash it already returned");
+        println!("Got block");
+
+        // Apply the new block
+        apply_block(&db, block, hash, &keystore).await?;
+
+        height += 1;
+
+        node_hash = rpc::node_get_block_hash(height, &client).await?;
+    }
+    
+    println!("Done with forward sync up to {}", height - 1);
+
+    Ok(())
+}
+
+/// Gets the block hash from the local database given a block height. Similar the Node's RPC.
+/// 
+/// Some if the block exists, None if the block does not exist.
+pub(crate) fn get_block_hash(db: &Db, height: u32) -> anyhow::Result<Option<H256>> {
+    let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
+    let Some(ivec) = wallet_block_hashes_tree.get(height.encode())? else {
+        return Ok(None);
+    };
+
+    let hash = H256::decode(&mut &ivec[..])?;
+
+    Ok(Some(hash))
+}
+
+/// Gets the block from the local database given a block hash. Similar to the Node's RPC.
+pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
+    let wallet_blocks_tree = db.open_tree("blocks")?;
+    let Some(ivec) = wallet_blocks_tree.get(hash.encode())? else {
+        return Ok(None);
+    };
+
+    let block = Block::decode(&mut &ivec[..])?;
+
+    Ok(Some(block))
 }
 
 /// Apply a block to the local database
 pub(crate) async fn apply_block(db: &Db, b: Block, block_hash: H256, keystore: &LocalKeystore) -> anyhow::Result<()> {
     // Write the hash to the block_hashess table
-    let wallet_block_hashes_tree = db.open_tree("block_hashes").expect("should be able to open block hashes tree from sled db.");
+    let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
     wallet_block_hashes_tree.insert(b.header.number.encode(), block_hash.encode())?;
 
     // Write the block to the blocks table
-    let wallet_blocks_tree = db.open_tree("blocks").expect("should be able to open blocks table");
+    let wallet_blocks_tree = db.open_tree("blocks")?;
     wallet_blocks_tree.insert(block_hash.encode(), b.encode())?;
 
     // Iterate through each transaction
@@ -149,7 +224,9 @@ fn add_unspent_output(db: &Db, output_ref: &OutputRef, owner_pubkey: &H256, amou
 fn remove_unspent_output(db: &Db, output_ref: &OutputRef)  -> anyhow::Result<()> {
     let unspent_tree = db.open_tree("unspent_outputs")?;
 
-    todo!()
+    unspent_tree.remove(output_ref.encode())?;
+
+    Ok(())
 }
 
 /// Mark an existing output as spent. This does not purge all record of the output from the db.
@@ -218,7 +295,7 @@ pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
 
     // Take the block from the blocks table
     let Some(ivec) = wallet_blocks_tree.remove(hash.encode())? else {
-        return Err(anyhow!("Block was not present in bd but block has ws. DB is corrpted."));
+        return Err(anyhow!("Block was not present in db but block hash was. DB is corrupted."));
     };
        
     let block = Block::decode(&mut &ivec[..])?;
@@ -234,6 +311,6 @@ pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
 /// Get the block height that the wallet is currently synced to
 pub(crate) fn height(db: &Db) -> anyhow::Result<u32> {
     let wallet_block_hashes_tree = db.open_tree("block_hashes")?;
-    let num_blocks = wallet_block_hashes_tree.len();
+    let num_blocks = wallet_block_hashes_tree.len() - 1;
     Ok(num_blocks as u32)
 }
