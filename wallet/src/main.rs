@@ -175,17 +175,12 @@ async fn main() -> anyhow::Result<()> {
     sync::synchronize(&db, &client, &keystore).await?;
     println!(
         "Wallet database synchronized with node to height {:?}",
-        sync::height(&db)
+        sync::height(&db)?
     );
 
-    // TODO make this a helper function too
-    // Now for good measure, print out the entire blocks table.
-    // for result in wallet_blocks_tree.iter() {
-    //     let (height_ivec, hash_ivec) = result?;
-    //     height = u32::decode(&mut &height_ivec[..])?;
-    //     wallet_hash = H256::decode(&mut &hash_ivec[..])?;
-    //     println!("{height:?}: {wallet_hash:?}");
-    // }
+    // Print entire unspent outputs tree
+    println!("###### Unspent outputs ###########");
+    sync::print_unspent_tree(&db)?;
 
     // Dispatch to proper subcommand
     match cli.command {

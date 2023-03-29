@@ -365,3 +365,28 @@ pub(crate) fn height(db: &Db) -> anyhow::Result<Option<u32>> {
         Some(num_blocks as u32 - 1)
     })
 }
+
+
+/// Debugging use. Print out the entire block_hashes tree.
+pub(crate) fn print_block_hashes_tree(db: &Db) -> anyhow::Result<()> {
+    for height in 0..height(db)?.unwrap() {
+        let hash = get_block_hash(db, height)?;
+        println!("height: {height}, hash: {hash:?}");
+    }
+
+    Ok(())
+}
+
+/// Debugging use. Print the entire unspent outputs tree.
+pub(crate) fn print_unspent_tree (db: &Db) -> anyhow::Result<()> {
+    let wallet_unspent_tree = db.open_tree(UNSPENT)?; 
+    for x in wallet_unspent_tree.iter() {
+        let (output_ref_ivec, owner_amount_ivec) = x?;
+        let output_ref = hex::encode(output_ref_ivec);
+        let (owner_pubkey, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
+
+        println!("{output_ref}: owner {owner_pubkey:?}, amount {amount}");
+    }
+
+    Ok(())
+}
