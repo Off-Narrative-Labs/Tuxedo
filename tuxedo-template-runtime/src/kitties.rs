@@ -433,11 +433,17 @@ mod test {
 
     impl TestKittyMaker {
         pub fn get_bogus_type() -> DynamicallyTypedData {
-            DynamicallyTypedData { data: Bogus.encode() , type_id: Bogus::TYPE_ID }
+            DynamicallyTypedData {
+                data: Bogus.encode(),
+                type_id: Bogus::TYPE_ID,
+            }
         }
 
         pub fn get_default_mom() -> DynamicallyTypedData {
-            DynamicallyTypedData { data: KittyData::default().encode(), type_id: KittyData::TYPE_ID }
+            DynamicallyTypedData {
+                data: KittyData::default().encode(),
+                type_id: KittyData::TYPE_ID,
+            }
         }
 
         pub fn get_default_dad() -> DynamicallyTypedData {
@@ -445,132 +451,168 @@ mod test {
                 data: KittyData {
                     parent: Parent::Dad(DadKittyStatus::RearinToGo),
                     ..Default::default()
-                }.encode(),
-                type_id: KittyData::TYPE_ID
+                }
+                .encode(),
+                type_id: KittyData::TYPE_ID,
             }
         }
 
         pub fn get_default_child() -> DynamicallyTypedData {
-            let mom: KittyData = KittyData::try_from(&Self::get_default_mom()).expect("Can get mom KittyData in test");
-            let dad = KittyData::try_from(&Self::get_default_dad()).expect("Can get dad KittyData in test");
+            let mom: KittyData = KittyData::try_from(&Self::get_default_mom())
+                .expect("Can get mom KittyData in test");
+            let dad = KittyData::try_from(&Self::get_default_dad())
+                .expect("Can get dad KittyData in test");
             DynamicallyTypedData {
-                 data: KittyData {
+                data: KittyData {
                     parent: Parent::Mom(MomKittyStatus::RearinToGo),
                     free_breedings: 2,
-                    dna: KittyDNA(BlakeTwo256::hash_of(&(mom.dna, dad.dna, mom.num_breedings + 1, dad.num_breedings + 1))),
-                    num_breedings: 0
-                 }.encode(),
-                type_id: KittyData::TYPE_ID
+                    dna: KittyDNA(BlakeTwo256::hash_of(&(
+                        mom.dna,
+                        dad.dna,
+                        mom.num_breedings + 1,
+                        dad.num_breedings + 1,
+                    ))),
+                    num_breedings: 0,
+                }
+                .encode(),
+                type_id: KittyData::TYPE_ID,
             }
         }
     }
 
-
     #[test]
     fn breed_happy_path_works() {
-        let mut new_mom: KittyData = KittyData::try_from(&TestKittyMaker::get_default_mom()).expect("Can get mom KittyData in test");
+        let mut new_mom: KittyData = KittyData::try_from(&TestKittyMaker::get_default_mom())
+            .expect("Can get mom KittyData in test");
         new_mom.parent = Parent::Mom(MomKittyStatus::HadBirthRecently);
         new_mom.num_breedings += 1;
         new_mom.free_breedings -= 1;
-        let mut new_dad = KittyData::try_from(&TestKittyMaker::get_default_dad()).expect("Can get dad KittyData in test");
+        let mut new_dad = KittyData::try_from(&TestKittyMaker::get_default_dad())
+            .expect("Can get dad KittyData in test");
         new_dad.parent = Parent::Dad(DadKittyStatus::Tired);
         new_dad.num_breedings += 1;
         new_dad.free_breedings -= 1;
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_mom(), TestKittyMaker::get_default_dad()],
-                &vec![new_mom.try_into().unwrap(), new_dad.try_into().unwrap(), TestKittyMaker::get_default_child()]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_mom(),
+                TestKittyMaker::get_default_dad(),
+            ],
+            &vec![
+                new_mom.try_into().unwrap(),
+                new_dad.try_into().unwrap(),
+                TestKittyMaker::get_default_child(),
+            ],
+        );
         assert!(result.is_ok());
     }
 
     #[test]
     fn breed_wrong_input_type_fails() {
-
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_bogus_type(), TestKittyMaker::get_bogus_type()],
-                &vec![],
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_bogus_type(),
+                TestKittyMaker::get_bogus_type(),
+            ],
+            &vec![],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::BadlyTyped));
     }
 
     #[test]
     fn breed_wrong_output_type_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_mom(), TestKittyMaker::get_default_dad()],
-                &vec![TestKittyMaker::get_bogus_type(), TestKittyMaker::get_bogus_type(), TestKittyMaker::get_bogus_type()]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_mom(),
+                TestKittyMaker::get_default_dad(),
+            ],
+            &vec![
+                TestKittyMaker::get_bogus_type(),
+                TestKittyMaker::get_bogus_type(),
+                TestKittyMaker::get_bogus_type(),
+            ],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::BadlyTyped));
     }
 
     #[test]
     fn inputs_dont_contain_two_parents_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_mom()],
-                &vec![]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![TestKittyMaker::get_default_mom()],
+            &vec![],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::TwoParentsDoNotExist));
     }
 
     #[test]
     fn outputs_dont_contain_all_family_members_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_mom(), TestKittyMaker::get_default_dad()],
-                &vec![TestKittyMaker::get_default_mom()]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_mom(),
+                TestKittyMaker::get_default_dad(),
+            ],
+            &vec![TestKittyMaker::get_default_mom()],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFamilyMembers));
     }
 
     #[test]
     fn breed_two_dads_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_dad(), TestKittyMaker::get_default_dad()],
-                &vec![TestKittyMaker::get_default_mom()]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_dad(),
+                TestKittyMaker::get_default_dad(),
+            ],
+            &vec![TestKittyMaker::get_default_mom()],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid));
     }
 
     #[test]
     fn breed_two_moms_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_mom(), TestKittyMaker::get_default_mom()],
-                &vec![TestKittyMaker::get_default_mom()]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_mom(),
+                TestKittyMaker::get_default_mom(),
+            ],
+            &vec![TestKittyMaker::get_default_mom()],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::TwoMomsNotValid));
     }
 
     #[test]
     fn first_input_not_mom_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_dad(), TestKittyMaker::get_default_mom()],
-                &vec![]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_dad(),
+                TestKittyMaker::get_default_mom(),
+            ],
+            &vec![],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid))
     }
 
     #[test]
     fn first_output_not_mom_fails() {
-        let result =
-            FreeKittyConstraintChecker::check(
-                &FreeKittyConstraintChecker,
-                &vec![TestKittyMaker::get_default_mom(), TestKittyMaker::get_default_dad()],
-                &vec![TestKittyMaker::get_default_dad(), TestKittyMaker::get_default_mom(), TestKittyMaker::get_default_child()]
-            );
+        let result = FreeKittyConstraintChecker::check(
+            &FreeKittyConstraintChecker,
+            &vec![
+                TestKittyMaker::get_default_mom(),
+                TestKittyMaker::get_default_dad(),
+            ],
+            &vec![
+                TestKittyMaker::get_default_dad(),
+                TestKittyMaker::get_default_mom(),
+                TestKittyMaker::get_default_child(),
+            ],
+        );
         assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid));
     }
 
