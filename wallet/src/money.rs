@@ -1,6 +1,6 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{fetch_storage, sync, SpendArgs, KEY_TYPE};
+use crate::{fetch_storage, sync, cli::SpendArgs};
 
 use std::{thread::sleep, time::Duration};
 
@@ -14,7 +14,6 @@ use runtime::{
 use sc_keystore::LocalKeystore;
 use sled::Db;
 use sp_core::sr25519::Public;
-use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef},
@@ -89,10 +88,7 @@ pub async fn spend_coins(
         let redeemer = match utxo.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 let public = Public::from_h256(owner_pubkey);
-                keystore
-                    .sign_with(KEY_TYPE, &public.into(), &stripped_encoded_transaction)
-                    .await?
-                    .ok_or(anyhow!("Key doesn't exist in keystore"))?
+                crate::keystore::sign_with(keystore, &public.into(), &stripped_encoded_transaction)?
             }
             OuterVerifier::UpForGrabs(_) => Vec::new(),
             OuterVerifier::ThresholdMultiSignature(_) => todo!(),

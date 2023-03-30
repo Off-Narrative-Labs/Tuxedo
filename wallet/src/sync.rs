@@ -13,13 +13,12 @@
 
 use std::path::PathBuf;
 
-use crate::{rpc, KEY_TYPE};
+use crate::rpc;
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sc_keystore::LocalKeystore;
 use sled::Db;
 use sp_core::H256;
-use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, OutputRef},
@@ -246,10 +245,7 @@ async fn apply_transaction(
             Output {
                 verifier: OuterVerifier::SigCheck(SigCheck { owner_pubkey }),
                 payload,
-            } if keystore
-                .has_keys(&[(owner_pubkey.encode(), KEY_TYPE)])
-                .await =>
-            {
+            } if crate::keystore::has_key(&keystore, owner_pubkey) => {
                 // For now the wallet only supports simple coins, so skip anything else
                 let amount = match payload.extract::<Coin>() {
                     Ok(Coin(amount)) => amount,
