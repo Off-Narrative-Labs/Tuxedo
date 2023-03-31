@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use crate::{rpc, KEY_TYPE, output_filter::Filter};
+use crate::{output_filter::Filter, rpc, KEY_TYPE};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sc_keystore::LocalKeystore;
@@ -228,11 +228,7 @@ pub(crate) async fn apply_block(
 
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
-async fn apply_transaction(
-    db: &Db,
-    tx: Transaction,
-    filter: &Filter,
-) -> anyhow::Result<()> {
+async fn apply_transaction(db: &Db, tx: Transaction, filter: &Filter) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
@@ -240,20 +236,19 @@ async fn apply_transaction(
     let filtered_outputs = filter(&tx.outputs, &tx_hash).map_err(|e| anyhow!("{:?}", e))?;
     // Insert all new outputs
     for (output, output_ref) in filtered_outputs.iter() {
-                // For now the wallet only supports simple coins, so skip anything else
-                let amount = match output.payload.extract::<Coin>() {
-                    Ok(Coin(amount)) => amount,
-                    Err(_) => continue,
-                };
+        // For now the wallet only supports simple coins, so skip anything else
+        let amount = match output.payload.extract::<Coin>() {
+            Ok(Coin(amount)) => amount,
+            Err(_) => continue,
+        };
 
-                match output.verifier {
-                    OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
-                        // Add it to the global unspent_outputs table
-                        add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
-                    },
-                    _ => return Err(anyhow!("{:?}", ()))
-
-                }
+        match output.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+                // Add it to the global unspent_outputs table
+                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+            }
+            _ => return Err(anyhow!("{:?}", ())),
+        }
     }
 
     println!("about to spend all inputs");

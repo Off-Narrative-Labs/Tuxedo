@@ -1,10 +1,6 @@
 use runtime::{OuterVerifier, Output};
 use sp_core::H256;
-use tuxedo_core::{
-    dynamic_typing::DynamicallyTypedData,
-    types::{OutputRef},
-    verifier::*,
-};
+use tuxedo_core::{dynamic_typing::DynamicallyTypedData, types::OutputRef, verifier::*};
 
 pub type OutputInfo = (Output, OutputRef);
 
@@ -30,7 +26,15 @@ impl OutputFilter for SigCheckFilter {
             let filtered_outputs = outputs
                 .iter()
                 .enumerate()
-                .map(|(i, output)| (output.clone(), OutputRef { tx_hash: *tx_hash, index: i as u32 }))
+                .map(|(i, output)| {
+                    (
+                        output.clone(),
+                        OutputRef {
+                            tx_hash: *tx_hash,
+                            index: i as u32,
+                        },
+                    )
+                })
                 .filter(|(output, _)| output.verifier == verifier)
                 .collect::<Vec<_>>();
             Ok(filtered_outputs)
@@ -105,17 +109,23 @@ mod tests {
             },
         ];
 
-        let expected_filtered_output_infos = vec![(Output {
-            verifier: verifier.clone(),
-            payload: DynamicallyTypedData {
-                data: vec![],
-                type_id: *b"1234",
+        let expected_filtered_output_infos = vec![(
+            Output {
+                verifier: verifier.clone(),
+                payload: DynamicallyTypedData {
+                    data: vec![],
+                    type_id: *b"1234",
+                },
             },
-        }, OutputRef{ tx_hash: H256::zero(), index: 0 })];
+            OutputRef {
+                tx_hash: H256::zero(),
+                index: 0,
+            },
+        )];
 
         let my_filter = SigCheckFilter::build_filter(verifier).expect("Can build sigcheck filter");
-        let filtered_output_infos =
-            my_filter(&outputs_to_filter, &H256::zero()).expect("Can filter the outputs by verifier correctly");
+        let filtered_output_infos = my_filter(&outputs_to_filter, &H256::zero())
+            .expect("Can filter the outputs by verifier correctly");
 
         assert_eq!(filtered_output_infos, expected_filtered_output_infos);
     }

@@ -9,8 +9,8 @@ use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
     rpc_params,
 };
-use runtime::OuterVerifier;
 use parity_scale_codec::{Decode, Encode};
+use runtime::OuterVerifier;
 use sp_keystore::SyncCryptoStore;
 use sp_runtime::{CryptoTypeId, KeyTypeId};
 use tuxedo_core::{
@@ -184,7 +184,8 @@ async fn main() -> anyhow::Result<()> {
 
     let shawn_filter = SigCheckFilter::build_filter(OuterVerifier::SigCheck(SigCheck {
         owner_pubkey: shawn_public_key.into(),
-    })).map_err(|e| anyhow!("{:?}", e))?;
+    }))
+    .map_err(|e| anyhow!("{:?}", e))?;
 
     // Synchronize the wallet with attached node.
     sync::synchronize(&db, &client, &shawn_filter).await?;
