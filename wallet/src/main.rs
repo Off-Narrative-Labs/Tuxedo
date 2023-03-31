@@ -189,7 +189,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Synchronize the wallet with attached node.
     sync::synchronize(&db, &client, &shawn_filter).await?;
-    // sync::synchronize(&db, &client, &keystore).await?;
+
     println!(
         "Wallet database synchronized with node to height {:?}",
         sync::height(&db)?
