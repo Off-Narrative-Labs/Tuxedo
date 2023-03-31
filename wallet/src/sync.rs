@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use crate::{rpc, KEY_TYPE};
+use crate::{rpc, KEY_TYPE, output_filter::Filter};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sc_keystore::LocalKeystore;
@@ -27,7 +27,7 @@ use tuxedo_core::{
 };
 
 use jsonrpsee::http_client::HttpClient;
-use runtime::{money::Coin, Block, OuterVerifier, Output, Transaction};
+use runtime::{money::Coin, Block, OuterVerifier, Transaction};
 
 /// The identifier for the blocks tree in the db.
 const BLOCKS: &str = "blocks";
@@ -91,15 +91,13 @@ pub(crate) fn open_db(
     Ok(db)
 }
 
-//TODO don't take the keystore as a param here. Instead take a filter function
-// that determines which utxos are relevant.
 /// Synchronize the local database to the database of the running node.
 /// The wallet entirely trusts the data the node feeds it. In the bigger
 /// picture, that means run your own (light) node.
 pub(crate) async fn synchronize(
     db: &Db,
     client: &HttpClient,
-    keystore: &LocalKeystore,
+    filter: &Filter,
 ) -> anyhow::Result<()> {
     println!("Synchronizing wallet with node.");
 
@@ -143,7 +141,7 @@ pub(crate) async fn synchronize(
             .expect("Node should be able to return a block whose hash it already returned");
 
         // Apply the new block
-        apply_block(&db, block, hash, &keystore).await?;
+        apply_block(&db, block, hash, filter).await?;
 
         height += 1;
 
@@ -206,12 +204,11 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
     Ok(Some(block))
 }
 
-/// Apply a block to the local database
 pub(crate) async fn apply_block(
     db: &Db,
     b: Block,
     block_hash: H256,
-    keystore: &LocalKeystore,
+    filter: &Filter,
 ) -> anyhow::Result<()> {
     // Write the hash to the block_hashes table
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
@@ -223,7 +220,7 @@ pub(crate) async fn apply_block(
 
     // Iterate through each transaction
     for tx in b.extrinsics {
-        apply_transaction(db, tx, keystore).await?;
+        apply_transaction(db, tx, filter).await?;
     }
 
     Ok(())
@@ -234,40 +231,29 @@ pub(crate) async fn apply_block(
 async fn apply_transaction(
     db: &Db,
     tx: Transaction,
-    keystore: &LocalKeystore,
+    filter: &Filter,
 ) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
     println!("about to insert new outputs");
+    let filtered_outputs = filter(&tx.outputs, &tx_hash).map_err(|e| anyhow!("{:?}", e))?;
     // Insert all new outputs
-    for (index, output) in tx.outputs.iter().enumerate() {
-        match output {
-            Output {
-                verifier: OuterVerifier::SigCheck(SigCheck { owner_pubkey }),
-                payload,
-            } if keystore
-                .has_keys(&[(owner_pubkey.encode(), KEY_TYPE)])
-                .await =>
-            {
+    for (output, output_ref) in filtered_outputs.iter() {
                 // For now the wallet only supports simple coins, so skip anything else
-                let amount = match payload.extract::<Coin>() {
+                let amount = match output.payload.extract::<Coin>() {
                     Ok(Coin(amount)) => amount,
                     Err(_) => continue,
                 };
 
-                let output_ref = OutputRef {
-                    tx_hash,
-                    index: index as u32,
-                };
+                match output.verifier {
+                    OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+                        // Add it to the global unspent_outputs table
+                        add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+                    },
+                    _ => return Err(anyhow!("{:?}", ()))
 
-                // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, owner_pubkey, &amount)?;
-            }
-            v => {
-                println!("Not recording output with verifier {v:?}");
-            }
-        }
+                }
     }
 
     println!("about to spend all inputs");

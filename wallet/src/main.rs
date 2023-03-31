@@ -9,12 +9,13 @@ use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
     rpc_params,
 };
+use runtime::OuterVerifier;
 use parity_scale_codec::{Decode, Encode};
 use sp_keystore::SyncCryptoStore;
 use sp_runtime::{CryptoTypeId, KeyTypeId};
 use tuxedo_core::{
     types::{Output, OutputRef},
-    Verifier,
+    verifier::*,
 };
 
 use sp_core::{
@@ -22,6 +23,8 @@ use sp_core::{
     sr25519::Pair,
     H256,
 };
+
+use output_filter::{OutputFilter, SigCheckFilter};
 
 mod amoeba;
 mod money;
@@ -177,8 +180,15 @@ async fn main() -> anyhow::Result<()> {
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
     println!("Number of blocks in the db: {num_blocks}");
 
+    let shawn_public_key = Pair::from_phrase(SHAWN_PHRASE, None)?.0.public();
+
+    let shawn_filter = SigCheckFilter::build_filter(OuterVerifier::SigCheck(SigCheck {
+        owner_pubkey: shawn_public_key.into(),
+    })).map_err(|e| anyhow!("{:?}", e))?;
+
     // Synchronize the wallet with attached node.
-    sync::synchronize(&db, &client, &keystore).await?;
+    sync::synchronize(&db, &client, &shawn_filter).await?;
+    // sync::synchronize(&db, &client, &keystore).await?;
     println!(
         "Wallet database synchronized with node to height {:?}",
         sync::height(&db)?
