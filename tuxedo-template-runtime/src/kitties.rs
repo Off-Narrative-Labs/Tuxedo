@@ -429,94 +429,59 @@ mod test {
         const TYPE_ID: [u8; 4] = *b"bogs";
     }
 
-    struct TestKittyMaker;
-
-    impl TestKittyMaker {
-        pub fn get_bogus_type() -> DynamicallyTypedData {
-            DynamicallyTypedData {
-                data: Bogus.encode(),
-                type_id: Bogus::TYPE_ID,
+    impl KittyData {
+        pub fn default_dad() -> Self {
+            KittyData {
+                parent: Parent::Dad(DadKittyStatus::RearinToGo),
+                ..Default::default()
             }
         }
 
-        pub fn get_default_mom() -> DynamicallyTypedData {
-            DynamicallyTypedData {
-                data: KittyData::default().encode(),
-                type_id: KittyData::TYPE_ID,
+        pub fn default_child() -> Self {
+            let mom = Self::default();
+            let dad = Self::default_dad();
+
+            KittyData {
+                parent: Parent::Mom(MomKittyStatus::RearinToGo),
+                free_breedings: 2,
+                dna: KittyDNA(BlakeTwo256::hash_of(&(
+                    mom.dna,
+                    dad.dna,
+                    mom.num_breedings + 1,
+                    dad.num_breedings + 1,
+                ))),
+                num_breedings: 0,
             }
         }
 
-        pub fn get_default_dad() -> DynamicallyTypedData {
-            DynamicallyTypedData {
-                data: KittyData {
-                    parent: Parent::Dad(DadKittyStatus::RearinToGo),
-                    ..Default::default()
-                }
-                .encode(),
-                type_id: KittyData::TYPE_ID,
-            }
-        }
-
-        pub fn get_default_child() -> DynamicallyTypedData {
-            let mom: KittyData = KittyData::try_from(&Self::get_default_mom())
-                .expect("Can get mom KittyData in test");
-            let dad = KittyData::try_from(&Self::get_default_dad())
-                .expect("Can get dad KittyData in test");
-            DynamicallyTypedData {
-                data: KittyData {
-                    parent: Parent::Mom(MomKittyStatus::RearinToGo),
-                    free_breedings: 2,
-                    dna: KittyDNA(BlakeTwo256::hash_of(&(
-                        mom.dna,
-                        dad.dna,
-                        mom.num_breedings + 1,
-                        dad.num_breedings + 1,
-                    ))),
-                    num_breedings: 0,
-                }
-                .encode(),
-                type_id: KittyData::TYPE_ID,
-            }
-        }
-
-        pub fn get_default_family() -> Box<Vec<DynamicallyTypedData>> {
-            let mut new_mom: KittyData = KittyData::try_from(&Self::get_default_mom())
-                .expect("Can get mom KittyData in test");
+        pub fn default_family() -> Box<Vec<Self>> {
+            let mut new_mom: KittyData = KittyData::default();
             new_mom.parent = Parent::Mom(MomKittyStatus::HadBirthRecently);
             new_mom.num_breedings += 1;
             new_mom.free_breedings -= 1;
 
-            let mut new_dad = KittyData::try_from(&Self::get_default_dad())
-                .expect("Can get dad KittyData in test");
+            let mut new_dad = KittyData::default_dad();
             new_dad.parent = Parent::Dad(DadKittyStatus::Tired);
             new_dad.num_breedings += 1;
             new_dad.free_breedings -= 1;
 
-            let child = Self::get_default_child();
+            let child = KittyData::default_child();
 
-            Box::new(vec![new_mom.into(), new_dad.into(), child])
+            Box::new(vec![new_mom, new_dad, child])
         }
     }
 
     #[test]
     fn breed_happy_path_works() {
-        let mut new_mom: KittyData = KittyData::try_from(&TestKittyMaker::get_default_mom())
-            .expect("Can get mom KittyData in test");
-        new_mom.parent = Parent::Mom(MomKittyStatus::HadBirthRecently);
-        new_mom.num_breedings += 1;
-        new_mom.free_breedings -= 1;
-        let mut new_dad = KittyData::try_from(&TestKittyMaker::get_default_dad())
-            .expect("Can get dad KittyData in test");
-        new_dad.parent = Parent::Dad(DadKittyStatus::Tired);
-        new_dad.num_breedings += 1;
-        new_dad.free_breedings -= 1;
+        let new_family = KittyData::default_family();
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_family[0].clone().into(),
+                new_family[1].clone().into(),
+                new_family[2].clone().into(),
             ],
-            &TestKittyMaker::get_default_family(),
         );
         assert!(result.is_ok());
     }
@@ -525,10 +490,7 @@ mod test {
     fn breed_wrong_input_type_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![
-                TestKittyMaker::get_bogus_type(),
-                TestKittyMaker::get_bogus_type(),
-            ],
+            &vec![Bogus.into(), Bogus.into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::BadlyTyped));
@@ -538,15 +500,8 @@ mod test {
     fn breed_wrong_output_type_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                TestKittyMaker::get_bogus_type(),
-                TestKittyMaker::get_bogus_type(),
-                TestKittyMaker::get_bogus_type(),
-            ],
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
+            &vec![Bogus.into(), Bogus.into(), Bogus.into()],
         );
         assert_eq!(result, Err(ConstraintCheckerError::BadlyTyped));
     }
@@ -555,7 +510,7 @@ mod test {
     fn inputs_dont_contain_two_parents_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![TestKittyMaker::get_default_mom()],
+            &vec![KittyData::default().into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::TwoParentsDoNotExist));
@@ -565,11 +520,8 @@ mod test {
     fn outputs_dont_contain_all_family_members_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![TestKittyMaker::get_default_mom()],
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
+            &vec![KittyData::default().into()],
         );
         assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFamilyMembers));
     }
@@ -579,10 +531,10 @@ mod test {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
             &vec![
-                TestKittyMaker::get_default_dad(),
-                TestKittyMaker::get_default_dad(),
+                KittyData::default_dad().into(),
+                KittyData::default_dad().into(),
             ],
-            &vec![TestKittyMaker::get_default_mom()],
+            &vec![KittyData::default().into()],
         );
         assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid));
     }
@@ -591,11 +543,8 @@ mod test {
     fn breed_two_moms_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_mom(),
-            ],
-            &vec![TestKittyMaker::get_default_mom()],
+            &vec![KittyData::default().into(), KittyData::default().into()],
+            &vec![KittyData::default().into()],
         );
         assert_eq!(result, Err(ConstraintCheckerError::TwoMomsNotValid));
     }
@@ -604,10 +553,7 @@ mod test {
     fn first_input_not_mom_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![
-                TestKittyMaker::get_default_dad(),
-                TestKittyMaker::get_default_mom(),
-            ],
+            &vec![KittyData::default_dad().into(), KittyData::default().into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid))
@@ -617,14 +563,11 @@ mod test {
     fn first_output_not_mom_fails() {
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                TestKittyMaker::get_default_dad(),
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_child(),
+                KittyData::default_dad().into(),
+                KittyData::default().into(),
+                KittyData::default_child().into(),
             ],
         );
         assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid));
@@ -632,12 +575,12 @@ mod test {
 
     #[test]
     fn breed_mom_when_she_gave_birth_recently_fails() {
-        let mut new_momma = KittyData::try_from(&TestKittyMaker::get_default_mom()).unwrap();
+        let mut new_momma = KittyData::default();
         new_momma.parent = Parent::Mom(MomKittyStatus::HadBirthRecently);
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![new_momma.into(), TestKittyMaker::get_default_dad()],
+            &vec![new_momma.into(), KittyData::default_dad().into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::MomNotReadyYet));
@@ -645,12 +588,12 @@ mod test {
 
     #[test]
     fn breed_dad_when_he_is_tired_fails() {
-        let mut tired_dadda = KittyData::try_from(&TestKittyMaker::get_default_dad()).unwrap();
+        let mut tired_dadda = KittyData::default_dad();
         tired_dadda.parent = Parent::Dad(DadKittyStatus::Tired);
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![TestKittyMaker::get_default_mom(), tired_dadda.into()],
+            &vec![KittyData::default().into(), tired_dadda.into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::DadTooTired));
@@ -658,12 +601,12 @@ mod test {
 
     #[test]
     fn check_mom_breedings_overflow_fails() {
-        let mut test_mom = KittyData::try_from(&TestKittyMaker::get_default_mom()).unwrap();
+        let mut test_mom = KittyData::default();
         test_mom.num_breedings = u128::MAX;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![test_mom.into(), TestKittyMaker::get_default_dad()],
+            &vec![test_mom.into(), KittyData::default_dad().into()],
             &vec![],
         );
         assert_eq!(
@@ -674,12 +617,12 @@ mod test {
 
     #[test]
     fn check_dad_breedings_overflow_fails() {
-        let mut test_dad = KittyData::try_from(&TestKittyMaker::get_default_dad()).unwrap();
+        let mut test_dad = KittyData::default_dad();
         test_dad.num_breedings = u128::MAX;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![TestKittyMaker::get_default_mom(), test_dad.into()],
+            &vec![KittyData::default().into(), test_dad.into()],
             &vec![],
         );
         assert_eq!(
@@ -690,12 +633,12 @@ mod test {
 
     #[test]
     fn check_mom_free_breedings_zero_fails() {
-        let mut test_mom = KittyData::try_from(&TestKittyMaker::get_default_mom()).unwrap();
+        let mut test_mom = KittyData::default();
         test_mom.free_breedings = 0;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![test_mom.into(), TestKittyMaker::get_default_dad()],
+            &vec![test_mom.into(), KittyData::default_dad().into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFreeBreedings));
@@ -703,12 +646,12 @@ mod test {
 
     #[test]
     fn check_dad_free_breedings_zero_fails() {
-        let mut test_dad = KittyData::try_from(&TestKittyMaker::get_default_dad()).unwrap();
+        let mut test_dad = KittyData::default_dad();
         test_dad.free_breedings = 0;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
-            &vec![TestKittyMaker::get_default_mom(), test_dad.into()],
+            &vec![KittyData::default().into(), test_dad.into()],
             &vec![],
         );
         assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFreeBreedings));
@@ -716,17 +659,18 @@ mod test {
 
     #[test]
     fn check_new_mom_free_breedings_incorrect_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_mom = KittyData::try_from(&new_family[0].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_mom = new_family[0].clone();
         new_mom.free_breedings = 2;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_mom.into(),
+                new_family[1].clone().into(),
+                new_family[2].clone().into(),
             ],
-            &vec![new_mom.into(), new_family[1].clone(), new_family[2].clone()],
         );
         assert_eq!(
             result,
@@ -736,17 +680,18 @@ mod test {
 
     #[test]
     fn check_new_dad_free_breedings_incorrect_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_dad = KittyData::try_from(&new_family[1].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_dad = new_family[1].clone();
         new_dad.free_breedings = 2;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_family[0].clone().into(),
+                new_dad.into(),
+                new_family[2].clone().into(),
             ],
-            &vec![new_family[0].clone(), new_dad.into(), new_family[2].clone()],
         );
         assert_eq!(
             result,
@@ -756,17 +701,18 @@ mod test {
 
     #[test]
     fn check_new_mom_num_breedings_incorrect_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_mom = KittyData::try_from(&new_family[0].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_mom = new_family[0].clone();
         new_mom.num_breedings = 0;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_mom.into(),
+                new_family[1].clone().into(),
+                new_family[2].clone().into(),
             ],
-            &vec![new_mom.into(), new_family[1].clone(), new_family[2].clone()],
         );
         assert_eq!(
             result,
@@ -776,17 +722,18 @@ mod test {
 
     #[test]
     fn check_new_dad_num_breedings_incorrect_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_dad = KittyData::try_from(&new_family[1].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_dad = new_family[1].clone();
         new_dad.num_breedings = 0;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_family[0].clone().into(),
+                new_dad.into(),
+                new_family[2].clone().into(),
             ],
-            &vec![new_family[0].clone(), new_dad.into(), new_family[2].clone()],
         );
         assert_eq!(
             result,
@@ -796,17 +743,18 @@ mod test {
 
     #[test]
     fn check_new_mom_dna_doesnt_match_old_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_mom = KittyData::try_from(&new_family[0].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_mom = new_family[0].clone();
         new_mom.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoci"));
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_mom.into(),
+                new_family[1].clone().into(),
+                new_family[2].clone().into(),
             ],
-            &vec![new_mom.into(), new_family[1].clone(), new_family[2].clone()],
         );
         assert_eq!(
             result,
@@ -816,17 +764,18 @@ mod test {
 
     #[test]
     fn check_new_dad_dna_doesnt_match_old_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_dad = KittyData::try_from(&new_family[1].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_dad = new_family[1].clone();
         new_dad.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoci"));
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
+                new_family[0].clone().into(),
+                new_dad.into(),
+                new_family[2].clone().into(),
             ],
-            &vec![new_family[0].clone(), new_dad.into(), new_family[2].clone()],
         );
         assert_eq!(
             result,
@@ -836,19 +785,16 @@ mod test {
 
     #[test]
     fn check_child_dna_incorrect_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_child = KittyData::try_from(&new_family[2].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_child = new_family[2].clone();
         new_child.dna = KittyDNA(H256::zero());
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                new_family[0].clone(),
-                new_family[1].clone(),
+                new_family[0].clone().into(),
+                new_family[1].clone().into(),
                 new_child.into(),
             ],
         );
@@ -857,19 +803,16 @@ mod test {
 
     #[test]
     fn check_child_dad_parent_tired_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_child = KittyData::try_from(&new_family[2].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_child = new_family[2].clone();
         new_child.parent = Parent::Dad(DadKittyStatus::Tired);
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                new_family[0].clone(),
-                new_family[1].clone(),
+                new_family[0].clone().into(),
+                new_family[1].clone().into(),
                 new_child.into(),
             ],
         );
@@ -881,19 +824,16 @@ mod test {
 
     #[test]
     fn check_child_mom_parent_recently_gave_birth_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_child = KittyData::try_from(&new_family[2].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_child = new_family[2].clone();
         new_child.parent = Parent::Mom(MomKittyStatus::HadBirthRecently);
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                new_family[0].clone(),
-                new_family[1].clone(),
+                new_family[0].clone().into(),
+                new_family[1].clone().into(),
                 new_child.into(),
             ],
         );
@@ -905,19 +845,16 @@ mod test {
 
     #[test]
     fn check_child_free_breedings_incorrect_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_child = KittyData::try_from(&new_family[2].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_child = new_family[2].clone();
         new_child.free_breedings = KittyHelpers::NUM_FREE_BREEDINGS + 1;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                new_family[0].clone(),
-                new_family[1].clone(),
+                new_family[0].clone().into(),
+                new_family[1].clone().into(),
                 new_child.into(),
             ],
         );
@@ -929,19 +866,16 @@ mod test {
 
     #[test]
     fn check_child_num_breedings_non_zero_fails() {
-        let new_family = TestKittyMaker::get_default_family();
-        let mut new_child = KittyData::try_from(&new_family[2].clone()).unwrap();
+        let new_family = KittyData::default_family();
+        let mut new_child = new_family[2].clone();
         new_child.num_breedings = 42;
 
         let result = FreeKittyConstraintChecker::check(
             &FreeKittyConstraintChecker,
+            &vec![KittyData::default().into(), KittyData::default_dad().into()],
             &vec![
-                TestKittyMaker::get_default_mom(),
-                TestKittyMaker::get_default_dad(),
-            ],
-            &vec![
-                new_family[0].clone(),
-                new_family[1].clone(),
+                new_family[0].clone().into(),
+                new_family[1].clone().into(),
                 new_child.into(),
             ],
         );
