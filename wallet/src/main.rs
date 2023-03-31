@@ -25,6 +25,7 @@ use sp_core::{
 
 mod amoeba;
 mod money;
+mod output_filter;
 mod rpc;
 mod sync;
 
