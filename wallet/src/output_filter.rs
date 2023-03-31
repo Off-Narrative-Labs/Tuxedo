@@ -65,4 +65,54 @@ mod tests {
         let my_filter = TestSigCheckFilter::build_filter(verifier).expect("Can build print filter");
         let _ = my_filter(&vec![output]);
     }
+
+    #[test]
+    fn filter_sig_check_works() {
+        let verifier = OuterVerifier::SigCheck(SigCheck {
+            owner_pubkey: H256::zero(),
+        });
+
+        let outputs_to_filter = vec![
+            Output {
+                verifier: verifier.clone(),
+                payload: DynamicallyTypedData {
+                    data: vec![],
+                    type_id: *b"1234",
+                },
+            },
+            Output {
+                verifier: OuterVerifier::SigCheck(SigCheck {
+                    owner_pubkey: H256::from_slice(b"asdfasdfasdfasdfasdfasdfasdfasdf"),
+                }),
+                payload: DynamicallyTypedData {
+                    data: vec![],
+                    type_id: *b"1234",
+                },
+            },
+            Output {
+                verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
+                    threshold: 1,
+                    signatories: vec![H256::zero()],
+                }),
+                payload: DynamicallyTypedData {
+                    data: vec![],
+                    type_id: *b"1234",
+                },
+            },
+        ];
+
+        let expected_filtered_outputs = vec![Output {
+            verifier: verifier.clone(),
+            payload: DynamicallyTypedData {
+                data: vec![],
+                type_id: *b"1234",
+            },
+        }];
+
+        let my_filter = SigCheckFilter::build_filter(verifier).expect("Can build sigcheck filter");
+        let filtered_outputs =
+            my_filter(&outputs_to_filter).expect("Can filter the outputs by verifier correctly");
+
+        assert_eq!(filtered_outputs, expected_filtered_outputs);
+    }
 }
