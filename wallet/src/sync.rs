@@ -48,20 +48,20 @@ pub(crate) async fn init_from_genesis(
     filter: &Filter,
 ) -> anyhow::Result<()> {
     let genesis_utxo_refs: Vec<OutputRef> = (0..NUM_GENESIS_UTXOS)
-        .into_iter()
         .map(|utxo_index| OutputRef {
             tx_hash: H256::zero(),
             index: utxo_index,
         })
         .collect();
 
-    let genesis_utxos: Vec<_> =
-        stream::iter(genesis_utxo_refs.iter().map(|utxo_ref| async move {
-            fetch_storage::<OuterVerifier>(utxo_ref, &client).await
-        }))
-        .buffer_unordered(5)
-        .try_collect()
-        .await?;
+    let genesis_utxos: Vec<_> = stream::iter(
+        genesis_utxo_refs
+            .iter()
+            .map(|utxo_ref| fetch_storage::<OuterVerifier>(utxo_ref, client)),
+    )
+    .buffer_unordered(5)
+    .try_collect()
+    .await?;
 
     println!("The fetched genesis_utxos are {:?}", genesis_utxos);
 
@@ -77,7 +77,7 @@ pub(crate) async fn init_from_genesis(
         match output.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+                add_unspent_output(db, output_ref, &owner_pubkey, &amount)?;
             }
             _ => return Err(anyhow!("{:?}", ())),
         }
@@ -186,11 +186,11 @@ pub(crate) async fn synchronize(
             .expect("Node should be able to return a block whose hash it already returned");
 
         // Apply the new block
-        apply_block(&db, block, hash, filter).await?;
+        apply_block(db, block, hash, filter).await?;
 
         height += 1;
 
-        node_hash = rpc::node_get_block_hash(height, &client).await?;
+        node_hash = rpc::node_get_block_hash(height, client).await?;
     }
 
     println!("Done with forward sync up to {}", height - 1);
@@ -294,7 +294,7 @@ async fn apply_transaction(db: &Db, tx: Transaction, filter: &Filter) -> anyhow:
         match output.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+                add_unspent_output(db, output_ref, &owner_pubkey, &amount)?;
             }
             _ => return Err(anyhow!("{:?}", ())),
         }
