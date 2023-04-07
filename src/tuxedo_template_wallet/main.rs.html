@@ -239,244 +239,133 @@
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
 <a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A simple CLI wallet. For now it is a toy just to start testing things out.
 
 </span><span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">use </span>anyhow::anyhow;
-<span class="kw">use </span>clap::{ArgAction::Append, Args, Parser, Subcommand};
+<span class="kw">use </span>clap::Parser;
 <span class="kw">use </span>jsonrpsee::{
     core::client::ClientT,
     http_client::{HttpClient, HttpClientBuilder},
     rpc_params,
 };
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
-<span class="kw">use </span>sp_keystore::SyncCryptoStore;
-<span class="kw">use </span>sp_runtime::{CryptoTypeId, KeyTypeId};
+<span class="kw">use </span>runtime::OuterVerifier;
 <span class="kw">use </span>tuxedo_core::{
     types::{Output, OutputRef},
     Verifier,
 };
 
-<span class="kw">use </span>sp_core::{
-    crypto::{CryptoTypePublicPair, Pair <span class="kw">as </span>PairT},
-    sr25519::Pair,
-    H256,
-};
+<span class="kw">use </span>sp_core::H256;
 
 <span class="kw">mod </span>amoeba;
+<span class="kw">mod </span>cli;
+<span class="kw">mod </span>keystore;
 <span class="kw">mod </span>money;
+<span class="kw">mod </span>rpc;
+<span class="kw">mod </span>sync;
+
+<span class="kw">use </span>cli::{Cli, Command};
 
 <span class="doccomment">/// The default RPC endpoint for the wallet to connect to
 </span><span class="kw">const </span>DEFAULT_ENDPOINT: <span class="kw-2">&amp;</span>str = <span class="string">&quot;http://localhost:9933&quot;</span>;
-
-<span class="doccomment">/// A KeyTypeId to use in the keystore for Tuxedo transactions. We&#39;ll use this everywhere
-/// until it becomes clear that there is a reason to use multiple of them
-</span><span class="kw">const </span>KEY_TYPE: KeyTypeId = KeyTypeId(<span class="kw-2">*</span><span class="string">b&quot;_tux&quot;</span>);
-
-<span class="doccomment">/// A default seed phrase for signing inputs when none is provided
-/// Corresponds to the default pubkey.
-</span><span class="kw">const </span>SHAWN_PHRASE: <span class="kw-2">&amp;</span>str =
-    <span class="string">&quot;news slush supreme milk chapter athlete soap sausage put clutch what kitten&quot;</span>;
-
-<span class="kw">const </span>SHAWN_PUB_KEY: <span class="kw-2">&amp;</span>str = <span class="string">&quot;d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67&quot;</span>;
-
-<span class="doccomment">/// The wallet&#39;s main CLI struct
-</span><span class="attr">#[derive(Debug, Parser)]
-#[command(about, version)]
-</span><span class="kw">struct </span>Cli {
-    <span class="attr">#[arg(long, short, default_value_t = DEFAULT_ENDPOINT.to_string())]
-    </span><span class="doccomment">/// RPC endpoint of the node that this wallet will connect to
-    </span>endpoint: String,
-
-    <span class="attr">#[arg(long, short)]
-    </span><span class="doccomment">/// Path where the wallet data is stored. Wallet data is just keystore at the moment,
-    /// but will contain a local database of UTXOs in the future.
-    ///
-    /// Default value is platform specific
-    </span>data_path: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
-
-    <span class="attr">#[command(subcommand)]
-    </span>command: Command,
-}
-
-<span class="doccomment">/// The tasks supported by the wallet
-</span><span class="attr">#[derive(Debug, Subcommand)]
-</span><span class="kw">enum </span>Command {
-    <span class="doccomment">/// Demonstrate creating an amoeba and performing mitosis on it.
-    </span>AmoebaDemo,
-
-    <span class="doccomment">/// Verify that a particular coin exists in storage. Show its value and owner.
-    </span>VerifyCoin {
-        <span class="doccomment">/// A hex-encoded output reference
-        </span><span class="attr">#[arg(value_parser = output_ref_from_string)]
-        </span>output_ref: OutputRef,
-    },
-
-    <span class="doccomment">/// Spend some coins. For now, all outputs go to the same recipient.
-    </span>SpendCoins(SpendArgs),
-
-    <span class="doccomment">/// Insert a private key into the keystore to later use when signing transactions.
-    </span>InsertKey {
-        <span class="doccomment">/// Seed phrase of the key to insert.
-        </span>seed: String,
-    },
-
-    <span class="doccomment">/// Generate a private key using either some or no password and insert into the keystore
-    </span>GenerateKey {
-        <span class="doccomment">/// Initialize a public/private key pair with a password
-        </span>password: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    },
-
-    <span class="doccomment">/// Show public information about all the keys in the keystore.
-    </span>ShowKeys,
-
-    <span class="doccomment">/// Remove a specific key from the keystore.
-    /// WARNING! This will permanently delete the private key information. Make sure your
-    /// keys are backed up somewhere safe.
-    </span>RemoveKey {
-        <span class="doccomment">/// The public key to remove
-        </span><span class="attr">#[arg(value_parser = h256_from_string)]
-        </span>pub_key: H256,
-    },
-}
-
-<span class="attr">#[derive(Debug, Args)]
-</span><span class="kw">pub struct </span>SpendArgs {
-    <span class="doccomment">/// An input to be consumed by this transaction. This argument may be specified multiple times.
-    /// They must all be coins.
-    </span><span class="attr">#[arg(long, short, value_parser = output_ref_from_string)]
-    </span>input: Vec&lt;OutputRef&gt;,
-
-    <span class="comment">// https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html
-    // shows how to specify a custom parsing function
-    </span><span class="doccomment">/// Hex encoded address (sr25519 pubkey) of the recipient
-    </span><span class="attr">#[arg(long, short, value_parser = h256_from_string, default_value = SHAWN_PUB_KEY)]
-    </span>recipient: H256,
-
-    <span class="comment">// The `action = Append` allows us to accept the same value multiple times.
-    </span><span class="doccomment">/// An output amount. For the transaction to be valid, the outputs must add up to less than
-    /// the sum of the inputs. The wallet will not enforce this and will gladly send an invalid transaction
-    /// which will then e rejected by the node.
-    </span><span class="attr">#[arg(long, short, action = Append)]
-    </span>output_amount: Vec&lt;u128&gt;,
-}
 
 <span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() -&gt; anyhow::Result&lt;()&gt; {
     <span class="comment">// Parse command line args
     </span><span class="kw">let </span>cli = Cli::parse();
 
-    <span class="comment">// Setup the keystore.
+    <span class="comment">// Setup the data paths.
     </span><span class="kw">let </span>data_path = cli.data_path.unwrap_or_else(default_data_path);
     <span class="kw">let </span>keystore_path = data_path.join(<span class="string">&quot;keystore&quot;</span>);
-    <span class="kw">let </span>keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>db_path = data_path.join(<span class="string">&quot;wallet_database&quot;</span>);
 
-    <span class="comment">// If the keystore is empty, insert the example Shawn key so example transactions can be signed.
-    </span><span class="kw">if </span>keystore.keys(KEY_TYPE)<span class="question-mark">?</span>.is_empty() {
-        <span class="macro">println!</span>(<span class="string">&quot;Keystore wsa empty. Inserting example key for THIS SESSION ONLY&quot;</span>);
+    <span class="comment">// Setup the keystore
+    </span><span class="kw">let </span>keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
-        <span class="comment">// This only inserts it into memory. That should be fine for the example key since it can always be
-        // re-inserted on each new run. But for user-provided keys, we want them to be persisted.
-        // Hopefully insert_unknown will make that happen.
-        </span>keystore
-            .sr25519_generate_new(KEY_TYPE, <span class="prelude-val">Some</span>(SHAWN_PHRASE))
-            .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">&quot;{:?}&quot;</span>, e))<span class="question-mark">?</span>;
-    }
+    <span class="comment">// Insert the example Shawn key so example transactions can be signed.
+    </span><span class="kw">crate</span>::keystore::insert_default_key_for_this_session(<span class="kw-2">&amp;</span>keystore)<span class="question-mark">?</span>;
 
     <span class="comment">// Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
     </span><span class="kw">let </span>client = HttpClientBuilder::default().build(cli.endpoint)<span class="question-mark">?</span>;
+
+    <span class="comment">// Read node&#39;s genesis block.
+    </span><span class="kw">let </span>node_genesis_hash = rpc::node_get_block_hash(<span class="number">0</span>, <span class="kw-2">&amp;</span>client)
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.expect(<span class="string">&quot;node should be able to return some genesis hash&quot;</span>);
+    <span class="kw">let </span>node_genesis_block = rpc::node_get_block(node_genesis_hash, <span class="kw-2">&amp;</span>client)
+        .<span class="kw">await</span><span class="question-mark">?
+        </span>.expect(<span class="string">&quot;node should be able to return some genesis block&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Node&#39;s Genesis block::{:?}&quot;</span>, node_genesis_hash);
+
+    <span class="comment">// Get the expected genesis state to populate the database if it is new.
+    </span><span class="kw">let </span>expected_genesis_utxos = runtime::GenesisConfig::default().genesis_utxos;
+
+    <span class="comment">// Open the local database
+    </span><span class="kw">let </span>db = sync::open_db(
+        db_path,
+        node_genesis_hash,
+        node_genesis_block,
+        expected_genesis_utxos,
+    )<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>num_blocks =
+        sync::height(<span class="kw-2">&amp;</span>db)<span class="question-mark">?</span>.expect(<span class="string">&quot;db should be initialized automatically when opening.&quot;</span>);
+    <span class="macro">println!</span>(<span class="string">&quot;Number of blocks in the db: {num_blocks}&quot;</span>);
+
+    <span class="comment">// Synchronize the wallet with attached node.
+    </span>sync::synchronize(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="macro">println!</span>(
+        <span class="string">&quot;Wallet database synchronized with node to height {:?}&quot;</span>,
+        sync::height(<span class="kw-2">&amp;</span>db)<span class="question-mark">?
+    </span>);
+
+    <span class="comment">// Print entire unspent outputs tree
+    </span><span class="macro">println!</span>(<span class="string">&quot;###### Unspent outputs ###########&quot;</span>);
+    sync::print_unspent_tree(<span class="kw-2">&amp;</span>db)<span class="question-mark">?</span>;
+    <span class="macro">println!</span>();
 
     <span class="comment">// Dispatch to proper subcommand
     </span><span class="kw">match </span>cli.command {
         Command::AmoebaDemo =&gt; amoeba::amoeba_demo(<span class="kw-2">&amp;</span>client).<span class="kw">await</span>,
         <span class="comment">// Command::MultiSigDemo =&gt; multi_sig::multi_sig_demo(&amp;client).await,
         </span>Command::VerifyCoin { output_ref } =&gt; {
-            money::print_coin_from_storage(<span class="kw-2">&amp;</span>output_ref, <span class="kw-2">&amp;</span>client).<span class="kw">await
-        </span>}
-        Command::SpendCoins(args) =&gt; money::spend_coins(<span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore, args).<span class="kw">await</span>,
-        Command::InsertKey { seed } =&gt; {
-            <span class="comment">// We need to provide a public key to the keystore manually, so let&#39;s calculate it.
-            </span><span class="kw">let </span>public_key = Pair::from_phrase(<span class="kw-2">&amp;</span>seed, <span class="prelude-val">None</span>)<span class="question-mark">?</span>.<span class="number">0</span>.public();
-            <span class="macro">println!</span>(<span class="string">&quot;The generated public key is {:?}&quot;</span>, public_key);
-            keystore
-                .insert_unknown(KEY_TYPE, <span class="kw-2">&amp;</span>seed, public_key.as_ref())
-                .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">&quot;{:?}&quot;</span>, e))<span class="question-mark">?</span>;
+            <span class="macro">println!</span>(<span class="string">&quot;Details of coin {}:&quot;</span>, hex::encode(output_ref.encode()));
+
+            <span class="comment">// Print the details from storage
+            </span><span class="kw">let </span>(coin_from_storage, verifier_from_storage) =
+                money::get_coin_from_storage(<span class="kw-2">&amp;</span>output_ref, <span class="kw-2">&amp;</span>client).<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="macro">print!</span>(<span class="string">&quot;Found in storage.  Value: {}, &quot;</span>, coin_from_storage.<span class="number">0</span>);
+            pretty_print_verifier(<span class="kw-2">&amp;</span>verifier_from_storage);
+
+            <span class="comment">// Print the details from the local db
+            </span><span class="kw">match </span>sync::get_unspent(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>output_ref)<span class="question-mark">? </span>{
+                <span class="prelude-val">Some</span>((owner, amount)) =&gt; {
+                    <span class="macro">println!</span>(<span class="string">&quot;Found in local db. Value: {amount}, owned by {owner}&quot;</span>);
+                }
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="macro">println!</span>(<span class="string">&quot;Not found in local db&quot;</span>);
+                }
+            }
+
             <span class="prelude-val">Ok</span>(())
         }
+        Command::SpendCoins(args) =&gt; money::spend_coins(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore, args).<span class="kw">await</span>,
+        Command::InsertKey { seed } =&gt; <span class="kw">crate</span>::keystore::insert_key(<span class="kw-2">&amp;</span>keystore, <span class="kw-2">&amp;</span>seed),
         Command::GenerateKey { password } =&gt; {
-            <span class="kw">let </span>(pair, phrase, <span class="kw">_</span>) = Pair::generate_with_phrase(password.as_deref());
-            <span class="macro">println!</span>(<span class="string">&quot;Generated public key is {:?}&quot;</span>, pair.public());
-            <span class="macro">println!</span>(<span class="string">&quot;Generated Phrase is {}&quot;</span>, phrase);
-            keystore
-                .insert_unknown(KEY_TYPE, phrase.as_ref(), pair.public().as_ref())
-                .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">&quot;{:?}&quot;</span>, e))<span class="question-mark">?</span>;
+            <span class="kw">crate</span>::keystore::generate_key(<span class="kw-2">&amp;</span>keystore, password)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(())
         }
         Command::ShowKeys =&gt; {
-            keystore
-                .keys(KEY_TYPE)<span class="question-mark">?
-                </span>.into_iter()
-                .filter_map(|CryptoTypePublicPair(t, public)| {
-                    <span class="comment">// Since we insert with `insert_unknown`, each key is inserted three times.
-                    // Here we filter out just the sr25519 variant so we don&#39;t print duplicates.
-                    </span><span class="kw">if </span>t == CryptoTypeId(<span class="kw-2">*</span><span class="string">b&quot;sr25&quot;</span>) {
-                        <span class="prelude-val">Some</span>(public)
-                    } <span class="kw">else </span>{
-                        <span class="prelude-val">None
-                    </span>}
-                })
-                .for_each(|pubkey| {
-                    <span class="macro">println!</span>(<span class="string">&quot;key: 0x{}&quot;</span>, hex::encode(pubkey));
-                });
+            <span class="kw">crate</span>::keystore::get_keys(<span class="kw-2">&amp;</span>keystore)<span class="question-mark">?</span>.for_each(|pubkey| {
+                <span class="macro">println!</span>(<span class="string">&quot;key: 0x{}&quot;</span>, hex::encode(pubkey));
+            });
 
             <span class="prelude-val">Ok</span>(())
         }
         Command::RemoveKey { pub_key } =&gt; {
-            <span class="comment">// The keystore doesn&#39;t provide an API for removing keys, so we
-            // remove them from the filesystem directly
-            </span><span class="kw">let </span>filename = <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, hex::encode(KEY_TYPE.<span class="number">0</span>), hex::encode(pub_key.<span class="number">0</span>));
-            <span class="kw">let </span>path = keystore_path.join(filename);
-
             <span class="macro">println!</span>(<span class="string">&quot;CAUTION!!! About permanently remove {pub_key}. This action CANNOT BE REVERSED. Type \&quot;proceed\&quot; to confirm deletion.&quot;</span>);
 
             <span class="kw">let </span><span class="kw-2">mut </span>confirmation = String::new();
@@ -485,17 +374,31 @@
                 .expect(<span class="string">&quot;Failed to read line&quot;</span>);
 
             <span class="kw">if </span>confirmation.trim() == <span class="string">&quot;proceed&quot; </span>{
-                std::fs::remove_file(path)<span class="question-mark">?</span>;
+                <span class="kw">crate</span>::keystore::remove_key(<span class="kw-2">&amp;</span>keystore_path, <span class="kw-2">&amp;</span>pub_key)
             } <span class="kw">else </span>{
-                <span class="macro">println!</span>(<span class="string">&quot;Deletion aborted. That was close.&quot;</span>)
+                <span class="macro">println!</span>(<span class="string">&quot;Deletion aborted. That was close.&quot;</span>);
+                <span class="prelude-val">Ok</span>(())
             }
+        }
+        Command::SyncOnly =&gt; <span class="prelude-val">Ok</span>(()),
+        Command::ShowBalance =&gt; {
+            <span class="macro">println!</span>(<span class="string">&quot;Balance Summary&quot;</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>total = <span class="number">0</span>;
+            <span class="kw">let </span>balances = sync::get_balances(<span class="kw-2">&amp;</span>db)<span class="question-mark">?</span>;
+            <span class="kw">for </span>(account, balance) <span class="kw">in </span>balances {
+                total += balance;
+                <span class="macro">println!</span>(<span class="string">&quot;{account}: {balance}&quot;</span>);
+            }
+            <span class="macro">println!</span>(<span class="string">&quot;--------------------&quot;</span>);
+            <span class="macro">println!</span>(<span class="string">&quot;total      : {total}&quot;</span>);
 
             <span class="prelude-val">Ok</span>(())
         }
     }
 }
 
-<span class="doccomment">/// Fetch an output from chain storage given an OutputRef
+<span class="comment">//TODO move to rpc.rs
+</span><span class="doccomment">/// Fetch an output from chain storage given an OutputRef
 </span><span class="kw">pub async fn </span>fetch_storage&lt;V: Verifier&gt;(
     output_ref: <span class="kw-2">&amp;</span>OutputRef,
     client: <span class="kw-2">&amp;</span>HttpClient,
@@ -513,7 +416,7 @@
 }
 
 <span class="doccomment">/// Parse a string into an H256 that represents a public key
-</span><span class="kw">fn </span>h256_from_string(s: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;H256, clap::Error&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>h256_from_string(s: <span class="kw-2">&amp;</span>str) -&gt; anyhow::Result&lt;H256&gt; {
     <span class="kw">let </span>s = strip_0x_prefix(s);
 
     <span class="kw">let </span><span class="kw-2">mut </span>bytes: [u8; <span class="number">32</span>] = [<span class="number">0</span>; <span class="number">32</span>];
@@ -555,5 +458,26 @@
         .expect(<span class="string">&quot;app directories exist on all supported platforms; qed&quot;</span>)
         .config_dir()
         .into()
+}
+
+<span class="doccomment">/// Utility to pretty print an outer verifier
+</span><span class="kw">pub fn </span>pretty_print_verifier(v: <span class="kw-2">&amp;</span>OuterVerifier) {
+    <span class="kw">match </span>v {
+        OuterVerifier::SigCheck(sig_check) =&gt; {
+            <span class="macro">println! </span>{<span class="string">&quot;owned by {}&quot;</span>, sig_check.owner_pubkey}
+        }
+        OuterVerifier::UpForGrabs(<span class="kw">_</span>) =&gt; <span class="macro">println!</span>(<span class="string">&quot;that can be spent by anyone&quot;</span>),
+        OuterVerifier::ThresholdMultiSignature(multi_sig) =&gt; {
+            <span class="kw">let </span>string_sigs: Vec&lt;<span class="kw">_</span>&gt; = multi_sig
+                .signatories
+                .iter()
+                .map(|sig| <span class="macro">format!</span>(<span class="string">&quot;0x{}&quot;</span>, hex::encode(sig)))
+                .collect();
+            <span class="macro">println!</span>(
+                <span class="string">&quot;Owned by {:?}, with a threshold of {} sigs necessary&quot;</span>,
+                string_sigs, multi_sig.threshold
+            );
+        }
+    }
 }
 </code></pre></div></section></main></body></html>

@@ -982,9 +982,6 @@
 <a href="#982" id="982">982</a>
 <a href="#983" id="983">983</a>
 <a href="#984" id="984">984</a>
-<a href="#985" id="985">985</a>
-<a href="#986" id="986">986</a>
-<a href="#987" id="987">987</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1001,7 +998,7 @@
     verifier::Verifier,
     EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
 };
-<span class="kw">use </span>log::info;
+<span class="kw">use </span>log::debug;
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 <span class="kw">use </span>sp_runtime::{
@@ -1073,10 +1070,9 @@
                 index: index <span class="kw">as </span>u32,
             };
 
-            <span class="macro">log::debug!</span>(
+            <span class="macro">debug!</span>(
                 target: LOG_TARGET,
-                <span class="string">&quot;Checking for pre-existing output {:?}&quot;</span>,
-                output_ref
+                <span class="string">&quot;Checking for pre-existing output {:?}&quot;</span>, output_ref
             );
 
             <span class="macro">ensure!</span>(
@@ -1129,10 +1125,9 @@
     /// Most of the validation happens in the call to `validate_tuxedo_transaction`.
     /// Once those checks are done we make sure there are no missing inputs and then update storage.
     </span><span class="kw">pub fn </span>apply_tuxedo_transaction(transaction: Transaction&lt;V, C&gt;) -&gt; DispatchResult&lt;C::Error&gt; {
-        <span class="macro">log::debug!</span>(
+        <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;applying tuxedo transaction {:?}&quot;</span>,
-            transaction
+            <span class="string">&quot;applying tuxedo transaction {:?}&quot;</span>, transaction
         );
 
         <span class="comment">// Re-do the pre-checks. These should have been done in the pool, but we can&#39;t
@@ -1162,10 +1157,9 @@
             TransparentUtxoSet::&lt;V&gt;::consume_utxo(<span class="kw-2">&amp;</span>input.output_ref);
         }
 
-        <span class="macro">log::debug!</span>(
+        <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Transaction before updating storage {:?}&quot;</span>,
-            transaction
+            <span class="string">&quot;Transaction before updating storage {:?}&quot;</span>, transaction
         );
         <span class="comment">// Write the newly created utxos
         </span><span class="kw">for </span>(index, output) <span class="kw">in </span>transaction.outputs.iter().enumerate() {
@@ -1194,7 +1188,7 @@
     // Open the block, apply zero or more extrinsics, close the block
 
     </span><span class="kw">pub fn </span>open_block(header: <span class="kw-2">&amp;</span>&lt;B <span class="kw">as </span>BlockT&gt;::Header) {
-        <span class="macro">info!</span>(
+        <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">&quot;Entering initialize_block. header: {:?}&quot;</span>, header
         );
@@ -1205,7 +1199,7 @@
     }
 
     <span class="kw">pub fn </span>apply_extrinsic(extrinsic: &lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic) -&gt; ApplyExtrinsicResult {
-        <span class="macro">info!</span>(
+        <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">&quot;Entering apply_extrinsic: {:?}&quot;</span>, extrinsic
         );
@@ -1249,14 +1243,14 @@
             &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hash::decode(<span class="kw-2">&amp;mut &amp;</span>raw_state_root[..]).unwrap();
         header.set_state_root(state_root);
 
-        <span class="macro">info!</span>(target: LOG_TARGET, <span class="string">&quot;finalizing block {:?}&quot;</span>, header);
+        <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">&quot;finalizing block {:?}&quot;</span>, header);
         header
     }
 
     <span class="comment">// This one is for the Core api. It is used to import blocks authored by foreign nodes.
 
     </span><span class="kw">pub fn </span>execute_block(block: B) {
-        <span class="macro">info!</span>(
+        <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">&quot;Entering execute_block. block: {:?}&quot;</span>, block
         );
@@ -1269,7 +1263,7 @@
         <span class="comment">// Apply each extrinsic
         </span><span class="kw">for </span>extrinsic <span class="kw">in </span>block.extrinsics() {
             <span class="kw">match </span><span class="self">Self</span>::apply_tuxedo_transaction(extrinsic.clone()) {
-                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">info!</span>(
+                <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">debug!</span>(
                     target: LOG_TARGET,
                     <span class="string">&quot;Successfully executed extrinsic: {:?}&quot;</span>, extrinsic
                 ),
@@ -1327,7 +1321,7 @@
         tx: &lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic,
         block_hash: &lt;B <span class="kw">as </span>BlockT&gt;::Hash,
     ) -&gt; TransactionValidity {
-        <span class="macro">log::debug!</span>(
+        <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">&quot;Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}&quot;</span>,
             source,
@@ -1340,7 +1334,7 @@
         // For now, I just make them all custom zero
         </span><span class="kw">let </span>r = <span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
-        <span class="macro">log::debug!</span>(target: LOG_TARGET, <span class="string">&quot;Validation result: {:?}&quot;</span>, r);
+        <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">&quot;Validation result: {:?}&quot;</span>, r);
 
         r.map_err(|<span class="kw">_</span>| TransactionValidityError::Invalid(InvalidTransaction::Custom(<span class="number">0</span>)))
     }

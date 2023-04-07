@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["print_coin_from_storage","spend_coins"]};
+window.SIDEBAR_ITEMS = {"fn":["get_coin_from_storage","spend_coins"]};

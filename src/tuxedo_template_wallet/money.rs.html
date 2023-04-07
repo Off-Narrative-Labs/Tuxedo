@@ -136,15 +136,9 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Wallet features related to spending money and checking balances.
 
-</span><span class="kw">use crate</span>::{fetch_storage, SpendArgs, KEY_TYPE};
-
-<span class="kw">use </span>std::{thread::sleep, time::Duration};
+</span><span class="kw">use crate</span>::{cli::SpendArgs, fetch_storage, sync};
 
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
@@ -154,8 +148,8 @@
     OuterConstraintChecker, OuterVerifier, Transaction,
 };
 <span class="kw">use </span>sc_keystore::LocalKeystore;
+<span class="kw">use </span>sled::Db;
 <span class="kw">use </span>sp_core::sr25519::Public;
-<span class="kw">use </span>sp_keystore::CryptoStore;
 <span class="kw">use </span>sp_runtime::traits::{BlakeTwo256, Hash};
 <span class="kw">use </span>tuxedo_core::{
     types::{Input, Output, OutputRef},
@@ -164,6 +158,7 @@
 
 <span class="doccomment">/// Create and send a transaction that spends coins on the network
 </span><span class="kw">pub async fn </span>spend_coins(
+    db: <span class="kw-2">&amp;</span>Db,
     client: <span class="kw-2">&amp;</span>HttpClient,
     keystore: <span class="kw-2">&amp;</span>LocalKeystore,
     args: SpendArgs,
@@ -177,24 +172,44 @@
         checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
     };
 
-    <span class="comment">// Make sure each input decodes and is present in storage, and then push to transaction.
-    </span><span class="kw">for </span>output_ref <span class="kw">in </span><span class="kw-2">&amp;</span>args.input {
-        print_coin_from_storage(output_ref, client).<span class="kw">await</span><span class="question-mark">?</span>;
-        transaction.inputs.push(Input {
-            output_ref: output_ref.clone(),
-            redeemer: <span class="macro">vec!</span>[], <span class="comment">// We will sign the total transaction so this should be empty
-        </span>});
-    }
-
     <span class="comment">// Construct each output and then push to the transactions
-    </span><span class="kw">for </span>amount <span class="kw">in </span><span class="kw-2">&amp;</span>args.output_amount {
+    </span><span class="kw">let </span><span class="kw-2">mut </span>total_output_amount = <span class="number">0</span>;
+    <span class="kw">for </span>amount <span class="kw">in </span><span class="kw-2">&amp;</span>args.output_amount {
         <span class="kw">let </span>output = Output {
             payload: Coin::new(<span class="kw-2">*</span>amount).into(),
             verifier: OuterVerifier::SigCheck(SigCheck {
                 owner_pubkey: args.recipient,
             }),
         };
+        total_output_amount += amount;
         transaction.outputs.push(output);
+    }
+
+    <span class="comment">// The total input set will consist of any manually chosen inputs
+    // plus any automatically chosen to make the input amount high enough
+    </span><span class="kw">let </span><span class="kw-2">mut </span>total_input_amount = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>all_input_refs = args.input;
+    <span class="kw">for </span>output_ref <span class="kw">in </span><span class="kw-2">&amp;</span>all_input_refs {
+        <span class="kw">let </span>(_owner_pubkey, amount) = sync::get_unspent(db, output_ref)<span class="question-mark">?</span>.ok_or(<span class="macro">anyhow!</span>(
+            <span class="string">&quot;user-specified output ref not found in local database&quot;
+        </span>))<span class="question-mark">?</span>;
+        total_input_amount += amount;
+    }
+    <span class="comment">//TODO filtering on a specific sender
+    </span><span class="kw">while </span>total_input_amount &lt; total_output_amount {
+        <span class="kw">let </span>(output_ref, _owner_pubkey, amount) = sync::get_arbitrary_unspent(db)<span class="question-mark">?</span>;
+        all_input_refs.push(output_ref);
+        total_input_amount += amount;
+    }
+
+    <span class="comment">// Make sure each input decodes and is still present in the node&#39;s storage,
+    // and then push to transaction.
+    </span><span class="kw">for </span>output_ref <span class="kw">in </span><span class="kw-2">&amp;</span>all_input_refs {
+        get_coin_from_storage(output_ref, client).<span class="kw">await</span><span class="question-mark">?</span>;
+        transaction.inputs.push(Input {
+            output_ref: output_ref.clone(),
+            redeemer: <span class="macro">vec!</span>[], <span class="comment">// We will sign the total transaction so this should be empty
+        </span>});
     }
 
     <span class="comment">// Keep a copy of the stripped encoded transaction for signing purposes
@@ -209,10 +224,7 @@
         </span><span class="kw">let </span>redeemer = <span class="kw">match </span>utxo.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) =&gt; {
                 <span class="kw">let </span>public = Public::from_h256(owner_pubkey);
-                keystore
-                    .sign_with(KEY_TYPE, <span class="kw-2">&amp;</span>public.into(), <span class="kw-2">&amp;</span>stripped_encoded_transaction)
-                    .<span class="kw">await</span><span class="question-mark">?
-                    </span>.ok_or(<span class="macro">anyhow!</span>(<span class="string">&quot;Key doesn&#39;t exist in keystore&quot;</span>))<span class="question-mark">?
+                <span class="kw">crate</span>::keystore::sign_with(keystore, <span class="kw-2">&amp;</span>public, <span class="kw-2">&amp;</span>stripped_encoded_transaction)<span class="question-mark">?
             </span>}
             OuterVerifier::UpForGrabs(<span class="kw">_</span>) =&gt; Vec::new(),
             OuterVerifier::ThresholdMultiSignature(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
@@ -232,54 +244,34 @@
         genesis_spend_response
     );
 
-    <span class="comment">// Wait a few seconds to make sure a block has been authored.
-    </span>sleep(Duration::from_secs(<span class="number">3</span>));
-
-    <span class="comment">// Retrieve new coins from storage
-    </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..transaction.outputs.len() {
+    <span class="comment">// Print new output refs for user to check later
+    </span><span class="kw">let </span>tx_hash = &lt;BlakeTwo256 <span class="kw">as </span>Hash&gt;::hash_of(<span class="kw-2">&amp;</span>transaction.encode());
+    <span class="kw">for </span>(i, output) <span class="kw">in </span>transaction.outputs.iter().enumerate() {
         <span class="kw">let </span>new_coin_ref = OutputRef {
-            tx_hash: &lt;BlakeTwo256 <span class="kw">as </span>Hash&gt;::hash_of(<span class="kw-2">&amp;</span>transaction.encode()),
+            tx_hash,
             index: i <span class="kw">as </span>u32,
         };
+        <span class="kw">let </span>amount = output.payload.extract::&lt;Coin&gt;()<span class="question-mark">?</span>.<span class="number">0</span>;
 
-        print_coin_from_storage(<span class="kw-2">&amp;</span>new_coin_ref, client).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="macro">print!</span>(
+            <span class="string">&quot;Created {:?} worth {amount}. &quot;</span>,
+            hex::encode(new_coin_ref.encode())
+        );
+        <span class="kw">crate</span>::pretty_print_verifier(<span class="kw-2">&amp;</span>output.verifier);
     }
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="doccomment">/// Pretty print the details of a coin in storage given the OutputRef
-</span><span class="kw">pub async fn </span>print_coin_from_storage(
+<span class="doccomment">/// Given an output ref, fetch the details about this coin from the node&#39;s
+/// storage.
+</span><span class="kw">pub async fn </span>get_coin_from_storage(
     output_ref: <span class="kw-2">&amp;</span>OutputRef,
     client: <span class="kw-2">&amp;</span>HttpClient,
-) -&gt; anyhow::Result&lt;()&gt; {
+) -&gt; anyhow::Result&lt;(Coin, OuterVerifier)&gt; {
     <span class="kw">let </span>utxo = fetch_storage::&lt;OuterVerifier&gt;(output_ref, client).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let </span>coin_in_storage: Coin = utxo.payload.extract()<span class="question-mark">?</span>;
 
-    <span class="macro">print!</span>(
-        <span class="string">&quot;{}: Found coin worth {:?} units &quot;</span>,
-        hex::encode(output_ref.encode()),
-        coin_in_storage.<span class="number">0
-    </span>);
-
-    <span class="kw">match </span>utxo.verifier {
-        OuterVerifier::SigCheck(sig_check) =&gt; {
-            <span class="macro">println! </span>{<span class="string">&quot;owned by 0x{}&quot;</span>, hex::encode(sig_check.owner_pubkey)}
-        }
-        OuterVerifier::UpForGrabs(<span class="kw">_</span>) =&gt; <span class="macro">println!</span>(<span class="string">&quot;that can be spent by anyone&quot;</span>),
-        OuterVerifier::ThresholdMultiSignature(multi_sig) =&gt; {
-            <span class="kw">let </span>string_sigs: Vec&lt;<span class="kw">_</span>&gt; = multi_sig
-                .signatories
-                .iter()
-                .map(|sig| <span class="macro">format!</span>(<span class="string">&quot;0x{}&quot;</span>, hex::encode(sig)))
-                .collect();
-            <span class="macro">println!</span>(
-                <span class="string">&quot;Owned by {:?}, with a threshold of {} sigs necessary&quot;</span>,
-                string_sigs, multi_sig.threshold
-            );
-        }
-    }
-
-    <span class="prelude-val">Ok</span>(())
+    <span class="prelude-val">Ok</span>((coin_in_storage, utxo.verifier))
 }
 </code></pre></div></section></main></body></html>
