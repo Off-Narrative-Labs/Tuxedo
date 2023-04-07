@@ -59,8 +59,11 @@ async fn main() -> anyhow::Result<()> {
         .expect("node should be able to return some genesis block");
     println!("Node's Genesis block::{:?}", node_genesis_hash);
 
+    // Get the expected genesis state to populate the database if it is new.
+    let expected_genesis_utxos = runtime::GenesisConfig::default().genesis_utxos;
+
     // Open the local database
-    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
+    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block, expected_genesis_utxos)?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
@@ -76,6 +79,7 @@ async fn main() -> anyhow::Result<()> {
     // Print entire unspent outputs tree
     println!("###### Unspent outputs ###########");
     sync::print_unspent_tree(&db)?;
+    println!();
 
     // Dispatch to proper subcommand
     match cli.command {
@@ -117,6 +121,19 @@ async fn main() -> anyhow::Result<()> {
             }
         }
         Command::SyncOnly => Ok(()),
+        Command::ShowBalance => {
+            println!("Balance Summary");
+            let mut total = 0;
+            let balances = sync::get_balances(&db)?;
+            for (account, balance) in balances {
+                total += balance;
+                println!("{account}: {balance}");
+            }
+            println!("----------------------------");
+            println!("total: {total}");
+
+            Ok(())
+        }
     }
 }
 

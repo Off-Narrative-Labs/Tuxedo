@@ -48,6 +48,7 @@ pub(crate) fn open_db(
     db_path: PathBuf,
     expected_genesis_hash: H256,
     expected_genesis_block: Block,
+    expected_genesis_utxos: Vec<Output>,
 ) -> anyhow::Result<Db> {
     //TODO figure out why this assertion fails.
     //assert_eq!(BlakeTwo256::hash_of(&expected_genesis_block.encode()), expected_genesis_hash, "expected block hash does not match expected block");
@@ -80,12 +81,37 @@ pub(crate) fn open_db(
         expected_genesis_hash
     );
 
-    // Update both tables
+    // Update both block tables
     wallet_block_hashes_tree.insert(0u32.encode(), expected_genesis_hash.encode())?;
     wallet_blocks_tree.insert(
         expected_genesis_hash.encode(),
         expected_genesis_block.encode(),
     )?;
+
+    // Fill in the genesis state
+    // TODO this logic needs cleaner separation, but for now,
+    // I'm just trying to sync the genesis utxos at all.
+    for (index, Output { payload, verifier }) in expected_genesis_utxos.iter().enumerate() {
+        
+
+        let (amount, owner_pubkey) = match (payload.extract(), verifier) {
+            // If it is a coin with a private owner, we sync it.
+            (Ok(Coin(amount)), OuterVerifier::SigCheck(SigCheck { owner_pubkey })) => {
+                (amount, owner_pubkey)
+            }
+            _ => {
+                // This gnesis utxo is not a coin, or is not privately owned, so skip it.
+                continue;
+            }
+        };
+
+        let output_ref = OutputRef {
+            tx_hash: H256::zero(),
+            index: index as u32,
+        };
+
+        add_unspent_output(&db, &output_ref, owner_pubkey, &amount)?;
+    }
 
     Ok(db)
 }
@@ -409,4 +435,21 @@ pub(crate) fn print_unspent_tree(db: &Db) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+/// Iterate the entire unspent set summing the values of the coins
+/// on a per-address basis.
+pub(crate) fn get_balances(db: &Db) -> anyhow::Result<impl Iterator<Item = (H256, u128)>> {
+    let mut balances = std::collections::HashMap::<H256, u128>::new();
+
+    let wallet_unspent_tree = db.open_tree(UNSPENT)?;
+
+    for raw_data in wallet_unspent_tree.iter() {
+        let (_output_ref_ivec, owner_amount_ivec) = raw_data?;
+        let (owner, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
+
+        balances.entry(owner).and_modify(|old| *old += amount).or_insert(amount);
+    }
+
+    Ok(balances.into_iter())
 }

@@ -71,6 +71,10 @@ pub enum Command {
 
     /// Synchronizes the wallet up to the tip of the chain, and does nothing else.
     SyncOnly,
+
+    /// For each key tracked by the wallet, shows the sum of all UTXO values
+    /// owned by that key. This sum is sometimes known as the "balance".
+    ShowBalance,
 }
 
 #[derive(Debug, Args)]
