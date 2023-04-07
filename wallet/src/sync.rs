@@ -13,13 +13,11 @@
 
 use std::path::PathBuf;
 
-use crate::{fetch_storage, output_filter::Filter, rpc, KEY_TYPE, NUM_GENESIS_UTXOS};
+use crate::{fetch_storage, output_filter::Filter, rpc};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
-use sc_keystore::LocalKeystore;
 use sled::Db;
 use sp_core::H256;
-use sp_keystore::CryptoStore;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, OutputRef},
@@ -27,7 +25,6 @@ use tuxedo_core::{
 };
 
 use futures::{stream, StreamExt, TryStreamExt};
-
 use jsonrpsee::http_client::HttpClient;
 use runtime::{money::Coin, Block, OuterVerifier, Transaction};
 
@@ -42,6 +39,8 @@ const UNSPENT: &str = "unspent";
 
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
+
+pub const NUM_GENESIS_UTXOS: u32 = 1;
 
 pub(crate) async fn init_from_genesis(
     db: &Db,
@@ -153,7 +152,7 @@ pub(crate) async fn synchronize(
     let mut height: u32 = height(db)?.ok_or(anyhow!("tried to sync an uninitialized database"))?;
     let mut wallet_hash = get_block_hash(db, height)?
         .expect("Local database should have a block hash at the height reported as best");
-    let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, &client).await?;
+    let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, client).await?;
 
     // There may have been a re-org since the last time the node synced. So we loop backwards from the
     // best height the wallet knows about checking whether the wallet knows the same block as the node.
@@ -169,21 +168,21 @@ pub(crate) async fn synchronize(
         height -= 1;
         wallet_hash = get_block_hash(db, height)?
             .expect("Local database should have a block hash at the height reported as best");
-        node_hash = rpc::node_get_block_hash(height, &client).await?;
+        node_hash = rpc::node_get_block_hash(height, client).await?;
     }
 
     // Orphaned blocks (if any) have been discarded at this point.
     // So we prepare our variables for forward syncing.
     println!("Resyncing from common ancestor {node_hash:?} - {wallet_hash:?}");
     height += 1;
-    node_hash = rpc::node_get_block_hash(height, &client).await?;
+    node_hash = rpc::node_get_block_hash(height, client).await?;
 
     // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
     while let Some(hash) = node_hash {
         println!("Forward syncing height {height}, hash {hash:?}");
 
         // Fetch the entire block in order to apply its transactions
-        let block = rpc::node_get_block(hash, &client)
+        let block = rpc::node_get_block(hash, client)
             .await?
             .expect("Node should be able to return a block whose hash it already returned");
 
@@ -239,6 +238,8 @@ pub(crate) fn get_block_hash(db: &Db, height: u32) -> anyhow::Result<Option<H256
     Ok(Some(hash))
 }
 
+// This is part of what I expect to be a useful public interface. For now it is not used.
+#[allow(dead_code)]
 /// Gets the block from the local database given a block hash. Similar to the Node's RPC.
 pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
     let wallet_blocks_tree = db.open_tree(BLOCKS)?;
@@ -251,6 +252,7 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
     Ok(Some(block))
 }
 
+/// Apply a block to the local database
 pub(crate) async fn apply_block(
     db: &Db,
     b: Block,
@@ -420,6 +422,8 @@ pub(crate) fn height(db: &Db) -> anyhow::Result<Option<u32>> {
     })
 }
 
+// This is part of what I expect to be a useful public interface. For now it is not used.
+#[allow(dead_code)]
 /// Debugging use. Print out the entire block_hashes tree.
 pub(crate) fn print_block_hashes_tree(db: &Db) -> anyhow::Result<()> {
     for height in 0..height(db)?.unwrap() {
@@ -442,4 +446,24 @@ pub(crate) fn print_unspent_tree(db: &Db) -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+/// Iterate the entire unspent set summing the values of the coins
+/// on a per-address basis.
+pub(crate) fn get_balances(db: &Db) -> anyhow::Result<impl Iterator<Item = (H256, u128)>> {
+    let mut balances = std::collections::HashMap::<H256, u128>::new();
+
+    let wallet_unspent_tree = db.open_tree(UNSPENT)?;
+
+    for raw_data in wallet_unspent_tree.iter() {
+        let (_output_ref_ivec, owner_amount_ivec) = raw_data?;
+        let (owner, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
+
+        balances
+            .entry(owner)
+            .and_modify(|old| *old += amount)
+            .or_insert(amount);
+    }
+
+    Ok(balances.into_iter())
 }
