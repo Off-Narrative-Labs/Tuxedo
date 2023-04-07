@@ -49,6 +49,10 @@ pub enum Command {
     InsertKey {
         /// Seed phrase of the key to insert.
         seed: String,
+        // /// Height from which the blockchain should be scanned to sync outputs
+        // /// belonging to this address. If non is provided, no re-syncing will
+        // /// happen and this key will be treated like a new key.
+        // sync_height: Option<u32>,
     },
 
     /// Generate a private key using either some or no password and insert into the keystore
