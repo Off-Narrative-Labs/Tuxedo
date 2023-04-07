@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["amoeba_demo"],"opaque":[""]};
+window.SIDEBAR_ITEMS = {"fn":["amoeba_demo"]};
