@@ -1,7 +1,5 @@
 //! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-use std::path::PathBuf;
-use keystore::SHAWN_PHRASE;
 use anyhow::anyhow;
 use clap::Parser;
 use jsonrpsee::{
@@ -9,14 +7,16 @@ use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
     rpc_params,
 };
+use keystore::SHAWN_PHRASE;
 use parity_scale_codec::{Decode, Encode};
 use runtime::OuterVerifier;
+use std::path::PathBuf;
 use tuxedo_core::{
     types::{Output, OutputRef},
     verifier::*,
 };
 
-use sp_core::{H256, Pair as PairT, sr25519::Pair};
+use sp_core::{sr25519::Pair, Pair as PairT, H256};
 
 use output_filter::{OutputFilter, SigCheckFilter};
 

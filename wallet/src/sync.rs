@@ -65,8 +65,7 @@ pub(crate) async fn init_from_genesis(
 
     println!("The fetched genesis_utxos are {:?}", genesis_utxos);
 
-    let filtered_outputs =
-        filter(&genesis_utxos, &H256::zero()).map_err(|e| anyhow!("{:?}", e))?;
+    let filtered_outputs = filter(&genesis_utxos, &H256::zero()).map_err(|e| anyhow!("{:?}", e))?;
 
     for (output, output_ref) in filtered_outputs.iter() {
         // For now the wallet only supports simple coins, so skip anything else
