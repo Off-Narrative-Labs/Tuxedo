@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use crate::{output_filter::Filter, rpc, KEY_TYPE};
+use crate::{fetch_storage, output_filter::Filter, rpc, KEY_TYPE, NUM_GENESIS_UTXOS};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sc_keystore::LocalKeystore;
@@ -25,6 +25,8 @@ use tuxedo_core::{
     types::{Input, OutputRef},
     verifier::SigCheck,
 };
+
+use futures::{stream, StreamExt, TryStreamExt};
 
 use jsonrpsee::http_client::HttpClient;
 use runtime::{money::Coin, Block, OuterVerifier, Transaction};
@@ -40,6 +42,51 @@ const UNSPENT: &str = "unspent";
 
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
+
+pub(crate) async fn init_from_genesis(
+    db: &Db,
+    client: &HttpClient,
+    filter: &Filter,
+) -> anyhow::Result<()> {
+    let genesis_utxo_refs: Vec<OutputRef> = (0..NUM_GENESIS_UTXOS)
+        .into_iter()
+        .map(|utxo_index| OutputRef {
+            tx_hash: H256::zero(),
+            index: utxo_index,
+        })
+        .collect();
+
+    let genesis_utxos: Vec<_> =
+        stream::iter(genesis_utxo_refs.iter().map(|utxo_ref| async move {
+            fetch_storage::<OuterVerifier>(utxo_ref, &client).await
+        }))
+        .buffer_unordered(5)
+        .try_collect()
+        .await?;
+
+    println!("The fetched genesis_utxos are {:?}", genesis_utxos);
+
+    let filtered_outputs =
+        filter(&genesis_utxos, &H256::zero()).map_err(|e| anyhow!("{:?}", e))?;
+
+    for (output, output_ref) in filtered_outputs.iter() {
+        // For now the wallet only supports simple coins, so skip anything else
+        let amount = match output.payload.extract::<Coin>() {
+            Ok(Coin(amount)) => amount,
+            Err(_) => continue,
+        };
+
+        match output.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+                // Add it to the global unspent_outputs table
+                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+            }
+            _ => return Err(anyhow!("{:?}", ())),
+        }
+    }
+
+    Ok(())
+}
 
 /// Open a database at the given location intended for the given genesis block.
 ///
@@ -210,6 +257,7 @@ pub(crate) async fn apply_block(
     block_hash: H256,
     filter: &Filter,
 ) -> anyhow::Result<()> {
+    // println!("Applying Block {:?}, Block_Hash {:?}", b, block_hash);
     // Write the hash to the block_hashes table
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     wallet_block_hashes_tree.insert(b.header.number.encode(), block_hash.encode())?;

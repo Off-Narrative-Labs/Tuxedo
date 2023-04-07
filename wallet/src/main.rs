@@ -46,6 +46,9 @@ const SHAWN_PHRASE: &str =
 
 const SHAWN_PUB_KEY: &str = "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67";
 
+/// Must be set according to how many UTXOS one has configured for their chain
+pub const NUM_GENESIS_UTXOS: u32 = 1;
+
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
 #[command(about, version)]
@@ -186,6 +189,11 @@ async fn main() -> anyhow::Result<()> {
         owner_pubkey: shawn_public_key.into(),
     }))
     .map_err(|e| anyhow!("{:?}", e))?;
+
+    if !sled::Db::was_recovered(&db) {
+        // Before synchronizing init the database with the current Genesis utxos
+        sync::init_from_genesis(&db, &client, &shawn_filter).await?;
+    }
 
     // Synchronize the wallet with attached node.
     sync::synchronize(&db, &client, &shawn_filter).await?;
