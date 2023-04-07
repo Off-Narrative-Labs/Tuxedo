@@ -35,7 +35,7 @@ mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    types::{Output, Transaction as TuxedoTransaction},
+    types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
     ConstraintChecker, Verifier,
 };
@@ -104,7 +104,7 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-    pub genesis_utxos: Vec<Output<OuterVerifier>>,
+    pub genesis_utxos: Vec<Output>,
 }
 
 impl Default for GenesisConfig {
@@ -174,6 +174,7 @@ pub type BlockNumber = u32;
 pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, Transaction>;
 pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
+pub type Output = tuxedo_core::types::Output<OuterVerifier>;
 
 impl sp_runtime::traits::GetNodeBlockType for Runtime {
     type NodeBlock = opaque::Block;
@@ -320,8 +321,8 @@ impl ConstraintChecker for OuterConstraintChecker {
 
     fn check<V: Verifier>(
         &self,
-        inputs: &[Output<V>],
-        outputs: &[Output<V>],
+        inputs: &[tuxedo_core::types::Output<V>],
+        outputs: &[tuxedo_core::types::Output<V>],
     ) -> Result<TransactionPriority, OuterConstraintCheckerError> {
         Ok(match self {
             Self::Money(money) => money.check(inputs, outputs)?,
@@ -584,8 +585,7 @@ mod tests {
 
             let encoded_utxo =
                 sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-            let utxo = Output::<OuterVerifier>::decode(&mut &encoded_utxo[..])
-                .expect("Can Decode UTXO correctly");
+            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_utxo);
         })
     }
@@ -620,8 +620,7 @@ mod tests {
 
             let encoded_utxo =
                 sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis MultiSig UTXO");
-            let utxo = Output::<OuterVerifier>::decode(&mut &encoded_utxo[..])
-                .expect("Can Decode UTXO correctly");
+            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_multi_sig_utxo);
         })
     }

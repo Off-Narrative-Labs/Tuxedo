@@ -10,6 +10,7 @@ description = "A simple example / template wallet built for the tuxedo template 
 runtime = { path = "../tuxedo-template-runtime", package = "tuxedo-template-runtime"}
 tuxedo-core = { path = "../tuxedo-core" }
 
+serde_json = "1.0"
 parity-scale-codec = { version = '3.4.0', default-features = false }
 jsonrpsee = { version = "0.16.2", features = ["http-client"] }
 tokio = { version = "1.25.0", features = ["full"] }
@@ -17,7 +18,8 @@ anyhow = "1.0.69"
 hex = "0.4.3"
 hex-literal = "0.3.4"
 clap = { version = "4.1.8", features = [ "derive"] }
-directories = "4.0.1"
+directories = "5.0.0"
+sled = "0.34.7"
 
 sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
 sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
