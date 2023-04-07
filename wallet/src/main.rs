@@ -10,6 +10,7 @@ use jsonrpsee::{
     rpc_params,
 };
 use parity_scale_codec::{Decode, Encode};
+use runtime::OuterVerifier;
 use tuxedo_core::{
     types::{Output, OutputRef},
     Verifier,
@@ -86,7 +87,27 @@ async fn main() -> anyhow::Result<()> {
         Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
         Command::VerifyCoin { output_ref } => {
-            money::print_coin_from_storage(&output_ref, &client).await
+            println!("Details of coin {}:", hex::encode(output_ref.encode()));
+
+            // Print the details from storage
+            let (coin_from_storage, verifier_from_storage) = money::get_coin_from_storage(&output_ref, &client).await?;
+            print!(
+                "Found in storage.  Value: {}, ",
+                coin_from_storage.0
+            );
+            pretty_print_verifier(&verifier_from_storage);
+
+            // Print the details from the local db
+            match sync::get_unspent(&db, &output_ref)? {
+                Some((owner, amount)) => {
+                    println!("Found in local db. Value: {amount}, owned by {owner}");
+                }
+                None => {
+                    println!("Not found in local db");
+                }
+            }
+
+            Ok(())
         }
         Command::SpendCoins(args) => money::spend_coins(&db, &client, &keystore, args).await,
         Command::InsertKey { seed } => {
@@ -130,7 +151,7 @@ async fn main() -> anyhow::Result<()> {
                 println!("{account}: {balance}");
             }
             println!("----------------------------");
-            println!("total: {total}");
+            println!("total      : {total}");
 
             Ok(())
         }
@@ -198,4 +219,25 @@ fn default_data_path() -> PathBuf {
         .expect("app directories exist on all supported platforms; qed")
         .config_dir()
         .into()
+}
+
+/// Utility to pretty print an outer verifier
+pub fn pretty_print_verifier(v: &OuterVerifier) {
+    match v {
+        OuterVerifier::SigCheck(sig_check) => {
+            println! {"owned by {}", sig_check.owner_pubkey}
+        }
+        OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
+        OuterVerifier::ThresholdMultiSignature(multi_sig) => {
+            let string_sigs: Vec<_> = multi_sig
+                .signatories
+                .iter()
+                .map(|sig| format!("0x{}", hex::encode(sig)))
+                .collect();
+            println!(
+                "Owned by {:?}, with a threshold of {} sigs necessary",
+                string_sigs, multi_sig.threshold
+            );
+        }
+    }
 }

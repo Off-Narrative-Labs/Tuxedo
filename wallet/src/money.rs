@@ -2,8 +2,6 @@
 
 use crate::{fetch_storage, sync, cli::SpendArgs};
 
-use std::{thread::sleep, time::Duration};
-
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
@@ -49,7 +47,7 @@ pub async fn spend_coins(
         transaction.outputs.push(output);
     }
 
-    // The total input set will consist or any manually chosen inputs
+    // The total input set will consist of any manually chosen inputs
     // plus any automatically chosen to make the input amount high enough
     let mut total_input_amount = 0;
     let mut all_input_refs = args.input;
@@ -69,7 +67,7 @@ pub async fn spend_coins(
     // Make sure each input decodes and is still present in the node's storage,
     // and then push to transaction.
     for output_ref in &all_input_refs {
-        print_coin_from_storage(output_ref, client).await?;
+        get_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
             output_ref: output_ref.clone(),
             redeemer: vec![], // We will sign the total transaction so this should be empty
@@ -108,53 +106,31 @@ pub async fn spend_coins(
         genesis_spend_response
     );
 
-    // Wait a few seconds to make sure a block has been authored.
-    sleep(Duration::from_secs(3));
-
-    // Retrieve new coins from storage
-    for i in 0..transaction.outputs.len() {
+    // Print new output refs for user to check later
+    let tx_hash = <BlakeTwo256 as Hash>::hash_of(&transaction.encode());
+    for (i, output) in transaction.outputs.iter().enumerate() {
         let new_coin_ref = OutputRef {
-            tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
+            tx_hash,
             index: i as u32,
         };
+        let amount = output.payload.extract::<Coin>()?.0;
 
-        print_coin_from_storage(&new_coin_ref, client).await?;
+        print!("Created {:?} worth {amount}. ", hex::encode(new_coin_ref.encode()));
+        crate::pretty_print_verifier(&output.verifier);
     }
 
     Ok(())
 }
 
-/// Pretty print the details of a coin in storage given the OutputRef
-pub async fn print_coin_from_storage(
+/// Given an output ref, fetch the details about this coin from the node's
+/// storage.
+pub async fn get_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<(Coin, OuterVerifier)> {
     let utxo = fetch_storage::<OuterVerifier>(output_ref, client).await?;
     let coin_in_storage: Coin = utxo.payload.extract()?;
 
-    print!(
-        "{}: Found coin worth {:?} units ",
-        hex::encode(output_ref.encode()),
-        coin_in_storage.0
-    );
-
-    match utxo.verifier {
-        OuterVerifier::SigCheck(sig_check) => {
-            println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
-        }
-        OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
-        OuterVerifier::ThresholdMultiSignature(multi_sig) => {
-            let string_sigs: Vec<_> = multi_sig
-                .signatories
-                .iter()
-                .map(|sig| format!("0x{}", hex::encode(sig)))
-                .collect();
-            println!(
-                "Owned by {:?}, with a threshold of {} sigs necessary",
-                string_sigs, multi_sig.threshold
-            );
-        }
-    }
-
-    Ok(())
+    Ok((coin_in_storage, utxo.verifier))
 }
+
