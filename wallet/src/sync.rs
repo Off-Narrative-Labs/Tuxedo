@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use crate::{fetch_storage, output_filter::Filter, rpc};
+use crate::{fetch_storage, rpc};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sled::Db;
@@ -40,12 +40,13 @@ const UNSPENT: &str = "unspent";
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
 
+/// TODO remove this constant. Instead we should just iterate output refs until we find one that doesn't exist.
 pub const NUM_GENESIS_UTXOS: u32 = 1;
 
-pub(crate) async fn init_from_genesis(
+pub(crate) async fn init_from_genesis<F: Fn(&OuterVerifier) -> bool>(
     db: &Db,
     client: &HttpClient,
-    filter: &Filter,
+    filter: &F,
 ) -> anyhow::Result<()> {
     let genesis_utxo_refs: Vec<OutputRef> = (0..NUM_GENESIS_UTXOS)
         .map(|utxo_index| OutputRef {
@@ -54,30 +55,39 @@ pub(crate) async fn init_from_genesis(
         })
         .collect();
 
-    let genesis_utxos: Vec<_> = stream::iter(
+    let genesis_utxos = stream::iter(
         genesis_utxo_refs
             .iter()
+            //TODO Fetch storage will read the latest storage. We want to read genesis utxos from the genesis state.
             .map(|utxo_ref| fetch_storage::<OuterVerifier>(utxo_ref, client)),
     )
     .buffer_unordered(5)
-    .try_collect()
+    .try_collect::<Vec<_>>()
     .await?;
 
     println!("The fetched genesis_utxos are {:?}", genesis_utxos);
 
-    let filtered_outputs = filter(&genesis_utxos, &H256::zero()).map_err(|e| anyhow!("{:?}", e))?;
+    let filtered_outputs_and_refs = genesis_utxos.iter().zip(genesis_utxo_refs).filter_map(|(output, output_ref)| {
+        if filter(&output.verifier) {
+            Some((output, output_ref))
+        } else {
+            None
+        }
+    });
 
-    for (output, output_ref) in filtered_outputs.iter() {
+    for (output, output_ref) in filtered_outputs_and_refs {
         // For now the wallet only supports simple coins, so skip anything else
         let amount = match output.payload.extract::<Coin>() {
             Ok(Coin(amount)) => amount,
             Err(_) => continue,
         };
 
+        // At this point we already know we have a coin that matches our filter.
+        // So we extract its owner.
         match output.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 // Add it to the global unspent_outputs table
-                add_unspent_output(db, output_ref, &owner_pubkey, &amount)?;
+                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
             }
             _ => return Err(anyhow!("{:?}", ())),
         }
@@ -139,10 +149,10 @@ pub(crate) fn open_db(
 /// Synchronize the local database to the database of the running node.
 /// The wallet entirely trusts the data the node feeds it. In the bigger
 /// picture, that means run your own (light) node.
-pub(crate) async fn synchronize(
+pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
     db: &Db,
     client: &HttpClient,
-    filter: &Filter,
+    filter: &F,
 ) -> anyhow::Result<()> {
     println!("Synchronizing wallet with node.");
 
@@ -252,11 +262,11 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
 }
 
 /// Apply a block to the local database
-pub(crate) async fn apply_block(
+pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
     db: &Db,
     b: Block,
     block_hash: H256,
-    filter: &Filter,
+    filter: &F,
 ) -> anyhow::Result<()> {
     // println!("Applying Block {:?}, Block_Hash {:?}", b, block_hash);
     // Write the hash to the block_hashes table
@@ -277,24 +287,28 @@ pub(crate) async fn apply_block(
 
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
-async fn apply_transaction(db: &Db, tx: Transaction, filter: &Filter) -> anyhow::Result<()> {
+async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(db: &Db, tx: Transaction, filter: &F) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
     println!("about to insert new outputs");
-    let filtered_outputs = filter(&tx.outputs, &tx_hash).map_err(|e| anyhow!("{:?}", e))?;
     // Insert all new outputs
-    for (output, output_ref) in filtered_outputs.iter() {
+    for (index, output) in tx.outputs.iter().filter(|o| filter(&o.verifier)).enumerate() {
         // For now the wallet only supports simple coins, so skip anything else
         let amount = match output.payload.extract::<Coin>() {
             Ok(Coin(amount)) => amount,
             Err(_) => continue,
         };
 
+        let output_ref = OutputRef {
+            tx_hash,
+            index: index as u32,
+        };
+
         match output.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 // Add it to the global unspent_outputs table
-                add_unspent_output(db, output_ref, &owner_pubkey, &amount)?;
+                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
             }
             _ => return Err(anyhow!("{:?}", ())),
         }

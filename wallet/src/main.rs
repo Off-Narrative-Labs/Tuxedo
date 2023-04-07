@@ -7,7 +7,6 @@ use jsonrpsee::{
     http_client::{HttpClient, HttpClientBuilder},
     rpc_params,
 };
-use keystore::SHAWN_PHRASE;
 use parity_scale_codec::{Decode, Encode};
 use runtime::OuterVerifier;
 use std::path::PathBuf;
@@ -16,9 +15,7 @@ use tuxedo_core::{
     verifier::*,
 };
 
-use sp_core::{sr25519::Pair, Pair as PairT, H256};
-
-use output_filter::{OutputFilter, SigCheckFilter};
+use sp_core::H256;
 
 mod amoeba;
 mod cli;
@@ -69,20 +66,23 @@ async fn main() -> anyhow::Result<()> {
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
     println!("Number of blocks in the db: {num_blocks}");
 
-    let shawn_public_key = Pair::from_phrase(SHAWN_PHRASE, None)?.0.public();
-
-    let shawn_filter = SigCheckFilter::build_filter(OuterVerifier::SigCheck(SigCheck {
-        owner_pubkey: shawn_public_key.into(),
-    }))
-    .map_err(|e| anyhow!("{:?}", e))?;
+    // The filter function that will determine whether the local database should
+    // track a given utxo is based on whether that utxo is privately owned by a
+    // key that is in our keystore.
+    let keystore_filter = |v: &OuterVerifier| -> bool {
+        matches![
+            v,
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) if crate::keystore::has_key(&keystore, &owner_pubkey)
+        ]
+    };
 
     if !sled::Db::was_recovered(&db) {
         // Before synchronizing init the database with the current Genesis utxos
-        sync::init_from_genesis(&db, &client, &shawn_filter).await?;
+        sync::init_from_genesis(&db, &client, &keystore_filter).await?;
     }
 
     // Synchronize the wallet with attached node.
-    sync::synchronize(&db, &client, &shawn_filter).await?;
+    sync::synchronize(&db, &client, &keystore_filter).await?;
 
     println!(
         "Wallet database synchronized with node to height {:?}",
@@ -160,7 +160,6 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Command::SyncOnly => Ok(()),
     }
 }
 
