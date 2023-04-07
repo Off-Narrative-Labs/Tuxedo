@@ -86,7 +86,7 @@ pub async fn spend_coins(
         let redeemer = match utxo.verifier {
             OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 let public = Public::from_h256(owner_pubkey);
-                crate::keystore::sign_with(keystore, &public.into(), &stripped_encoded_transaction)?
+                crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?
             }
             OuterVerifier::UpForGrabs(_) => Vec::new(),
             OuterVerifier::ThresholdMultiSignature(_) => todo!(),

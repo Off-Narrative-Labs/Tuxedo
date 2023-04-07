@@ -12,7 +12,7 @@ use sp_core::{
 };
 use sp_keystore::SyncCryptoStore;
 use sp_runtime::{CryptoTypeId, KeyTypeId};
-use std::path::PathBuf;
+use std::path::Path;
 
 /// A KeyTypeId to use in the keystore for Tuxedo transactions. We'll use this everywhere
 /// until it becomes clear that there is a reason to use multiple of them
@@ -49,7 +49,7 @@ pub fn insert_key(keystore: &LocalKeystore, seed: &str) -> anyhow::Result<()> {
     let public_key = Pair::from_phrase(seed, None)?.0.public();
     println!("The generated public key is {:?}", public_key);
     keystore
-        .insert_unknown(KEY_TYPE, &seed, public_key.as_ref())
+        .insert_unknown(KEY_TYPE, seed, public_key.as_ref())
         .map_err(|()| anyhow!("Error inserting key"))?;
     Ok(())
 }
@@ -86,7 +86,7 @@ pub fn get_keys(keystore: &LocalKeystore) -> anyhow::Result<impl Iterator<Item =
 }
 
 /// Caution. Removes key from keystore. Call with care.
-pub fn remove_key(keystore_path: &PathBuf, pub_key: &H256) -> anyhow::Result<()> {
+pub fn remove_key(keystore_path: &Path, pub_key: &H256) -> anyhow::Result<()> {
     // The keystore doesn't provide an API for removing keys, so we
     // remove them from the filesystem directly
     let filename = format!("{}{}", hex::encode(KEY_TYPE.0), hex::encode(pub_key.0));

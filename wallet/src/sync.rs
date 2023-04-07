@@ -131,7 +131,7 @@ pub(crate) async fn synchronize(
     let mut height: u32 = height(db)?.ok_or(anyhow!("tried to sync an uninitialized database"))?;
     let mut wallet_hash = get_block_hash(db, height)?
         .expect("Local database should have a block hash at the height reported as best");
-    let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, &client).await?;
+    let mut node_hash: Option<H256> = rpc::node_get_block_hash(height, client).await?;
 
     // There may have been a re-org since the last time the node synced. So we loop backwards from the
     // best height the wallet knows about checking whether the wallet knows the same block as the node.
@@ -147,30 +147,30 @@ pub(crate) async fn synchronize(
         height -= 1;
         wallet_hash = get_block_hash(db, height)?
             .expect("Local database should have a block hash at the height reported as best");
-        node_hash = rpc::node_get_block_hash(height, &client).await?;
+        node_hash = rpc::node_get_block_hash(height, client).await?;
     }
 
     // Orphaned blocks (if any) have been discarded at this point.
     // So we prepare our variables for forward syncing.
     println!("Resyncing from common ancestor {node_hash:?} - {wallet_hash:?}");
     height += 1;
-    node_hash = rpc::node_get_block_hash(height, &client).await?;
+    node_hash = rpc::node_get_block_hash(height, client).await?;
 
     // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
     while let Some(hash) = node_hash {
         println!("Forward syncing height {height}, hash {hash:?}");
 
         // Fetch the entire block in order to apply its transactions
-        let block = rpc::node_get_block(hash, &client)
+        let block = rpc::node_get_block(hash, client)
             .await?
             .expect("Node should be able to return a block whose hash it already returned");
 
         // Apply the new block
-        apply_block(&db, block, hash, &keystore).await?;
+        apply_block(db, block, hash, keystore).await?;
 
         height += 1;
 
-        node_hash = rpc::node_get_block_hash(height, &client).await?;
+        node_hash = rpc::node_get_block_hash(height, client).await?;
     }
 
     println!("Done with forward sync up to {}", height - 1);
@@ -217,6 +217,8 @@ pub(crate) fn get_block_hash(db: &Db, height: u32) -> anyhow::Result<Option<H256
     Ok(Some(hash))
 }
 
+// This is part of what I expect to be a useful public interface. For now it is not used.
+#[allow(dead_code)]
 /// Gets the block from the local database given a block hash. Similar to the Node's RPC.
 pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
     let wallet_blocks_tree = db.open_tree(BLOCKS)?;
@@ -269,7 +271,7 @@ async fn apply_transaction(
             Output {
                 verifier: OuterVerifier::SigCheck(SigCheck { owner_pubkey }),
                 payload,
-            } if crate::keystore::has_key(&keystore, owner_pubkey) => {
+            } if crate::keystore::has_key(keystore, owner_pubkey) => {
                 // For now the wallet only supports simple coins, so skip anything else
                 let amount = match payload.extract::<Coin>() {
                     Ok(Coin(amount)) => amount,
@@ -411,6 +413,8 @@ pub(crate) fn height(db: &Db) -> anyhow::Result<Option<u32>> {
     })
 }
 
+// This is part of what I expect to be a useful public interface. For now it is not used.
+#[allow(dead_code)]
 /// Debugging use. Print out the entire block_hashes tree.
 pub(crate) fn print_block_hashes_tree(db: &Db) -> anyhow::Result<()> {
     for height in 0..height(db)?.unwrap() {
