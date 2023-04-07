@@ -1,5 +1,5 @@
 //! Tuxedo Template Wallet's Command Line Interface.
-//! 
+//!
 //! Built with clap's derive macros.
 
 use std::path::PathBuf;
@@ -8,7 +8,7 @@ use clap::{ArgAction::Append, Args, Parser, Subcommand};
 use sp_core::H256;
 use tuxedo_core::types::OutputRef;
 
-use crate::{DEFAULT_ENDPOINT, keystore::SHAWN_PUB_KEY, h256_from_string, output_ref_from_string};
+use crate::{h256_from_string, keystore::SHAWN_PUB_KEY, output_ref_from_string, DEFAULT_ENDPOINT};
 
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]

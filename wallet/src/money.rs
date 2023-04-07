@@ -1,6 +1,6 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{fetch_storage, sync, cli::SpendArgs};
+use crate::{cli::SpendArgs, fetch_storage, sync};
 
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
@@ -115,7 +115,10 @@ pub async fn spend_coins(
         };
         let amount = output.payload.extract::<Coin>()?.0;
 
-        print!("Created {:?} worth {amount}. ", hex::encode(new_coin_ref.encode()));
+        print!(
+            "Created {:?} worth {amount}. ",
+            hex::encode(new_coin_ref.encode())
+        );
         crate::pretty_print_verifier(&output.verifier);
     }
 
@@ -133,4 +136,3 @@ pub async fn get_coin_from_storage(
 
     Ok((coin_in_storage, utxo.verifier))
 }
-

@@ -92,8 +92,6 @@ pub(crate) fn open_db(
     // TODO this logic needs cleaner separation, but for now,
     // I'm just trying to sync the genesis utxos at all.
     for (index, Output { payload, verifier }) in expected_genesis_utxos.iter().enumerate() {
-        
-
         let (amount, owner_pubkey) = match (payload.extract(), verifier) {
             // If it is a coin with a private owner, we sync it.
             (Ok(Coin(amount)), OuterVerifier::SigCheck(SigCheck { owner_pubkey })) => {
@@ -448,7 +446,10 @@ pub(crate) fn get_balances(db: &Db) -> anyhow::Result<impl Iterator<Item = (H256
         let (_output_ref_ivec, owner_amount_ivec) = raw_data?;
         let (owner, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
 
-        balances.entry(owner).and_modify(|old| *old += amount).or_insert(amount);
+        balances
+            .entry(owner)
+            .and_modify(|old| *old += amount)
+            .or_insert(amount);
     }
 
     Ok(balances.into_iter())

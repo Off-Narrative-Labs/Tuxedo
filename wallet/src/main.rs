@@ -19,17 +19,16 @@ use tuxedo_core::{
 use sp_core::H256;
 
 mod amoeba;
+mod cli;
+mod keystore;
 mod money;
 mod rpc;
 mod sync;
-mod cli;
-mod keystore;
 
 use cli::{Cli, Command};
 
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
-
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -64,7 +63,12 @@ async fn main() -> anyhow::Result<()> {
     let expected_genesis_utxos = runtime::GenesisConfig::default().genesis_utxos;
 
     // Open the local database
-    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block, expected_genesis_utxos)?;
+    let db = sync::open_db(
+        db_path,
+        node_genesis_hash,
+        node_genesis_block,
+        expected_genesis_utxos,
+    )?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
@@ -90,11 +94,9 @@ async fn main() -> anyhow::Result<()> {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
             // Print the details from storage
-            let (coin_from_storage, verifier_from_storage) = money::get_coin_from_storage(&output_ref, &client).await?;
-            print!(
-                "Found in storage.  Value: {}, ",
-                coin_from_storage.0
-            );
+            let (coin_from_storage, verifier_from_storage) =
+                money::get_coin_from_storage(&output_ref, &client).await?;
+            print!("Found in storage.  Value: {}, ", coin_from_storage.0);
             pretty_print_verifier(&verifier_from_storage);
 
             // Print the details from the local db
@@ -110,23 +112,19 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Command::SpendCoins(args) => money::spend_coins(&db, &client, &keystore, args).await,
-        Command::InsertKey { seed } => {
-            crate::keystore::insert_key(&keystore, &seed)
-        }
+        Command::InsertKey { seed } => crate::keystore::insert_key(&keystore, &seed),
         Command::GenerateKey { password } => {
             crate::keystore::generate_key(&keystore, password)?;
             Ok(())
         }
         Command::ShowKeys => {
-            crate::keystore::get_keys(&keystore)?
-                .for_each(|pubkey| {
-                    println!("key: 0x{}", hex::encode(pubkey));
-                });
+            crate::keystore::get_keys(&keystore)?.for_each(|pubkey| {
+                println!("key: 0x{}", hex::encode(pubkey));
+            });
 
             Ok(())
         }
         Command::RemoveKey { pub_key } => {
-
             println!("CAUTION!!! About permanently remove {pub_key}. This action CANNOT BE REVERSED. Type \"proceed\" to confirm deletion.");
 
             let mut confirmation = String::new();
@@ -150,7 +148,7 @@ async fn main() -> anyhow::Result<()> {
                 total += balance;
                 println!("{account}: {balance}");
             }
-            println!("----------------------------");
+            println!("--------------------");
             println!("total      : {total}");
 
             Ok(())
