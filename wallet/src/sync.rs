@@ -13,10 +13,9 @@
 
 use std::path::PathBuf;
 
-use crate::rpc;
+use crate::{fetch_storage, rpc};
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
-use sc_keystore::LocalKeystore;
 use sled::Db;
 use sp_core::H256;
 use sp_runtime::traits::{BlakeTwo256, Hash};
@@ -25,8 +24,9 @@ use tuxedo_core::{
     verifier::SigCheck,
 };
 
+use futures::{stream, StreamExt, TryStreamExt};
 use jsonrpsee::http_client::HttpClient;
-use runtime::{money::Coin, Block, OuterVerifier, Output, Transaction};
+use runtime::{money::Coin, Block, OuterVerifier, Transaction};
 
 /// The identifier for the blocks tree in the db.
 const BLOCKS: &str = "blocks";
@@ -40,6 +40,66 @@ const UNSPENT: &str = "unspent";
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
 
+/// TODO remove this constant. Instead we should just iterate output refs until we find one that doesn't exist.
+pub const NUM_GENESIS_UTXOS: u32 = 1;
+
+pub(crate) async fn init_from_genesis<F: Fn(&OuterVerifier) -> bool>(
+    db: &Db,
+    client: &HttpClient,
+    filter: &F,
+) -> anyhow::Result<()> {
+    let genesis_utxo_refs: Vec<OutputRef> = (0..NUM_GENESIS_UTXOS)
+        .map(|utxo_index| OutputRef {
+            tx_hash: H256::zero(),
+            index: utxo_index,
+        })
+        .collect();
+
+    let genesis_utxos = stream::iter(
+        genesis_utxo_refs
+            .iter()
+            //TODO Fetch storage will read the latest storage. We want to read genesis utxos from the genesis state.
+            .map(|utxo_ref| fetch_storage::<OuterVerifier>(utxo_ref, client)),
+    )
+    .buffer_unordered(5)
+    .try_collect::<Vec<_>>()
+    .await?;
+
+    println!("The fetched genesis_utxos are {:?}", genesis_utxos);
+
+    let filtered_outputs_and_refs =
+        genesis_utxos
+            .iter()
+            .zip(genesis_utxo_refs)
+            .filter_map(|(output, output_ref)| {
+                if filter(&output.verifier) {
+                    Some((output, output_ref))
+                } else {
+                    None
+                }
+            });
+
+    for (output, output_ref) in filtered_outputs_and_refs {
+        // For now the wallet only supports simple coins, so skip anything else
+        let amount = match output.payload.extract::<Coin>() {
+            Ok(Coin(amount)) => amount,
+            Err(_) => continue,
+        };
+
+        // At this point we already know we have a coin that matches our filter.
+        // So we extract its owner.
+        match output.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+                // Add it to the global unspent_outputs table
+                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+            }
+            _ => return Err(anyhow!("{:?}", ())),
+        }
+    }
+
+    Ok(())
+}
+
 /// Open a database at the given location intended for the given genesis block.
 ///
 /// If the database is already populated, make sure it is based on the expected genesis
@@ -48,7 +108,6 @@ pub(crate) fn open_db(
     db_path: PathBuf,
     expected_genesis_hash: H256,
     expected_genesis_block: Block,
-    expected_genesis_utxos: Vec<Output>,
 ) -> anyhow::Result<Db> {
     //TODO figure out why this assertion fails.
     //assert_eq!(BlakeTwo256::hash_of(&expected_genesis_block.encode()), expected_genesis_hash, "expected block hash does not match expected block");
@@ -81,48 +140,23 @@ pub(crate) fn open_db(
         expected_genesis_hash
     );
 
-    // Update both block tables
+    // Update both tables
     wallet_block_hashes_tree.insert(0u32.encode(), expected_genesis_hash.encode())?;
     wallet_blocks_tree.insert(
         expected_genesis_hash.encode(),
         expected_genesis_block.encode(),
     )?;
 
-    // Fill in the genesis state
-    // TODO this logic needs cleaner separation, but for now,
-    // I'm just trying to sync the genesis utxos at all.
-    for (index, Output { payload, verifier }) in expected_genesis_utxos.iter().enumerate() {
-        let (amount, owner_pubkey) = match (payload.extract(), verifier) {
-            // If it is a coin with a private owner, we sync it.
-            (Ok(Coin(amount)), OuterVerifier::SigCheck(SigCheck { owner_pubkey })) => {
-                (amount, owner_pubkey)
-            }
-            _ => {
-                // This gnesis utxo is not a coin, or is not privately owned, so skip it.
-                continue;
-            }
-        };
-
-        let output_ref = OutputRef {
-            tx_hash: H256::zero(),
-            index: index as u32,
-        };
-
-        add_unspent_output(&db, &output_ref, owner_pubkey, &amount)?;
-    }
-
     Ok(db)
 }
 
-//TODO don't take the keystore as a param here. Instead take a filter function
-// that determines which utxos are relevant.
 /// Synchronize the local database to the database of the running node.
 /// The wallet entirely trusts the data the node feeds it. In the bigger
 /// picture, that means run your own (light) node.
-pub(crate) async fn synchronize(
+pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
     db: &Db,
     client: &HttpClient,
-    keystore: &LocalKeystore,
+    filter: &F,
 ) -> anyhow::Result<()> {
     println!("Synchronizing wallet with node.");
 
@@ -166,7 +200,7 @@ pub(crate) async fn synchronize(
             .expect("Node should be able to return a block whose hash it already returned");
 
         // Apply the new block
-        apply_block(db, block, hash, keystore).await?;
+        apply_block(db, block, hash, filter).await?;
 
         height += 1;
 
@@ -232,12 +266,13 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
 }
 
 /// Apply a block to the local database
-pub(crate) async fn apply_block(
+pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
     db: &Db,
     b: Block,
     block_hash: H256,
-    keystore: &LocalKeystore,
+    filter: &F,
 ) -> anyhow::Result<()> {
+    // println!("Applying Block {:?}, Block_Hash {:?}", b, block_hash);
     // Write the hash to the block_hashes table
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     wallet_block_hashes_tree.insert(b.header.number.encode(), block_hash.encode())?;
@@ -248,7 +283,7 @@ pub(crate) async fn apply_block(
 
     // Iterate through each transaction
     for tx in b.extrinsics {
-        apply_transaction(db, tx, keystore).await?;
+        apply_transaction(db, tx, filter).await?;
     }
 
     Ok(())
@@ -256,39 +291,39 @@ pub(crate) async fn apply_block(
 
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
-async fn apply_transaction(
+async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
     db: &Db,
     tx: Transaction,
-    keystore: &LocalKeystore,
+    filter: &F,
 ) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
     println!("about to insert new outputs");
     // Insert all new outputs
-    for (index, output) in tx.outputs.iter().enumerate() {
-        match output {
-            Output {
-                verifier: OuterVerifier::SigCheck(SigCheck { owner_pubkey }),
-                payload,
-            } if crate::keystore::has_key(keystore, owner_pubkey) => {
-                // For now the wallet only supports simple coins, so skip anything else
-                let amount = match payload.extract::<Coin>() {
-                    Ok(Coin(amount)) => amount,
-                    Err(_) => continue,
-                };
+    for (index, output) in tx
+        .outputs
+        .iter()
+        .filter(|o| filter(&o.verifier))
+        .enumerate()
+    {
+        // For now the wallet only supports simple coins, so skip anything else
+        let amount = match output.payload.extract::<Coin>() {
+            Ok(Coin(amount)) => amount,
+            Err(_) => continue,
+        };
 
-                let output_ref = OutputRef {
-                    tx_hash,
-                    index: index as u32,
-                };
+        let output_ref = OutputRef {
+            tx_hash,
+            index: index as u32,
+        };
 
+        match output.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
                 // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, owner_pubkey, &amount)?;
+                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
             }
-            v => {
-                println!("Not recording output with verifier {v:?}");
-            }
+            _ => return Err(anyhow!("{:?}", ())),
         }
     }
 

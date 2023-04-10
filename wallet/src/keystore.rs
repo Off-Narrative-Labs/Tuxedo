@@ -20,7 +20,7 @@ const KEY_TYPE: KeyTypeId = KeyTypeId(*b"_tux");
 
 /// A default seed phrase for signing inputs when none is provided
 /// Corresponds to the default pubkey.
-const SHAWN_PHRASE: &str =
+pub const SHAWN_PHRASE: &str =
     "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
 
 /// The public key corresponding to the default seed above.

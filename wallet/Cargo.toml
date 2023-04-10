@@ -20,6 +20,7 @@ hex-literal = "0.3.4"
 clap = { version = "4.1.8", features = [ "derive"] }
 directories = "5.0.0"
 sled = "0.34.7"
+futures = "0.3"
 
 sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
 sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }

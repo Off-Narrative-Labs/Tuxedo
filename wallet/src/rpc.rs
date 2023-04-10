@@ -1,7 +1,6 @@
 //! Strongly typed helper functions for communicating with the Node's
 //! RPC endpoint.
 
-// use crate::h256_from_string;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use runtime::Block;
 use sp_core::H256;

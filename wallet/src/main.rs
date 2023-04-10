@@ -1,7 +1,5 @@
 //! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-use std::path::PathBuf;
-
 use anyhow::anyhow;
 use clap::Parser;
 use jsonrpsee::{
@@ -11,9 +9,10 @@ use jsonrpsee::{
 };
 use parity_scale_codec::{Decode, Encode};
 use runtime::OuterVerifier;
+use std::path::PathBuf;
 use tuxedo_core::{
     types::{Output, OutputRef},
-    Verifier,
+    verifier::*,
 };
 
 use sp_core::H256;
@@ -22,6 +21,7 @@ mod amoeba;
 mod cli;
 mod keystore;
 mod money;
+mod output_filter;
 mod rpc;
 mod sync;
 
@@ -59,23 +59,31 @@ async fn main() -> anyhow::Result<()> {
         .expect("node should be able to return some genesis block");
     println!("Node's Genesis block::{:?}", node_genesis_hash);
 
-    // Get the expected genesis state to populate the database if it is new.
-    let expected_genesis_utxos = runtime::GenesisConfig::default().genesis_utxos;
-
     // Open the local database
-    let db = sync::open_db(
-        db_path,
-        node_genesis_hash,
-        node_genesis_block,
-        expected_genesis_utxos,
-    )?;
+    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
     println!("Number of blocks in the db: {num_blocks}");
 
+    // The filter function that will determine whether the local database should
+    // track a given utxo is based on whether that utxo is privately owned by a
+    // key that is in our keystore.
+    let keystore_filter = |v: &OuterVerifier| -> bool {
+        matches![
+            v,
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) if crate::keystore::has_key(&keystore, owner_pubkey)
+        ]
+    };
+
+    if !sled::Db::was_recovered(&db) {
+        // Before synchronizing init the database with the current Genesis utxos
+        sync::init_from_genesis(&db, &client, &keystore_filter).await?;
+    }
+
     // Synchronize the wallet with attached node.
-    sync::synchronize(&db, &client, &keystore).await?;
+    sync::synchronize(&db, &client, &keystore_filter).await?;
+
     println!(
         "Wallet database synchronized with node to height {:?}",
         sync::height(&db)?
@@ -84,7 +92,6 @@ async fn main() -> anyhow::Result<()> {
     // Print entire unspent outputs tree
     println!("###### Unspent outputs ###########");
     sync::print_unspent_tree(&db)?;
-    println!();
 
     // Dispatch to proper subcommand
     match cli.command {
