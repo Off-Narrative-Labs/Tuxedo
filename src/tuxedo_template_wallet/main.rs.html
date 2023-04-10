@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wallet/src/main.rs`."><title>main.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-63a85fc7cf22dee2.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_wallet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (28a29282f 2023-04-06)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-d4a1a279bad1a0c0.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-8e6affb8c73a5ff1.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_wallet/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wallet/src/main.rs`."><title>main.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-63a85fc7cf22dee2.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_wallet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (696aaad58 2023-04-09)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-1159a395118aa44e.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_template_wallet/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -239,11 +239,16 @@
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
 <a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-</span><span class="kw">use </span>std::path::PathBuf;
-
-<span class="kw">use </span>anyhow::anyhow;
+</span><span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>clap::Parser;
 <span class="kw">use </span>jsonrpsee::{
     core::client::ClientT,
@@ -252,9 +257,10 @@
 };
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>runtime::OuterVerifier;
+<span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>tuxedo_core::{
     types::{Output, OutputRef},
-    Verifier,
+    verifier::<span class="kw-2">*</span>,
 };
 
 <span class="kw">use </span>sp_core::H256;
@@ -263,6 +269,7 @@
 <span class="kw">mod </span>cli;
 <span class="kw">mod </span>keystore;
 <span class="kw">mod </span>money;
+<span class="kw">mod </span>output_filter;
 <span class="kw">mod </span>rpc;
 <span class="kw">mod </span>sync;
 
@@ -300,23 +307,31 @@
         </span>.expect(<span class="string">&quot;node should be able to return some genesis block&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Node&#39;s Genesis block::{:?}&quot;</span>, node_genesis_hash);
 
-    <span class="comment">// Get the expected genesis state to populate the database if it is new.
-    </span><span class="kw">let </span>expected_genesis_utxos = runtime::GenesisConfig::default().genesis_utxos;
-
     <span class="comment">// Open the local database
-    </span><span class="kw">let </span>db = sync::open_db(
-        db_path,
-        node_genesis_hash,
-        node_genesis_block,
-        expected_genesis_utxos,
-    )<span class="question-mark">?</span>;
+    </span><span class="kw">let </span>db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>num_blocks =
         sync::height(<span class="kw-2">&amp;</span>db)<span class="question-mark">?</span>.expect(<span class="string">&quot;db should be initialized automatically when opening.&quot;</span>);
     <span class="macro">println!</span>(<span class="string">&quot;Number of blocks in the db: {num_blocks}&quot;</span>);
 
+    <span class="comment">// The filter function that will determine whether the local database should
+    // track a given utxo is based on whether that utxo is privately owned by a
+    // key that is in our keystore.
+    </span><span class="kw">let </span>keystore_filter = |v: <span class="kw-2">&amp;</span>OuterVerifier| -&gt; bool {
+        <span class="macro">matches!</span>[
+            v,
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) <span class="kw">if </span><span class="kw">crate</span>::keystore::has_key(<span class="kw-2">&amp;</span>keystore, owner_pubkey)
+        ]
+    };
+
+    <span class="kw">if </span>!sled::Db::was_recovered(<span class="kw-2">&amp;</span>db) {
+        <span class="comment">// Before synchronizing init the database with the current Genesis utxos
+        </span>sync::init_from_genesis(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore_filter).<span class="kw">await</span><span class="question-mark">?</span>;
+    }
+
     <span class="comment">// Synchronize the wallet with attached node.
-    </span>sync::synchronize(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore).<span class="kw">await</span><span class="question-mark">?</span>;
+    </span>sync::synchronize(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore_filter).<span class="kw">await</span><span class="question-mark">?</span>;
+
     <span class="macro">println!</span>(
         <span class="string">&quot;Wallet database synchronized with node to height {:?}&quot;</span>,
         sync::height(<span class="kw-2">&amp;</span>db)<span class="question-mark">?
@@ -325,7 +340,6 @@
     <span class="comment">// Print entire unspent outputs tree
     </span><span class="macro">println!</span>(<span class="string">&quot;###### Unspent outputs ###########&quot;</span>);
     sync::print_unspent_tree(<span class="kw-2">&amp;</span>db)<span class="question-mark">?</span>;
-    <span class="macro">println!</span>();
 
     <span class="comment">// Dispatch to proper subcommand
     </span><span class="kw">match </span>cli.command {
