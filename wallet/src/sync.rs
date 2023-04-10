@@ -67,13 +67,17 @@ pub(crate) async fn init_from_genesis<F: Fn(&OuterVerifier) -> bool>(
 
     println!("The fetched genesis_utxos are {:?}", genesis_utxos);
 
-    let filtered_outputs_and_refs = genesis_utxos.iter().zip(genesis_utxo_refs).filter_map(|(output, output_ref)| {
-        if filter(&output.verifier) {
-            Some((output, output_ref))
-        } else {
-            None
-        }
-    });
+    let filtered_outputs_and_refs =
+        genesis_utxos
+            .iter()
+            .zip(genesis_utxo_refs)
+            .filter_map(|(output, output_ref)| {
+                if filter(&output.verifier) {
+                    Some((output, output_ref))
+                } else {
+                    None
+                }
+            });
 
     for (output, output_ref) in filtered_outputs_and_refs {
         // For now the wallet only supports simple coins, so skip anything else
@@ -287,13 +291,22 @@ pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
 
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
-async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(db: &Db, tx: Transaction, filter: &F) -> anyhow::Result<()> {
+async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
+    db: &Db,
+    tx: Transaction,
+    filter: &F,
+) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
     println!("syncing transaction {tx_hash:?}");
 
     println!("about to insert new outputs");
     // Insert all new outputs
-    for (index, output) in tx.outputs.iter().filter(|o| filter(&o.verifier)).enumerate() {
+    for (index, output) in tx
+        .outputs
+        .iter()
+        .filter(|o| filter(&o.verifier))
+        .enumerate()
+    {
         // For now the wallet only supports simple coins, so skip anything else
         let amount = match output.payload.extract::<Coin>() {
             Ok(Coin(amount)) => amount,

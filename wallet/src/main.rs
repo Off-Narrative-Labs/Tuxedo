@@ -72,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
     let keystore_filter = |v: &OuterVerifier| -> bool {
         matches![
             v,
-            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) if crate::keystore::has_key(&keystore, &owner_pubkey)
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) if crate::keystore::has_key(&keystore, owner_pubkey)
         ]
     };
 

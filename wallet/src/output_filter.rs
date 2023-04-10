@@ -1,6 +1,6 @@
 use runtime::{OuterVerifier, Output};
 use sp_core::H256;
-use tuxedo_core::{dynamic_typing::DynamicallyTypedData, types::OutputRef, verifier::*};
+use tuxedo_core::types::OutputRef;
 
 pub type OutputInfo = (Output, OutputRef);
 
@@ -44,6 +44,9 @@ impl OutputFilter for SigCheckFilter {
 
 mod tests {
     use super::*;
+
+    #[cfg(test)]
+    use tuxedo_core::{dynamic_typing::DynamicallyTypedData, verifier::*};
 
     pub struct TestSigCheckFilter;
     impl OutputFilter for TestSigCheckFilter {
