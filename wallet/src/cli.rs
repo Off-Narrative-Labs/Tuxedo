@@ -26,7 +26,7 @@ pub struct Cli {
     pub data_path: Option<PathBuf>,
 
     #[command(subcommand)]
-    pub command: Command,
+    pub command: Option<Command>,
 }
 
 /// The tasks supported by the wallet
@@ -75,12 +75,12 @@ pub enum Command {
         pub_key: H256,
     },
 
-    /// Synchronizes the wallet up to the tip of the chain, and does nothing else.
-    SyncOnly,
-
     /// For each key tracked by the wallet, shows the sum of all UTXO values
     /// owned by that key. This sum is sometimes known as the "balance".
     ShowBalance,
+
+    /// Show the complete list of UTXOs known to the wallet.
+    ShowAllOutputs,
 }
 
 #[derive(Debug, Args)]

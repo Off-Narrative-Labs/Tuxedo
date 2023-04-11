@@ -32,6 +32,8 @@ const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    env_logger::init();
+
     // Parse command line args
     let cli = Cli::parse();
 
@@ -84,20 +86,16 @@ async fn main() -> anyhow::Result<()> {
     // Synchronize the wallet with attached node.
     sync::synchronize(&db, &client, &keystore_filter).await?;
 
-    println!(
+    log::info!(
         "Wallet database synchronized with node to height {:?}",
         sync::height(&db)?
     );
 
-    // Print entire unspent outputs tree
-    println!("###### Unspent outputs ###########");
-    sync::print_unspent_tree(&db)?;
-
     // Dispatch to proper subcommand
     match cli.command {
-        Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
+        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(&client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
-        Command::VerifyCoin { output_ref } => {
+        Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
             // Print the details from storage
@@ -118,20 +116,20 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Command::SpendCoins(args) => money::spend_coins(&db, &client, &keystore, args).await,
-        Command::InsertKey { seed } => crate::keystore::insert_key(&keystore, &seed),
-        Command::GenerateKey { password } => {
+        Some(Command::SpendCoins(args)) => money::spend_coins(&db, &client, &keystore, args).await,
+        Some(Command::InsertKey { seed }) => crate::keystore::insert_key(&keystore, &seed),
+        Some(Command::GenerateKey { password }) => {
             crate::keystore::generate_key(&keystore, password)?;
             Ok(())
         }
-        Command::ShowKeys => {
+        Some(Command::ShowKeys) => {
             crate::keystore::get_keys(&keystore)?.for_each(|pubkey| {
                 println!("key: 0x{}", hex::encode(pubkey));
             });
 
             Ok(())
         }
-        Command::RemoveKey { pub_key } => {
+        Some(Command::RemoveKey { pub_key }) => {
             println!("CAUTION!!! About permanently remove {pub_key}. This action CANNOT BE REVERSED. Type \"proceed\" to confirm deletion.");
 
             let mut confirmation = String::new();
@@ -146,8 +144,7 @@ async fn main() -> anyhow::Result<()> {
                 Ok(())
             }
         }
-        Command::SyncOnly => Ok(()),
-        Command::ShowBalance => {
+        Some(Command::ShowBalance) => {
             println!("Balance Summary");
             let mut total = 0;
             let balances = sync::get_balances(&db)?;
@@ -159,7 +156,17 @@ async fn main() -> anyhow::Result<()> {
             println!("total      : {total}");
 
             Ok(())
-        }
+        },
+        Some(Command::ShowAllOutputs) => {
+            println!("###### Unspent outputs ###########");
+            sync::print_unspent_tree(&db)?;
+
+            Ok(())
+        },
+        None => {
+            log::info!("No Wallet Command invoked. Exiting.");
+            Ok(())
+        },
     }
 }
 
