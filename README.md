@@ -122,8 +122,23 @@ Then, in a separate terminal, experiment with the PoC wallet.
 # Confirm that a 100 token genesis utxo is present in storage
 ./target/release/tuxedo-template-wallet verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
 
-  000000000000000000000000000000000000000000000000000000000000000000000000:
-    Found coin worth 100 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+  000000000000000000000000000000000000000000000000000000000000000000000000: owner 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67, amount 100
+  Details of coin 000000000000000000000000000000000000000000000000000000000000000000000000:
+  Found in storage.  Value: 100, owned by 0xd2bf…df67
+  Found in local db. Value: 100, owned by 0xd2bf…df67
+
+# Generate a new key or insert a pre generated other key
+./target/release/tuxedo-template-wallet generate-key
+
+  Generated public key is f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b (5HamRMAa...)
+  Generated Phrase is decide city tattoo arrest jeans split main sad slam blame crack farm
+
+or to continue on with demo just insert the following generated key
+
+# Inserting new generated key
+./target/release/tuxedo-template-wallet insert-key "decide city tattoo arrest jeans split main sad slam blame crack farm"
+
+  The generated public key is f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b (5HamRMAa...)
 
 # Split the 100 tokens into two of values 20 and 25, burning the remaining 5
 ./target/release/tuxedo-template-wallet spend-coins \
@@ -131,31 +146,27 @@ Then, in a separate terminal, experiment with the PoC wallet.
   --output-amount 20 \
   --output-amount 25
 
-  f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1400000000:
-    Found coin worth 20 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
-  f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1401000000:
-    Found coin worth 25 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+  Created "337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c00000000" worth 20. owned by 0xd2bf…df67
+  Created "337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c01000000" worth 25. owned by 0xd2bf…df67
 
 
-# Further split the 25 token utxo into 10 and 5, burning the remaining 10
+# Further split the 25 token utxo into 10 and 5 given to a new address, burning the remaining 10
 ./target/release/tuxedo-template-wallet spend-coins \
-  --input f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1401000000 \
+  --input $UTXO_FROM_ABOVE! 337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c01000000 \
+  --recipient 0x42ef192744a0c9af409039e77b1b001e45f4f7553a7acd3b9dc06621c6a22a43 \
   --output-amount 10 \
   --output-amount 5
 
-  06fa6e2a1875ee6cab54e863a244bf2577dba8061782c20411f49168e0a18a9300000000:
-    Found coin worth 10 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
-  06fa6e2a1875ee6cab54e863a244bf2577dba8061782c20411f49168e0a18a9301000000:
-    Found coin worth 5 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+  Created "5bf5941daf1e1484b04ec7ee1d4c63012a0b244f8d0dc523368f6251bd823a8600000000" worth 10. owned by 0x42ef…2a43
+  Created "5bf5941daf1e1484b04ec7ee1d4c63012a0b244f8d0dc523368f6251bd823a8601000000" worth 5. owned by 0x42ef…2a43
 
 # Join the 20 token utxo and 10 token utxo back into a single 30 token utxo, burning nothing
 ./target/release/tuxedo-template-wallet spend-coins \
-  --input f15c546f47b2447ecebc7327e7670ee3e600cbebd3eb529549a585066c38fe1400000000 \
-  --input 06fa6e2a1875ee6cab54e863a244bf2577dba8061782c20411f49168e0a18a9300000000 \
+  --input 5bf5941daf1e1484b04ec7ee1d4c63012a0b244f8d0dc523368f6251bd823a8600000000 \
+  --input 337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c00000000 \
   --output-amount 30
 
-  f8ee7f42d81b749223da7a49838df414aef6f4343da59bc4798335d67886f13000000000:
-    Found coin worth 30 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+  Created "de8710e5b2bd5306b3cb238d8995b6e630a47189af6240b02d0e7140a3a8620400000000" worth 30. owned by 0xd2bf…df67
 ```
 
 ## Docker
