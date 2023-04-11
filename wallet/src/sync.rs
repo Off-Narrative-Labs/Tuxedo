@@ -225,10 +225,13 @@ pub(crate) fn get_unspent(db: &Db, output_ref: &OutputRef) -> anyhow::Result<Opt
 
 /// Picks an arbitrary set of unspent outputs from the database for spending.
 /// The set's token values must add up to at least the specified target value.
-/// 
+///
 /// The return value is None if the total value of the database is less than the target
 /// It is Some(Vec![...]) when it is possible
-pub(crate) fn get_arbitrary_unspent_set(db: &Db, target: u128) -> anyhow::Result<Option<Vec<OutputRef>>> {
+pub(crate) fn get_arbitrary_unspent_set(
+    db: &Db,
+    target: u128,
+) -> anyhow::Result<Option<Vec<OutputRef>>> {
     let wallet_unspent_tree = db.open_tree(UNSPENT)?;
 
     let mut total = 0u128;
@@ -247,7 +250,6 @@ pub(crate) fn get_arbitrary_unspent_set(db: &Db, target: u128) -> anyhow::Result
         total += amount;
         keepers.push(output_ref);
     }
-
 
     Ok(Some(keepers))
 }

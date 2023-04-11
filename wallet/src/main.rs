@@ -87,7 +87,6 @@ async fn main() -> anyhow::Result<()> {
     if cli.no_sync {
         log::warn!("Skipping sync with node. Using previously synced information.")
     } else {
-       
         sync::synchronize(&db, &client, &keystore_filter).await?;
 
         log::info!(
@@ -161,17 +160,17 @@ async fn main() -> anyhow::Result<()> {
             println!("total      : {total}");
 
             Ok(())
-        },
+        }
         Some(Command::ShowAllOutputs) => {
             println!("###### Unspent outputs ###########");
             sync::print_unspent_tree(&db)?;
 
             Ok(())
-        },
+        }
         None => {
             log::info!("No Wallet Command invoked. Exiting.");
             Ok(())
-        },
+        }
     }
 }
 

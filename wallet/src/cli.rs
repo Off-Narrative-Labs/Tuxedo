@@ -27,7 +27,7 @@ pub struct Cli {
 
     #[arg(long)]
     /// Skip the initial sync that the wallet typically performs with the node.
-    /// 
+    ///
     /// The wallet will use the latest data it had previously synced.
     pub no_sync: bool,
 
@@ -42,7 +42,7 @@ pub enum Command {
     AmoebaDemo,
 
     /// Verify that a particular coin exists.
-    /// 
+    ///
     /// Show its value and owner from both chain storage and the local database.
     VerifyCoin {
         /// A hex-encoded output reference
