@@ -58,12 +58,18 @@ pub async fn spend_coins(
         total_input_amount += amount;
     }
     //TODO filtering on a specific sender
-    while total_input_amount < total_output_amount {
-        let (output_ref, _owner_pubkey, amount) = sync::get_arbitrary_unspent(db)?;
-        all_input_refs.push(output_ref);
-        total_input_amount += amount;
-    }
 
+    // If the supplied inputs are not valuable enough to cover the output amount
+    // we select the rest arbitrarily from the local db. (In many cases, this will be all the inputs.)
+    if total_input_amount < total_output_amount {
+        match sync::get_arbitrary_unspent_set(db, total_output_amount - total_input_amount)? {
+            Some(more_inputs) => {
+                all_input_refs.extend(more_inputs);
+            },
+            None => Err(anyhow!("Not enough value in database to construct transaction"))?,
+        }
+    }
+    
     // Make sure each input decodes and is still present in the node's storage,
     // and then push to transaction.
     for output_ref in &all_input_refs {

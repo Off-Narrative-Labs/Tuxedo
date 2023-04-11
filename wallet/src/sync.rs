@@ -223,17 +223,33 @@ pub(crate) fn get_unspent(db: &Db, output_ref: &OutputRef) -> anyhow::Result<Opt
     Ok(Some(<(H256, u128)>::decode(&mut &ivec[..])?))
 }
 
-/// Picks an arbitrary unspent output out of the database for spending
-pub(crate) fn get_arbitrary_unspent(db: &Db) -> anyhow::Result<(OutputRef, H256, u128)> {
+/// Picks an arbitrary set of unspent outputs from the database for spending.
+/// The set's token values must add up to at least the specified target value.
+/// 
+/// The return value is None if the total value of the database is less than the target
+/// It is Some(Vec![...]) when it is possible
+pub(crate) fn get_arbitrary_unspent_set(db: &Db, target: u128) -> anyhow::Result<Option<Vec<OutputRef>>> {
     let wallet_unspent_tree = db.open_tree(UNSPENT)?;
-    let Some((output_ref_ivec, owner_amount_ivec)) = wallet_unspent_tree.first()? else {
-        return Err(anyhow!("No more unspent outputs in database"));
-    };
 
-    let output_ref = OutputRef::decode(&mut &output_ref_ivec[..])?;
-    let (owner_pubkey, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
+    let mut total = 0u128;
+    let mut keepers = Vec::new();
 
-    Ok((output_ref, owner_pubkey, amount))
+    let mut unspent_iter = wallet_unspent_tree.iter();
+    while total < target {
+        let Some(pair) = unspent_iter.next() else {
+            return Ok(None);
+        };
+
+        let (output_ref_ivec, owner_amount_ivec) = pair?;
+        let output_ref = OutputRef::decode(&mut &output_ref_ivec[..])?;
+        let (_owner_pubkey, amount) = <(H256, u128)>::decode(&mut &owner_amount_ivec[..])?;
+
+        total += amount;
+        keepers.push(output_ref);
+    }
+
+
+    Ok(Some(keepers))
 }
 
 /// Gets the block hash from the local database given a block height. Similar the Node's RPC.
