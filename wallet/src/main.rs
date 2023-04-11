@@ -32,7 +32,7 @@ const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    env_logger::init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     // Parse command line args
     let cli = Cli::parse();
@@ -59,14 +59,14 @@ async fn main() -> anyhow::Result<()> {
     let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client)
         .await?
         .expect("node should be able to return some genesis block");
-    println!("Node's Genesis block::{:?}", node_genesis_hash);
+    log::debug!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
     let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
-    println!("Number of blocks in the db: {num_blocks}");
+    log::info!("Number of blocks in the db: {num_blocks}");
 
     // The filter function that will determine whether the local database should
     // track a given utxo is based on whether that utxo is privately owned by a
@@ -83,13 +83,18 @@ async fn main() -> anyhow::Result<()> {
         sync::init_from_genesis(&db, &client, &keystore_filter).await?;
     }
 
-    // Synchronize the wallet with attached node.
-    sync::synchronize(&db, &client, &keystore_filter).await?;
+    // Synchronize the wallet with attached node unless instructed otherwise.
+    if cli.no_sync {
+        log::warn!("Skipping sync with node. Using previously synced information.")
+    } else {
+       
+        sync::synchronize(&db, &client, &keystore_filter).await?;
 
-    log::info!(
-        "Wallet database synchronized with node to height {:?}",
-        sync::height(&db)?
-    );
+        log::info!(
+            "Wallet database synchronized with node to height {:?}",
+            sync::height(&db)?.expect("We just synced, so there is a height available")
+        );
+    }
 
     // Dispatch to proper subcommand
     match cli.command {

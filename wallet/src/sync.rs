@@ -65,7 +65,7 @@ pub(crate) async fn init_from_genesis<F: Fn(&OuterVerifier) -> bool>(
     .try_collect::<Vec<_>>()
     .await?;
 
-    println!("The fetched genesis_utxos are {:?}", genesis_utxos);
+    log::debug!("The fetched genesis_utxos are {:?}", genesis_utxos);
 
     let filtered_outputs_and_refs =
         genesis_utxos
@@ -125,17 +125,16 @@ pub(crate) fn open_db(
             .get(0.encode())?
             .expect("We know there are some blocks, so there should be a 0th block.");
         let wallet_genesis_hash = H256::decode(&mut &wallet_genesis_ivec[..])?;
-        println!("Found existing database.");
+        log::debug!("Found existing database.");
         if expected_genesis_hash != wallet_genesis_hash {
-            println!("Wallet's genesis does not match expected. Aborting database opening.");
+            log::error!("Wallet's genesis does not match expected. Aborting database opening.");
             return Err(anyhow!("Node reports a different genesis block than wallet. Wallet: {wallet_genesis_hash:?}. Expected: {expected_genesis_hash:?}. Aborting all operations"));
         }
         return Ok(db);
     }
 
     // If there are no local blocks yet, initialize the tables
-    println!("Found empty database.");
-    println!(
+    log::info!(
         "Initializing fresh sync from genesis {:?}",
         expected_genesis_hash
     );
@@ -158,7 +157,7 @@ pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
     client: &HttpClient,
     filter: &F,
 ) -> anyhow::Result<()> {
-    println!("Synchronizing wallet with node.");
+    log::debug!("Synchronizing wallet with node.");
 
     // Start the algorithm at the height that the wallet currently thinks is best.
     // Fetch the block hash at that height from both the wallet's local db and the node
@@ -173,7 +172,7 @@ pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
     // When the wallet and the node agree on the best block, the wallet can re-sync following the node.
     // In the best case, where there is no re-org, this loop will execute zero times.
     while Some(wallet_hash) != node_hash {
-        println!("Divergence at height {height}. Node reports block: {node_hash:?}. Reverting wallet block: {wallet_hash:?}.");
+        log::debug!("Divergence at height {height}. Node reports block: {node_hash:?}. Reverting wallet block: {wallet_hash:?}.");
 
         unapply_highest_block(db).await?;
 
@@ -186,13 +185,13 @@ pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
 
     // Orphaned blocks (if any) have been discarded at this point.
     // So we prepare our variables for forward syncing.
-    println!("Resyncing from common ancestor {node_hash:?} - {wallet_hash:?}");
+    log::debug!("Resyncing from common ancestor {node_hash:?} - {wallet_hash:?}");
     height += 1;
     node_hash = rpc::node_get_block_hash(height, client).await?;
 
     // Now that we have checked for reorgs and rolled back any orphan blocks, we can go ahead and sync forward.
     while let Some(hash) = node_hash {
-        println!("Forward syncing height {height}, hash {hash:?}");
+        log::debug!("Forward syncing height {height}, hash {hash:?}");
 
         // Fetch the entire block in order to apply its transactions
         let block = rpc::node_get_block(hash, client)
@@ -207,7 +206,7 @@ pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
         node_hash = rpc::node_get_block_hash(height, client).await?;
     }
 
-    println!("Done with forward sync up to {}", height - 1);
+    log::debug!("Done with forward sync up to {}", height - 1);
 
     Ok(())
 }
@@ -272,7 +271,7 @@ pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
     block_hash: H256,
     filter: &F,
 ) -> anyhow::Result<()> {
-    // println!("Applying Block {:?}, Block_Hash {:?}", b, block_hash);
+    log::debug!("Applying Block {:?}, Block_Hash {:?}", b, block_hash);
     // Write the hash to the block_hashes table
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
     wallet_block_hashes_tree.insert(b.header.number.encode(), block_hash.encode())?;
@@ -297,9 +296,8 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
     filter: &F,
 ) -> anyhow::Result<()> {
     let tx_hash = BlakeTwo256::hash_of(&tx.encode());
-    println!("syncing transaction {tx_hash:?}");
+    log::debug!("syncing transaction {tx_hash:?}");
 
-    println!("about to insert new outputs");
     // Insert all new outputs
     for (index, output) in tx
         .outputs
@@ -327,7 +325,7 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
         }
     }
 
-    println!("about to spend all inputs");
+    log::debug!("about to spend all inputs");
     // Spend all the inputs
     for Input { output_ref, .. } in tx.inputs {
         spend_output(db, &output_ref)?;

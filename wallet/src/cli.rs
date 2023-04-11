@@ -25,6 +25,12 @@ pub struct Cli {
     /// Default value is platform specific
     pub data_path: Option<PathBuf>,
 
+    #[arg(long)]
+    /// Skip the initial sync that the wallet typically performs with the node.
+    /// 
+    /// The wallet will use the latest data it had previously synced.
+    pub no_sync: bool,
+
     #[command(subcommand)]
     pub command: Option<Command>,
 }
