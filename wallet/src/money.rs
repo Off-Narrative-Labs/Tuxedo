@@ -25,7 +25,7 @@ pub async fn spend_coins(
     keystore: &LocalKeystore,
     args: SpendArgs,
 ) -> anyhow::Result<()> {
-    println!("The args are:: {:?}", args);
+    log::debug!("The args are:: {:?}", args);
 
     // Construct a template Transaction to push coins into later
     let mut transaction = Transaction {
@@ -101,7 +101,7 @@ pub async fn spend_coins(
     let params = rpc_params![genesis_spend_hex];
     let genesis_spend_response: Result<String, _> =
         client.request("author_submitExtrinsic", params).await;
-    println!(
+    log::info!(
         "Node's response to spend transaction: {:?}",
         genesis_spend_response
     );
