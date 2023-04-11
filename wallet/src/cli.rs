@@ -41,7 +41,9 @@ pub enum Command {
     /// Demonstrate creating an amoeba and performing mitosis on it.
     AmoebaDemo,
 
-    /// Verify that a particular coin exists in storage. Show its value and owner.
+    /// Verify that a particular coin exists.
+    /// 
+    /// Show its value and owner from both chain storage and the local database.
     VerifyCoin {
         /// A hex-encoded output reference
         #[arg(value_parser = output_ref_from_string)]
