@@ -42,7 +42,9 @@ pub enum Command {
         output_ref: OutputRef,
     },
 
-    /// Spend some coins. For now, all outputs go to the same recipient.
+    /// Spend some coins.
+    ///
+    /// For now, all outputs in a single transaction go to the same recipient. FixMe: #62
     SpendCoins(SpendArgs),
 
     /// Insert a private key into the keystore to later use when signing transactions.
