@@ -133,7 +133,7 @@ Then, in a separate terminal, experiment with the PoC wallet.
   Generated public key is f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b (5HamRMAa...)
   Generated Phrase is decide city tattoo arrest jeans split main sad slam blame crack farm
 
-or to continue on with demo just insert the following generated key
+# or to continue on with demo just insert the following generated key
 
 # Inserting new generated key
 ./target/release/tuxedo-template-wallet insert-key "decide city tattoo arrest jeans split main sad slam blame crack farm"
