@@ -77,8 +77,8 @@ Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their sup
 As part of this grant we will deliver three milestones. More details are available in the [Tuxedo grant application](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md).
 
 - ✅ Core Tuxedo Functionality (complete)
-- 🏗️ User wallet (in development)
-- 🔜 Full Documentation and Tutorial (not yet started)
+- ✅ Template wallet (complete)
+- 🏗️ Full Documentation and Tutorial (in progress)
 
 After the grant work is complete we intend to continue developing Tuxedo. The future is less clear, but our current ideas include:
 
