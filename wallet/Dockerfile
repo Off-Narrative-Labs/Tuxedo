@@ -19,18 +19,16 @@ COPY --from=builder /wallet/target/release/tuxedo-template-wallet /usr/local/bin
 RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
   mkdir -p /wallet-data /node-dev/.local/share && \
   chown -R node-dev:node-dev /wallet-data && \
-  # We may eventually want to make a wallet data directory available outside the container,
-  # But currently keys just live in the code.
-  #ln -s /wallet-data /node-dev/.local/share/node-template/todo/what/is/the/real/path/for/wallet/data && \
+  # Make the wallet data directory available outside the container.
+  ln -s /wallet-data /node-dev/.local/share/tuxedo-template-wallet && \
   # unclutter and minimize the attack surface
   rm -rf /usr/bin /usr/sbin 
-  # TODO this is a good check to do once we actually have a --version flag
   # check if executable works in this container
-  #/usr/local/bin/tuxedo-template-wallet --version
+  /usr/local/bin/tuxedo-template-wallet --version
 
 USER node-dev
 
 EXPOSE 9933 9944
-# VOLUME ["/wallet-data"]
+VOLUME ["/wallet-data"]
 
 ENTRYPOINT ["/usr/local/bin/tuxedo-template-wallet"]

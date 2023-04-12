@@ -233,7 +233,7 @@ fn default_data_path() -> PathBuf {
 
     directories::ProjectDirs::from(qualifier, organization, application)
         .expect("app directories exist on all supported platforms; qed")
-        .config_dir()
+        .data_dir()
         .into()
 }
 
