@@ -1,12 +1,17 @@
 //! An Order-book based dex to swap between two hard-coded tokens A and B.
-//! 
+//!
 //! For simplicity, we don't allow partial fills right now.
 
-use tuxedo_core::{SimpleConstraintChecker, types::Output, Verifier, dynamic_typing::{DynamicallyTypedData, UtxoData, DynamicTypingError}, ensure, ConstraintChecker};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+use tuxedo_core::{
+    dynamic_typing::{DynamicTypingError, DynamicallyTypedData, UtxoData},
+    ensure,
+    types::Output,
+    ConstraintChecker, SimpleConstraintChecker, Verifier,
+};
 
 #[cfg_attr(
     feature = "std",
@@ -92,7 +97,7 @@ enum DexError {
 }
 
 impl From<DynamicTypingError> for DexError {
-    fn from(value: DynamicTypingError) -> Self {
+    fn from(_value: DynamicTypingError) -> Self {
         Self::TypeError
     }
 }
@@ -136,7 +141,10 @@ impl SimpleConstraintChecker for MakeOrder {
     ) -> Result<TransactionPriority, Self::Error> {
         // There should be a single order as the output
         ensure!(!output_data.is_empty(), DexError::OrderMissing);
-        ensure!(output_data.len() == 1, DexError::TooManyOutputsWhenMakingOrder);
+        ensure!(
+            output_data.len() == 1,
+            DexError::TooManyOutputsWhenMakingOrder
+        );
         let DexItem::Order(order) = output_data[1].extract()? else {
             Err(DexError::TypeError)?
         };
@@ -148,10 +156,10 @@ impl SimpleConstraintChecker for MakeOrder {
             match input.extract::<DexItem>()? {
                 DexItem::TokenA(amount) if order.side == SeekingTokenB => {
                     total_input_amount += amount;
-                },
+                }
                 DexItem::TokenB(amount) if order.side == SeekingTokenA => {
                     total_input_amount += amount;
-                },
+                }
                 _ => Err(DexError::WrongCollateralToOpenOrder)?,
             }
         }
@@ -179,7 +187,10 @@ impl ConstraintChecker for MatchOrders {
         // The input and output slices can be arbitrarily long. We
         // assume there is a 1:1 correspondence in the sorting such that
         // the first output is the coin associated with the first order etc.
-        ensure!(inputs.len() == outputs.len(), DexError::OrderAndPayoutCountDiffer);
+        ensure!(
+            inputs.len() == outputs.len(),
+            DexError::OrderAndPayoutCountDiffer
+        );
 
         let mut total_a_required = 0;
         let mut total_b_required = 0;
@@ -187,7 +198,6 @@ impl ConstraintChecker for MatchOrders {
         let mut b_so_far = 0;
 
         for (input, output) in inputs.iter().zip(outputs) {
-
             let DexItem::Order(order) = input.payload.extract()? else {
                 Err(DexError::TypeError)?
             };
@@ -201,9 +211,12 @@ impl ConstraintChecker for MatchOrders {
                         Err(DexError::TypeError)?
                     };
 
-                    ensure!(payout_amount == order.token_a, DexError::PayoutDoesNotSatisfyOrder);
+                    ensure!(
+                        payout_amount == order.token_a,
+                        DexError::PayoutDoesNotSatisfyOrder
+                    );
                     // TODO ensure that the payout was given to the right owner
-                },
+                }
                 SeekingTokenB => {
                     a_so_far += order.token_a;
                     total_b_required += order.token_b;
@@ -212,20 +225,27 @@ impl ConstraintChecker for MatchOrders {
                         Err(DexError::TypeError)?
                     };
 
-                    ensure!(payout_amount == order.token_b, DexError::PayoutDoesNotSatisfyOrder);
+                    ensure!(
+                        payout_amount == order.token_b,
+                        DexError::PayoutDoesNotSatisfyOrder
+                    );
                     // TODO ensure that the payout was given to the right owner
-                },
+                }
             }
 
             // TODO Allow the match maker to claim the spread as a reward.
-
         }
 
         // Make sure the amounts in the orders actually match and satisfy each other.
-        ensure!(a_so_far >= total_a_required, DexError::InsufficientTokenAForMatch);
-        ensure!(b_so_far >= total_b_required, DexError::InsufficientTokenBForMatch);
+        ensure!(
+            a_so_far >= total_a_required,
+            DexError::InsufficientTokenAForMatch
+        );
+        ensure!(
+            b_so_far >= total_b_required,
+            DexError::InsufficientTokenBForMatch
+        );
 
         Ok(0)
-
     }
 }
