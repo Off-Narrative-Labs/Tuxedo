@@ -38,3 +38,17 @@ struct Order {
     /// Which side of the trade this order maker is on
     side: Side,
 }
+
+/// The Constraint checking logic for the Dex. We are taking the approach of a single
+/// constraint checker with multiple variants.
+enum DexConstraitChecker {
+    /// Open a new order in the order book
+    MakeOrder,
+    /// Match existing open orders against one another
+    MatchOrders,
+    /// Fullfil existing orders in the order book with the supplied funds.
+    /// This is an atomic combination of making and order and matching it with
+    /// an existing order.
+    TakeOrders,
+}
+
