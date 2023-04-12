@@ -2,7 +2,7 @@
 //! 
 //! For simplicity, we don't allow partial fills right now.
 
-use tuxedo_core::{SimpleConstraintChecker, dynamic_typing::{DynamicallyTypedData, UtxoData, DynamicTypingError}, ensure};
+use tuxedo_core::{SimpleConstraintChecker, types::Output, Verifier, dynamic_typing::{DynamicallyTypedData, UtxoData, DynamicTypingError}, ensure, ConstraintChecker};
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -56,6 +56,8 @@ struct Order {
     token_b: u128,
     /// Which side of the trade this order maker is on
     side: Side,
+    //TODO another field to hold the verifier that will protect the
+    // output coin in the event of a successful match.
 }
 
 #[cfg_attr(
@@ -78,6 +80,15 @@ enum DexError {
     WrongCollateralToOpenOrder,
     /// The coins provided do not have enough combined value to back the order that you attempted to open.
     NotEnoughCollateralToOpenOrder,
+    /// This transaction has a different number of input orders than output payouts.
+    /// When matching orders, the number of inputs and outputs must be equal.
+    OrderAndPayoutCountDiffer,
+    /// This transaction tries to match an order but provides an incorrect payout.
+    PayoutDoesNotSatisfyOrder,
+    /// The amount of token A supplied by the orders is not enough to match with the demand.
+    InsufficientTokenAForMatch,
+    /// The amount of token B supplied by the orders is not enough to match with the demand.
+    InsufficientTokenBForMatch,
 }
 
 impl From<DynamicTypingError> for DexError {
@@ -91,33 +102,31 @@ impl From<DynamicTypingError> for DexError {
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-/// The Constraint checking logic for the Dex. We are taking the approach of a single
-/// constraint checker with multiple variants.
-enum DexConstraintChecker {
-    /// Open a new order in the order book
-    MakeOrder,
-    /// Match existing open orders against one another
-    MatchOrders,
-    /// Fullfil existing orders in the order book with the supplied funds.
-    /// This is an atomic combination of making and order and matching it with
-    /// an existing order.
-    TakeOrders,
-    /// Cancel an existing open order
-    /// This is similar to taking your own order except for maybe things like fees.
-    CancelOrder,
-}
+/// The Constraint checking logic for opening a new order.
+struct MakeOrder;
 
 #[cfg_attr(
     feature = "std",
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-/// A secondary constraint checker that allows minting tokens A and B
-/// This one is only useful for test networks. Of course it kills scarcity.
-struct DexTokenMinter;
-//TODO impl methods on this guy
+/// Constraint checking logic for matching existing open orders against one another
+struct MatchOrders;
 
-impl SimpleConstraintChecker for DexConstraintChecker {
+// The following lines brainstorm some other constraint checkers that could be added
+// but currently are not implemented.
+// /// Fullfil existing orders in the order book with the supplied funds.
+// /// This is an atomic combination of making and order and matching it with
+// /// an existing order.
+// struct TakeOrders;
+// /// Cancel an existing open order
+// /// This is similar to taking your own order except for maybe things like fees.
+// struct CancelOrder;
+// /// A secondary constraint checker that allows minting tokens A and B
+// /// This one is only useful for test networks. Of course it kills scarcity.
+// struct DexTokenMinter;
+
+impl SimpleConstraintChecker for MakeOrder {
     type Error = DexError;
 
     fn check(
@@ -125,47 +134,98 @@ impl SimpleConstraintChecker for DexConstraintChecker {
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        match self {
-            DexConstraintChecker::MakeOrder => {
-                // There should be a single order as the output
-                ensure!(!output_data.is_empty(), DexError::OrderMissing);
-                ensure!(output_data.len() == 1, DexError::TooManyOutputsWhenMakingOrder);
-                let DexItem::Order(order) = output_data[1].extract()? else {
-                    DexError::TypeError?
-                };
+        // There should be a single order as the output
+        ensure!(!output_data.is_empty(), DexError::OrderMissing);
+        ensure!(output_data.len() == 1, DexError::TooManyOutputsWhenMakingOrder);
+        let DexItem::Order(order) = output_data[1].extract()? else {
+            Err(DexError::TypeError)?
+        };
 
-                // There may be many inputs and they should all be tokens whose combined value
-                // equals or exceeds the amount of token they need to provide for this order
-                let mut total_input_amount = 0;
-                for input in input_data {
-                    match input.extract::<DexItem>()? {
-                        DexItem::TokenA(amount) if order.side == SeekingTokenB => {
-                            total_input_amount += amount;
-                        },
-                        DexItem::TokenB(amount) if order.side == SeekingTokenA => {
-                            total_input_amount += amount;
-                        },
-                        _ => DexError::WrongCollateralToOpenOrder?,
-                    }
-                }
-
-                let required_input_amount = match order.side {
-                    SeekingTokenA => order.token_b,
-                    SeekingTokenB => order.token_a,
-                };
-                if total_input_amount < required_input_amount {
-                    DexError::NotEnoughCollateralToOpenOrder?
-                }
-
-                Ok(0)
-            },
-            DexConstraintChecker::MatchOrders => todo!(),
-            DexConstraintChecker::TakeOrders => todo!(),
-            DexConstraintChecker::CancelOrder => todo!(),
+        // There may be many inputs and they should all be tokens whose combined value
+        // equals or exceeds the amount of token they need to provide for this order
+        let mut total_input_amount = 0;
+        for input in input_data {
+            match input.extract::<DexItem>()? {
+                DexItem::TokenA(amount) if order.side == SeekingTokenB => {
+                    total_input_amount += amount;
+                },
+                DexItem::TokenB(amount) if order.side == SeekingTokenA => {
+                    total_input_amount += amount;
+                },
+                _ => Err(DexError::WrongCollateralToOpenOrder)?,
+            }
         }
+
+        let required_input_amount = match order.side {
+            SeekingTokenA => order.token_b,
+            SeekingTokenB => order.token_a,
+        };
+        if total_input_amount < required_input_amount {
+            Err(DexError::NotEnoughCollateralToOpenOrder)?
+        }
+
+        Ok(0)
     }
 }
 
-// impl DexConstraintChecker {
-//     fn make_order
-// }
+impl ConstraintChecker for MatchOrders {
+    type Error = DexError;
+
+    fn check<V: Verifier>(
+        &self,
+        inputs: &[Output<V>],
+        outputs: &[Output<V>],
+    ) -> Result<TransactionPriority, Self::Error> {
+        // The input and output slices can be arbitrarily long. We
+        // assume there is a 1:1 correspondence in the sorting such that
+        // the first output is the coin associated with the first order etc.
+        ensure!(inputs.len() == outputs.len(), DexError::OrderAndPayoutCountDiffer);
+
+        let mut total_a_required = 0;
+        let mut total_b_required = 0;
+        let mut a_so_far = 0;
+        let mut b_so_far = 0;
+
+        for (input, output) in inputs.iter().zip(outputs) {
+
+            let DexItem::Order(order) = input.payload.extract()? else {
+                Err(DexError::TypeError)?
+            };
+
+            match order.side {
+                SeekingTokenA => {
+                    total_a_required += order.token_a;
+                    b_so_far += order.token_b;
+
+                    let DexItem::TokenA(payout_amount) = output.payload.extract()? else {
+                        Err(DexError::TypeError)?
+                    };
+
+                    ensure!(payout_amount == order.token_a, DexError::PayoutDoesNotSatisfyOrder);
+                    // TODO ensure that the payout was given to the right owner
+                },
+                SeekingTokenB => {
+                    a_so_far += order.token_a;
+                    total_b_required += order.token_b;
+
+                    let DexItem::TokenB(payout_amount) = output.payload.extract()? else {
+                        Err(DexError::TypeError)?
+                    };
+
+                    ensure!(payout_amount == order.token_b, DexError::PayoutDoesNotSatisfyOrder);
+                    // TODO ensure that the payout was given to the right owner
+                },
+            }
+
+            // TODO Allow the match maker to claim the spread as a reward.
+
+        }
+
+        // Make sure the amounts in the orders actually match and satisfy each other.
+        ensure!(a_so_far >= total_a_required, DexError::InsufficientTokenAForMatch);
+        ensure!(b_so_far >= total_b_required, DexError::InsufficientTokenBForMatch);
+
+        Ok(0)
+
+    }
+}
