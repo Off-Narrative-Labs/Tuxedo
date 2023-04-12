@@ -29,7 +29,7 @@ sp-version = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2
 sp-timestamp = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 
 # These were added for Aura / Grandpa API support
-hex-literal = "0.3.4"
+hex-literal = "0.4.1"
 sp-consensus-aura = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 sp-application-crypto = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}
 sp-consensus-grandpa = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03", default_features = false}

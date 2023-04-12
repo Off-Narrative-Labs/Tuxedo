@@ -32,6 +32,7 @@ pub mod amoeba;
 pub mod kitties;
 pub mod money;
 mod poe;
+mod dex;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
