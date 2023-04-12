@@ -249,3 +249,55 @@ impl ConstraintChecker for MatchOrders {
         Ok(0)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use tuxedo_core::dynamic_typing::testing::Bogus;
+
+    #[test]
+    fn opening_an_order_seeking_a_works() {
+
+    }
+
+    #[test]
+    fn opening_order_with_no_inputs_fails() {
+
+    }
+
+    #[test]
+    fn opening_order_with_no_outputs_fails() {
+
+    }
+
+    #[test]
+    fn opening_order_with_insufficient_collateral_fails() {
+
+    }
+
+    #[test]
+    fn matching_two_orders_together_works() {
+
+    }
+
+    #[test]
+    fn bad_match_not_enough_a() {
+
+    }
+
+    #[test]
+    fn bad_match_not_enough_b() {
+
+    }
+
+    #[test]
+    fn match_with_bad_payout() {
+
+    }
+
+    #[test]
+    fn match_with_different_numbers_of_payouts_and_orders() {
+        
+    }
+
+}
