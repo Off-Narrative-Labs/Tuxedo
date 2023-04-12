@@ -165,11 +165,13 @@ docker run --network host ghcr.io/off-narrative-labs/tuxedo --dev
 # In a separate terminal, explore the PoC wallet's CLI
 docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet --help
 
-# Use the PoC wallet to confirm that a 100 token genesis utxo is present in storage
-docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
+# Use the PoC wallet to confirm that a 100 token genesis utxo is present
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet show-balance
 
-  000000000000000000000000000000000000000000000000000000000000000000000000:
-    Found coin worth 100 units owned by 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67
+Balance Summary
+0xd2bf…df67: 100
+--------------------
+total      : 100
 ```
 
 More example commands are listed above in the section on [running locally](#building-and-running-locally). They all work with docker as well.
