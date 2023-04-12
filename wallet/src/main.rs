@@ -32,6 +32,8 @@ const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     // Parse command line args
     let cli = Cli::parse();
 
@@ -57,14 +59,14 @@ async fn main() -> anyhow::Result<()> {
     let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client)
         .await?
         .expect("node should be able to return some genesis block");
-    println!("Node's Genesis block::{:?}", node_genesis_hash);
+    log::debug!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
     let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
-    println!("Number of blocks in the db: {num_blocks}");
+    log::info!("Number of blocks in the db: {num_blocks}");
 
     // The filter function that will determine whether the local database should
     // track a given utxo is based on whether that utxo is privately owned by a
@@ -81,23 +83,23 @@ async fn main() -> anyhow::Result<()> {
         sync::init_from_genesis(&db, &client, &keystore_filter).await?;
     }
 
-    // Synchronize the wallet with attached node.
-    sync::synchronize(&db, &client, &keystore_filter).await?;
+    // Synchronize the wallet with attached node unless instructed otherwise.
+    if cli.no_sync {
+        log::warn!("Skipping sync with node. Using previously synced information.")
+    } else {
+        sync::synchronize(&db, &client, &keystore_filter).await?;
 
-    println!(
-        "Wallet database synchronized with node to height {:?}",
-        sync::height(&db)?
-    );
-
-    // Print entire unspent outputs tree
-    println!("###### Unspent outputs ###########");
-    sync::print_unspent_tree(&db)?;
+        log::info!(
+            "Wallet database synchronized with node to height {:?}",
+            sync::height(&db)?.expect("We just synced, so there is a height available")
+        );
+    }
 
     // Dispatch to proper subcommand
     match cli.command {
-        Command::AmoebaDemo => amoeba::amoeba_demo(&client).await,
+        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(&client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
-        Command::VerifyCoin { output_ref } => {
+        Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
             // Print the details from storage
@@ -118,20 +120,20 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Command::SpendCoins(args) => money::spend_coins(&db, &client, &keystore, args).await,
-        Command::InsertKey { seed } => crate::keystore::insert_key(&keystore, &seed),
-        Command::GenerateKey { password } => {
+        Some(Command::SpendCoins(args)) => money::spend_coins(&db, &client, &keystore, args).await,
+        Some(Command::InsertKey { seed }) => crate::keystore::insert_key(&keystore, &seed),
+        Some(Command::GenerateKey { password }) => {
             crate::keystore::generate_key(&keystore, password)?;
             Ok(())
         }
-        Command::ShowKeys => {
+        Some(Command::ShowKeys) => {
             crate::keystore::get_keys(&keystore)?.for_each(|pubkey| {
                 println!("key: 0x{}", hex::encode(pubkey));
             });
 
             Ok(())
         }
-        Command::RemoveKey { pub_key } => {
+        Some(Command::RemoveKey { pub_key }) => {
             println!("CAUTION!!! About permanently remove {pub_key}. This action CANNOT BE REVERSED. Type \"proceed\" to confirm deletion.");
 
             let mut confirmation = String::new();
@@ -146,8 +148,7 @@ async fn main() -> anyhow::Result<()> {
                 Ok(())
             }
         }
-        Command::SyncOnly => Ok(()),
-        Command::ShowBalance => {
+        Some(Command::ShowBalance) => {
             println!("Balance Summary");
             let mut total = 0;
             let balances = sync::get_balances(&db)?;
@@ -158,6 +159,16 @@ async fn main() -> anyhow::Result<()> {
             println!("--------------------");
             println!("total      : {total}");
 
+            Ok(())
+        }
+        Some(Command::ShowAllOutputs) => {
+            println!("###### Unspent outputs ###########");
+            sync::print_unspent_tree(&db)?;
+
+            Ok(())
+        }
+        None => {
+            log::info!("No Wallet Command invoked. Exiting.");
             Ok(())
         }
     }

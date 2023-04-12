@@ -25,8 +25,14 @@ pub struct Cli {
     /// Default value is platform specific
     pub data_path: Option<PathBuf>,
 
+    #[arg(long)]
+    /// Skip the initial sync that the wallet typically performs with the node.
+    ///
+    /// The wallet will use the latest data it had previously synced.
+    pub no_sync: bool,
+
     #[command(subcommand)]
-    pub command: Command,
+    pub command: Option<Command>,
 }
 
 /// The tasks supported by the wallet
@@ -35,7 +41,9 @@ pub enum Command {
     /// Demonstrate creating an amoeba and performing mitosis on it.
     AmoebaDemo,
 
-    /// Verify that a particular coin exists in storage. Show its value and owner.
+    /// Verify that a particular coin exists.
+    ///
+    /// Show its value and owner from both chain storage and the local database.
     VerifyCoin {
         /// A hex-encoded output reference
         #[arg(value_parser = output_ref_from_string)]
@@ -75,12 +83,12 @@ pub enum Command {
         pub_key: H256,
     },
 
-    /// Synchronizes the wallet up to the tip of the chain, and does nothing else.
-    SyncOnly,
-
     /// For each key tracked by the wallet, shows the sum of all UTXO values
     /// owned by that key. This sum is sometimes known as the "balance".
     ShowBalance,
+
+    /// Show the complete list of UTXOs known to the wallet.
+    ShowAllOutputs,
 }
 
 #[derive(Debug, Args)]

@@ -77,8 +77,8 @@ Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their sup
 As part of this grant we will deliver three milestones. More details are available in the [Tuxedo grant application](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md).
 
 - ✅ Core Tuxedo Functionality (complete)
-- 🏗️ User wallet (in development)
-- 🔜 Full Documentation and Tutorial (not yet started)
+- ✅ Template wallet (complete)
+- 🏗️ Full Documentation and Tutorial (in progress)
 
 After the grant work is complete we intend to continue developing Tuxedo. The future is less clear, but our current ideas include:
 
@@ -119,30 +119,16 @@ Then, in a separate terminal, experiment with the PoC wallet.
 # Check out the minimal PoC CLI
 ./target/release/tuxedo-template-wallet --help
 
-# Confirm that a 100 token genesis utxo is present in storage
-./target/release/tuxedo-template-wallet verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
+# Check your balance
+./target/release/tuxedo-template-wallet show-balance
 
-  000000000000000000000000000000000000000000000000000000000000000000000000: owner 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67, amount 100
-  Details of coin 000000000000000000000000000000000000000000000000000000000000000000000000:
-  Found in storage.  Value: 100, owned by 0xd2bf…df67
-  Found in local db. Value: 100, owned by 0xd2bf…df67
+Balance Summary
+0xd2bf…df67: 100
+--------------------
+total      : 100
 
-# Generate a new key or insert a pre generated other key
-./target/release/tuxedo-template-wallet generate-key
-
-  Generated public key is f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b (5HamRMAa...)
-  Generated Phrase is decide city tattoo arrest jeans split main sad slam blame crack farm
-
-# or to continue on with demo just insert the following generated key
-
-# Inserting new generated key
-./target/release/tuxedo-template-wallet insert-key "decide city tattoo arrest jeans split main sad slam blame crack farm"
-
-  The generated public key is f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b (5HamRMAa...)
-
-# Split the 100 tokens into two of values 20 and 25, burning the remaining 5
+# Split the 100 genesis tokens into two of values 20 and 25, burning the remaining 55
 ./target/release/tuxedo-template-wallet spend-coins \
-  --input 000000000000000000000000000000000000000000000000000000000000000000000000 \
   --output-amount 20 \
   --output-amount 25
 
@@ -150,24 +136,16 @@ Then, in a separate terminal, experiment with the PoC wallet.
   Created "337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c01000000" worth 25. owned by 0xd2bf…df67
 
 
-# Further split the 25 token utxo into 10 and 5 given to a new address, burning the remaining 10
-./target/release/tuxedo-template-wallet spend-coins \
-  --input $UTXO_FROM_ABOVE! 337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c01000000 \
-  --recipient 0x42ef192744a0c9af409039e77b1b001e45f4f7553a7acd3b9dc06621c6a22a43 \
-  --output-amount 10 \
-  --output-amount 5
+# Check your balance again to confirm the burn worked
+./target/release/tuxedo-template-wallet show-balance
 
-  Created "5bf5941daf1e1484b04ec7ee1d4c63012a0b244f8d0dc523368f6251bd823a8600000000" worth 10. owned by 0x42ef…2a43
-  Created "5bf5941daf1e1484b04ec7ee1d4c63012a0b244f8d0dc523368f6251bd823a8601000000" worth 5. owned by 0x42ef…2a43
-
-# Join the 20 token utxo and 10 token utxo back into a single 30 token utxo, burning nothing
-./target/release/tuxedo-template-wallet spend-coins \
-  --input 5bf5941daf1e1484b04ec7ee1d4c63012a0b244f8d0dc523368f6251bd823a8600000000 \
-  --input 337395dec41937478bb55c4e8c75911cbec061511ddbc38163b94e4386f1228c00000000 \
-  --output-amount 30
-
-  Created "de8710e5b2bd5306b3cb238d8995b6e630a47189af6240b02d0e7140a3a8620400000000" worth 30. owned by 0xd2bf…df67
+Balance Summary
+0xd2bf…df67: 45
+--------------------
+total      : 45
 ```
+
+There is a more detailed walkthrough of the wallet in the [Wallet README](wallet/README.md).
 
 ## Docker
 
