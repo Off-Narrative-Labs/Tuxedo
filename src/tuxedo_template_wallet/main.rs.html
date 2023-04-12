@@ -492,7 +492,7 @@
 
     directories::ProjectDirs::from(qualifier, organization, application)
         .expect(<span class="string">&quot;app directories exist on all supported platforms; qed&quot;</span>)
-        .config_dir()
+        .data_dir()
         .into()
 }
 
