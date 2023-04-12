@@ -68,7 +68,10 @@ There is an example node built with the Tuxedo template runtime. Because Tuxedo 
 
 ### Wallet
 
-The repo contains a proof-of-concept wallet in the `wallet` directory. This wallet will be expanded to be a fully-featured usable cryptocurrency wallet over the next few weeks (see the [roadmap](#funding-and-roadmap) below). For now, the PoC is enough to demonstrate that transferring tokens works.
+The repo contains a CLI cryptocurrency wallet that works with the template node in the `wallet` directory.
+The wallet allows users to see their token balances and send transactions.
+It also allows advanced interactions like seeing the exact UTXOs you own, choosing specific UTXOs for a transaction, and constructing transactions with UTXOs from diverse owners.
+From a developer perspective, this wallet can serve as a starting point for building your own CLI dApp UI.
 
 ## Funding and Roadmap
 
