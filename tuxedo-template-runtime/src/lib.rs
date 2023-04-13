@@ -194,24 +194,11 @@ const BLOCK_TIME: u64 = 3000;
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-#[aggregate]
+#[aggregate(Verifier)]
 pub enum OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
     ThresholdMultiSignature(ThresholdMultiSignature),
-}
-
-//TODO this should be implemented by the aggregation macro I guess
-impl Verifier for OuterVerifier {
-    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
-        match self {
-            Self::SigCheck(sig_check) => sig_check.verify(simplified_tx, redeemer),
-            Self::UpForGrabs(up_for_grabs) => up_for_grabs.verify(simplified_tx, redeemer),
-            Self::ThresholdMultiSignature(threshold_multisig) => {
-                threshold_multisig.verify(simplified_tx, redeemer)
-            }
-        }
-    }
 }
 
 // Observation: For some applications, it will be invalid to simply delete

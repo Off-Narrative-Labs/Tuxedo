@@ -5,8 +5,6 @@ use syn::{parse_macro_input, Ident, ItemEnum};
 #[proc_macro_attribute]
 pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(body as ItemEnum);
-    // TODO get the type name to impl the trait
-    // let type_name = ast.ident.into();
     let original_code = ast.clone();
 
     // Uncomment this to inspect the ast of the original code.
@@ -39,11 +37,20 @@ pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
     let mut tuxedo_trait_impl = quote! {};
 
     if !attrs.is_empty() {
+        let variants = variants.clone();
         let attrs_tree = parse_macro_input!(attrs as Ident);
+        
         tuxedo_trait_impl = if ident_is_named(&attrs_tree, "Verifier") {
-            println!("TODO implement verifier");
             quote! {
-                todo!("impl Verifier for the type");
+                impl tuxedo_core::Verifier for #outer_type {
+                    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+                        match self {
+                            #(
+                                Self::#variants(inner) => inner.verify(simplified_tx, redeemer),
+                            )*
+                        }
+                    }
+                }
             }
         } else if ident_is_named(&attrs_tree, "ConstraintChecker") {
             println!("TODO implement ConstraintChecker");
