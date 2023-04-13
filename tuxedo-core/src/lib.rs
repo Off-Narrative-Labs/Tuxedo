@@ -15,10 +15,10 @@ pub mod types;
 pub mod utxo_set;
 pub mod verifier;
 
+pub use aggregator::aggregate;
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
 pub use verifier::Verifier;
-pub use aggregator::aggregate;
 
 /// A Tuxedo-specific target for diagnostic node log messages
 const LOG_TARGET: &str = "tuxedo-core";
