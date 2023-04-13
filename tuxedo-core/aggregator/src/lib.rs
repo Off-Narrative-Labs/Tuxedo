@@ -53,7 +53,6 @@ pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
                 }
             }
         } else if ident_is_named(&attrs_tree, "ConstraintChecker") {
-            println!("@@@@@@@@@In Constraint Checker branch");
             quote! {
 
                 impl tuxedo_core::ConstraintChecker for #outer_type {
