@@ -39,7 +39,7 @@ pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
     if !attrs.is_empty() {
         let variants = variants.clone();
         let attrs_tree = parse_macro_input!(attrs as Ident);
-        
+
         tuxedo_trait_impl = if ident_is_named(&attrs_tree, "Verifier") {
             quote! {
                 impl tuxedo_core::Verifier for #outer_type {
@@ -55,7 +55,7 @@ pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
         } else if ident_is_named(&attrs_tree, "ConstraintChecker") {
             println!("@@@@@@@@@In Constraint Checker branch");
             quote! {
-                
+
                 impl tuxedo_core::ConstraintChecker for #outer_type {
                     // Oooh, this is a little yucky. The macro requires a already-existing error type.
                     // We could consider auto-generating the error type
