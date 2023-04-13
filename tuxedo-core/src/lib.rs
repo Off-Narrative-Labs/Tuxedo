@@ -18,6 +18,7 @@ pub mod verifier;
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
 pub use verifier::Verifier;
+pub use aggregator::aggregate;
 
 /// A Tuxedo-specific target for diagnostic node log messages
 const LOG_TARGET: &str = "tuxedo-core";

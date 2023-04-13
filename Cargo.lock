@@ -8003,6 +8003,7 @@ dependencies = [
 name = "tuxedo-core"
 version = "1.0.0-dev"
 dependencies = [
+ "aggregator",
  "array-bytes 6.0.0",
  "log",
  "parity-scale-codec",
