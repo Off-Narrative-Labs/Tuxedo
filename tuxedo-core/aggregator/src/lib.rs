@@ -53,9 +53,27 @@ pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
                 }
             }
         } else if ident_is_named(&attrs_tree, "ConstraintChecker") {
-            println!("TODO implement ConstraintChecker");
+            println!("@@@@@@@@@In Constraint Checker branch");
             quote! {
-                todo!("impl ConstraintChecker for the type");
+                
+                impl tuxedo_core::ConstraintChecker for #outer_type {
+                    // Oooh, this is a little yucky. The macro requires a already-existing error type.
+                    // We could consider auto-generating the error type
+                    // For now, I'll just leave it like this
+                    type Error = OuterConstraintCheckerError;
+
+                    fn check<V: tuxedo_core::Verifier>(
+                        &self,
+                        inputs: &[tuxedo_core::types::Output<V>],
+                        outputs: &[tuxedo_core::types::Output<V>],
+                    ) -> Result<TransactionPriority, Self::Error> {
+                        Ok(match self {
+                            #(
+                                Self::#variants(inner) => inner.check(inputs, outputs)?,
+                            )*
+                        })
+                    }
+                }
             }
         } else {
             //TODO, how to use the correct span, which is `attrs_tree.span()`?

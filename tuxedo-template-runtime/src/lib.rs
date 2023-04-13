@@ -213,7 +213,7 @@ pub enum OuterVerifier {
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-#[aggregate]
+#[aggregate(ConstraintChecker)]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker),
@@ -252,28 +252,6 @@ pub enum OuterConstraintCheckerError {
     Poe(poe::ConstraintCheckerError),
     /// Error from the Runtime Upgrade piece
     RuntimeUpgrade(runtime_upgrade::ConstraintCheckerError),
-}
-
-impl ConstraintChecker for OuterConstraintChecker {
-    type Error = OuterConstraintCheckerError;
-
-    fn check<V: Verifier>(
-        &self,
-        inputs: &[tuxedo_core::types::Output<V>],
-        outputs: &[tuxedo_core::types::Output<V>],
-    ) -> Result<TransactionPriority, OuterConstraintCheckerError> {
-        Ok(match self {
-            Self::Money(money) => money.check(inputs, outputs)?,
-            Self::FreeKittyConstraintChecker(free_breed) => free_breed.check(inputs, outputs)?,
-            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.check(inputs, outputs)?,
-            Self::AmoebaDeath(amoeba_death) => amoeba_death.check(inputs, outputs)?,
-            Self::AmoebaCreation(amoeba_creation) => amoeba_creation.check(inputs, outputs)?,
-            Self::PoeClaim(poe_claim) => poe_claim.check(inputs, outputs)?,
-            Self::PoeRevoke(poe_revoke) => poe_revoke.check(inputs, outputs)?,
-            Self::PoeDispute(poe_dispute) => poe_dispute.check(inputs, outputs)?,
-            Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.check(inputs, outputs)?,
-        })
-    }
 }
 
 /// The main struct in this module.
