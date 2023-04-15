@@ -235,24 +235,6 @@ pub enum OuterConstraintChecker {
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
 
-// There is no trait to impl so it would just generate the From impls.
-// But so far we are okay without those.
-/// An aggregated error type with a variant for each tuxedo piece
-#[derive(Debug)]
-#[aggregate]
-pub enum OuterConstraintCheckerError {
-    /// Error from the Money piece
-    Money(money::ConstraintCheckerError),
-    /// Error for the Kitties piece
-    Kitty(kitties::ConstraintCheckerError),
-    /// Error from the Amoeba piece
-    Amoeba(amoeba::ConstraintCheckerError),
-    /// Error from the PoE piece
-    Poe(poe::ConstraintCheckerError),
-    /// Error from the Runtime Upgrade piece
-    RuntimeUpgrade(runtime_upgrade::ConstraintCheckerError),
-}
-
 /// The main struct in this module.
 pub struct Runtime;
 
