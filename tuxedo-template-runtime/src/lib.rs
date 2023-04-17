@@ -472,7 +472,7 @@ impl_runtime_apis! {
             OpaqueMetadata::new(Default::default())
         }
 
-        fn metadata_at_version(version: u32) -> Option<OpaqueMetadata> {
+        fn metadata_at_version(_version: u32) -> Option<OpaqueMetadata> {
 			None
 		}
 
