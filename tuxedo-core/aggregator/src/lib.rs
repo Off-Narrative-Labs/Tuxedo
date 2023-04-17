@@ -58,7 +58,6 @@ pub fn aggregate(attrs: TokenStream, body: TokenStream) -> TokenStream {
             error_type_name.push_str("Error");
             let error_type = Ident::new(&error_type_name, outer_type.span());
             let inner_types = inner_types.clone();
-            // Is this the right way?
             let variants2 = variants.clone();
             quote! {
 
