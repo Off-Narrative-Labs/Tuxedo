@@ -466,12 +466,19 @@ impl_runtime_apis! {
         }
     }
 
-    // Ignore everything after this.
+    // Tuxedo does not yet support metadata
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            // Tuxedo does not yet support metadata
             OpaqueMetadata::new(Default::default())
         }
+
+        fn metadata_at_version(version: u32) -> Option<OpaqueMetadata> {
+			None
+		}
+
+		fn metadata_versions() -> sp_std::vec::Vec<u32> {
+			Default::default()
+		}
     }
 
     impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
