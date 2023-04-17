@@ -542,8 +542,8 @@ mod tests {
     use super::*;
     use parity_scale_codec::Encode;
     use sp_core::testing::SR25519;
-    use sp_keystore::testing::KeyStore;
-    use sp_keystore::{KeystoreExt, SyncCryptoStore};
+    use sp_keystore::testing::MemoryKeystore;
+    use sp_keystore::{KeystoreExt, Keystore};
 
     use std::sync::Arc;
 
@@ -554,7 +554,7 @@ mod tests {
         "monkey happy total rib lumber scrap guide photo country online rose diet";
 
     fn new_test_ext() -> sp_io::TestExternalities {
-        let keystore = KeyStore::new();
+        let keystore = MemoryKeystore::new();
 
         let t = GenesisConfig::default()
             .build_storage()
@@ -568,7 +568,7 @@ mod tests {
     #[test]
     fn utxo_money_test_genesis() {
         new_test_ext().execute_with(|| {
-            let keystore = KeyStore::new();
+            let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
                 .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
                 .unwrap();
@@ -600,7 +600,7 @@ mod tests {
     #[test]
     fn utxo_money_multi_sig_genesis_test() {
         new_test_ext().execute_with(|| {
-            let keystore = KeyStore::new();
+            let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
                 .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
                 .unwrap();
