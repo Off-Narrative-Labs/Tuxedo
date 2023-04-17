@@ -52,7 +52,7 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
     let original_code = ast.clone();
 
     let outer_type = ast.ident;
-    let variants = ast.variants.iter();
+    let variants = ast.variants.into_iter().map(|v| v.ident);
 
     let output = quote! {
 
