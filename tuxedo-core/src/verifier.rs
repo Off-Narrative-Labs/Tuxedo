@@ -164,6 +164,22 @@ mod test {
     use super::*;
     use sp_core::{crypto::Pair as _, sr25519::Pair};
 
+    /// Generate a bunch of test keyparis
+    fn generate_n_pairs(n: u8) -> Vec<Pair> {
+        let mut seed = [0u8; 32];
+        let mut pairs = Vec::new();
+
+        // We generate the pairs from sequential seeds. Just changing the last byte of the seed each time.
+        for i in 0..n {
+            seed[31] = i;
+
+            let pair = Pair::from_seed(&seed);
+            pairs.push(pair);
+        }
+
+        pairs
+    }
+
     #[test]
     fn up_for_grabs_always_verifies() {
         assert!(UpForGrabs.verify(&[], &[]))
@@ -171,7 +187,7 @@ mod test {
 
     #[test]
     fn sig_check_with_good_sig() {
-        let pair = Pair::from_entropy(b"entropy_entropy_entropy_entropy!".as_slice(), None).0;
+        let pair = Pair::from_seed(&[0u8; 32]);
         let simplified_tx = b"hello world".as_slice();
         let sig = pair.sign(simplified_tx);
         let redeemer: &[u8] = sig.as_ref();
@@ -185,15 +201,7 @@ mod test {
 
     #[test]
     fn threshold_multisig_with_enough_sigs_passes() {
-        let pairs: Vec<_> = (1..3)
-            .map(|i| {
-                Pair::from_entropy(
-                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
-                    None,
-                )
-                .0
-            })
-            .collect();
+        let pairs = generate_n_pairs(3);
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -218,15 +226,7 @@ mod test {
 
     #[test]
     fn threshold_multisig_not_enough_sigs_fails() {
-        let pairs: Vec<_> = (1..3)
-            .map(|i| {
-                Pair::from_entropy(
-                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
-                    None,
-                )
-                .0
-            })
-            .collect();
+        let pairs = generate_n_pairs(3);
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -251,15 +251,7 @@ mod test {
 
     #[test]
     fn threshold_multisig_replay_sig_attack_fails() {
-        let pairs: Vec<_> = (1..3)
-            .map(|i| {
-                Pair::from_entropy(
-                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
-                    None,
-                )
-                .0
-            })
-            .collect();
+        let pairs = generate_n_pairs(3);
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -287,15 +279,7 @@ mod test {
 
     #[test]
     fn threshold_multisig_has_duplicate_signatories_fails() {
-        let pairs: Vec<_> = (1..3)
-            .map(|i| {
-                Pair::from_entropy(
-                    format!("entropy_entropy_entropy_entropy{}", i).as_bytes(),
-                    None,
-                )
-                .0
-            })
-            .collect();
+        let pairs = generate_n_pairs(3);
 
         let signatories: Vec<H256> =
             vec![H256::from(pairs[0].public()), H256::from(pairs[0].public())];
