@@ -24,7 +24,7 @@ futures = "0.3"
 env_logger = "0.10.0"
 log = "0.4.17"
 
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
-sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
-sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
-sc-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-03" }
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-04" }
+sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-04" }
+sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-04" }
+sc-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-04" }
