@@ -33,8 +33,8 @@ pub mod money;
 mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
-    tuxedo_constraint_checker, tuxedo_verifier,
     dynamic_typing::{DynamicallyTypedData, UtxoData},
+    tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };

@@ -3,10 +3,10 @@ use quote::quote;
 use syn::{parse_macro_input, Ident, ItemEnum};
 
 /// Automatically implements `From` for each type in an aggregate type enum.
-/// 
+///
 /// The supplied enum should have a single unnamed type parameter for each variant.
 /// And the type for each variant should be unique in the enum.
-/// 
+///
 /// The macro generates all the `From` implementations automatically.
 #[proc_macro_attribute]
 pub fn aggregate(_: TokenStream, body: TokenStream) -> TokenStream {
@@ -56,7 +56,6 @@ pub fn aggregate(_: TokenStream, body: TokenStream) -> TokenStream {
 /// enum by delegating to an inner type.
 #[proc_macro_attribute]
 pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
-
     let ast = parse_macro_input!(body as ItemEnum);
     let original_code = ast.clone();
 
@@ -85,7 +84,7 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
 /// This macro treats the supplied enum as an aggregate constraint checker. As such, it implements the `From`
 /// trait for eah of the inner types. Then it implements the `ConstraintChecker` trait for this type for this
 /// enum by delegating to an inner type.
-/// 
+///
 /// It also declares an associated error type. The error type has a variant for each inner constraint checker,
 /// just like this original enum. however, the contained values in the error enum are of the corresponding types
 /// for the inner constraint checker.
@@ -156,5 +155,4 @@ pub fn tuxedo_constraint_checker(_: TokenStream, body: TokenStream) -> TokenStre
     };
 
     output.into()
-
 }
