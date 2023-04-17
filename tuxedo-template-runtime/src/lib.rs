@@ -33,7 +33,7 @@ pub mod money;
 mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
-    aggregate,
+    tuxedo_constraint_checker, tuxedo_verifier,
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
@@ -193,7 +193,7 @@ const BLOCK_TIME: u64 = 3000;
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-#[aggregate(Verifier)]
+#[tuxedo_verifier]
 pub enum OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
@@ -212,7 +212,7 @@ pub enum OuterVerifier {
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-#[aggregate(ConstraintChecker)]
+#[tuxedo_constraint_checker]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker),
