@@ -12,6 +12,7 @@ use tuxedo_core::{
     types::Output,
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
+use sp_std::prelude::*;
 
 #[cfg_attr(
     feature = "std",
@@ -145,7 +146,7 @@ impl SimpleConstraintChecker for MakeOrder {
             output_data.len() == 1,
             DexError::TooManyOutputsWhenMakingOrder
         );
-        let DexItem::Order(order) = output_data[1].extract()? else {
+        let DexItem::Order(order) = output_data[0].extract()? else {
             Err(DexError::TypeError)?
         };
 
@@ -257,7 +258,16 @@ mod test {
 
     #[test]
     fn opening_an_order_seeking_a_works() {
+        let order = Order {
+            token_a: 100,
+            token_b: 150,
+            side: Side::SeekingTokenB
+        };
+        let input = DexItem::TokenA(100);
+        let output = DexItem::Order(order);
 
+        let result = <MakeOrder as SimpleConstraintChecker>::check(&MakeOrder, &vec![input.into()], &vec![output.into()]);
+        assert!(result.is_ok());
     }
 
     #[test]
