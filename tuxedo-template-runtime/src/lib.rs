@@ -3,7 +3,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use amoeba::{AmoebaCreation, AmoebaMitosis};
 use parity_scale_codec::{Decode, Encode};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
@@ -36,9 +35,9 @@ mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
+    tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
-    ConstraintChecker, Verifier,
 };
 
 #[cfg(feature = "std")]
@@ -188,7 +187,6 @@ impl sp_runtime::traits::GetRuntimeBlockType for Runtime {
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
 
-//TODO this should be implemented by the aggregation macro I guess
 /// A verifier checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
 #[cfg_attr(
@@ -196,48 +194,17 @@ const BLOCK_TIME: u64 = 3000;
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[tuxedo_verifier]
 pub enum OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
     ThresholdMultiSignature(ThresholdMultiSignature),
 }
 
-//TODO this should be implemented by the aggregation macro I guess
-impl Verifier for OuterVerifier {
-    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
-        match self {
-            Self::SigCheck(sig_check) => sig_check.verify(simplified_tx, redeemer),
-            Self::UpForGrabs(up_for_grabs) => up_for_grabs.verify(simplified_tx, redeemer),
-            Self::ThresholdMultiSignature(threshold_multisig) => {
-                threshold_multisig.verify(simplified_tx, redeemer)
-            }
-        }
-    }
-}
-
-impl From<UpForGrabs> for OuterVerifier {
-    fn from(value: UpForGrabs) -> Self {
-        Self::UpForGrabs(value)
-    }
-}
-
-impl From<SigCheck> for OuterVerifier {
-    fn from(value: SigCheck) -> Self {
-        Self::SigCheck(value)
-    }
-}
-
-impl From<ThresholdMultiSignature> for OuterVerifier {
-    fn from(value: ThresholdMultiSignature) -> Self {
-        Self::ThresholdMultiSignature(value)
-    }
-}
-
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
-//TODO this should be implemented by the aggregation macro I guess
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
@@ -246,6 +213,7 @@ impl From<ThresholdMultiSignature> for OuterVerifier {
     derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
 )]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[tuxedo_constraint_checker]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker),
@@ -267,92 +235,6 @@ pub enum OuterConstraintChecker {
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
-
-/// An aggregated error type with a variant for each tuxedo piece
-/// TODO This should probably be macro generated
-#[derive(Debug)]
-pub enum OuterConstraintCheckerError {
-    /// Error from the Money piece
-    Money(money::ConstraintCheckerError),
-    /// Error for the Kitties piece
-    Kitty(kitties::ConstraintCheckerError),
-    /// Error from the Amoeba piece
-    Amoeba(amoeba::ConstraintCheckerError),
-    /// Error from the PoE piece
-    Poe(poe::ConstraintCheckerError),
-    /// Error from the Runtime Upgrade piece
-    RuntimeUpgrade(runtime_upgrade::ConstraintCheckerError),
-}
-
-// We impl conversions from each of the inner error types to the outer error type.
-// This should also be done by a macro
-
-impl From<money::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: money::ConstraintCheckerError) -> Self {
-        Self::Money(e)
-    }
-}
-
-impl From<kitties::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: kitties::ConstraintCheckerError) -> Self {
-        Self::Kitty(e)
-    }
-}
-
-impl From<amoeba::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: amoeba::ConstraintCheckerError) -> Self {
-        Self::Amoeba(e)
-    }
-}
-
-impl From<poe::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: poe::ConstraintCheckerError) -> Self {
-        Self::Poe(e)
-    }
-}
-
-impl From<runtime_upgrade::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: runtime_upgrade::ConstraintCheckerError) -> Self {
-        Self::RuntimeUpgrade(e)
-    }
-}
-
-impl ConstraintChecker for OuterConstraintChecker {
-    type Error = OuterConstraintCheckerError;
-
-    fn check<V: Verifier>(
-        &self,
-        inputs: &[tuxedo_core::types::Output<V>],
-        outputs: &[tuxedo_core::types::Output<V>],
-    ) -> Result<TransactionPriority, OuterConstraintCheckerError> {
-        Ok(match self {
-            Self::Money(money) => money.check(inputs, outputs)?,
-            Self::FreeKittyConstraintChecker(free_breed) => free_breed.check(inputs, outputs)?,
-            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.check(inputs, outputs)?,
-            Self::AmoebaDeath(amoeba_death) => amoeba_death.check(inputs, outputs)?,
-            Self::AmoebaCreation(amoeba_creation) => amoeba_creation.check(inputs, outputs)?,
-            Self::PoeClaim(poe_claim) => poe_claim.check(inputs, outputs)?,
-            Self::PoeRevoke(poe_revoke) => poe_revoke.check(inputs, outputs)?,
-            Self::PoeDispute(poe_dispute) => poe_dispute.check(inputs, outputs)?,
-            Self::RuntimeUpgrade(runtime_upgrade) => runtime_upgrade.check(inputs, outputs)?,
-        })
-    }
-}
-
-impl From<AmoebaCreation> for OuterConstraintChecker {
-    fn from(value: AmoebaCreation) -> Self {
-        Self::AmoebaCreation(value)
-    }
-}
-
-impl From<AmoebaMitosis> for OuterConstraintChecker {
-    fn from(value: AmoebaMitosis) -> Self {
-        Self::AmoebaMitosis(value)
-    }
-}
-
-//TODO the rest of these impl blocks. For now I'm only doing these two
-// because they are the only two I use in my wallet prototype
 
 /// The main struct in this module.
 pub struct Runtime;
