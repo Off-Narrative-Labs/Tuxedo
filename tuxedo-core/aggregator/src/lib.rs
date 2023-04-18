@@ -140,7 +140,7 @@ pub fn tuxedo_constraint_checker(_: TokenStream, body: TokenStream) -> TokenStre
         impl tuxedo_core::ConstraintChecker for #outer_type {
             type Error = #error_type;
 
-            fn check<V: tuxedo_core::Verifier>(
+            fn check<V: tuxedo_core::Verifier + core::cmp::PartialEq>(
                 &self,
                 inputs: &[tuxedo_core::types::Output<V>],
                 outputs: &[tuxedo_core::types::Output<V>],
