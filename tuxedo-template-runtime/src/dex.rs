@@ -6,13 +6,14 @@ use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicTypingError, DynamicallyTypedData, UtxoData},
     ensure,
     types::Output,
+    verifier::SigCheck,
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
-use sp_std::prelude::*;
 
 #[cfg_attr(
     feature = "std",
@@ -254,60 +255,115 @@ impl ConstraintChecker for MatchOrders {
 #[cfg(test)]
 mod test {
     use super::*;
+    use sp_core::H256;
     use tuxedo_core::dynamic_typing::testing::Bogus;
+
+    impl Order {
+        pub fn default_test_order() -> Self {
+            Order {
+                token_a: 100,
+                token_b: 150,
+                side: Side::SeekingTokenB,
+            }
+        }
+    }
 
     #[test]
     fn opening_an_order_seeking_a_works() {
-        let order = Order {
-            token_a: 100,
-            token_b: 150,
-            side: Side::SeekingTokenB
-        };
+        let order = Order::default_test_order();
         let input = DexItem::TokenA(100);
         let output = DexItem::Order(order);
 
-        let result = <MakeOrder as SimpleConstraintChecker>::check(&MakeOrder, &vec![input.into()], &vec![output.into()]);
+        let result = <MakeOrder as SimpleConstraintChecker>::check(
+            &MakeOrder,
+            &vec![input.into()],
+            &vec![output.into()],
+        );
         assert!(result.is_ok());
     }
 
     #[test]
     fn opening_order_with_no_inputs_fails() {
+        let order = Order::default_test_order();
+        let output = DexItem::Order(order);
 
+        let result = <MakeOrder as SimpleConstraintChecker>::check(
+            &MakeOrder,
+            &vec![],
+            &vec![output.into()],
+        );
+        assert_eq!(result, Err(DexError::NotEnoughCollateralToOpenOrder));
     }
 
     #[test]
     fn opening_order_with_no_outputs_fails() {
+        let input = DexItem::TokenA(100);
 
+        let result =
+            <MakeOrder as SimpleConstraintChecker>::check(&MakeOrder, &vec![input.into()], &vec![]);
+        assert_eq!(result, Err(DexError::OrderMissing));
     }
 
     #[test]
-    fn opening_order_with_insufficient_collateral_fails() {
-
-    }
+    fn opening_order_with_insufficient_collateral_fails() {}
 
     #[test]
     fn matching_two_orders_together_works() {
+        let order_a = Order::default_test_order();
+        let order_b = Order {
+            token_a: 100,
+            token_b: 150,
+            side: Side::SeekingTokenA,
+        };
+        let input_a = DexItem::Order(order_a);
+        let input_b = DexItem::Order(order_b);
 
+        let input_a = Output {
+            payload: input_a.into(),
+            verifier: SigCheck {
+                owner_pubkey: H256::zero(),
+            },
+        };
+        let input_b = Output {
+            payload: input_b.into(),
+            verifier: SigCheck {
+                owner_pubkey: H256::zero(),
+            },
+        };
+
+        let output_a = DexItem::TokenB(150);
+        let output_b = DexItem::TokenA(100);
+
+        let output_a = Output {
+            payload: output_a.into(),
+            verifier: SigCheck {
+                owner_pubkey: H256::zero(),
+            },
+        };
+        let output_b = Output {
+            payload: output_b.into(),
+            verifier: SigCheck {
+                owner_pubkey: H256::zero(),
+            },
+        };
+
+        let result = <MatchOrders as ConstraintChecker>::check(
+            &MatchOrders,
+            &vec![input_a, input_b],
+            &vec![output_a, output_b],
+        );
+        assert_eq!(result, Ok(0));
     }
 
     #[test]
-    fn bad_match_not_enough_a() {
-
-    }
+    fn bad_match_not_enough_a() {}
 
     #[test]
-    fn bad_match_not_enough_b() {
-
-    }
+    fn bad_match_not_enough_b() {}
 
     #[test]
-    fn match_with_bad_payout() {
-
-    }
+    fn match_with_bad_payout() {}
 
     #[test]
-    fn match_with_different_numbers_of_payouts_and_orders() {
-        
-    }
-
+    fn match_with_different_numbers_of_payouts_and_orders() {}
 }
