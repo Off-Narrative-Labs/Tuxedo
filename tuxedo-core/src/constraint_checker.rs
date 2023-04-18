@@ -43,7 +43,7 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
     type Error: Debug;
 
     /// The actual check validation logic
-    fn check<V: Verifier>(
+    fn check<V: Verifier + core::cmp::PartialEq>(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],

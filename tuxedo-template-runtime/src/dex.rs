@@ -96,6 +96,8 @@ enum DexError {
     InsufficientTokenAForMatch,
     /// The amount of token B supplied by the orders is not enough to match with the demand.
     InsufficientTokenBForMatch,
+    /// The verifier who is recieving the tokens is not correct
+    VerifierMismatchForTrade,
 }
 
 impl From<DynamicTypingError> for DexError {
@@ -125,6 +127,7 @@ struct MatchOrders;
 // /// Fullfil existing orders in the order book with the supplied funds.
 // /// This is an atomic combination of making and order and matching it with
 // /// an existing order.
+// #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 // struct TakeOrders;
 // /// Cancel an existing open order
 // /// This is similar to taking your own order except for maybe things like fees.
@@ -181,7 +184,7 @@ impl SimpleConstraintChecker for MakeOrder {
 impl ConstraintChecker for MatchOrders {
     type Error = DexError;
 
-    fn check<V: Verifier>(
+    fn check<V: Verifier + core::cmp::PartialEq>(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
@@ -217,7 +220,12 @@ impl ConstraintChecker for MatchOrders {
                         payout_amount == order.token_a,
                         DexError::PayoutDoesNotSatisfyOrder
                     );
-                    // TODO ensure that the payout was given to the right owner
+
+                    // ensure that the payout was given to the right owner
+                    ensure!(
+                        input.verifier == output.verifier,
+                        DexError::VerifierMismatchForTrade
+                    )
                 }
                 SeekingTokenB => {
                     a_so_far += order.token_a;
@@ -231,7 +239,12 @@ impl ConstraintChecker for MatchOrders {
                         payout_amount == order.token_b,
                         DexError::PayoutDoesNotSatisfyOrder
                     );
-                    // TODO ensure that the payout was given to the right owner
+
+                    // ensure that the payout was given to the right owner
+                    ensure!(
+                        input.verifier == output.verifier,
+                        DexError::VerifierMismatchForTrade
+                    )
                 }
             }
 
