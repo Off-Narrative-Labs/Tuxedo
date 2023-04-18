@@ -164,7 +164,7 @@ mod test {
     use super::*;
     use sp_core::{crypto::Pair as _, sr25519::Pair};
 
-    /// Generate a bunch of test keyparis
+    /// Generate a bunch of test keypairs
     fn generate_n_pairs(n: u8) -> Vec<Pair> {
         let mut seed = [0u8; 32];
         let mut pairs = Vec::new();
