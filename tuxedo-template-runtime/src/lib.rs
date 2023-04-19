@@ -125,7 +125,7 @@ impl Default for GenesisConfig {
                     }),
                     payload: DynamicallyTypedData {
                         data: 100u128.encode(),
-                        type_id: <money::Coin as UtxoData>::TYPE_ID,
+                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                     },
                 },
                 Output {
@@ -135,7 +135,7 @@ impl Default for GenesisConfig {
                     }),
                     payload: DynamicallyTypedData {
                         data: 100u128.encode(),
-                        type_id: <money::Coin as UtxoData>::TYPE_ID,
+                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                     },
                 },
             ],
@@ -216,7 +216,7 @@ pub enum OuterVerifier {
 #[tuxedo_constraint_checker]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
-    Money(money::MoneyConstraintChecker),
+    Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
     FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
     /// Checks that an amoeba can split into two new amoebas
@@ -456,7 +456,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
@@ -491,7 +491,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
