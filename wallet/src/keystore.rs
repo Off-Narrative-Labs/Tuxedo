@@ -34,7 +34,7 @@ pub fn insert_default_key_for_this_session(keystore: &LocalKeystore) -> anyhow::
 }
 
 /// Sign a given message with the private key that corresponds to the given public key.
-/// 
+///
 /// Returns an error if the keystore itself errors, or does not contain the requested key.
 pub fn sign_with(
     keystore: &LocalKeystore,
@@ -59,7 +59,7 @@ pub fn insert_key(keystore: &LocalKeystore, seed: &str) -> anyhow::Result<()> {
 
 /// Generate a new key from system entropy and insert it into the keystore, optionally
 /// protected by a password.
-/// 
+///
 /// TODO there is no password support when using keys later when signing.
 pub fn generate_key(keystore: &LocalKeystore, password: Option<String>) -> anyhow::Result<()> {
     let (pair, phrase, _) = Pair::generate_with_phrase(password.as_deref());
