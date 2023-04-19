@@ -1,5 +1,5 @@
 //! An implementation that supports multiple simple fungible tokens.
-//! 
+//!
 //! Each token behaves similarly to the the single token from the Money,
 //! piece as both implement the `Fungible` trait.
 
@@ -90,12 +90,8 @@ impl SimpleConstraintChecker for SpendToken {
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        
         // Check that we are consuming at least one input
-        ensure!(
-            !input_data.is_empty(),
-            MultiTokenError::SpendingNothing
-        );
+        ensure!(!input_data.is_empty(), MultiTokenError::SpendingNothing);
 
         let mut token_id = None;
         let mut total_input_value: u128 = 0;
@@ -154,18 +150,12 @@ mod test {
 
     /// Helper function to create a new token of id 0
     fn token_0(value: u128) -> Token {
-        Token {
-            id: 0,
-            value,
-        }
+        Token { id: 0, value }
     }
 
     /// Helper function to create a new token of id 1
     fn token_1(value: u128) -> Token {
-        Token {
-            id: 1,
-            value,
-        }
+        Token { id: 1, value }
     }
 
     #[test]

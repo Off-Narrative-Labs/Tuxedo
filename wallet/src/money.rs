@@ -138,9 +138,9 @@ pub async fn spend_coins(
 pub async fn get_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<(Coin::<0>, OuterVerifier)> {
+) -> anyhow::Result<(Coin<0>, OuterVerifier)> {
     let utxo = fetch_storage::<OuterVerifier>(output_ref, client).await?;
-    let coin_in_storage: Coin::<0> = utxo.payload.extract()?;
+    let coin_in_storage: Coin<0> = utxo.payload.extract()?;
 
     Ok((coin_in_storage, utxo.verifier))
 }

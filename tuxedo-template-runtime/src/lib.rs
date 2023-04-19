@@ -143,7 +143,7 @@ impl Default for GenesisConfig {
                         owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
                     }),
                     // TODO we should use .into() on the lines above too.
-                    payload: multitoken::Token { id: 0, value: 100 }.into()
+                    payload: multitoken::Token { id: 0, value: 100 }.into(),
                 },
             ],
         }
