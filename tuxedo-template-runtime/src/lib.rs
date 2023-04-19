@@ -473,12 +473,12 @@ impl_runtime_apis! {
         }
 
         fn metadata_at_version(_version: u32) -> Option<OpaqueMetadata> {
-			None
-		}
+            None
+        }
 
-		fn metadata_versions() -> sp_std::vec::Vec<u32> {
-			Default::default()
-		}
+        fn metadata_versions() -> sp_std::vec::Vec<u32> {
+            Default::default()
+        }
     }
 
     impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
@@ -543,7 +543,7 @@ mod tests {
     use parity_scale_codec::Encode;
     use sp_core::testing::SR25519;
     use sp_keystore::testing::MemoryKeystore;
-    use sp_keystore::{KeystoreExt, Keystore};
+    use sp_keystore::{Keystore, KeystoreExt};
 
     use std::sync::Arc;
 
