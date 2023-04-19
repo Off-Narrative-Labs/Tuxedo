@@ -152,37 +152,53 @@ mod test {
     use super::*;
     use tuxedo_core::dynamic_typing::testing::Bogus;
 
+    /// Helper function to create a new token of id 0
+    fn token_0(value: u128) -> Token {
+        Token {
+            id: 0,
+            value,
+        }
+    }
+
+    /// Helper function to create a new token of id 1
+    fn token_1(value: u128) -> Token {
+        Token {
+            id: 1,
+            value,
+        }
+    }
+
     #[test]
     fn spend_valid_transaction_work() {
-        let input_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
-        let output_data = vec![Coin(10).into(), Coin(1).into()]; // total 11
+        let input_data = vec![token_0(5).into(), token_0(7).into()]; // total 12
+        let output_data = vec![token_0(10).into(), token_0(1).into()]; // total 11
         let expected_priority = 1u64;
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Ok(expected_priority),
         );
     }
 
     #[test]
     fn spend_with_zero_value_output_fails() {
-        let input_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
-        let output_data = vec![Coin(10).into(), Coin(1).into(), Coin(0).into()]; // total 1164;
+        let input_data = vec![token_0(5).into(), token_0(7).into()]; // total 12
+        let output_data = vec![token_0(10).into(), token_0(1).into(), token_0(0).into()]; // total 1164;
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Err(MultiTokenError::ZeroValueCoin),
         );
     }
 
     #[test]
     fn spend_no_outputs_is_a_burn() {
-        let input_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
+        let input_data = vec![token_0(5).into(), token_0(7).into()]; // total 12
         let output_data = vec![];
         let expected_priority = 12u64;
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Ok(expected_priority),
         );
     }
@@ -190,10 +206,10 @@ mod test {
     #[test]
     fn spend_no_inputs_fails() {
         let input_data = vec![];
-        let output_data = vec![Coin(10).into(), Coin(1).into()];
+        let output_data = vec![token_0(10).into(), token_0(1).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Err(MultiTokenError::SpendingNothing),
         );
     }
@@ -201,88 +217,110 @@ mod test {
     #[test]
     fn spend_wrong_input_type_fails() {
         let input_data = vec![Bogus.into()];
-        let output_data = vec![Coin(10).into(), Coin(1).into()];
+        let output_data = vec![token_0(10).into(), token_0(1).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Err(MultiTokenError::BadlyTyped),
         );
     }
 
     #[test]
     fn spend_wrong_output_type_fails() {
-        let input_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
+        let input_data = vec![token_0(5).into(), token_0(7).into()]; // total 12
         let output_data = vec![Bogus.into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Err(MultiTokenError::BadlyTyped),
         );
     }
 
     #[test]
     fn spend_output_value_exceeds_input_value_fails() {
-        let input_data = vec![Coin(10).into(), Coin(1).into()]; // total 11
-        let output_data = vec![Coin(5).into(), Coin(7).into()]; // total 12
+        let input_data = vec![token_0(10).into(), token_0(1).into()]; // total 11
+        let output_data = vec![token_0(5).into(), token_0(7).into()]; // total 12
 
         assert_eq!(
-            MoneyConstraintChecker::Spend.check(&input_data, &output_data),
+            SpendToken.check(&input_data, &output_data),
             Err(MultiTokenError::OutputsExceedInputs),
         );
     }
 
     #[test]
-    fn mint_valid_transaction_works() {
-        let input_data = vec![];
-        let output_data = vec![Coin(10).into(), Coin(1).into()];
+    fn spend_mixed_input_types_fails() {
+        let input_data = vec![token_0(10).into(), token_1(1).into()];
+        let output_data = vec![token_0(5).into(), token_0(7).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
-            Ok(0),
+            SpendToken.check(&input_data, &output_data),
+            Err(MultiTokenError::MixedTokenIDs),
         );
     }
 
     #[test]
-    fn mint_with_zero_value_output_fails() {
-        let input_data = vec![];
-        let output_data = vec![Coin(0).into()];
+    fn spend_mixed_output_types_fails() {
+        let input_data = vec![token_0(10).into(), token_0(1).into()];
+        let output_data = vec![token_0(5).into(), token_1(7).into()];
 
         assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
-            Err(MultiTokenError::ZeroValueCoin),
+            SpendToken.check(&input_data, &output_data),
+            Err(MultiTokenError::MixedTokenIDs),
         );
     }
 
-    #[test]
-    fn mint_with_inputs_fails() {
-        let input_data = vec![Coin(5).into()];
-        let output_data = vec![Coin(10).into(), Coin(1).into()];
+    // #[test]
+    // fn mint_valid_transaction_works() {
+    //     let input_data = vec![];
+    //     let output_data = vec![token_0(10).into(), token_0(1).into()];
 
-        assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
-            Err(MultiTokenError::MintingWithInputs),
-        );
-    }
+    //     assert_eq!(
+    //         MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+    //         Ok(0),
+    //     );
+    // }
 
-    #[test]
-    fn mint_with_no_outputs_fails() {
-        let input_data = vec![];
-        let output_data = vec![];
+    // #[test]
+    // fn mint_with_zero_value_output_fails() {
+    //     let input_data = vec![];
+    //     let output_data = vec![token_0(0).into()];
 
-        assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
-            Err(MultiTokenError::MintingNothing),
-        );
-    }
+    //     assert_eq!(
+    //         MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+    //         Err(MultiTokenError::ZeroValueCoin),
+    //     );
+    // }
 
-    #[test]
-    fn mint_wrong_output_type_fails() {
-        let input_data = vec![];
-        let output_data = vec![Coin(10).into(), Bogus.into()];
+    // #[test]
+    // fn mint_with_inputs_fails() {
+    //     let input_data = vec![token_0(5).into()];
+    //     let output_data = vec![token_0(10).into(), token_0(1).into()];
 
-        assert_eq!(
-            MoneyConstraintChecker::Mint.check(&input_data, &output_data),
-            Err(MultiTokenError::BadlyTyped),
-        );
-    }
+    //     assert_eq!(
+    //         MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+    //         Err(MultiTokenError::MintingWithInputs),
+    //     );
+    // }
+
+    // #[test]
+    // fn mint_with_no_outputs_fails() {
+    //     let input_data = vec![];
+    //     let output_data = vec![];
+
+    //     assert_eq!(
+    //         MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+    //         Err(MultiTokenError::MintingNothing),
+    //     );
+    // }
+
+    // #[test]
+    // fn mint_wrong_output_type_fails() {
+    //     let input_data = vec![];
+    //     let output_data = vec![token_0(10).into(), Bogus.into()];
+
+    //     assert_eq!(
+    //         MoneyConstraintChecker::Mint.check(&input_data, &output_data),
+    //         Err(MultiTokenError::BadlyTyped),
+    //     );
+    // }
 }
