@@ -73,19 +73,7 @@ pub fn has_key(keystore: &LocalKeystore, pubkey: &H256) -> bool {
 }
 
 pub fn get_keys(keystore: &LocalKeystore) -> anyhow::Result<impl Iterator<Item = Vec<u8>>> {
-    Ok(keystore
-        .keys(KEY_TYPE)?
-        .into_iter()
-        // .filter_map(|CryptoTypePublicPair(t, public)| {
-        //     // Since we insert with `insert_unknown`, each key is inserted three times.
-        //     // Here we filter out just the sr25519 variant so we don't print duplicates.
-        //     if t == CryptoTypeId(*b"sr25") {
-        //         Some(public)
-        //     } else {
-        //         None
-        //     }
-        // })
-    )
+    Ok(keystore.keys(KEY_TYPE)?.into_iter())
 }
 
 /// Caution. Removes key from keystore. Call with care.
