@@ -30,6 +30,7 @@ use serde::{Deserialize, Serialize};
 pub mod amoeba;
 pub mod kitties;
 pub mod money;
+pub mod multitoken;
 mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
@@ -137,6 +138,13 @@ impl Default for GenesisConfig {
                         type_id: <money::Coin as UtxoData>::TYPE_ID,
                     },
                 },
+                Output {
+                    verifier: OuterVerifier::SigCheck(SigCheck {
+                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
+                    }),
+                    // TODO we should use .into() on the lines above too.
+                    payload: multitoken::Token { id: 0, value: 100 }.into()
+                },
             ],
         }
 
@@ -233,6 +241,8 @@ pub enum OuterConstraintChecker {
     PoeDispute(poe::PoeDispute),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+    /// Monetary transaction in many distinct fungible currencies,
+    MultiToken(multitoken::SpendToken),
 }
 
 /// The main struct in this module.
