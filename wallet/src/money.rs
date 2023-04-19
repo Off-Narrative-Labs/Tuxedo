@@ -38,7 +38,7 @@ pub async fn spend_coins(
     let mut total_output_amount = 0;
     for amount in &args.output_amount {
         let output = Output {
-            payload: Coin::new(*amount).into(),
+            payload: Coin::<0>::new(*amount).into(),
             verifier: OuterVerifier::SigCheck(SigCheck {
                 owner_pubkey: args.recipient,
             }),
@@ -121,7 +121,7 @@ pub async fn spend_coins(
             tx_hash,
             index: i as u32,
         };
-        let amount = output.payload.extract::<Coin>()?.0;
+        let amount = output.payload.extract::<Coin<0>>()?.0;
 
         print!(
             "Created {:?} worth {amount}. ",
@@ -138,9 +138,9 @@ pub async fn spend_coins(
 pub async fn get_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<(Coin, OuterVerifier)> {
+) -> anyhow::Result<(Coin::<0>, OuterVerifier)> {
     let utxo = fetch_storage::<OuterVerifier>(output_ref, client).await?;
-    let coin_in_storage: Coin = utxo.payload.extract()?;
+    let coin_in_storage: Coin::<0> = utxo.payload.extract()?;
 
     Ok((coin_in_storage, utxo.verifier))
 }
