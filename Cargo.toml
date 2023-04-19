@@ -3,6 +3,7 @@ members = [
     "node",
     "tuxedo-template-runtime",
     "tuxedo-core",
+    "tuxedo-core/aggregator",
     "wallet",
 ]
 [profile.release]

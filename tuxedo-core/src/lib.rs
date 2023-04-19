@@ -15,6 +15,7 @@ pub mod types;
 pub mod utxo_set;
 pub mod verifier;
 
+pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
 pub use verifier::Verifier;
