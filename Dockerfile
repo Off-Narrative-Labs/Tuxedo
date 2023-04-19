@@ -6,7 +6,7 @@
 # For the build stage, we use an image provided by Parity
 FROM docker.io/paritytech/ci-linux:production as builder
 WORKDIR /node-template
-COPY . .
+COPY . /node-template
 RUN cargo build --locked --release 
 
 
