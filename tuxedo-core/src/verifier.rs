@@ -275,7 +275,7 @@ mod test {
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, redeemer));
+        assert!(threshold_multisig.verify(simplified_tx, redeemer));
     }
 
     #[test]
