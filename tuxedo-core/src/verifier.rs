@@ -201,7 +201,8 @@ mod test {
 
     #[test]
     fn threshold_multisig_with_enough_sigs_passes() {
-        let pairs = generate_n_pairs(3);
+        let threshold = 2;
+        let pairs = generate_n_pairs(threshold);
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -217,7 +218,7 @@ mod test {
 
         let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
-            threshold: 2,
+            threshold,
             signatories,
         };
 
@@ -226,13 +227,15 @@ mod test {
 
     #[test]
     fn threshold_multisig_not_enough_sigs_fails() {
-        let pairs = generate_n_pairs(3);
+        let threshold = 3;
+        let pairs = generate_n_pairs(threshold);
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
         let simplified_tx = b"hello_world".as_slice();
         let sigs: Vec<_> = pairs
             .iter()
+            .take(threshold as usize - 1)
             .enumerate()
             .map(|(i, p)| SignatureAndIndex {
                 signature: p.sign(simplified_tx),
@@ -242,7 +245,7 @@ mod test {
 
         let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
-            threshold: 3,
+            threshold,
             signatories,
         };
 
@@ -251,7 +254,8 @@ mod test {
 
     #[test]
     fn threshold_multisig_replay_sig_attack_fails() {
-        let pairs = generate_n_pairs(3);
+        let threshold = 2;
+        let pairs = generate_n_pairs(threshold);
 
         let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -270,7 +274,7 @@ mod test {
 
         let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
-            threshold: 2,
+            threshold,
             signatories,
         };
 
@@ -279,7 +283,8 @@ mod test {
 
     #[test]
     fn threshold_multisig_has_duplicate_signatories_fails() {
-        let pairs = generate_n_pairs(3);
+        let threshold = 2;
+        let pairs = generate_n_pairs(threshold);
 
         let signatories: Vec<H256> =
             vec![H256::from(pairs[0].public()), H256::from(pairs[0].public())];
@@ -297,7 +302,7 @@ mod test {
         let redeemer: &[u8] = &sigs.encode()[..];
 
         let threshold_multisig = ThresholdMultiSignature {
-            threshold: 2,
+            threshold,
             signatories,
         };
 
