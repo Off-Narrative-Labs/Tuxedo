@@ -6,7 +6,6 @@ use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
 pub use sc_executor::NativeElseWasmExecutor;
-use sc_keystore::LocalKeystore;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncParams};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
@@ -55,12 +54,6 @@ pub fn new_partial(
     >,
     ServiceError,
 > {
-    if config.keystore_remote.is_some() {
-        return Err(ServiceError::Other(
-            "Remote Keystores are not supported.".into(),
-        ));
-    }
-
     let telemetry = config
         .telemetry_endpoints
         .clone()
@@ -148,13 +141,6 @@ pub fn new_partial(
     })
 }
 
-fn remote_keystore(_url: &str) -> Result<Arc<LocalKeystore>, &'static str> {
-    // FIXME: here would the concrete keystore be built,
-    //        must return a concrete type (NOT `LocalKeystore`) that
-    //        implements `CryptoStore` and `SyncCryptoStore`
-    Err("Remote Keystore not supported.")
-}
-
 /// Builds a new service for a full client.
 pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> {
     let sc_service::PartialComponents {
@@ -162,23 +148,11 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
         backend,
         mut task_manager,
         import_queue,
-        mut keystore_container,
+        keystore_container,
         select_chain,
         transaction_pool,
         other: (block_import, grandpa_link, mut telemetry),
     } = new_partial(&config)?;
-
-    if let Some(url) = &config.keystore_remote {
-        match remote_keystore(url) {
-            Ok(k) => keystore_container.set_remote_keystore(k),
-            Err(e) => {
-                return Err(ServiceError::Other(format!(
-                    "Error hooking up remote keystore for {}: {}",
-                    url, e
-                )))
-            }
-        };
-    }
 
     let grandpa_protocol_name = sc_consensus_grandpa::protocol_standard_name(
         &client
@@ -201,7 +175,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
         Vec::default(),
     ));
 
-    let (network, system_rpc_tx, tx_handler_controller, network_starter) =
+    let (network, system_rpc_tx, tx_handler_controller, network_starter, sync_service) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
             client: client.clone(),
@@ -245,13 +219,14 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
     let _rpc_handlers = sc_service::spawn_tasks(sc_service::SpawnTasksParams {
         network: network.clone(),
         client: client.clone(),
-        keystore: keystore_container.sync_keystore(),
+        keystore: keystore_container.keystore(),
         task_manager: &mut task_manager,
         transaction_pool: transaction_pool.clone(),
         rpc_builder: rpc_extensions_builder,
         backend,
         system_rpc_tx,
         tx_handler_controller,
+        sync_service: sync_service.clone(),
         config,
         telemetry: telemetry.as_mut(),
     })?;
@@ -287,9 +262,9 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
                 },
                 force_authoring,
                 backoff_authoring_blocks,
-                keystore: keystore_container.sync_keystore(),
-                sync_oracle: network.clone(),
-                justification_sync_link: network.clone(),
+                keystore: keystore_container.keystore(),
+                sync_oracle: sync_service.clone(),
+                justification_sync_link: sync_service.clone(),
                 block_proposal_slot_portion: SlotProportion::new(2f32 / 3f32),
                 max_block_proposal_slot_portion: None,
                 telemetry: telemetry.as_ref().map(|x| x.handle()),
@@ -307,7 +282,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
     // if the node isn't actively participating in consensus then it doesn't
     // need a keystore, regardless of which protocol we use below.
     let keystore = if role.is_authority() {
-        Some(keystore_container.sync_keystore())
+        Some(keystore_container.keystore())
     } else {
         None
     };
@@ -335,6 +310,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
             config: grandpa_config,
             link: grandpa_link,
             network,
+            sync: Arc::new(sync_service),
             voting_rule: sc_consensus_grandpa::VotingRulesBuilder::default().build(),
             prometheus_registry,
             shared_voter_state: SharedVoterState::empty(),

@@ -6,12 +6,12 @@ use anyhow::anyhow;
 use parity_scale_codec::Encode;
 use sc_keystore::LocalKeystore;
 use sp_core::{
-    crypto::{CryptoTypePublicPair, Pair as PairT},
+    crypto::Pair as PairT,
     sr25519::{Pair, Public},
     H256,
 };
-use sp_keystore::SyncCryptoStore;
-use sp_runtime::{CryptoTypeId, KeyTypeId};
+use sp_keystore::Keystore;
+use sp_runtime::KeyTypeId;
 use std::path::Path;
 
 /// A KeyTypeId to use in the keystore for Tuxedo transactions. We'll use this everywhere
@@ -41,9 +41,11 @@ pub fn sign_with(
     public: &Public,
     message: &[u8],
 ) -> anyhow::Result<Vec<u8>> {
-    keystore
-        .sign_with(KEY_TYPE, &public.into(), message)?
-        .ok_or(anyhow!("Key doesn't exist in keystore"))
+    let sig = keystore
+        .sr25519_sign(KEY_TYPE, public, message)?
+        .ok_or(anyhow!("Key doesn't exist in keystore"))?;
+
+    Ok(sig.encode())
 }
 
 /// Insert the private key associated with the given seed into the keystore for later use.
@@ -52,7 +54,7 @@ pub fn insert_key(keystore: &LocalKeystore, seed: &str) -> anyhow::Result<()> {
     let public_key = Pair::from_phrase(seed, None)?.0.public();
     println!("The generated public key is {:?}", public_key);
     keystore
-        .insert_unknown(KEY_TYPE, seed, public_key.as_ref())
+        .insert(KEY_TYPE, seed, public_key.as_ref())
         .map_err(|()| anyhow!("Error inserting key"))?;
     Ok(())
 }
@@ -66,7 +68,7 @@ pub fn generate_key(keystore: &LocalKeystore, password: Option<String>) -> anyho
     println!("Generated public key is {:?}", pair.public());
     println!("Generated Phrase is {}", phrase);
     keystore
-        .insert_unknown(KEY_TYPE, phrase.as_ref(), pair.public().as_ref())
+        .insert(KEY_TYPE, phrase.as_ref(), pair.public().as_ref())
         .map_err(|()| anyhow!("Error inserting key"))?;
     Ok(())
 }
@@ -77,18 +79,7 @@ pub fn has_key(keystore: &LocalKeystore, pubkey: &H256) -> bool {
 }
 
 pub fn get_keys(keystore: &LocalKeystore) -> anyhow::Result<impl Iterator<Item = Vec<u8>>> {
-    Ok(keystore
-        .keys(KEY_TYPE)?
-        .into_iter()
-        .filter_map(|CryptoTypePublicPair(t, public)| {
-            // Since we insert with `insert_unknown`, each key is inserted three times.
-            // Here we filter out just the sr25519 variant so we don't print duplicates.
-            if t == CryptoTypeId(*b"sr25") {
-                Some(public)
-            } else {
-                None
-            }
-        }))
+    Ok(keystore.keys(KEY_TYPE)?.into_iter())
 }
 
 /// Caution. Removes key from keystore. Call with care.
