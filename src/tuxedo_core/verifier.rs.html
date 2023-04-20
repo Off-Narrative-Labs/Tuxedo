@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/verifier.rs`."><title>verifier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (c609da59d 2023-04-18)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-1a524efa7bd4ab32.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/verifier.rs`."><title>verifier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (39c6804b9 2023-04-19)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-1a524efa7bd4ab32.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -347,17 +347,6 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A verifier is a piece of logic that determines whether an input can be consumed in a given context.
 //! Because there are multiple reasonable ways to make this decision, we expose a trait to encapsulate
 //! the various options. Each runtime will choose to make one or more verifiers available to its users
@@ -524,6 +513,22 @@
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>sp_core::{crypto::Pair <span class="kw">as _</span>, sr25519::Pair};
 
+    <span class="doccomment">/// Generate a bunch of test keypairs
+    </span><span class="kw">fn </span>generate_n_pairs(n: u8) -&gt; Vec&lt;Pair&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>seed = [<span class="number">0u8</span>; <span class="number">32</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>pairs = Vec::new();
+
+        <span class="comment">// We generate the pairs from sequential seeds. Just changing the last byte of the seed each time.
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..n {
+            seed[<span class="number">31</span>] = i;
+
+            <span class="kw">let </span>pair = Pair::from_seed(<span class="kw-2">&amp;</span>seed);
+            pairs.push(pair);
+        }
+
+        pairs
+    }
+
     <span class="attr">#[test]
     </span><span class="kw">fn </span>up_for_grabs_always_verifies() {
         <span class="macro">assert!</span>(UpForGrabs.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]))
@@ -531,7 +536,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sig_check_with_good_sig() {
-        <span class="kw">let </span>pair = Pair::from_entropy(<span class="string">b&quot;entropy_entropy_entropy_entropy!&quot;</span>.as_slice(), <span class="prelude-val">None</span>).<span class="number">0</span>;
+        <span class="kw">let </span>pair = Pair::from_seed(<span class="kw-2">&amp;</span>[<span class="number">0u8</span>; <span class="number">32</span>]);
         <span class="kw">let </span>simplified_tx = <span class="string">b&quot;hello world&quot;</span>.as_slice();
         <span class="kw">let </span>sig = pair.sign(simplified_tx);
         <span class="kw">let </span>redeemer: <span class="kw-2">&amp;</span>[u8] = sig.as_ref();
@@ -545,15 +550,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>threshold_multisig_with_enough_sigs_passes() {
-        <span class="kw">let </span>pairs: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">1</span>..<span class="number">3</span>)
-            .map(|i| {
-                Pair::from_entropy(
-                    <span class="macro">format!</span>(<span class="string">&quot;entropy_entropy_entropy_entropy{}&quot;</span>, i).as_bytes(),
-                    <span class="prelude-val">None</span>,
-                )
-                .<span class="number">0
-            </span>})
-            .collect();
+        <span class="kw">let </span>threshold = <span class="number">2</span>;
+        <span class="kw">let </span>pairs = generate_n_pairs(threshold);
 
         <span class="kw">let </span>signatories: Vec&lt;H256&gt; = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -569,7 +567,7 @@
 
         <span class="kw">let </span>redeemer: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>sigs.encode()[..];
         <span class="kw">let </span>threshold_multisig = ThresholdMultiSignature {
-            threshold: <span class="number">2</span>,
+            threshold,
             signatories,
         };
 
@@ -578,21 +576,15 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>threshold_multisig_not_enough_sigs_fails() {
-        <span class="kw">let </span>pairs: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">1</span>..<span class="number">3</span>)
-            .map(|i| {
-                Pair::from_entropy(
-                    <span class="macro">format!</span>(<span class="string">&quot;entropy_entropy_entropy_entropy{}&quot;</span>, i).as_bytes(),
-                    <span class="prelude-val">None</span>,
-                )
-                .<span class="number">0
-            </span>})
-            .collect();
+        <span class="kw">let </span>threshold = <span class="number">3</span>;
+        <span class="kw">let </span>pairs = generate_n_pairs(threshold);
 
         <span class="kw">let </span>signatories: Vec&lt;H256&gt; = pairs.iter().map(|p| H256::from(p.public())).collect();
 
         <span class="kw">let </span>simplified_tx = <span class="string">b&quot;hello_world&quot;</span>.as_slice();
         <span class="kw">let </span>sigs: Vec&lt;<span class="kw">_</span>&gt; = pairs
             .iter()
+            .take(threshold <span class="kw">as </span>usize - <span class="number">1</span>)
             .enumerate()
             .map(|(i, p)| SignatureAndIndex {
                 signature: p.sign(simplified_tx),
@@ -602,7 +594,7 @@
 
         <span class="kw">let </span>redeemer: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>sigs.encode()[..];
         <span class="kw">let </span>threshold_multisig = ThresholdMultiSignature {
-            threshold: <span class="number">3</span>,
+            threshold,
             signatories,
         };
 
@@ -611,15 +603,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>threshold_multisig_replay_sig_attack_fails() {
-        <span class="kw">let </span>pairs: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">1</span>..<span class="number">3</span>)
-            .map(|i| {
-                Pair::from_entropy(
-                    <span class="macro">format!</span>(<span class="string">&quot;entropy_entropy_entropy_entropy{}&quot;</span>, i).as_bytes(),
-                    <span class="prelude-val">None</span>,
-                )
-                .<span class="number">0
-            </span>})
-            .collect();
+        <span class="kw">let </span>threshold = <span class="number">2</span>;
+        <span class="kw">let </span>pairs = generate_n_pairs(threshold);
 
         <span class="kw">let </span>signatories: Vec&lt;H256&gt; = pairs.iter().map(|p| H256::from(p.public())).collect();
 
@@ -638,7 +623,7 @@
 
         <span class="kw">let </span>redeemer: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>sigs.encode()[..];
         <span class="kw">let </span>threshold_multisig = ThresholdMultiSignature {
-            threshold: <span class="number">2</span>,
+            threshold,
             signatories,
         };
 
@@ -647,15 +632,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>threshold_multisig_has_duplicate_signatories_fails() {
-        <span class="kw">let </span>pairs: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">1</span>..<span class="number">3</span>)
-            .map(|i| {
-                Pair::from_entropy(
-                    <span class="macro">format!</span>(<span class="string">&quot;entropy_entropy_entropy_entropy{}&quot;</span>, i).as_bytes(),
-                    <span class="prelude-val">None</span>,
-                )
-                .<span class="number">0
-            </span>})
-            .collect();
+        <span class="kw">let </span>threshold = <span class="number">2</span>;
+        <span class="kw">let </span>pairs = generate_n_pairs(threshold);
 
         <span class="kw">let </span>signatories: Vec&lt;H256&gt; =
             <span class="macro">vec!</span>[H256::from(pairs[<span class="number">0</span>].public()), H256::from(pairs[<span class="number">0</span>].public())];
@@ -673,7 +651,7 @@
         <span class="kw">let </span>redeemer: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>sigs.encode()[..];
 
         <span class="kw">let </span>threshold_multisig = ThresholdMultiSignature {
-            threshold: <span class="number">2</span>,
+            threshold,
             signatories,
         };
 
