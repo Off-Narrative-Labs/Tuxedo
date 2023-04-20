@@ -253,6 +253,32 @@ mod test {
     }
 
     #[test]
+    fn threshold_multisig_extra_sigs_still_passes() {
+        let threshold = 2;
+        let pairs = generate_n_pairs(threshold + 1);
+
+        let signatories: Vec<H256> = pairs.iter().map(|p| H256::from(p.public())).collect();
+
+        let simplified_tx = b"hello_world".as_slice();
+        let sigs: Vec<_> = pairs
+            .iter()
+            .enumerate()
+            .map(|(i, p)| SignatureAndIndex {
+                signature: p.sign(simplified_tx),
+                index: i.try_into().unwrap(),
+            })
+            .collect();
+
+        let redeemer: &[u8] = &sigs.encode()[..];
+        let threshold_multisig = ThresholdMultiSignature {
+            threshold,
+            signatories,
+        };
+
+        assert!(!threshold_multisig.verify(simplified_tx, redeemer));
+    }
+
+    #[test]
     fn threshold_multisig_replay_sig_attack_fails() {
         let threshold = 2;
         let pairs = generate_n_pairs(threshold);
