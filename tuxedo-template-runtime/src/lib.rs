@@ -48,11 +48,9 @@ use tuxedo_core::types::OutputRef;
 /// to even the core data structures.
 pub mod opaque {
     use super::*;
-    // type OpaqueExtrinsic = Transaction;
-    type OpaqueExtrinsic = sp_runtime::OpaqueExtrinsic;
 
     /// Opaque block type.
-    pub type Block = sp_runtime::generic::Block<Header, OpaqueExtrinsic>;
+    pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
 
     // This part is necessary for generating session keys in the runtime
     impl_opaque_keys! {
