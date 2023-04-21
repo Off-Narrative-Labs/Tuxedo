@@ -44,6 +44,45 @@ pub struct Transaction<V, C> {
     pub checker: C,
 }
 
+// Trying Kian's advice as far as I remember it. We manually implement serialize and deserialize for the transaction type
+// so that it can be serialized to/from the same bytes as an opaque Vec<u8>.
+// Stealing this code from Andrew's PBA solution:
+// https://github.com/Polkadot-Blockchain-Academy/frameless-node-template--master/blob/andrew_ungraded_solution/frameless-runtime/src/lib.rs#L127-L144
+impl<V: Encode, C: Encode> Encode for Transaction<V, C> {
+    fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
+        let inputs = self.inputs.encode();
+        let outputs = self.outputs.encode();
+        let checker = self.checker.encode();
+
+        let total_len = (inputs.len() + outputs.len() + checker.len()) as u32;
+        let size = parity_scale_codec::Compact::<u32>(total_len).encode();
+
+        dest.write(&size);
+        dest.write(&inputs);
+        dest.write(&outputs);
+        dest.write(&checker);
+    }
+}
+
+impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
+    fn decode<I: parity_scale_codec::Input>(
+        input: &mut I,
+    ) -> Result<Self, parity_scale_codec::Error> {
+        // Throw away the length of the vec. We just want the bytes.
+        let _size = <parity_scale_codec::Compact<u32>>::skip(input)?;
+
+        let inputs = <Vec<Input>>::decode(input)?;
+        let outputs = <Vec<Output<V>>>::decode(input)?;
+        let checker = C::decode(input)?;
+
+        Ok(Transaction {
+            inputs,
+            outputs,
+            checker,
+        })
+    }
+}
+
 // We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
 // See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
 //
