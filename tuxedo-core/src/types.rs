@@ -35,10 +35,7 @@ pub struct OutputRef {
 ///
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<V, C> {
     pub inputs: Vec<Input>,
@@ -69,10 +66,7 @@ impl<V, C> Extrinsic for Transaction<V, C> {
 }
 
 /// A reference the a utxo that will be consumed along with proof that it may be consumed
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Input {
     /// a reference to the output being consumed
@@ -104,10 +98,7 @@ pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
 /// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Output<V> {
     pub payload: DynamicallyTypedData,
