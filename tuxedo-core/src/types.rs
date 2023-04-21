@@ -9,10 +9,7 @@ use sp_runtime::traits::Extrinsic;
 use sp_std::vec::Vec;
 
 /// A reference to a output that is expected to exist in the state.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
@@ -36,7 +33,7 @@ pub struct OutputRef {
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<V, C> {
     pub inputs: Vec<Input>,
     //Todo peeks: Vec<Input>,
@@ -44,10 +41,8 @@ pub struct Transaction<V, C> {
     pub checker: C,
 }
 
-// Trying Kian's advice as far as I remember it. We manually implement serialize and deserialize for the transaction type
-// so that it can be serialized to/from the same bytes as an opaque Vec<u8>.
-// Stealing this code from Andrew's PBA solution:
-// https://github.com/Polkadot-Blockchain-Academy/frameless-node-template--master/blob/andrew_ungraded_solution/frameless-runtime/src/lib.rs#L127-L144
+// Manually implement Encode and Decode for the Transaction type
+// so that its encoding is the same as an opaque Vec<u8>.
 impl<V: Encode, C: Encode> Encode for Transaction<V, C> {
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
         let inputs = self.inputs.encode();
@@ -120,7 +115,7 @@ pub enum UtxoError<ConstraintCheckerError> {
     DuplicateInput,
     /// This transaction defines an output that already existed in the UTXO set
     PreExistingOutput,
-    /// The contraint checker errored.
+    /// The constraint checker errored.
     ConstraintCheckerError(ConstraintCheckerError),
     /// The Verifier errored.
     /// TODO determine whether it is useful to relay an inner error from the verifier.
