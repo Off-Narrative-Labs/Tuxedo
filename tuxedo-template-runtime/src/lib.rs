@@ -32,6 +32,7 @@ pub mod kitties;
 pub mod money;
 mod poe;
 mod runtime_upgrade;
+pub mod verifier_abstraction;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
