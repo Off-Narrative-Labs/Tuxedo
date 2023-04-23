@@ -10,12 +10,12 @@ use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_std::fmt::Debug;
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicTypingError, DynamicallyTypedData, UtxoData},
     ensure,
     types::Output,
-    verifier::SigCheck,
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
 
@@ -101,7 +101,7 @@ struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// Constraint checking logic for matching existing open orders against one another
-struct MatchOrders<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
+struct MatchOrders<A: Cash, B: Cash>(PhantomData<(A, B)>);
 
 // The following lines brainstorm some other constraint checkers that could be added
 // but currently are not implemented.
@@ -116,7 +116,11 @@ struct MatchOrders<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 // struct CancelOrder;
 
 // Here we see an example
-impl<V: Verifier, A: Cash, B: Cash> SimpleConstraintChecker for MakeOrder<V, A, B> {
+impl<V: Verifier, A, B> SimpleConstraintChecker for MakeOrder<V, A, B>
+where
+    A: Cash + UtxoData +Encode + Decode + Debug + PartialEq + Eq + Clone,
+    B: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
+{
     type Error = DexError;
 
     fn check(
@@ -130,9 +134,7 @@ impl<V: Verifier, A: Cash, B: Cash> SimpleConstraintChecker for MakeOrder<V, A, 
             output_data.len() == 1,
             DexError::TooManyOutputsWhenMakingOrder
         );
-        let order: Order<V, A, B> = output_data[0].extract()? else {
-            Err(DexError::TypeError)?
-        };
+        let order: Order<V, A, B> = output_data[0].extract()?;
 
         // There may be many inputs and they should all be tokens whose combined value
         // equals or exceeds the amount of token they need to provide for this order
@@ -150,10 +152,14 @@ impl<V: Verifier, A: Cash, B: Cash> SimpleConstraintChecker for MakeOrder<V, A, 
     }
 }
 
-impl<V: Verifier + PartialEq, A: Cash, B: Cash> ConstraintChecker for MatchOrders<V, A, B> {
+impl<A, B> ConstraintChecker for MatchOrders<A, B>
+where
+    A: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
+    B: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
+{
     type Error = DexError;
 
-    fn check(
+    fn check<V: Verifier + PartialEq> (
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
@@ -194,7 +200,7 @@ impl<V: Verifier + PartialEq, A: Cash, B: Cash> ConstraintChecker for MatchOrder
 
                 // ensure that the payout was given to the right owner
                 ensure!(
-                    order.outcome_verifier == output.verifier,
+                    order.payout_verifier == output.verifier,
                     DexError::VerifierMismatchForTrade
                 )
             } else if let Ok(order) = input.payload.extract::<Order<V, B, A>>() {
@@ -210,7 +216,7 @@ impl<V: Verifier + PartialEq, A: Cash, B: Cash> ConstraintChecker for MatchOrder
 
                 // ensure that the payout was given to the right owner
                 ensure!(
-                    order.outcome_verifier == output.verifier,
+                    order.payout_verifier == output.verifier,
                     DexError::VerifierMismatchForTrade
                 )
             } else {

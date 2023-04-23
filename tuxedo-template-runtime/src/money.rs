@@ -24,7 +24,7 @@ pub trait Cash {
     const ID: u8;
 }
 
-impl<const ID: i8> Cash for Coin<ID> {
+impl<const ID: u8> Cash for Coin<ID> {
     fn value(&self) -> u128 {
         self.0
     }
