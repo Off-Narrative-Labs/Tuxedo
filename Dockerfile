@@ -1,12 +1,12 @@
 # This is a multi-stage docker file. See https://docs.docker.com/build/building/multi-stage/
 # for details about this pattern.
-# It is largely copied from the Substrate node template
-# https://github.com/substrate-developer-hub/substrate-node-template/blob/main/Dockerfile
+# It is largely copied from Substrate
+# https://github.com/paritytech/substrate/blob/master/docker/substrate_builder.Dockerfile
 
 # For the build stage, we use an image provided by Parity
 FROM docker.io/paritytech/ci-linux:production as builder
 WORKDIR /node-template
-COPY . .
+COPY . /node-template
 RUN cargo build --locked --release 
 
 

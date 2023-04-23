@@ -349,11 +349,18 @@ impl_runtime_apis! {
         }
     }
 
-    // Ignore everything after this.
+    // Tuxedo does not yet support metadata
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            // Tuxedo does not yet support metadata
             OpaqueMetadata::new(Default::default())
+        }
+
+        fn metadata_at_version(_version: u32) -> Option<OpaqueMetadata> {
+            None
+        }
+
+        fn metadata_versions() -> sp_std::vec::Vec<u32> {
+            Default::default()
         }
     }
 
@@ -418,8 +425,8 @@ mod tests {
     use super::*;
     use parity_scale_codec::Encode;
     use sp_core::testing::SR25519;
-    use sp_keystore::testing::KeyStore;
-    use sp_keystore::{KeystoreExt, SyncCryptoStore};
+    use sp_keystore::testing::MemoryKeystore;
+    use sp_keystore::{Keystore, KeystoreExt};
 
     use std::sync::Arc;
 
@@ -430,7 +437,7 @@ mod tests {
         "monkey happy total rib lumber scrap guide photo country online rose diet";
 
     fn new_test_ext() -> sp_io::TestExternalities {
-        let keystore = KeyStore::new();
+        let keystore = MemoryKeystore::new();
 
         let t = GenesisConfig::default()
             .build_storage()
@@ -444,7 +451,7 @@ mod tests {
     #[test]
     fn utxo_money_test_genesis() {
         new_test_ext().execute_with(|| {
-            let keystore = KeyStore::new();
+            let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
                 .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
                 .unwrap();
@@ -476,7 +483,7 @@ mod tests {
     #[test]
     fn utxo_money_multi_sig_genesis_test() {
         new_test_ext().execute_with(|| {
-            let keystore = KeyStore::new();
+            let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
                 .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
                 .unwrap();
