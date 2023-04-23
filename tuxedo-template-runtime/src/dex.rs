@@ -1,7 +1,11 @@
-//! An Order-book based dex to swap between two hard-coded tokens A and B.
+//! An Order-book based dex to swap between two tokens, both of which
+//! are instances of the money piece.
 //!
 //! For simplicity, we don't allow partial fills right now.
 
+use core::marker::PhantomData;
+
+use crate::money::Cash;
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -15,62 +19,33 @@ use tuxedo_core::{
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-/// All the data that this piece could care to store. Here I'm choosing to use a
-/// single enum to experiment with some stronger typing.
-enum DexItem {
-    /// A coin of token A
-    TokenA(u128),
-    /// A coin of token B
-    TokenB(u128),
-    /// An order in the order book
-    Order(Order),
-}
-
-impl UtxoData for DexItem {
-    const TYPE_ID: [u8; 4] = *b"$dex";
-}
-
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-/// Which side of a trade the order maker is on
-enum Side {
-    /// The order maker wants to obtain more or token A (by selling some of token B)
-    SeekingTokenA,
-    /// The order maker wants to obtain more of token B (by selling some of token A)
-    SeekingTokenB,
-}
-use Side::*;
-
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-/// An order in the book consists of amounts of each token, A and B, as well as which side
-/// of the trade the order maker is on.
-struct Order {
+/// An order in the order book represents a binding collateralized
+/// offer to make a trade.
+///
+/// The user who opens this order must put up a corresponding amount of
+/// token A. This order can be matched with other orders so long as
+/// the ask amount of token B may be paid to this user.
+///
+/// When a match is made, the payment token will be protected with the
+/// verifier contained in this order.
+struct Order<V: Verifier, A: Cash, B: Cash> {
     /// The amount of token A in this order
-    token_a: u128,
+    offer_amount: u128,
     /// The amount of token B in this order
-    token_b: u128,
-    /// Which side of the trade this order maker is on
-    side: Side,
-    //TODO another field to hold the verifier that will protect the
-    // output coin in the event of a successful match.
+    ask_amount: u128,
+    /// The verifier that will protect the payout coin
+    /// in the event of a successful match.
+    payout_verifier: V,
+    _ph_data: PhantomData<(A, B)>,
 }
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+impl<V: Verifier, A: Cash, B: Cash> UtxoData for Order<V, A, B> {
+    const TYPE_ID: [u8; 4] = [b'$', b'$', A::ID, B::ID];
+}
+
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// All the things that can go wrong while checking constraints on dex transactions
 enum DexError {
@@ -96,7 +71,7 @@ enum DexError {
     InsufficientTokenAForMatch,
     /// The amount of token B supplied by the orders is not enough to match with the demand.
     InsufficientTokenBForMatch,
-    /// The verifier who is recieving the tokens is not correct
+    /// The verifier who is receiving the tokens is not correct
     VerifierMismatchForTrade,
 }
 
@@ -106,21 +81,27 @@ impl From<DynamicTypingError> for DexError {
     }
 }
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// The Constraint checking logic for opening a new order.
-struct MakeOrder;
+///
+/// It is generic over the verifier type which can be used to protect
+/// matched outputs. Typically this should be set to the runtime's
+/// outer verifier type. It is also generic over the two coins that will
+/// trade in this order book.
+///
+/// This constraint checker demonstrates taking configuration information
+/// from the broader runtime. Here we use separate generics for each piece of
+/// configuration. It is also be fine to take a more FRAME-like approach of
+/// writing a configuration trait and taking a single generic that implements
+/// that trait. In cases where a lot of configuration is required, the FRAME-like
+/// approach is even preferable.
+struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// Constraint checking logic for matching existing open orders against one another
-struct MatchOrders;
+struct MatchOrders<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 
 // The following lines brainstorm some other constraint checkers that could be added
 // but currently are not implemented.
@@ -131,12 +112,11 @@ struct MatchOrders;
 // struct TakeOrders;
 // /// Cancel an existing open order
 // /// This is similar to taking your own order except for maybe things like fees.
+// #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 // struct CancelOrder;
-// /// A secondary constraint checker that allows minting tokens A and B
-// /// This one is only useful for test networks. Of course it kills scarcity.
-// struct DexTokenMinter;
 
-impl SimpleConstraintChecker for MakeOrder {
+// Here we see an example
+impl<V: Verifier, A: Cash, B: Cash> SimpleConstraintChecker for MakeOrder<V, A, B> {
     type Error = DexError;
 
     fn check(
@@ -150,7 +130,7 @@ impl SimpleConstraintChecker for MakeOrder {
             output_data.len() == 1,
             DexError::TooManyOutputsWhenMakingOrder
         );
-        let DexItem::Order(order) = output_data[0].extract()? else {
+        let order: Order<V, A, B> = output_data[0].extract()? else {
             Err(DexError::TypeError)?
         };
 
@@ -158,22 +138,11 @@ impl SimpleConstraintChecker for MakeOrder {
         // equals or exceeds the amount of token they need to provide for this order
         let mut total_input_amount = 0;
         for input in input_data {
-            match input.extract::<DexItem>()? {
-                DexItem::TokenA(amount) if order.side == SeekingTokenB => {
-                    total_input_amount += amount;
-                }
-                DexItem::TokenB(amount) if order.side == SeekingTokenA => {
-                    total_input_amount += amount;
-                }
-                _ => Err(DexError::WrongCollateralToOpenOrder)?,
-            }
+            let coin = input.extract::<A>()?;
+            total_input_amount += coin.value();
         }
 
-        let required_input_amount = match order.side {
-            SeekingTokenA => order.token_b,
-            SeekingTokenB => order.token_a,
-        };
-        if total_input_amount < required_input_amount {
+        if total_input_amount < order.offer_amount {
             Err(DexError::NotEnoughCollateralToOpenOrder)?
         }
 
@@ -181,10 +150,10 @@ impl SimpleConstraintChecker for MakeOrder {
     }
 }
 
-impl ConstraintChecker for MatchOrders {
+impl<V: Verifier + PartialEq, A: Cash, B: Cash> ConstraintChecker for MatchOrders<V, A, B> {
     type Error = DexError;
 
-    fn check<V: Verifier + core::cmp::PartialEq>(
+    fn check(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
@@ -197,58 +166,56 @@ impl ConstraintChecker for MatchOrders {
             DexError::OrderAndPayoutCountDiffer
         );
 
+        // Each order will add some tokens to the matching pot
+        // and demand some tokens from the matching pot.
+        // As we loop through the orders, we will keep track of these totals.
+        // After all orders have been inspected, we will make sure the
+        // amounts add up.
         let mut total_a_required = 0;
         let mut total_b_required = 0;
         let mut a_so_far = 0;
         let mut b_so_far = 0;
 
+        // As we loop through all the orders, we:
+        // 1. Make sure the output properly fills the order's ask
+        // 2. Update the totals for checking at the end
         for (input, output) in inputs.iter().zip(outputs) {
-            let DexItem::Order(order) = input.payload.extract()? else {
+            // It could be Order<V, A, B> or Order<V, B, A> so we will try both.
+            if let Ok(order) = input.payload.extract::<Order<V, A, B>>() {
+                a_so_far += order.offer_amount;
+                total_b_required += order.ask_amount;
+
+                // Ensure the payout is the right amount
+                let payout = output.payload.extract::<B>()?;
+                ensure!(
+                    payout.value() == order.ask_amount,
+                    DexError::PayoutDoesNotSatisfyOrder
+                );
+
+                // ensure that the payout was given to the right owner
+                ensure!(
+                    order.outcome_verifier == output.verifier,
+                    DexError::VerifierMismatchForTrade
+                )
+            } else if let Ok(order) = input.payload.extract::<Order<V, B, A>>() {
+                b_so_far += order.offer_amount;
+                total_a_required += order.ask_amount;
+
+                // Ensure the payout is the right amount
+                let payout = output.payload.extract::<A>()?;
+                ensure!(
+                    payout.value() == order.ask_amount,
+                    DexError::PayoutDoesNotSatisfyOrder
+                );
+
+                // ensure that the payout was given to the right owner
+                ensure!(
+                    order.outcome_verifier == output.verifier,
+                    DexError::VerifierMismatchForTrade
+                )
+            } else {
                 Err(DexError::TypeError)?
             };
-
-            match order.side {
-                SeekingTokenA => {
-                    total_a_required += order.token_a;
-                    b_so_far += order.token_b;
-
-                    let DexItem::TokenA(payout_amount) = output.payload.extract()? else {
-                        Err(DexError::TypeError)?
-                    };
-
-                    ensure!(
-                        payout_amount == order.token_a,
-                        DexError::PayoutDoesNotSatisfyOrder
-                    );
-
-                    // ensure that the payout was given to the right owner
-                    ensure!(
-                        input.verifier == output.verifier,
-                        DexError::VerifierMismatchForTrade
-                    )
-                }
-                SeekingTokenB => {
-                    a_so_far += order.token_a;
-                    total_b_required += order.token_b;
-
-                    let DexItem::TokenB(payout_amount) = output.payload.extract()? else {
-                        Err(DexError::TypeError)?
-                    };
-
-                    ensure!(
-                        payout_amount == order.token_b,
-                        DexError::PayoutDoesNotSatisfyOrder
-                    );
-
-                    // ensure that the payout was given to the right owner
-                    ensure!(
-                        input.verifier == output.verifier,
-                        DexError::VerifierMismatchForTrade
-                    )
-                }
-            }
-
-            // TODO Allow the match maker to claim the spread as a reward.
         }
 
         // Make sure the amounts in the orders actually match and satisfy each other.
@@ -261,6 +228,12 @@ impl ConstraintChecker for MatchOrders {
             DexError::InsufficientTokenBForMatch
         );
 
+        // Allow the match maker to claim the spread as a reward.
+        let _a_for_matcher = a_so_far - total_a_required;
+        let _b_for_matcher = b_so_far - total_b_required;
+        //TODO actually pay these amounts out. This would mean there
+        // are two additional outputs at the end
+
         Ok(0)
     }
 }
@@ -268,15 +241,19 @@ impl ConstraintChecker for MatchOrders {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::money::Coin;
     use sp_core::H256;
-    use tuxedo_core::dynamic_typing::testing::Bogus;
+    use tuxedo_core::{dynamic_typing::testing::Bogus, verifier::TestVerifier};
 
-    impl Order {
+    type TestOrder = Order<TestVerifier, Coin<0>, Coin<1>>;
+
+    impl TestOrder {
         pub fn default_test_order() -> Self {
-            Order {
-                token_a: 100,
-                token_b: 150,
-                side: Side::SeekingTokenB,
+            TestOrder {
+                offer_amount: 100,
+                ask_amount: 150,
+                payout_verifier: Default::default(),
+                _ph_data: Default::default(),
             }
         }
     }
@@ -323,10 +300,10 @@ mod test {
     #[test]
     fn matching_two_orders_together_works() {
         let order_a = Order::default_test_order();
-        let order_b = Order {
-            token_a: 100,
-            token_b: 150,
-            side: Side::SeekingTokenA,
+        let order_b = Order::<TestVerifier, Coin<1>, Coin<0>> {
+            offer_amount: 100,
+            ask_amount: 150,
+            ..Default::default()
         };
         let input_a = DexItem::Order(order_a);
         let input_b = DexItem::Order(order_b);

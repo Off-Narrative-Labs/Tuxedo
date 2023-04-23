@@ -11,6 +11,27 @@ use tuxedo_core::{
     ensure, SimpleConstraintChecker,
 };
 
+/// TODO This should live somewhere analogous to frame support, not right here in the money piece.
+/// But this is where it is for now.
+///
+/// A trait for UTXOs that can act like coins, or bank notes.
+pub trait Cash {
+    /// Get the value of this token.
+    fn value(&self) -> u128;
+
+    /// A 1-byte unique identifier for this coin.
+    /// Might need more than 1 byte eventually...
+    const ID: u8;
+}
+
+impl<const ID: i8> Cash for Coin<ID> {
+    fn value(&self) -> u128 {
+        self.0
+    }
+
+    const ID: u8 = ID;
+}
+
 // use log::info;
 
 /// The main constraint checker for the money piece. Allows spending and minting tokens.
@@ -183,7 +204,11 @@ mod test {
     #[test]
     fn spend_with_zero_value_output_fails() {
         let input_data = vec![Coin::<0>(5).into(), Coin::<0>(7).into()]; // total 12
-        let output_data = vec![Coin::<0>(10).into(), Coin::<0>(1).into(), Coin::<0>(0).into()]; // total 1164;
+        let output_data = vec![
+            Coin::<0>(10).into(),
+            Coin::<0>(1).into(),
+            Coin::<0>(0).into(),
+        ]; // total 1164;
 
         assert_eq!(
             MoneyConstraintChecker::<0>::Spend.check(&input_data, &output_data),
