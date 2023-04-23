@@ -64,7 +64,7 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
         input: &mut I,
     ) -> Result<Self, parity_scale_codec::Error> {
         // Throw away the length of the vec. We just want the bytes.
-        let _size = <parity_scale_codec::Compact<u32>>::skip(input)?;
+        <parity_scale_codec::Compact<u32>>::skip(input)?;
 
         let inputs = <Vec<Input>>::decode(input)?;
         let outputs = <Vec<Output<V>>>::decode(input)?;
