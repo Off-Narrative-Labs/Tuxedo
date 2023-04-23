@@ -98,6 +98,12 @@ impl From<DynamicTypingError> for DexError {
 /// approach is even preferable.
 struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 
+impl<V: Verifier, A: Cash, B: Cash> Default for MakeOrder<V, A, B> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// Constraint checking logic for matching existing open orders against one another
@@ -248,10 +254,11 @@ where
 mod test {
     use super::*;
     use crate::money::Coin;
-    use sp_core::H256;
     use tuxedo_core::{dynamic_typing::testing::Bogus, verifier::TestVerifier};
 
     type TestOrder = Order<TestVerifier, Coin<0>, Coin<1>>;
+    type MakeTestOrder = MakeOrder<TestVerifier, Coin<0>, Coin<1>>;
+    type MatchTestOrders = MatchOrders<Coin<0>, Coin<1>>;
 
     impl TestOrder {
         pub fn default_test_order() -> Self {
@@ -267,13 +274,12 @@ mod test {
     #[test]
     fn opening_an_order_seeking_a_works() {
         let order = Order::default_test_order();
-        let input = DexItem::TokenA(100);
-        let output = DexItem::Order(order);
+        let input = Coin::<0>(100);
 
-        let result = <MakeOrder as SimpleConstraintChecker>::check(
-            &MakeOrder,
+        let result = <MakeTestOrder as SimpleConstraintChecker>::check(
+            &Default::default(),
             &vec![input.into()],
-            &vec![output.into()],
+            &vec![order.into()],
         );
         assert!(result.is_ok());
     }
@@ -281,22 +287,21 @@ mod test {
     #[test]
     fn opening_order_with_no_inputs_fails() {
         let order = Order::default_test_order();
-        let output = DexItem::Order(order);
-
-        let result = <MakeOrder as SimpleConstraintChecker>::check(
-            &MakeOrder,
+        
+        let result = <MakeTestOrder as SimpleConstraintChecker>::check(
+            &Default::default(),
             &vec![],
-            &vec![output.into()],
+            &vec![order.into()],
         );
         assert_eq!(result, Err(DexError::NotEnoughCollateralToOpenOrder));
     }
 
     #[test]
     fn opening_order_with_no_outputs_fails() {
-        let input = DexItem::TokenA(100);
+        let input = Coin::<0>(100);
 
         let result =
-            <MakeOrder as SimpleConstraintChecker>::check(&MakeOrder, &vec![input.into()], &vec![]);
+            <MakeTestOrder as SimpleConstraintChecker>::check(&Default::default(), &vec![input.into()], &vec![]);
         assert_eq!(result, Err(DexError::OrderMissing));
     }
 
@@ -307,49 +312,41 @@ mod test {
     fn matching_two_orders_together_works() {
         let order_a = Order::default_test_order();
         let order_b = Order::<TestVerifier, Coin<1>, Coin<0>> {
-            offer_amount: 100,
-            ask_amount: 150,
-            ..Default::default()
-        };
-        let input_a = DexItem::Order(order_a);
-        let input_b = DexItem::Order(order_b);
-
-        let input_a = Output {
-            payload: input_a.into(),
-            verifier: SigCheck {
-                owner_pubkey: H256::zero(),
-            },
-        };
-        let input_b = Output {
-            payload: input_b.into(),
-            verifier: SigCheck {
-                owner_pubkey: H256::zero(),
-            },
+            offer_amount: 150,
+            ask_amount: 100,
+            payout_verifier: Default::default(),
+            _ph_data: PhantomData,
+            
         };
 
-        let output_a = DexItem::TokenB(150);
-        let output_b = DexItem::TokenA(100);
-
-        let output_a = Output {
-            payload: output_a.into(),
-            verifier: SigCheck {
-                owner_pubkey: H256::zero(),
-            },
+        let input_a = Output::<TestVerifier> {
+            payload: order_a.into(),
+            verifier: Default::default(),
         };
-        let output_b = Output {
-            payload: output_b.into(),
-            verifier: SigCheck {
-                owner_pubkey: H256::zero(),
-            },
+        let input_b = Output::<TestVerifier> {
+            payload: order_b.into(),
+            verifier: Default::default(),
         };
 
-        let result = <MatchOrders as ConstraintChecker>::check(
-            &MatchOrders,
+        let output_a = Output::<TestVerifier> {
+            payload: Coin::<1>(150).into(),
+            verifier: Default::default(),
+        };
+        let output_b = Output::<TestVerifier> {
+            payload: Coin::<0>(100).into(),
+            verifier: Default::default(),
+        };
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
             &vec![input_a, input_b],
             &vec![output_a, output_b],
         );
         assert_eq!(result, Ok(0));
     }
+
+    #[test]
+    fn insufficient_payout_fails() {}
 
     #[test]
     fn bad_match_not_enough_a() {}
