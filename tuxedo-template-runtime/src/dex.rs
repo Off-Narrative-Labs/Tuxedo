@@ -200,7 +200,7 @@ where
                 // Ensure the payout is the right amount
                 let payout = output.payload.extract::<B>()?;
                 ensure!(
-                    payout.value() == order.ask_amount,
+                    payout.value() >= order.ask_amount,
                     DexError::PayoutDoesNotSatisfyOrder
                 );
 
@@ -216,7 +216,7 @@ where
                 // Ensure the payout is the right amount
                 let payout = output.payload.extract::<A>()?;
                 ensure!(
-                    payout.value() == order.ask_amount,
+                    payout.value() >= order.ask_amount,
                     DexError::PayoutDoesNotSatisfyOrder
                 );
 
