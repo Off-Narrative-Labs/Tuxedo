@@ -353,22 +353,6 @@ mod test {
     }
 
     #[test]
-    fn bad_match_orders_actually_do_not_match() {
-        let order_a = a_for_b_order(100, 150);
-        let order_b = b_for_a_order(100, 100);
-
-        let payout_a =Coin::<1>(150);
-        let payout_b = Coin::<0>(100);
-
-        let result = <MatchTestOrders as ConstraintChecker>::check(
-            &MatchOrders(PhantomData),
-            &vec![output_from(order_a), output_from(order_b)],
-            &vec![output_from(payout_a), output_from(payout_b)],
-        );
-        assert_eq!(result, Err(DexError::InsufficientTokenBForMatch));
-    }
-
-    #[test]
     fn bad_match_insufficient_payout() {
         let order_a = a_for_b_order(100, 150);
         let order_b = b_for_a_order(100, 100);
@@ -391,10 +375,36 @@ mod test {
     }
 
     #[test]
-    fn bad_match_not_enough_a() {}
+    fn bad_match_not_enough_a() {
+        let order_a = a_for_b_order(90, 150);
+        let order_b = b_for_a_order(150, 100);
+
+        let payout_a =Coin::<1>(150);
+        let payout_b = Coin::<0>(100);
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a), output_from(payout_b)],
+        );
+        assert_eq!(result, Err(DexError::InsufficientTokenAForMatch));
+    }
 
     #[test]
-    fn bad_match_not_enough_b() {}
+    fn bad_match_not_enough_b() {
+        let order_a = a_for_b_order(100, 150);
+        let order_b = b_for_a_order(100, 100);
+
+        let payout_a =Coin::<1>(150);
+        let payout_b = Coin::<0>(100);
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a), output_from(payout_b)],
+        );
+        assert_eq!(result, Err(DexError::InsufficientTokenBForMatch));
+    }
 
     #[test]
     fn match_with_bad_payout() {}
