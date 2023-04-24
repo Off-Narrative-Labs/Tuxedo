@@ -131,16 +131,16 @@ pub fn tuxedo_constraint_checker(_: TokenStream, body: TokenStream) -> TokenStre
         ///
         /// This type is accessible downstream as `<OuterConstraintChecker as ConstraintChecker>::Error`
         #[derive(Debug)]
-        #vis enum #error_type {
+        #vis enum #error_type <V: tuxedo_core::Verifier> {
             #(
-                #variants(<#inner_types as tuxedo_core::ConstraintChecker>::Error),
+                #variants(<#inner_types as tuxedo_core::ConstraintChecker<V>>::Error),
             )*
         }
 
-        impl tuxedo_core::ConstraintChecker for #outer_type {
-            type Error = #error_type;
+        impl<V: tuxedo_core::Verifier> tuxedo_core::ConstraintChecker<V> for #outer_type {
+            type Error = #error_type <V>;
 
-            fn check<V: tuxedo_core::Verifier + core::cmp::PartialEq>(
+            fn check (
                 &self,
                 inputs: &[tuxedo_core::types::Output<V>],
                 outputs: &[tuxedo_core::types::Output<V>],
