@@ -263,7 +263,7 @@ mod test {
         Order {
             offer_amount,
             ask_amount,
-            payout_verifier: Default::default(),
+            payout_verifier: TestVerifier { verifies: true },
             _ph_data: Default::default(),
         }
     }
@@ -272,8 +272,15 @@ mod test {
         Order {
             offer_amount,
             ask_amount,
-            payout_verifier: Default::default(),
+            payout_verifier: TestVerifier { verifies: true },
             _ph_data: Default::default(),
+        }
+    }
+
+    fn output_from<T: Into<DynamicallyTypedData>>(payload: T) -> Output<TestVerifier> {
+        Output {
+            payload: payload.into(),
+            verifier: TestVerifier { verifies: true },
         }
     }
 
@@ -334,40 +341,36 @@ mod test {
         let order_a = a_for_b_order(100, 150);
         let order_b = b_for_a_order(150, 100);
 
-        let input_a = Output::<TestVerifier> {
-            payload: order_a.into(),
-            verifier: Default::default(),
-        };
-        let input_b = Output::<TestVerifier> {
-            payload: order_b.into(),
-            verifier: Default::default(),
-        };
-
-        let output_a = Output::<TestVerifier> {
-            payload: Coin::<1>(150).into(),
-            verifier: Default::default(),
-        };
-        let output_b = Output::<TestVerifier> {
-            payload: Coin::<0>(100).into(),
-            verifier: Default::default(),
-        };
+        let payout_a =Coin::<1>(150);
+        let payout_b = Coin::<0>(100);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
             &MatchOrders(PhantomData),
-            &vec![input_a, input_b],
-            &vec![output_a, output_b],
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a), output_from(payout_b)],
         );
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn bad_match_orders_actually_do_not_match() {
-        // let order
+        let order_a = a_for_b_order(100, 150);
+        let order_b = b_for_a_order(100, 100);
+
+        let payout_a =Coin::<1>(150);
+        let payout_b = Coin::<0>(100);
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a), output_from(payout_b)],
+        );
+        assert_eq!(result, Err(DexError::InsufficientTokenBForMatch));
     }
 
     #[test]
     fn bad_match_insufficient_payout() {
-
+        
     }
 
     #[test]
@@ -381,4 +384,9 @@ mod test {
 
     #[test]
     fn match_with_different_numbers_of_payouts_and_orders() {}
+
+    #[test]
+    fn wrong_verifier_on_match_payout() {
+        
+    }
 }
