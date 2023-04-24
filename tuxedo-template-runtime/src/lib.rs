@@ -223,6 +223,10 @@ pub enum OuterConstraintChecker {
     PoeDispute(poe::PoeDispute),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+    /// A Second token just like the one up top.
+    SecondToken(money::MoneyConstraintChecker<1>),
+    /// Open Orders in a Decentralized Exchange to swap between the Money and the SecondToken
+    Dex(dex::MakeOrder<OuterVerifier, money::Coin::<0>, money::Coin::<1>>),
 }
 
 /// The main struct in this module.
