@@ -8,21 +8,10 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure,
+    traits::Cash,
+    SimpleConstraintChecker,
 };
-
-/// TODO This should live somewhere analogous to frame support, not right here in the money piece.
-/// But this is where it is for now.
-///
-/// A trait for UTXOs that can act like coins, or bank notes.
-pub trait Cash {
-    /// Get the value of this token.
-    fn value(&self) -> u128;
-
-    /// A 1-byte unique identifier for this coin.
-    /// Might need more than 1 byte eventually...
-    const ID: u8;
-}
 
 impl<const ID: u8> Cash for Coin<ID> {
     fn value(&self) -> u128 {
@@ -35,10 +24,7 @@ impl<const ID: u8> Cash for Coin<ID> {
 // use log::info;
 
 /// The main constraint checker for the money piece. Allows spending and minting tokens.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MoneyConstraintChecker<const ID: u8> {
     /// A typical spend transaction where some coins are consumed and others are created.
@@ -53,10 +39,7 @@ pub enum MoneyConstraintChecker<const ID: u8> {
 
 /// A single coin in the fungible money system.
 /// A new-type wrapper around a `u128` value.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct Coin<const ID: u8>(pub u128);
 
@@ -71,10 +54,7 @@ impl<const ID: u8> UtxoData for Coin<ID> {
 }
 
 /// Errors that can occur when checking money transactions.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
@@ -208,7 +188,7 @@ mod test {
             Coin::<0>(10).into(),
             Coin::<0>(1).into(),
             Coin::<0>(0).into(),
-        ]; // total 1164;
+        ]; // total 11
 
         assert_eq!(
             MoneyConstraintChecker::<0>::Spend.check(&input_data, &output_data),

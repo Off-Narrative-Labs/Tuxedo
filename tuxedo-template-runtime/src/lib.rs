@@ -49,14 +49,9 @@ use tuxedo_core::types::OutputRef;
 /// to even the core data structures.
 pub mod opaque {
     use super::*;
-    // TODO: eventually you will have to change this.
-    type OpaqueExtrinsic = Transaction;
-    // type OpaqueExtrinsic = Vec<u8>;
 
-    /// Opaque block header type.
-    pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
     /// Opaque block type.
-    pub type Block = sp_runtime::generic::Block<Header, OpaqueExtrinsic>;
+    pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
 
     // This part is necessary for generating session keys in the runtime
     impl_opaque_keys! {
@@ -189,10 +184,7 @@ const BLOCK_TIME: u64 = 3000;
 
 /// A verifier checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 #[tuxedo_verifier]
 pub enum OuterVerifier {
@@ -208,10 +200,7 @@ pub enum OuterVerifier {
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 #[tuxedo_constraint_checker]
 pub enum OuterConstraintChecker {

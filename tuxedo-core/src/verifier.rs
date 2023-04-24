@@ -24,10 +24,7 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 }
 
 /// A typical verifier that checks an sr25519 signature
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct SigCheck {
     pub owner_pubkey: H256,
@@ -45,10 +42,7 @@ impl Verifier for SigCheck {
 }
 
 /// A simple verifier that allows anyone to consume an output at any time
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct UpForGrabs;
 
@@ -62,10 +56,7 @@ impl Verifier for UpForGrabs {
 /// guarded by this verifier. A valid redeemer must supply valid signatures by at least
 /// `threshold` of the signatories. If the threshold is greater than the number of signatories
 /// the input can never be consumed.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct ThresholdMultiSignature {
     /// The minimum number of valid signatures needed to consume this input
