@@ -188,7 +188,7 @@ mod test {
             Coin::<0>(10).into(),
             Coin::<0>(1).into(),
             Coin::<0>(0).into(),
-        ]; // total 1164;
+        ]; // total 11
 
         assert_eq!(
             MoneyConstraintChecker::<0>::Spend.check(&input_data, &output_data),
