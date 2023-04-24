@@ -419,13 +419,40 @@ mod test {
     }
 
     #[test]
-    fn match_with_bad_payout() {}
+    fn match_with_different_numbers_of_payouts_and_orders() {
+        let order_a = a_for_b_order(90, 150);
+        let order_b = b_for_a_order(150, 100);
 
-    #[test]
-    fn match_with_different_numbers_of_payouts_and_orders() {}
+        let payout_a =Coin::<1>(150);
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a)],
+        );
+        assert_eq!(result, Err(DexError::OrderAndPayoutCountDiffer));
+    }
 
     #[test]
     fn wrong_verifier_on_match_payout() {
+        let order_a = a_for_b_order(90, 150);
+        let order_b = b_for_a_order(150, 100);
 
+        let payout_a =Coin::<1>(150);
+        let payout_b = Coin::<0>(100);
+
+        // We don't use the helper function to construct the full output
+        // because we want to make sure the verifier does NOT match
+        let payout_b_output = Output {
+            payload: payout_b.into(),
+            verifier: TestVerifier{ verifies: false },
+        };
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a), payout_b_output],
+        );
+        assert_eq!(result, Err(DexError::VerifierMismatchForTrade));
     }
 }
