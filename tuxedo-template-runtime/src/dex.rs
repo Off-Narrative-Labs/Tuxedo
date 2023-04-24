@@ -124,7 +124,7 @@ struct MatchOrders<A: Cash, B: Cash>(PhantomData<(A, B)>);
 // Here we see an example
 impl<V: Verifier, A, B> SimpleConstraintChecker for MakeOrder<V, A, B>
 where
-    A: Cash + UtxoData +Encode + Decode + Debug + PartialEq + Eq + Clone,
+    A: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
     B: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
 {
     type Error = DexError;
@@ -165,7 +165,7 @@ where
 {
     type Error = DexError;
 
-    fn check<V: Verifier + PartialEq> (
+    fn check<V: Verifier + PartialEq>(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
@@ -287,7 +287,7 @@ mod test {
     #[test]
     fn opening_order_with_no_inputs_fails() {
         let order = Order::default_test_order();
-        
+
         let result = <MakeTestOrder as SimpleConstraintChecker>::check(
             &Default::default(),
             &vec![],
@@ -300,8 +300,11 @@ mod test {
     fn opening_order_with_no_outputs_fails() {
         let input = Coin::<0>(100);
 
-        let result =
-            <MakeTestOrder as SimpleConstraintChecker>::check(&Default::default(), &vec![input.into()], &vec![]);
+        let result = <MakeTestOrder as SimpleConstraintChecker>::check(
+            &Default::default(),
+            &vec![input.into()],
+            &vec![],
+        );
         assert_eq!(result, Err(DexError::OrderMissing));
     }
 
@@ -316,7 +319,6 @@ mod test {
             ask_amount: 100,
             payout_verifier: Default::default(),
             _ph_data: PhantomData,
-            
         };
 
         let input_a = Output::<TestVerifier> {
