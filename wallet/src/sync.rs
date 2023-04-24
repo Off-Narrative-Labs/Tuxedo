@@ -81,7 +81,7 @@ pub(crate) async fn init_from_genesis<F: Fn(&OuterVerifier) -> bool>(
 
     for (output, output_ref) in filtered_outputs_and_refs {
         // For now the wallet only supports simple coins, so skip anything else
-        let amount = match output.payload.extract::<Coin>() {
+        let amount = match output.payload.extract::<Coin<0>>() {
             Ok(Coin(amount)) => amount,
             Err(_) => continue,
         };
@@ -324,7 +324,7 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
         .enumerate()
     {
         // For now the wallet only supports simple coins, so skip anything else
-        let amount = match output.payload.extract::<Coin>() {
+        let amount = match output.payload.extract::<Coin<0>>() {
             Ok(Coin(amount)) => amount,
             Err(_) => continue,
         };

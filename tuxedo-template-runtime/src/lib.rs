@@ -48,9 +48,14 @@ use tuxedo_core::types::OutputRef;
 /// to even the core data structures.
 pub mod opaque {
     use super::*;
+    // TODO: eventually you will have to change this.
+    type OpaqueExtrinsic = Transaction;
+    // type OpaqueExtrinsic = Vec<u8>;
 
+    /// Opaque block header type.
+    pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
     /// Opaque block type.
-    pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
+    pub type Block = sp_runtime::generic::Block<Header, OpaqueExtrinsic>;
 
     // This part is necessary for generating session keys in the runtime
     impl_opaque_keys! {
@@ -119,7 +124,7 @@ impl Default for GenesisConfig {
                     }),
                     payload: DynamicallyTypedData {
                         data: 100u128.encode(),
-                        type_id: <money::Coin as UtxoData>::TYPE_ID,
+                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                     },
                 },
                 Output {
@@ -129,7 +134,7 @@ impl Default for GenesisConfig {
                     }),
                     payload: DynamicallyTypedData {
                         data: 100u128.encode(),
-                        type_id: <money::Coin as UtxoData>::TYPE_ID,
+                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                     },
                 },
             ],
@@ -204,7 +209,7 @@ pub enum OuterVerifier {
 #[tuxedo_constraint_checker]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
-    Money(money::MoneyConstraintChecker),
+    Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
     FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
     /// Checks that an amoeba can split into two new amoebas
@@ -451,7 +456,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
@@ -486,7 +491,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
