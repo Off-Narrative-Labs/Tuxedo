@@ -57,9 +57,6 @@ pub enum DexError {
     /// More than one output was supplied.
     /// When making an order, exactly one output should be supplied, which is the order.
     TooManyOutputsWhenMakingOrder,
-    /// Transactions that open orders should only take inputs of the token needed to back
-    /// the order.
-    WrongCollateralToOpenOrder,
     /// The coins provided do not have enough combined value to back the order that you attempted to open.
     NotEnoughCollateralToOpenOrder,
     /// This transaction has a different number of input orders than output payouts.
