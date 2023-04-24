@@ -8,21 +8,10 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure,
+    traits::Cash,
+    SimpleConstraintChecker,
 };
-
-/// TODO This should live somewhere analogous to frame support, not right here in the money piece.
-/// But this is where it is for now.
-///
-/// A trait for UTXOs that can act like coins, or bank notes.
-pub trait Cash {
-    /// Get the value of this token.
-    fn value(&self) -> u128;
-
-    /// A 1-byte unique identifier for this coin.
-    /// Might need more than 1 byte eventually...
-    const ID: u8;
-}
 
 impl<const ID: u8> Cash for Coin<ID> {
     fn value(&self) -> u128 {
