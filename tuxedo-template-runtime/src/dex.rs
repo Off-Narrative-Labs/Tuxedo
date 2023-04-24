@@ -200,7 +200,7 @@ where
                 // Ensure the payout is the right amount
                 let payout = output.payload.extract::<B>()?;
                 ensure!(
-                    payout.value() == order.ask_amount,
+                    payout.value() >= order.ask_amount,
                     DexError::PayoutDoesNotSatisfyOrder
                 );
 
@@ -216,7 +216,7 @@ where
                 // Ensure the payout is the right amount
                 let payout = output.payload.extract::<A>()?;
                 ensure!(
-                    payout.value() == order.ask_amount,
+                    payout.value() >= order.ask_amount,
                     DexError::PayoutDoesNotSatisfyOrder
                 );
 
@@ -254,7 +254,7 @@ where
 mod test {
     use super::*;
     use crate::money::Coin;
-    use tuxedo_core::{dynamic_typing::testing::Bogus, verifier::TestVerifier};
+    use tuxedo_core::verifier::TestVerifier;
 
     type MakeTestOrder = MakeOrder<TestVerifier, Coin<0>, Coin<1>>;
     type MatchTestOrders = MatchOrders<Coin<0>, Coin<1>>;
@@ -340,6 +340,21 @@ mod test {
         );
 
         assert_eq!(result, Err(DexError::NotEnoughCollateralToOpenOrder));
+    }
+
+    #[test]
+    fn opening_order_with_collateral_in_wrong_asset() {
+        // Collateral is in Token B but order offered token A
+        let input = Coin::<1>(100);
+        let order = a_for_b_order(100, 150);
+
+        let result = <MakeTestOrder as SimpleConstraintChecker>::check(
+            &Default::default(),
+            &vec![input.into()],
+            &vec![order.into()],
+        );
+
+        assert_eq!(result, Err(DexError::TypeError));
     }
 
     #[test]
