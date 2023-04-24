@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"tuxedo_template_runtime":[["impl&lt;const ID: <a class=\"primitive\" href=\"https://doc.rust-lang.org/nightly/std/primitive.u8.html\">u8</a>&gt; <a class=\"trait\" href=\"tuxedo_core/traits/trait.Cash.html\" title=\"trait tuxedo_core::traits::Cash\">Cash</a> for <a class=\"struct\" href=\"tuxedo_template_runtime/money/struct.Coin.html\" title=\"struct tuxedo_template_runtime::money::Coin\">Coin</a>&lt;ID&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

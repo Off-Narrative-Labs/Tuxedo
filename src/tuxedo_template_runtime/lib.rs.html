@@ -624,7 +624,7 @@
                     }),
                     payload: DynamicallyTypedData {
                         data: <span class="number">100u128</span>.encode(),
-                        type_id: &lt;money::Coin <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
+                        type_id: &lt;money::Coin&lt;<span class="number">0</span>&gt; <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
                     },
                 },
                 Output {
@@ -634,7 +634,7 @@
                     }),
                     payload: DynamicallyTypedData {
                         data: <span class="number">100u128</span>.encode(),
-                        type_id: &lt;money::Coin <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
+                        type_id: &lt;money::Coin&lt;<span class="number">0</span>&gt; <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
                     },
                 },
             ],
@@ -709,7 +709,7 @@
 #[tuxedo_constraint_checker]
 </span><span class="kw">pub enum </span>OuterConstraintChecker {
     <span class="doccomment">/// Checks monetary transactions in a basic fungible cryptocurrency
-    </span>Money(money::MoneyConstraintChecker),
+    </span>Money(money::MoneyConstraintChecker&lt;<span class="number">0</span>&gt;),
     <span class="doccomment">/// Checks Free Kitty transactions
     </span>FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
     <span class="doccomment">/// Checks that an amoeba can split into two new amoebas
@@ -956,7 +956,7 @@
                 }),
                 payload: DynamicallyTypedData {
                     data: <span class="number">100u128</span>.encode(),
-                    type_id: &lt;money::Coin <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
+                    type_id: &lt;money::Coin&lt;<span class="number">0</span>&gt; <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
                 },
             };
 
@@ -991,7 +991,7 @@
                 }),
                 payload: DynamicallyTypedData {
                     data: <span class="number">100u128</span>.encode(),
-                    type_id: &lt;money::Coin <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
+                    type_id: &lt;money::Coin&lt;<span class="number">0</span>&gt; <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
                 },
             };
 

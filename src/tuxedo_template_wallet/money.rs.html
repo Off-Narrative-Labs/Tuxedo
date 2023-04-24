@@ -184,7 +184,7 @@
     </span><span class="kw">let </span><span class="kw-2">mut </span>total_output_amount = <span class="number">0</span>;
     <span class="kw">for </span>amount <span class="kw">in </span><span class="kw-2">&amp;</span>args.output_amount {
         <span class="kw">let </span>output = Output {
-            payload: Coin::new(<span class="kw-2">*</span>amount).into(),
+            payload: Coin::&lt;<span class="number">0</span>&gt;::new(<span class="kw-2">*</span>amount).into(),
             verifier: OuterVerifier::SigCheck(SigCheck {
                 owner_pubkey: args.recipient,
             }),
@@ -267,7 +267,7 @@
             tx_hash,
             index: i <span class="kw">as </span>u32,
         };
-        <span class="kw">let </span>amount = output.payload.extract::&lt;Coin&gt;()<span class="question-mark">?</span>.<span class="number">0</span>;
+        <span class="kw">let </span>amount = output.payload.extract::&lt;Coin&lt;<span class="number">0</span>&gt;&gt;()<span class="question-mark">?</span>.<span class="number">0</span>;
 
         <span class="macro">print!</span>(
             <span class="string">&quot;Created {:?} worth {amount}. &quot;</span>,
@@ -284,9 +284,9 @@
 </span><span class="kw">pub async fn </span>get_coin_from_storage(
     output_ref: <span class="kw-2">&amp;</span>OutputRef,
     client: <span class="kw-2">&amp;</span>HttpClient,
-) -&gt; anyhow::Result&lt;(Coin, OuterVerifier)&gt; {
+) -&gt; anyhow::Result&lt;(Coin&lt;<span class="number">0</span>&gt;, OuterVerifier)&gt; {
     <span class="kw">let </span>utxo = fetch_storage::&lt;OuterVerifier&gt;(output_ref, client).<span class="kw">await</span><span class="question-mark">?</span>;
-    <span class="kw">let </span>coin_in_storage: Coin = utxo.payload.extract()<span class="question-mark">?</span>;
+    <span class="kw">let </span>coin_in_storage: Coin&lt;<span class="number">0</span>&gt; = utxo.payload.extract()<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>((coin_in_storage, utxo.verifier))
 }

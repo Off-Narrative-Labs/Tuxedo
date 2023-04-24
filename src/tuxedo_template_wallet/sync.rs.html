@@ -592,7 +592,7 @@
 
     <span class="kw">for </span>(output, output_ref) <span class="kw">in </span>filtered_outputs_and_refs {
         <span class="comment">// For now the wallet only supports simple coins, so skip anything else
-        </span><span class="kw">let </span>amount = <span class="kw">match </span>output.payload.extract::&lt;Coin&gt;() {
+        </span><span class="kw">let </span>amount = <span class="kw">match </span>output.payload.extract::&lt;Coin&lt;<span class="number">0</span>&gt;&gt;() {
             <span class="prelude-val">Ok</span>(Coin(amount)) =&gt; amount,
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
         };
@@ -835,7 +835,7 @@
         .enumerate()
     {
         <span class="comment">// For now the wallet only supports simple coins, so skip anything else
-        </span><span class="kw">let </span>amount = <span class="kw">match </span>output.payload.extract::&lt;Coin&gt;() {
+        </span><span class="kw">let </span>amount = <span class="kw">match </span>output.payload.extract::&lt;Coin&lt;<span class="number">0</span>&gt;&gt;() {
             <span class="prelude-val">Ok</span>(Coin(amount)) =&gt; amount,
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
         };

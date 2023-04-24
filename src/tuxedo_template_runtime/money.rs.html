@@ -293,6 +293,20 @@
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! An implementation of a simple fungible token.
 
 </span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
@@ -303,15 +317,25 @@
 <span class="kw">use </span>sp_std::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure,
+    traits::Cash,
+    SimpleConstraintChecker,
 };
+
+<span class="kw">impl</span>&lt;<span class="kw">const </span>ID: u8&gt; Cash <span class="kw">for </span>Coin&lt;ID&gt; {
+    <span class="kw">fn </span>value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u128 {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
+
+    <span class="kw">const </span>ID: u8 = ID;
+}
 
 <span class="comment">// use log::info;
 
 </span><span class="doccomment">/// The main constraint checker for the money piece. Allows spending and minting tokens.
 </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;std&quot;</span>, derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-</span><span class="kw">pub enum </span>MoneyConstraintChecker {
+</span><span class="kw">pub enum </span>MoneyConstraintChecker&lt;<span class="kw">const </span>ID: u8&gt; {
     <span class="doccomment">/// A typical spend transaction where some coins are consumed and others are created.
     /// Input value must exceed output value. The difference is burned and reflected in the
     /// transaction&#39;s priority.
@@ -326,16 +350,16 @@
 /// A new-type wrapper around a `u128` value.
 </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;std&quot;</span>, derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
-</span><span class="kw">pub struct </span>Coin(<span class="kw">pub </span>u128);
+</span><span class="kw">pub struct </span>Coin&lt;<span class="kw">const </span>ID: u8&gt;(<span class="kw">pub </span>u128);
 
-<span class="kw">impl </span>Coin {
+<span class="kw">impl</span>&lt;<span class="kw">const </span>ID: u8&gt; Coin&lt;ID&gt; {
     <span class="kw">pub fn </span>new(amt: u128) -&gt; <span class="self">Self </span>{
         Coin(amt)
     }
 }
 
-<span class="kw">impl </span>UtxoData <span class="kw">for </span>Coin {
-    <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = <span class="kw-2">*</span><span class="string">b&quot;coin&quot;</span>;
+<span class="kw">impl</span>&lt;<span class="kw">const </span>ID: u8&gt; UtxoData <span class="kw">for </span>Coin&lt;ID&gt; {
+    <span class="kw">const </span>TYPE_ID: [u8; <span class="number">4</span>] = [<span class="string">b&#39;c&#39;</span>, <span class="string">b&#39;o&#39;</span>, <span class="string">b&#39;i&#39;</span>, ID];
 }
 
 <span class="doccomment">/// Errors that can occur when checking money transactions.
@@ -364,7 +388,7 @@
     </span>ZeroValueCoin,
 }
 
-<span class="kw">impl </span>SimpleConstraintChecker <span class="kw">for </span>MoneyConstraintChecker {
+<span class="kw">impl</span>&lt;<span class="kw">const </span>ID: u8&gt; SimpleConstraintChecker <span class="kw">for </span>MoneyConstraintChecker&lt;ID&gt; {
     <span class="kw">type </span>Error = ConstraintCheckerError;
 
     <span class="kw">fn </span>check(
@@ -386,7 +410,7 @@
                 <span class="comment">// Check that sum of input values &lt; output values
                 </span><span class="kw">for </span>input <span class="kw">in </span>input_data {
                     <span class="kw">let </span>utxo_value = input
-                        .extract::&lt;Coin&gt;()
+                        .extract::&lt;Coin&lt;ID&gt;&gt;()
                         .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTyped)<span class="question-mark">?
                         </span>.<span class="number">0</span>;
                     total_input_value = total_input_value
@@ -396,7 +420,7 @@
 
                 <span class="kw">for </span>utxo <span class="kw">in </span>output_data {
                     <span class="kw">let </span>utxo_value = utxo
-                        .extract::&lt;Coin&gt;()
+                        .extract::&lt;Coin&lt;ID&gt;&gt;()
                         .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTyped)<span class="question-mark">?
                         </span>.<span class="number">0</span>;
                     <span class="macro">ensure!</span>(utxo_value &gt; <span class="number">0</span>, ConstraintCheckerError::ZeroValueCoin);
@@ -435,7 +459,7 @@
                 <span class="comment">// Make sure the outputs are the right type
                 </span><span class="kw">for </span>utxo <span class="kw">in </span>output_data {
                     <span class="kw">let </span>utxo_value = utxo
-                        .extract::&lt;Coin&gt;()
+                        .extract::&lt;Coin&lt;ID&gt;&gt;()
                         .map_err(|<span class="kw">_</span>| ConstraintCheckerError::BadlyTyped)<span class="question-mark">?
                         </span>.<span class="number">0</span>;
                     <span class="macro">ensure!</span>(utxo_value &gt; <span class="number">0</span>, ConstraintCheckerError::ZeroValueCoin);
@@ -456,35 +480,39 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_valid_transaction_work() {
-        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin(<span class="number">5</span>).into(), Coin(<span class="number">7</span>).into()]; <span class="comment">// total 12
-        </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into()]; <span class="comment">// total 11
+        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">5</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">7</span>).into()]; <span class="comment">// total 12
+        </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into()]; <span class="comment">// total 11
         </span><span class="kw">let </span>expected_priority = <span class="number">1u64</span>;
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Ok</span>(expected_priority),
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_with_zero_value_output_fails() {
-        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin(<span class="number">5</span>).into(), Coin(<span class="number">7</span>).into()]; <span class="comment">// total 12
-        </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into(), Coin(<span class="number">0</span>).into()]; <span class="comment">// total 1164;
+        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">5</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">7</span>).into()]; <span class="comment">// total 12
+        </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[
+            Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(),
+            Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into(),
+            Coin::&lt;<span class="number">0</span>&gt;(<span class="number">0</span>).into(),
+        ]; <span class="comment">// total 11
 
         </span><span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::ZeroValueCoin),
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_no_outputs_is_a_burn() {
-        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin(<span class="number">5</span>).into(), Coin(<span class="number">7</span>).into()]; <span class="comment">// total 12
+        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">5</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">7</span>).into()]; <span class="comment">// total 12
         </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
         <span class="kw">let </span>expected_priority = <span class="number">12u64</span>;
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Ok</span>(expected_priority),
         );
     }
@@ -492,10 +520,10 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_no_inputs_fails() {
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[];
-        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into()];
+        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::SpendingNothing),
         );
     }
@@ -503,32 +531,32 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_wrong_input_type_fails() {
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Bogus.into()];
-        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into()];
+        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTyped),
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_wrong_output_type_fails() {
-        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin(<span class="number">5</span>).into(), Coin(<span class="number">7</span>).into()]; <span class="comment">// total 12
+        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">5</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">7</span>).into()]; <span class="comment">// total 12
         </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[Bogus.into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTyped),
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>spend_output_value_exceeds_input_value_fails() {
-        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into()]; <span class="comment">// total 11
-        </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">5</span>).into(), Coin(<span class="number">7</span>).into()]; <span class="comment">// total 12
+        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into()]; <span class="comment">// total 11
+        </span><span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">5</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">7</span>).into()]; <span class="comment">// total 12
 
         </span><span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Spend.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::OutputsExceedInputs),
         );
     }
@@ -536,10 +564,10 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>mint_valid_transaction_works() {
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[];
-        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into()];
+        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Ok</span>(<span class="number">0</span>),
         );
     }
@@ -547,21 +575,21 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>mint_with_zero_value_output_fails() {
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[];
-        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">0</span>).into()];
+        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">0</span>).into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::ZeroValueCoin),
         );
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>mint_with_inputs_fails() {
-        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin(<span class="number">5</span>).into()];
-        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Coin(<span class="number">1</span>).into()];
+        <span class="kw">let </span>input_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">5</span>).into()];
+        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Coin::&lt;<span class="number">0</span>&gt;(<span class="number">1</span>).into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::MintingWithInputs),
         );
     }
@@ -572,7 +600,7 @@
         <span class="kw">let </span>output_data = <span class="macro">vec!</span>[];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::MintingNothing),
         );
     }
@@ -580,10 +608,10 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>mint_wrong_output_type_fails() {
         <span class="kw">let </span>input_data = <span class="macro">vec!</span>[];
-        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin(<span class="number">10</span>).into(), Bogus.into()];
+        <span class="kw">let </span>output_data = <span class="macro">vec!</span>[Coin::&lt;<span class="number">0</span>&gt;(<span class="number">10</span>).into(), Bogus.into()];
 
         <span class="macro">assert_eq!</span>(
-            MoneyConstraintChecker::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
+            MoneyConstraintChecker::&lt;<span class="number">0</span>&gt;::Mint.check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>output_data),
             <span class="prelude-val">Err</span>(ConstraintCheckerError::BadlyTyped),
         );
     }
