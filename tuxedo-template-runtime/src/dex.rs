@@ -48,7 +48,7 @@ impl<V: Verifier, A: Cash, B: Cash> UtxoData for Order<V, A, B> {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// All the things that can go wrong while checking constraints on dex transactions
-enum DexError {
+pub enum DexError {
     /// Some dynamically typed data was not of the expected type
     TypeError,
     /// No outputs were supplied when making an order.
@@ -96,7 +96,7 @@ impl From<DynamicTypingError> for DexError {
 /// writing a configuration trait and taking a single generic that implements
 /// that trait. In cases where a lot of configuration is required, the FRAME-like
 /// approach is even preferable.
-struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
+pub struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 
 impl<V: Verifier, A: Cash, B: Cash> Default for MakeOrder<V, A, B> {
     fn default() -> Self {
@@ -107,7 +107,7 @@ impl<V: Verifier, A: Cash, B: Cash> Default for MakeOrder<V, A, B> {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// Constraint checking logic for matching existing open orders against one another
-struct MatchOrders<A: Cash, B: Cash>(PhantomData<(A, B)>);
+pub struct MatchOrders<A: Cash, B: Cash>(PhantomData<(A, B)>);
 
 // The following lines brainstorm some other constraint checkers that could be added
 // but currently are not implemented.
