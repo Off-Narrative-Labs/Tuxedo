@@ -256,24 +256,30 @@ mod test {
     use crate::money::Coin;
     use tuxedo_core::{dynamic_typing::testing::Bogus, verifier::TestVerifier};
 
-    type TestOrder = Order<TestVerifier, Coin<0>, Coin<1>>;
     type MakeTestOrder = MakeOrder<TestVerifier, Coin<0>, Coin<1>>;
     type MatchTestOrders = MatchOrders<Coin<0>, Coin<1>>;
 
-    impl TestOrder {
-        pub fn default_test_order() -> Self {
-            TestOrder {
-                offer_amount: 100,
-                ask_amount: 150,
-                payout_verifier: Default::default(),
-                _ph_data: Default::default(),
-            }
+    fn a_for_b_order(offer_amount: u128, ask_amount: u128) -> Order<TestVerifier, Coin<0>, Coin<1>> {
+        Order {
+            offer_amount,
+            ask_amount,
+            payout_verifier: Default::default(),
+            _ph_data: Default::default(),
+        }
+    }
+
+    fn b_for_a_order(offer_amount: u128, ask_amount: u128) -> Order<TestVerifier, Coin<1>, Coin<0>> {
+        Order {
+            offer_amount,
+            ask_amount,
+            payout_verifier: Default::default(),
+            _ph_data: Default::default(),
         }
     }
 
     #[test]
     fn opening_an_order_seeking_a_works() {
-        let order = Order::default_test_order();
+        let order = a_for_b_order(100, 150);
         let input = Coin::<0>(100);
 
         let result = <MakeTestOrder as SimpleConstraintChecker>::check(
@@ -286,7 +292,7 @@ mod test {
 
     #[test]
     fn opening_order_with_no_inputs_fails() {
-        let order = Order::default_test_order();
+        let order = a_for_b_order(100, 150);
 
         let result = <MakeTestOrder as SimpleConstraintChecker>::check(
             &Default::default(),
@@ -309,17 +315,24 @@ mod test {
     }
 
     #[test]
-    fn opening_order_with_insufficient_collateral_fails() {}
+    fn opening_order_with_insufficient_collateral_fails() {
+        // Collateral is only worth 50, but order is for 100
+        let input = Coin::<0>(50);
+        let order = a_for_b_order(100, 150);
+
+        let result = <MakeTestOrder as SimpleConstraintChecker>::check(
+            &Default::default(),
+            &vec![input.into()],
+            &vec![order.into()],
+        );
+
+        assert_eq!(result, Err(DexError::NotEnoughCollateralToOpenOrder));
+    }
 
     #[test]
     fn matching_two_orders_together_works() {
-        let order_a = Order::default_test_order();
-        let order_b = Order::<TestVerifier, Coin<1>, Coin<0>> {
-            offer_amount: 150,
-            ask_amount: 100,
-            payout_verifier: Default::default(),
-            _ph_data: PhantomData,
-        };
+        let order_a = a_for_b_order(100, 150);
+        let order_b = b_for_a_order(150, 100);
 
         let input_a = Output::<TestVerifier> {
             payload: order_a.into(),
@@ -348,7 +361,14 @@ mod test {
     }
 
     #[test]
-    fn insufficient_payout_fails() {}
+    fn bad_match_orders_actually_do_not_match() {
+        // let order
+    }
+
+    #[test]
+    fn bad_match_insufficient_payout() {
+
+    }
 
     #[test]
     fn bad_match_not_enough_a() {}
