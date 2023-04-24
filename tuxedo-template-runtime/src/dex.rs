@@ -49,7 +49,7 @@ impl<V: Verifier, A: Cash, B: Cash> UtxoData for Order<V, A, B> {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// All the things that can go wrong while checking constraints on dex transactions
 enum DexError {
-    /// Some dynamically typed data was not of the expected the expected type
+    /// Some dynamically typed data was not of the expected type
     TypeError,
     /// No outputs were supplied when making an order.
     /// When making an order, exactly one output should be supplied, which is the order.
