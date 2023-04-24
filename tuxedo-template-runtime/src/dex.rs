@@ -5,7 +5,6 @@
 
 use core::marker::PhantomData;
 
-use crate::money::Cash;
 use parity_scale_codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
@@ -15,6 +14,7 @@ use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicTypingError, DynamicallyTypedData, UtxoData},
     ensure,
+    traits::Cash,
     types::Output,
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
@@ -92,7 +92,7 @@ impl From<DynamicTypingError> for DexError {
 ///
 /// This constraint checker demonstrates taking configuration information
 /// from the broader runtime. Here we use separate generics for each piece of
-/// configuration. It is also be fine to take a more FRAME-like approach of
+/// configuration. It is also fine to take a more FRAME-like approach of
 /// writing a configuration trait and taking a single generic that implements
 /// that trait. In cases where a lot of configuration is required, the FRAME-like
 /// approach is even preferable.
