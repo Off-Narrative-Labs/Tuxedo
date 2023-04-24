@@ -259,7 +259,10 @@ mod test {
     type MakeTestOrder = MakeOrder<TestVerifier, Coin<0>, Coin<1>>;
     type MatchTestOrders = MatchOrders<Coin<0>, Coin<1>>;
 
-    fn a_for_b_order(offer_amount: u128, ask_amount: u128) -> Order<TestVerifier, Coin<0>, Coin<1>> {
+    fn a_for_b_order(
+        offer_amount: u128,
+        ask_amount: u128,
+    ) -> Order<TestVerifier, Coin<0>, Coin<1>> {
         Order {
             offer_amount,
             ask_amount,
@@ -268,7 +271,10 @@ mod test {
         }
     }
 
-    fn b_for_a_order(offer_amount: u128, ask_amount: u128) -> Order<TestVerifier, Coin<1>, Coin<0>> {
+    fn b_for_a_order(
+        offer_amount: u128,
+        ask_amount: u128,
+    ) -> Order<TestVerifier, Coin<1>, Coin<0>> {
         Order {
             offer_amount,
             ask_amount,
@@ -341,7 +347,7 @@ mod test {
         let order_a = a_for_b_order(100, 150);
         let order_b = b_for_a_order(150, 100);
 
-        let payout_a =Coin::<1>(150);
+        let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
@@ -358,7 +364,7 @@ mod test {
         let order_b = b_for_a_order(100, 100);
 
         // Order a was asking for 150B. But the payout is for only 100B.
-        let payout_a =Coin::<1>(100);
+        let payout_a = Coin::<1>(100);
         let payout_b = Coin::<0>(100);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
@@ -375,7 +381,7 @@ mod test {
         let order_b = b_for_a_order(100, 100);
 
         // Order a was asking for 150B. But the payout is for 100A.
-        let payout_a =Coin::<0>(100);
+        let payout_a = Coin::<0>(100);
         let payout_b = Coin::<0>(100);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
@@ -391,7 +397,7 @@ mod test {
         let order_a = a_for_b_order(90, 150);
         let order_b = b_for_a_order(150, 100);
 
-        let payout_a =Coin::<1>(150);
+        let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
@@ -407,7 +413,7 @@ mod test {
         let order_a = a_for_b_order(100, 150);
         let order_b = b_for_a_order(100, 100);
 
-        let payout_a =Coin::<1>(150);
+        let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
@@ -423,7 +429,7 @@ mod test {
         let order_a = a_for_b_order(90, 150);
         let order_b = b_for_a_order(150, 100);
 
-        let payout_a =Coin::<1>(150);
+        let payout_a = Coin::<1>(150);
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
             &MatchOrders(PhantomData),
@@ -438,14 +444,14 @@ mod test {
         let order_a = a_for_b_order(90, 150);
         let order_b = b_for_a_order(150, 100);
 
-        let payout_a =Coin::<1>(150);
+        let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
         // We don't use the helper function to construct the full output
         // because we want to make sure the verifier does NOT match
         let payout_b_output = Output {
             payload: payout_b.into(),
-            verifier: TestVerifier{ verifies: false },
+            verifier: TestVerifier { verifies: false },
         };
 
         let result = <MatchTestOrders as ConstraintChecker>::check(
