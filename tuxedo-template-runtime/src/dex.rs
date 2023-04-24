@@ -357,7 +357,7 @@ mod test {
         let order_a = a_for_b_order(100, 150);
         let order_b = b_for_a_order(100, 100);
 
-        // Order a was asking for 150B. But they payout is for only 100B.
+        // Order a was asking for 150B. But the payout is for only 100B.
         let payout_a =Coin::<1>(100);
         let payout_b = Coin::<0>(100);
 
@@ -371,7 +371,19 @@ mod test {
 
     #[test]
     fn bad_match_payout_in_wrong_asset() {
+        let order_a = a_for_b_order(100, 150);
+        let order_b = b_for_a_order(100, 100);
 
+        // Order a was asking for 150B. But the payout is for 100A.
+        let payout_a =Coin::<0>(100);
+        let payout_b = Coin::<0>(100);
+
+        let result = <MatchTestOrders as ConstraintChecker>::check(
+            &MatchOrders(PhantomData),
+            &vec![output_from(order_a), output_from(order_b)],
+            &vec![output_from(payout_a), output_from(payout_b)],
+        );
+        assert_eq!(result, Err(DexError::TypeError));
     }
 
     #[test]
