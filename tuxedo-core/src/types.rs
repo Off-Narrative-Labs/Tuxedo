@@ -9,10 +9,7 @@ use sp_runtime::traits::Extrinsic;
 use sp_std::vec::Vec;
 
 /// A reference to a output that is expected to exist in the state.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
@@ -35,16 +32,50 @@ pub struct OutputRef {
 ///
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Transaction<V, C> {
     pub inputs: Vec<Input>,
     //Todo peeks: Vec<Input>,
     pub outputs: Vec<Output<V>>,
     pub checker: C,
+}
+
+// Manually implement Encode and Decode for the Transaction type
+// so that its encoding is the same as an opaque Vec<u8>.
+impl<V: Encode, C: Encode> Encode for Transaction<V, C> {
+    fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
+        let inputs = self.inputs.encode();
+        let outputs = self.outputs.encode();
+        let checker = self.checker.encode();
+
+        let total_len = (inputs.len() + outputs.len() + checker.len()) as u32;
+        let size = parity_scale_codec::Compact::<u32>(total_len).encode();
+
+        dest.write(&size);
+        dest.write(&inputs);
+        dest.write(&outputs);
+        dest.write(&checker);
+    }
+}
+
+impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
+    fn decode<I: parity_scale_codec::Input>(
+        input: &mut I,
+    ) -> Result<Self, parity_scale_codec::Error> {
+        // Throw away the length of the vec. We just want the bytes.
+        <parity_scale_codec::Compact<u32>>::skip(input)?;
+
+        let inputs = <Vec<Input>>::decode(input)?;
+        let outputs = <Vec<Output<V>>>::decode(input)?;
+        let checker = C::decode(input)?;
+
+        Ok(Transaction {
+            inputs,
+            outputs,
+            checker,
+        })
+    }
 }
 
 // We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
@@ -69,10 +100,7 @@ impl<V, C> Extrinsic for Transaction<V, C> {
 }
 
 /// A reference the a utxo that will be consumed along with proof that it may be consumed
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Input {
     /// a reference to the output being consumed
@@ -87,7 +115,7 @@ pub enum UtxoError<ConstraintCheckerError> {
     DuplicateInput,
     /// This transaction defines an output that already existed in the UTXO set
     PreExistingOutput,
-    /// The contraint checker errored.
+    /// The constraint checker errored.
     ConstraintCheckerError(ConstraintCheckerError),
     /// The Verifier errored.
     /// TODO determine whether it is useful to relay an inner error from the verifier.
@@ -104,10 +132,7 @@ pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
 /// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct Output<V> {
     pub payload: DynamicallyTypedData,

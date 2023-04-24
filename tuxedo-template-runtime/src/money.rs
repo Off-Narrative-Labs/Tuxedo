@@ -14,10 +14,7 @@ use tuxedo_core::{
 // use log::info;
 
 /// The main constraint checker for the money piece. Allows spending and minting tokens.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MoneyConstraintChecker {
     /// A typical spend transaction where some coins are consumed and others are created.
@@ -32,10 +29,7 @@ pub enum MoneyConstraintChecker {
 
 /// A single coin in the fungible money system.
 /// A new-type wrapper around a `u128` value.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct Coin(pub u128);
 
@@ -50,10 +44,7 @@ impl UtxoData for Coin {
 }
 
 /// Errors that can occur when checking money transactions.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum ConstraintCheckerError {
     /// Dynamic typing issue.

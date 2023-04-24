@@ -26,10 +26,7 @@ use tuxedo_core::{
 };
 
 // Notice this type doesn't have to be public. Cool.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 struct ClaimData {
     /// The hash of the data whose existence is being proven.
@@ -43,10 +40,7 @@ impl UtxoData for ClaimData {
 }
 
 /// Errors that can occur when checking PoE Transactions
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum ConstraintCheckerError {
     // Ughhh again with these common errors.
@@ -70,10 +64,7 @@ pub enum ConstraintCheckerError {
 /// This constraint checker allows the creation of many claims in a single operation
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeClaim;
 
@@ -116,10 +107,7 @@ impl SimpleConstraintChecker for PoeClaim {
 /// A constraint checker to revoke claims.
 ///
 /// Like the creation constraint checker, this allows batch revocation.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeRevoke;
 
@@ -158,10 +146,7 @@ impl SimpleConstraintChecker for PoeRevoke {
 /// the verifier logic? This is a concrete case where the constraint checker verifier separation is not ideal.
 /// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
 /// but we want to authorized signer to come from the a different part of state.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct PoeDispute;
 

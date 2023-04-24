@@ -53,10 +53,7 @@ use sp_std::vec::Vec;
 
 /// A piece of encoded data with a type id associated
 /// Strongly typed data can be extracted
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct DynamicallyTypedData {
     pub data: Vec<u8>,
