@@ -13,6 +13,8 @@ use tuxedo_core::{
 };
 use sp_runtime::transaction_validity::TransactionPriority;
 
+use crate::money::Coin;
+
 /// An order in the book. Represents a binding collateralized
 /// offer to make a trade.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -40,6 +42,10 @@ pub enum DexError {
     /// User is trying to make an order, but has not put up enough collateral
     /// to back the offer amount
     InsufficientCollateral,
+    /// User is trying to make an order but didnt provide an order
+    NoOrderProvided,
+    /// Uer provided too many outputs when making an order (expected exactly one)
+    TooManyOutputs,
 }
 
 /// Place a new order in the book
@@ -55,7 +61,23 @@ impl SimpleConstraintChecker for MakeOrder {
         input_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        todo!()
+        // There should be one output which is the new order
+        ensure!(!input_data.is_empty(), DexError::NoOrderProvided);
+        ensure!(input_data.len() == 1, DexError::TooManyOutputs);
+
+        // TODO fix the generic
+        let order = input_data[0].extract::<Order>()?;
+
+        // There could be many inputs whose value sums to the offer amount
+        let mut total_collateral = 0u128;
+        for input in input_data {
+            let coin = input.extract::<Coin>()?;
+            total_collateral += coin.value();
+        }
+
+        ensure!(total_collateral == order.offer_amount, DexError::InsufficientCollateral);
+
+        Ok(0)
     }
 }
 
