@@ -1,14 +1,17 @@
 //! An order book decentralized exchange between two specific tokens.
 
+use core::marker::PhantomData;
+
 #[cfg(feature = "std")]
 use serde::{Serialize, Deserialize};
 
 use sp_std::prelude::*;
+use sp_std::fmt::Debug;
 
 use parity_scale_codec::{Decode, Encode};
 
 use tuxedo_core::{
-    dynamic_typing::DynamicallyTypedData, dynamic_typing::UtxoData, ensure, traits::Cash,
+    dynamic_typing::DynamicallyTypedData, dynamic_typing::{UtxoData, DynamicTypingError}, ensure, traits::Cash,
     types::Output, SimpleConstraintChecker, Verifier,
 };
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -19,18 +22,20 @@ use crate::money::Coin;
 /// offer to make a trade.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, Clone, Encode, Decode, Debug)]
-pub struct Order<V: Verifier /* TODO more generics */> {
+pub struct Order<V: Verifier, A: Cash + UtxoData, B: Cash + UtxoData> {
     /// The amount of token A I'm willing to trade away
     offer_amount: u128,
     /// The amount of token B I demand to receive
     ask_amount: u128,
     /// The verifier (maybe a signature check) that will protect the payout coin
     payout_verifier: V,
+    _ph_data: PhantomData<(A, B)>,
 }
 
-impl<V: Verifier> UtxoData for Order<V> {
-    // TODO fix when we have generic coins
-    const TYPE_ID: [u8; 4] = *b"ordr";
+// NOTE: We know this is error prone
+// It's gonna get better. TODO @ viewers make a PR :)
+impl<V: Verifier, A: Cash, B: Cash> UtxoData for Order<V, A, B> {
+    const TYPE_ID: [u8; 4] = [b'o', b'r', A::ID, B::ID];
 }
 
 /// Anything that can go wrong (make a transaction invalid) when using a dex
@@ -48,12 +53,30 @@ pub enum DexError {
     TooManyOutputs,
 }
 
+impl From<DynamicTypingError> for DexError {
+    fn from(value: DynamicTypingError) -> Self {
+        Self::TypeError
+    }
+}
+
 /// Place a new order in the book
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, Clone, Encode, Decode, Debug)]
-pub struct MakeOrder;
+#[derive(PartialEq, Eq, Encode, Decode)]
+pub struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
 
-impl SimpleConstraintChecker for MakeOrder {
+impl<V: Verifier, A: Cash, B: Cash> Clone for MakeOrder<V, A, B> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<V: Verifier, A: Cash, B: Cash> Debug for MakeOrder<V, A, B> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("MakeOrder").field(&self.0).finish()
+    }
+}
+
+impl<V: Verifier, A: Cash, B: Cash> SimpleConstraintChecker for MakeOrder<V, A, B> {
     type Error = DexError;
 
     fn check(
@@ -66,12 +89,12 @@ impl SimpleConstraintChecker for MakeOrder {
         ensure!(input_data.len() == 1, DexError::TooManyOutputs);
 
         // TODO fix the generic
-        let order = input_data[0].extract::<Order>()?;
+        let order = input_data[0].extract::<Order<V, A, B>>()?;
 
         // There could be many inputs whose value sums to the offer amount
         let mut total_collateral = 0u128;
         for input in input_data {
-            let coin = input.extract::<Coin>()?;
+            let coin = input.extract::<A>()?;
             total_collateral += coin.value();
         }
 
