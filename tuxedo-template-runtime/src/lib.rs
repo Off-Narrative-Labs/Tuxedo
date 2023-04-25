@@ -28,6 +28,7 @@ use sp_version::RuntimeVersion;
 use serde::{Deserialize, Serialize};
 
 pub mod amoeba;
+pub mod dex;
 pub mod kitties;
 pub mod money;
 mod poe;
@@ -222,6 +223,9 @@ pub enum OuterConstraintChecker {
     PoeDispute(poe::PoeDispute),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+    // TODO
+    // DexMakeOrder(dex::MakeOrder),
+    // DexMatchOrders(dex::MatchOrders),
 }
 
 /// The main struct in this module.
