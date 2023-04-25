@@ -89,8 +89,9 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
 /// just like this original enum. however, the contained values in the error enum are of the corresponding types
 /// for the inner constraint checker.
 #[proc_macro_attribute]
-pub fn tuxedo_constraint_checker(_: TokenStream, body: TokenStream) -> TokenStream {
+pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(body as ItemEnum);
+    let verifier = parse_macro_input!(attrs as Ident);
     let original_code = ast.clone();
 
     let outer_type = ast.ident;
@@ -131,19 +132,19 @@ pub fn tuxedo_constraint_checker(_: TokenStream, body: TokenStream) -> TokenStre
         ///
         /// This type is accessible downstream as `<OuterConstraintChecker as ConstraintChecker>::Error`
         #[derive(Debug)]
-        #vis enum #error_type <V: tuxedo_core::Verifier> {
+        #vis enum #error_type {
             #(
-                #variants(<#inner_types as tuxedo_core::ConstraintChecker<V>>::Error),
+                #variants(<#inner_types as tuxedo_core::ConstraintChecker<#verifier>>::Error),
             )*
         }
 
-        impl<V: tuxedo_core::Verifier> tuxedo_core::ConstraintChecker<V> for #outer_type {
-            type Error = #error_type <V>;
+        impl tuxedo_core::ConstraintChecker<#verifier> for #outer_type {
+            type Error = #error_type;
 
             fn check (
                 &self,
-                inputs: &[tuxedo_core::types::Output<V>],
-                outputs: &[tuxedo_core::types::Output<V>],
+                inputs: &[tuxedo_core::types::Output<#verifier>],
+                outputs: &[tuxedo_core::types::Output<#verifier>],
             ) -> Result<TransactionPriority, Self::Error> {
                 match self {
                     #(
