@@ -19,6 +19,31 @@ use tuxedo_core::{
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
 
+/// A Configuration for a Decentralized Exchange.
+pub trait Config {
+    /// The type of verifiers that can be used in dex payouts.
+    /// Typically this should just be the outer verifier type of the runtime.
+    type Verifier: Verifier + PartialEq;
+    /// The first token in the Dex's pair
+    type A: Cash + UtxoData;
+    /// The second token in the Dex's pair
+    type B: Cash + UtxoData;
+}
+
+/// This type represents a configuration that has the tokens swapped from
+/// some other configuration over which it is generic.
+///
+/// When matching orders we have to be sure that the matched orders are on
+/// opposite sides of the same trading pair. This type allows us to conveniently
+/// express "same pair, but opposite side".
+struct ReverseConfig<T: Config>(PhantomData<T>);
+
+impl<T: Config> Config for ReverseConfig<T> {
+    type Verifier = T::Verifier;
+    type A = T::B;
+    type B = T::A;
+}
+
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// An order in the order book represents a binding collateralized
@@ -30,19 +55,19 @@ use tuxedo_core::{
 ///
 /// When a match is made, the payment token will be protected with the
 /// verifier contained in this order.
-struct Order<V: Verifier, A: Cash, B: Cash> {
+struct Order<T: Config> {
     /// The amount of token A in this order
     offer_amount: u128,
     /// The amount of token B in this order
     ask_amount: u128,
     /// The verifier that will protect the payout coin
     /// in the event of a successful match.
-    payout_verifier: V,
-    _ph_data: PhantomData<(A, B)>,
+    payout_verifier: T::Verifier,
+    _ph_data: PhantomData<T>,
 }
 
-impl<V: Verifier, A: Cash, B: Cash> UtxoData for Order<V, A, B> {
-    const TYPE_ID: [u8; 4] = [b'$', b'$', A::ID, B::ID];
+impl<T: Config> UtxoData for Order<T> {
+    const TYPE_ID: [u8; 4] = [b'$', b'$', T::A::ID, T::B::ID];
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -79,7 +104,7 @@ impl From<DynamicTypingError> for DexError {
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, PartialEq, Eq)]
 /// The Constraint checking logic for opening a new order.
 ///
 /// It is generic over the verifier type which can be used to protect
@@ -93,18 +118,38 @@ impl From<DynamicTypingError> for DexError {
 /// writing a configuration trait and taking a single generic that implements
 /// that trait. In cases where a lot of configuration is required, the FRAME-like
 /// approach is even preferable.
-pub struct MakeOrder<V: Verifier, A: Cash, B: Cash>(PhantomData<(V, A, B)>);
+pub struct MakeOrder<T: Config>(PhantomData<T>);
 
-impl<V: Verifier, A: Cash, B: Cash> Default for MakeOrder<V, A, B> {
+impl<T: Config> Default for MakeOrder<T> {
     fn default() -> Self {
         Self(Default::default())
     }
 }
-
+impl<T: Config> Clone for MakeOrder<T> {
+    fn clone(&self) -> Self {
+        MakeOrder(Default::default())
+    }
+}
+impl<T: Config> Debug for MakeOrder<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("MakeOrder").field(&self.0).finish()
+    }
+}
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, PartialEq, Eq)]
 /// Constraint checking logic for matching existing open orders against one another
-pub struct MatchOrders<A: Cash, B: Cash>(PhantomData<(A, B)>);
+pub struct MatchOrders<T: Config>(PhantomData<T>);
+
+impl<T: Config> Clone for MatchOrders<T> {
+    fn clone(&self) -> Self {
+        MatchOrders(Default::default())
+    }
+}
+impl<T: Config> Debug for MatchOrders<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("MatchOrders").field(&self.0).finish()
+    }
+}
 
 // The following lines brainstorm some other constraint checkers that could be added
 // but currently are not implemented.
@@ -119,11 +164,7 @@ pub struct MatchOrders<A: Cash, B: Cash>(PhantomData<(A, B)>);
 // struct CancelOrder;
 
 // Here we see an example
-impl<V: Verifier, A, B> SimpleConstraintChecker for MakeOrder<V, A, B>
-where
-    A: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
-    B: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
-{
+impl<T: Config> SimpleConstraintChecker for MakeOrder<T> {
     type Error = DexError;
 
     fn check(
@@ -137,13 +178,13 @@ where
             output_data.len() == 1,
             DexError::TooManyOutputsWhenMakingOrder
         );
-        let order: Order<V, A, B> = output_data[0].extract()?;
+        let order: Order<T> = output_data[0].extract()?;
 
         // There may be many inputs and they should all be tokens whose combined value
         // equals or exceeds the amount of token they need to provide for this order
         let mut total_input_amount = 0;
         for input in input_data {
-            let coin = input.extract::<A>()?;
+            let coin = input.extract::<T::A>()?;
             total_input_amount += coin.value();
         }
 
@@ -155,17 +196,13 @@ where
     }
 }
 
-impl<A, B> ConstraintChecker for MatchOrders<A, B>
-where
-    A: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
-    B: Cash + UtxoData + Encode + Decode + Debug + PartialEq + Eq + Clone,
-{
+impl<T: Config> ConstraintChecker<T::Verifier> for MatchOrders<T> {
     type Error = DexError;
 
-    fn check<V: Verifier + PartialEq>(
+    fn check(
         &self,
-        inputs: &[Output<V>],
-        outputs: &[Output<V>],
+        inputs: &[Output<T::Verifier>],
+        outputs: &[Output<T::Verifier>],
     ) -> Result<TransactionPriority, Self::Error> {
         // The input and output slices can be arbitrarily long. We
         // assume there is a 1:1 correspondence in the sorting such that
@@ -190,12 +227,12 @@ where
         // 2. Update the totals for checking at the end
         for (input, output) in inputs.iter().zip(outputs) {
             // It could be Order<V, A, B> or Order<V, B, A> so we will try both.
-            if let Ok(order) = input.payload.extract::<Order<V, A, B>>() {
+            if let Ok(order) = input.payload.extract::<Order<T>>() {
                 a_so_far += order.offer_amount;
                 total_b_required += order.ask_amount;
 
                 // Ensure the payout is the right amount
-                let payout = output.payload.extract::<B>()?;
+                let payout = output.payload.extract::<T::B>()?;
                 ensure!(
                     payout.value() >= order.ask_amount,
                     DexError::PayoutDoesNotSatisfyOrder
@@ -206,12 +243,12 @@ where
                     order.payout_verifier == output.verifier,
                     DexError::VerifierMismatchForTrade
                 )
-            } else if let Ok(order) = input.payload.extract::<Order<V, B, A>>() {
+            } else if let Ok(order) = input.payload.extract::<Order<ReverseConfig<T>>>() {
                 b_so_far += order.offer_amount;
                 total_a_required += order.ask_amount;
 
                 // Ensure the payout is the right amount
-                let payout = output.payload.extract::<A>()?;
+                let payout = output.payload.extract::<T::A>()?;
                 ensure!(
                     payout.value() >= order.ask_amount,
                     DexError::PayoutDoesNotSatisfyOrder
@@ -253,13 +290,19 @@ mod test {
     use crate::money::Coin;
     use tuxedo_core::verifier::TestVerifier;
 
-    type MakeTestOrder = MakeOrder<TestVerifier, Coin<0>, Coin<1>>;
-    type MatchTestOrders = MatchOrders<Coin<0>, Coin<1>>;
+    struct TestConfig;
+    impl Config for TestConfig {
+        type Verifier = TestVerifier;
+        type A = Coin<0>;
+        type B = Coin<1>;
+    }
 
-    fn a_for_b_order(
-        offer_amount: u128,
-        ask_amount: u128,
-    ) -> Order<TestVerifier, Coin<0>, Coin<1>> {
+    type TestOrder = Order<TestConfig>;
+    type ReverseTestOrder = Order<ReverseConfig<TestConfig>>;
+    type MakeTestOrder = MakeOrder<TestConfig>;
+    type MatchTestOrders = MatchOrders<TestConfig>;
+
+    fn a_for_b_order(offer_amount: u128, ask_amount: u128) -> TestOrder {
         Order {
             offer_amount,
             ask_amount,
@@ -268,10 +311,7 @@ mod test {
         }
     }
 
-    fn b_for_a_order(
-        offer_amount: u128,
-        ask_amount: u128,
-    ) -> Order<TestVerifier, Coin<1>, Coin<0>> {
+    fn b_for_a_order(offer_amount: u128, ask_amount: u128) -> ReverseTestOrder {
         Order {
             offer_amount,
             ask_amount,
@@ -362,7 +402,7 @@ mod test {
         let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a), output_from(payout_b)],
@@ -379,7 +419,7 @@ mod test {
         let payout_a = Coin::<1>(100);
         let payout_b = Coin::<0>(100);
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a), output_from(payout_b)],
@@ -396,7 +436,7 @@ mod test {
         let payout_a = Coin::<0>(100);
         let payout_b = Coin::<0>(100);
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a), output_from(payout_b)],
@@ -412,7 +452,7 @@ mod test {
         let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a), output_from(payout_b)],
@@ -428,7 +468,7 @@ mod test {
         let payout_a = Coin::<1>(150);
         let payout_b = Coin::<0>(100);
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a), output_from(payout_b)],
@@ -443,7 +483,7 @@ mod test {
 
         let payout_a = Coin::<1>(150);
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a)],
@@ -466,7 +506,7 @@ mod test {
             verifier: TestVerifier { verifies: false },
         };
 
-        let result = <MatchTestOrders as ConstraintChecker>::check(
+        let result = <MatchTestOrders as ConstraintChecker<TestVerifier>>::check(
             &MatchOrders(PhantomData),
             &vec![output_from(order_a), output_from(order_b)],
             &vec![output_from(payout_a), payout_b_output],
