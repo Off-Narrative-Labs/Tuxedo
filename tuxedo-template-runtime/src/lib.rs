@@ -33,11 +33,10 @@ pub mod money;
 mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
-    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
+pub use tuxedo_core::verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs};
 
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;
@@ -97,59 +96,21 @@ pub fn native_version() -> NativeVersion {
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Default)]
 pub struct GenesisConfig {
     pub genesis_utxos: Vec<Output>,
-}
-
-impl Default for GenesisConfig {
-    fn default() -> Self {
-        use hex_literal::hex;
-
-        const SHAWN_PUB_KEY_BYTES: [u8; 32] =
-            hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
-        const ANDREW_PUB_KEY_BYTES: [u8; 32] =
-            hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
-
-        // Initial Config just for a Money UTXO
-        GenesisConfig {
-            genesis_utxos: vec![
-                Output {
-                    verifier: OuterVerifier::SigCheck(SigCheck {
-                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
-                },
-                Output {
-                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                        threshold: 1,
-                        signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
-                },
-            ],
-        }
-
-        // TODO: Initial UTXO for Kitties
-
-        // TODO: Initial UTXO for Existence
-    }
 }
 
 #[cfg(feature = "std")]
 impl BuildStorage for GenesisConfig {
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        // we have nothing to put into storage in genesis, except this:
+        // Write the proper wasm code into genesis storage
         storage.top.insert(
             sp_storage::well_known_keys::CODE.into(),
             WASM_BINARY.unwrap().to_vec(),
         );
 
+        // Write any specified UTXOs into genesis storage
         for (index, utxo) in self.genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just use the zero hash

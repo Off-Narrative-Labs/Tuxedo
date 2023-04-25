@@ -4083,6 +4083,7 @@ name = "node-template"
 version = "4.0.0-dev"
 dependencies = [
  "clap",
+ "hex-literal 0.4.1",
  "jsonrpsee",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
