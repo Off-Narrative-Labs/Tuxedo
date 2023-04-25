@@ -43,7 +43,7 @@ pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone {
     type Error: Debug;
 
     /// The actual check validation logic
-    fn check (
+    fn check(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
@@ -57,7 +57,7 @@ impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker>::Error;
 
-    fn check (
+    fn check(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
