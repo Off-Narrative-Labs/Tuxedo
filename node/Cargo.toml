@@ -16,42 +16,42 @@ name = "node-template"
 [dependencies]
 clap = { version = "4.0.29", features = ["derive"] }
 
-sc-cli = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-core = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-executor = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-service = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-telemetry = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-keystore = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-transaction-pool = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-client-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-timestamp = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-inherents = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-keyring = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
+sc-cli = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-core = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-executor = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-service = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-telemetry = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-keystore = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-transaction-pool = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-client-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-timestamp = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-inherents = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-keyring = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 
 # These dependencies are used for the node template's RPCs
-jsonrpsee = { version = "0.16.2", features = ["server"] }
-sc-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sp-block-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
-pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
+jsonrpsee = { version = "0.18.1", features = ["server"] }
+sc-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sp-block-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
+pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 
 # Local Dependencies
 node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 
 [build-dependencies]
-substrate-build-script-utils = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-04" }
+substrate-build-script-utils = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 
 [features]
 default = []
