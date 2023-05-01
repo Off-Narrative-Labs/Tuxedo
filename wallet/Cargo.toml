@@ -12,7 +12,7 @@ tuxedo-core = { path = "../tuxedo-core" }
 
 serde_json = "1.0"
 parity-scale-codec = { version = '3.4.0', default-features = false }
-jsonrpsee = { version = "0.18.1", features = ["http-client"] }
+jsonrpsee = { version = "0.16.2", features = ["http-client"] }
 tokio = { version = "1.25.0", features = ["full"] }
 anyhow = "1.0.69"
 hex = "0.4.3"

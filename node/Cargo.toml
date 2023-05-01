@@ -38,7 +38,7 @@ sp-keyring = { git = "https://github.com/paritytech/substrate.git", tag = "month
 pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 
 # These dependencies are used for the node template's RPCs
-jsonrpsee = { version = "0.18.1", features = ["server"] }
+jsonrpsee = { version = "0.16.2", features = ["server"] }
 sc-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 sp-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
