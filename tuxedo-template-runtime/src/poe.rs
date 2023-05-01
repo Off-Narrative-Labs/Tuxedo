@@ -16,6 +16,7 @@
 //! https://cannerlaw.com/blog/the-difference-of-recorded-and-registered-land/
 
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
@@ -65,7 +66,7 @@ pub enum ConstraintCheckerError {
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeClaim;
 
 impl SimpleConstraintChecker for PoeClaim {
@@ -108,7 +109,7 @@ impl SimpleConstraintChecker for PoeClaim {
 ///
 /// Like the creation constraint checker, this allows batch revocation.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeRevoke;
 
 impl SimpleConstraintChecker for PoeRevoke {
@@ -147,7 +148,7 @@ impl SimpleConstraintChecker for PoeRevoke {
 /// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
 /// but we want to authorized signer to come from the a different part of state.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeDispute;
 
 impl SimpleConstraintChecker for PoeDispute {

@@ -47,6 +47,7 @@
 //!   around by, for example, hashing the Debug strong, but that is ugly
 
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_std::vec::Vec;
@@ -54,7 +55,7 @@ use sp_std::vec::Vec;
 /// A piece of encoded data with a type id associated
 /// Strongly typed data can be extracted
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct DynamicallyTypedData {
     pub data: Vec<u8>,
     pub type_id: [u8; 4],
