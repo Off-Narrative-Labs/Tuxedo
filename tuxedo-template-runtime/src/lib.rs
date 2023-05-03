@@ -1,3 +1,9 @@
+//! The Tuxedo Template Runtime is an example runtime that uses
+//! most of the pieces provided in the wardrobe.
+//! 
+//! Runtime developers wishing to get started with Tuxedo should
+//! consider copying this template.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
@@ -30,7 +36,6 @@ use serde::{Deserialize, Serialize};
 
 pub mod amoeba;
 pub mod kitties;
-pub mod money;
 mod poe;
 mod runtime_upgrade;
 use tuxedo_core::{
@@ -39,6 +44,8 @@ use tuxedo_core::{
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
+
+pub use money;
 
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;

@@ -3966,6 +3966,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "money"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "sp-std",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "multiaddr"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8377,6 +8389,7 @@ version = "1.0.0-dev"
 dependencies = [
  "hex-literal",
  "log",
+ "money",
  "parity-scale-codec",
  "parity-util-mem",
  "scale-info",

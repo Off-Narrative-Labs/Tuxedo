@@ -34,8 +34,9 @@ sp-consensus-aura = { git = 'https://github.com/paritytech/substrate', tag = "mo
 sp-application-crypto = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
 sp-consensus-grandpa = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
 
-# Tuxedo Core
+# Tuxedo Core and Pieces
 tuxedo-core = { path = '../tuxedo-core', default-features = false }
+money = { path = '../wardrobe/money', default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
@@ -67,4 +68,5 @@ std = [
 	"sp-consensus-grandpa/std",
 
 	"tuxedo-core/std",
+	"money/std",
 ]
