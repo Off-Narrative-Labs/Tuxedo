@@ -28,7 +28,6 @@ use sp_version::RuntimeVersion;
 use serde::{Deserialize, Serialize};
 
 pub mod amoeba;
-mod dex;
 pub mod kitties;
 pub mod money;
 mod poe;
@@ -197,14 +196,6 @@ pub enum OuterVerifier {
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
-#[derive(PartialEq, Eq)]
-pub struct DexConfig;
-impl dex::Config for DexConfig {
-    type Verifier = OuterVerifier;
-    type A = money::Coin<0>;
-    type B = money::Coin<0>;
-}
-
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
@@ -231,12 +222,6 @@ pub enum OuterConstraintChecker {
     PoeDispute(poe::PoeDispute),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
-    /// A Second token just like the one up top.
-    SecondToken(money::MoneyConstraintChecker<1>),
-    /// Open Orders in a Decentralized Exchange to swap between the Money and the SecondToken
-    DexOpenOrder(dex::MakeOrder<DexConfig>),
-    /// Match orders in a Decentralized Exchange to swap between the Money and the SecondToken
-    DexMatchOrders(dex::MatchOrders<DexConfig>),
 }
 
 /// The main struct in this module.
