@@ -132,7 +132,7 @@ impl<T: Config> Clone for MakeOrder<T> {
 }
 impl<T: Config> Debug for MakeOrder<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_tuple("MakeOrder").field(&self.0).finish()
+        f.debug_tuple("MakeOrder").finish()
     }
 }
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -147,7 +147,7 @@ impl<T: Config> Clone for MatchOrders<T> {
 }
 impl<T: Config> Debug for MatchOrders<T> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_tuple("MatchOrders").field(&self.0).finish()
+        f.debug_tuple("MatchOrders").finish()
     }
 }
 
