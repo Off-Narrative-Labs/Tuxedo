@@ -5456,6 +5456,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "runtime-upgrade"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-storage",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8432,6 +8446,7 @@ dependencies = [
  "parity-scale-codec",
  "parity-util-mem",
  "poe",
+ "runtime-upgrade",
  "scale-info",
  "serde",
  "sp-api",

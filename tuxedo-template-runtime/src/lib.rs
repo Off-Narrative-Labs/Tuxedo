@@ -34,7 +34,6 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
@@ -43,10 +42,10 @@ use tuxedo_core::{
 };
 
 pub use amoeba;
+pub use kitties;
 pub use money;
 pub use poe;
-pub use kitties;
-// pub use runtime_upgrade;
+pub use runtime_upgrade;
 
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;

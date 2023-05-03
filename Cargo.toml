@@ -9,7 +9,7 @@ members = [
     "wardrobe/money",
     "wardrobe/poe",
     "wardrobe/kitties",
-    # "wardrobe/runtime_upgrade",
+    "wardrobe/runtime_upgrade",
 ]
 [profile.release]
 panic = "unwind"

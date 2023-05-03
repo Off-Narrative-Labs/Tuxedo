@@ -24,8 +24,8 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_std::fmt::Debug;
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_std::fmt::Debug;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleConstraintChecker,

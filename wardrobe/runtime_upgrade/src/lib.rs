@@ -11,6 +11,8 @@
 //! wasm code. Then we pass the full wasm code as part of the constraint checker and write
 //! it to the well-known key as a side effect.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -22,6 +24,9 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleConstraintChecker,
 };
+
+#[cfg(test)]
+mod tests;
 
 /// A reference to a runtime wasm blob. It is just a hash.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
