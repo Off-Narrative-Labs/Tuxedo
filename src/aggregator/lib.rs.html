@@ -156,6 +156,7 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>proc_macro::TokenStream;
 <span class="kw">use </span>quote::quote;
 <span class="kw">use </span>syn::{parse_macro_input, Ident, ItemEnum};
@@ -247,8 +248,9 @@
 /// just like this original enum. however, the contained values in the error enum are of the corresponding types
 /// for the inner constraint checker.
 </span><span class="attr">#[proc_macro_attribute]
-</span><span class="kw">pub fn </span>tuxedo_constraint_checker(<span class="kw">_</span>: TokenStream, body: TokenStream) -&gt; TokenStream {
+</span><span class="kw">pub fn </span>tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -&gt; TokenStream {
     <span class="kw">let </span>ast = <span class="macro">parse_macro_input!</span>(body <span class="kw">as </span>ItemEnum);
+    <span class="kw">let </span>verifier = <span class="macro">parse_macro_input!</span>(attrs <span class="kw">as </span>Ident);
     <span class="kw">let </span>original_code = ast.clone();
 
     <span class="kw">let </span>outer_type = ast.ident;
@@ -291,17 +293,17 @@
         </span><span class="attr">#[derive(Debug)]
         </span>#vis <span class="kw">enum </span>#error_type {
             #(
-                #variants(&lt;#inner_types <span class="kw">as </span>tuxedo_core::ConstraintChecker&gt;::Error),
+                #variants(&lt;#inner_types <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::Error),
             )*
         }
 
-        <span class="kw">impl </span>tuxedo_core::ConstraintChecker <span class="kw">for </span>#outer_type {
+        <span class="kw">impl </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt; <span class="kw">for </span>#outer_type {
             <span class="kw">type </span>Error = #error_type;
 
-            <span class="kw">fn </span>check&lt;V: tuxedo_core::Verifier&gt;(
+            <span class="kw">fn </span>check (
                 <span class="kw-2">&amp;</span><span class="self">self</span>,
-                inputs: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;V&gt;],
-                outputs: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;V&gt;],
+                inputs: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;#verifier&gt;],
+                outputs: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;#verifier&gt;],
             ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(

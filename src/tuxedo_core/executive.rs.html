@@ -1016,7 +1016,7 @@
 /// in the proper generic types.
 </span><span class="kw">pub struct </span>Executive&lt;B, V, C&gt;(PhantomData&lt;(B, V, C)&gt;);
 
-<span class="kw">impl</span>&lt;B: BlockT&lt;Extrinsic = Transaction&lt;V, C&gt;&gt;, V: Verifier, C: ConstraintChecker&gt;
+<span class="kw">impl</span>&lt;B: BlockT&lt;Extrinsic = Transaction&lt;V, C&gt;&gt;, V: Verifier, C: ConstraintChecker&lt;V&gt;&gt;
     Executive&lt;B, V, C&gt;
 {
     <span class="doccomment">/// Does pool-style validation of a tuxedo transaction.
