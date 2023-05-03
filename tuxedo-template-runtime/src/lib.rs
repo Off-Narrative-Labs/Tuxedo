@@ -212,7 +212,7 @@ impl poe::PoeConfig for Runtime {
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, TypeInfo)]
 pub struct DexConfig;
 impl dex::Config for DexConfig {
     type Verifier = OuterVerifier;

@@ -6,6 +6,7 @@
 use core::marker::PhantomData;
 
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -45,7 +46,7 @@ impl<T: Config> Config for ReverseConfig<T> {
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 /// An order in the order book represents a binding collateralized
 /// offer to make a trade.
 ///
@@ -104,7 +105,7 @@ impl From<DynamicTypingError> for DexError {
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, PartialEq, Eq)]
+#[derive(Encode, Decode, PartialEq, Eq, TypeInfo)]
 /// The Constraint checking logic for opening a new order.
 ///
 /// It is generic over the verifier type which can be used to protect
@@ -136,7 +137,7 @@ impl<T: Config> Debug for MakeOrder<T> {
     }
 }
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, PartialEq, Eq)]
+#[derive(Encode, Decode, PartialEq, Eq, TypeInfo)]
 /// Constraint checking logic for matching existing open orders against one another
 pub struct MatchOrders<T: Config>(PhantomData<T>);
 
