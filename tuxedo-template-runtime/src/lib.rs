@@ -34,7 +34,6 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-pub mod kitties;
 mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
@@ -46,7 +45,7 @@ use tuxedo_core::{
 pub use amoeba;
 pub use money;
 pub use poe;
-// pub use kitties;
+pub use kitties;
 // pub use runtime_upgrade;
 
 #[cfg(feature = "std")]

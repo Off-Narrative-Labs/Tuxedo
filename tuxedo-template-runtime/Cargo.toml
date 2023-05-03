@@ -39,7 +39,7 @@ tuxedo-core = { path = '../tuxedo-core', default-features = false }
 amoeba = { path = '../wardrobe/amoeba', default-features = false }
 money = { path = '../wardrobe/money', default-features = false }
 poe = { path = '../wardrobe/poe', default-features = false }
-# kitties = { path = '../wardrobe/kitties', default-features = false }
+kitties = { path = '../wardrobe/kitties', default-features = false }
 # runtime_upgrade = { path = '../wardrobe/runtime_upgrade', default-features = false }
 
 [build-dependencies]
@@ -75,6 +75,6 @@ std = [
 	"amoeba/std",
 	"money/std",
 	"poe/std",
-	# "kitties/std",
+	"kitties/std",
 	# "runtime_upgrade/std",
 ]

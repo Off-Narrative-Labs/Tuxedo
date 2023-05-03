@@ -8,7 +8,7 @@ members = [
     "wardrobe/amoeba",
     "wardrobe/money",
     "wardrobe/poe",
-    # "wardrobe/kitties",
+    "wardrobe/kitties",
     # "wardrobe/runtime_upgrade",
 ]
 [profile.release]

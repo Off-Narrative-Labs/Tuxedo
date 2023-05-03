@@ -3107,6 +3107,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitties"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "kvdb"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8413,6 +8426,7 @@ version = "1.0.0-dev"
 dependencies = [
  "amoeba",
  "hex-literal",
+ "kitties",
  "log",
  "money",
  "parity-scale-codec",
