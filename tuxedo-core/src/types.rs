@@ -2,6 +2,7 @@
 
 use crate::dynamic_typing::DynamicallyTypedData;
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
@@ -10,7 +11,7 @@ use sp_std::vec::Vec;
 
 /// A reference to a output that is expected to exist in the state.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
     pub tx_hash: H256,
@@ -33,7 +34,7 @@ pub struct OutputRef {
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Transaction<V, C> {
     pub inputs: Vec<Input>,
     //Todo peeks: Vec<Input>,
@@ -101,7 +102,7 @@ impl<V, C> Extrinsic for Transaction<V, C> {
 
 /// A reference the a utxo that will be consumed along with proof that it may be consumed
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Input {
     /// a reference to the output being consumed
     pub output_ref: OutputRef,
@@ -133,7 +134,7 @@ pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Output<V> {
     pub payload: DynamicallyTypedData,
     pub verifier: V,
