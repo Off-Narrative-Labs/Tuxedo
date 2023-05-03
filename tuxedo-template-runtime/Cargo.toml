@@ -36,6 +36,7 @@ sp-consensus-grandpa = { git = 'https://github.com/paritytech/substrate', tag = 
 
 # Tuxedo Core and Pieces
 tuxedo-core = { path = '../tuxedo-core', default-features = false }
+amoeba = { path = '../wardrobe/amoeba', default-features = false }
 money = { path = '../wardrobe/money', default-features = false }
 
 [build-dependencies]
@@ -68,5 +69,6 @@ std = [
 	"sp-consensus-grandpa/std",
 
 	"tuxedo-core/std",
+	"amoeba/std",
 	"money/std",
 ]

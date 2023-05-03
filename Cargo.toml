@@ -5,6 +5,7 @@ members = [
     "tuxedo-core",
     "tuxedo-core/aggregator",
     "wallet",
+    "wardrobe/amoeba",
     "wardrobe/money",
 ]
 [profile.release]

@@ -34,7 +34,6 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-pub mod amoeba;
 pub mod kitties;
 mod poe;
 mod runtime_upgrade;
@@ -45,6 +44,7 @@ use tuxedo_core::{
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
+pub use amoeba;
 pub use money;
 
 #[cfg(feature = "std")]
