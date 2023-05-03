@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["aggregator","node_template","tuxedo_core","tuxedo_template_runtime","tuxedo_template_wallet"];
+window.ALL_CRATES = ["aggregator","amoeba","kitties","money","node_template","poe","runtime_upgrade","tuxedo_core","tuxedo_template_runtime","tuxedo_template_wallet"];
