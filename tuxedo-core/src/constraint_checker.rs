@@ -38,12 +38,12 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
+pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone {
     /// the error type that this constraint checker may return
     type Error: Debug;
 
     /// The actual check validation logic
-    fn check<V: Verifier>(
+    fn check(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],
@@ -53,11 +53,11 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
 // This blanket implementation makes it so that any type that chooses to
 // implement the Simple trait also implements the more Powerful trait. This way
 // the executive can always just call the more Powerful trait.
-impl<T: SimpleConstraintChecker> ConstraintChecker for T {
+impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker>::Error;
 
-    fn check<V: Verifier>(
+    fn check(
         &self,
         inputs: &[Output<V>],
         outputs: &[Output<V>],

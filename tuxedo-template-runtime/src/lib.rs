@@ -202,7 +202,7 @@ pub enum OuterVerifier {
 /// For example, this may check that input token values exceed output token values.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-#[tuxedo_constraint_checker]
+#[tuxedo_constraint_checker(OuterVerifier)]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
