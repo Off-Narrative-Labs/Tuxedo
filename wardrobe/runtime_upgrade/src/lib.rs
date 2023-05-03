@@ -11,7 +11,10 @@
 //! wasm code. Then we pass the full wasm code as part of the constraint checker and write
 //! it to the well-known key as a side effect.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -21,6 +24,9 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleConstraintChecker,
 };
+
+#[cfg(test)]
+mod tests;
 
 /// A reference to a runtime wasm blob. It is just a hash.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -63,7 +69,7 @@ pub enum ConstraintCheckerError {
 /// writes the full wasm code to the well-known `:code` storage key. This is
 /// necessary to satisfy Substrate's assumptions that this will happen.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct RuntimeUpgrade {
     full_wasm: Vec<u8>,
 }
