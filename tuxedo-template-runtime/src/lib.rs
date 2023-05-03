@@ -1,3 +1,9 @@
+//! The Tuxedo Template Runtime is an example runtime that uses
+//! most of the pieces provided in the wardrobe.
+//!
+//! Runtime developers wishing to get started with Tuxedo should
+//! consider copying this template.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
@@ -28,17 +34,18 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-pub mod amoeba;
-pub mod kitties;
-pub mod money;
-mod poe;
-mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
+
+pub use amoeba;
+pub use kitties;
+pub use money;
+pub use poe;
+pub use runtime_upgrade;
 
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;
@@ -193,6 +200,12 @@ pub enum OuterVerifier {
     ThresholdMultiSignature(ThresholdMultiSignature),
 }
 
+impl poe::PoeConfig for Runtime {
+    fn block_height() -> u32 {
+        Executive::block_height()
+    }
+}
+
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
@@ -215,7 +228,7 @@ pub enum OuterConstraintChecker {
     /// Checks that a single amoeba is simply created from the void... and it is good
     AmoebaCreation(amoeba::AmoebaCreation),
     /// Checks that new valid proofs of existence are claimed
-    PoeClaim(poe::PoeClaim),
+    PoeClaim(poe::PoeClaim<Runtime>),
     /// Checks that proofs of existence are revoked.
     PoeRevoke(poe::PoeRevoke),
     /// Checks that one winning claim came earlier than all the other claims, and thus
@@ -226,6 +239,7 @@ pub enum OuterConstraintChecker {
 }
 
 /// The main struct in this module.
+#[derive(Encode, Decode, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Runtime;
 
 // Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags

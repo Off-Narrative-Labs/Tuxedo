@@ -197,6 +197,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "amoeba"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "android_system_properties"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3096,6 +3107,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kitties"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "kvdb"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3966,6 +3990,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "money"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "sp-std",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "multiaddr"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4711,6 +4747,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3d7ddaed09e0eb771a79ab0fd64609ba0afb0a8366421957936ad14cbd13630"
 
 [[package]]
+name = "poe"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "polling"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5404,6 +5453,20 @@ dependencies = [
  "serde",
  "thiserror",
  "webrtc-util",
+]
+
+[[package]]
+name = "runtime-upgrade"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-storage",
+ "tuxedo-core",
 ]
 
 [[package]]
@@ -8375,10 +8438,15 @@ dependencies = [
 name = "tuxedo-template-runtime"
 version = "1.0.0-dev"
 dependencies = [
+ "amoeba",
  "hex-literal",
+ "kitties",
  "log",
+ "money",
  "parity-scale-codec",
  "parity-util-mem",
+ "poe",
+ "runtime-upgrade",
  "scale-info",
  "serde",
  "sp-api",
