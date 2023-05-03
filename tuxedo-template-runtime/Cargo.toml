@@ -38,6 +38,9 @@ sp-consensus-grandpa = { git = 'https://github.com/paritytech/substrate', tag = 
 tuxedo-core = { path = '../tuxedo-core', default-features = false }
 amoeba = { path = '../wardrobe/amoeba', default-features = false }
 money = { path = '../wardrobe/money', default-features = false }
+poe = { path = '../wardrobe/poe', default-features = false }
+# kitties = { path = '../wardrobe/kitties', default-features = false }
+# runtime_upgrade = { path = '../wardrobe/runtime_upgrade', default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
@@ -71,4 +74,7 @@ std = [
 	"tuxedo-core/std",
 	"amoeba/std",
 	"money/std",
+	"poe/std",
+	# "kitties/std",
+	# "runtime_upgrade/std",
 ]
