@@ -1,6 +1,6 @@
 //! The Tuxedo Template Runtime is an example runtime that uses
 //! most of the pieces provided in the wardrobe.
-//! 
+//!
 //! Runtime developers wishing to get started with Tuxedo should
 //! consider copying this template.
 
