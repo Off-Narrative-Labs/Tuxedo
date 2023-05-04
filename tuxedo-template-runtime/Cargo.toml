@@ -43,6 +43,7 @@ runtime-upgrade = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 
 [dev-dependencies]
+trybuild = "1.0.80"
 sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false }
 
 [features]
