@@ -58,7 +58,45 @@ In this tutorial we will write a new piece that represents our order book dex, b
 
 Your task for this part is to extend the `OuterConstraintChecker` to have a third variant called `SecondToken` that uses token id 1.
 
+### `Order` Type
 
+Create an Order type and imple `UtxoData` for it.
+
+### Make an Error Type
+
+Create the Error enum, and brainstorm some variants. Specifically the ones related to making orders.
+
+### `MakeOrder` Type
+
+Create a MakeORder type impl `SimpleConstraintChecker` for it.
+
+### Add it to Runtime
+
+todo
+
+### `MatchOrders` Type
+
+Make it and impl `ConstraintChecker`. Explain difference between two checking traits. Add error variants. Add it to runtime.
+
+### Generic Coin Parameters
+
+Make order generic over two coins that implement the `Cash` trait.
+
+### Tests for Make Order
+
+### Tests for Match Order
+
+
+## Additional Ideas
+
+You may further your learning by continuing to extend and adapt this Tuxedo piece.
+At this point we will no longer guide you so directly.
+Here are some ideas:
+
+* CancelOrder
+* PartialMatching
+* Orders featuring arbitrarily many tokens in various amounts.
+* Proper prioritization
 
 ## License
 
