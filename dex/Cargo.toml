@@ -1,0 +1,25 @@
+[package]
+name = "dex"
+version = "0.1.0"
+edition = "2021"
+description = "An order-book-style decentralized exchange expressed as a Tuxedo piece"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tuxedo-core = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "main", default-features = false }
+serde = { version = "1.0", optional = true, features = ["derive"] }
+parity-scale-codec = { version = '3.4.0', default-features = false, features = ['derive'] }
+scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
+sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
+
+[features]
+default = ["std"]
+std = [
+    "tuxedo-core/std",
+    "parity-scale-codec/std",
+    "sp-runtime/std",
+    "sp-std/std",
+    "serde",
+]

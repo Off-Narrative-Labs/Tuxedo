@@ -2,6 +2,7 @@
 members = [
     "node",
     "tuxedo-template-runtime",
+    "dex",
 ]
 [profile.release]
 panic = "unwind"
