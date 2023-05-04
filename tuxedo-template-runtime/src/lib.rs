@@ -212,6 +212,10 @@ pub enum OuterConstraintChecker {
     Money(money::MoneyConstraintChecker<0>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+    // TODO add a third variant here to represent a second token.
+    // Your new variant should be called `SecondToken` and should use token id 1.
+    // The money piece is "instantiable" which means we can add multiple instances of it to
+    // a single runtime. This is accomplished by the generic constant.
 }
 
 /// The main struct in this module.
