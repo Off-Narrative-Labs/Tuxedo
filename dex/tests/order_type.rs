@@ -12,5 +12,6 @@ fn order_type_has_right_fields() {
 
 #[test]
 fn order_implements_utxo_data() {
-    <Order::<TestVerifier> as UtxoData>::TYPE_ID;
+    let id = <Order::<TestVerifier> as UtxoData>::TYPE_ID;
+    assert_eq!(id, *b"ordr");
 }
