@@ -17,9 +17,9 @@ As you look through the code, you will find comments and `todo!()`s giving furth
 In many places we link to the [Tuxedo Rust Docs]() to learn more details about the types and traits you are working with.
 Reading these reference docs as you progress through the process will add valuable context to the tasks you are completing.
 
-At any time you can check whether you have completed the task by running the unit tests.
-This entire tutorial is tested using the [trybuild]() crate.
-Thanks to this crate, when a test case would fail to compile against your code, this is treated as a test failure.
+At any time you can check whether you have completed the task by running the unit tests for the section you are on.
+In many cases, the tests will not eve compile when you begin a section.
+Your job is to make the tests compile _and_ pass.
 When all the tests pass for the section you are working on, move on to the next section
 
 ## Use as a Template

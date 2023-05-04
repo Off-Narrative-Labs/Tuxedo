@@ -1,7 +1,12 @@
-//TODO write test functions to wrap the trybuild tests
+use tuxedo_template_runtime::OuterConstraintChecker::{self, *};
 
 #[test]
 fn has_three_variants() {
-    let t = trybuild::TestCases::new();
-    t.pass("tests/add_token_tests/has_three_variants.rs");
+    fn match_outer_constraint_checker(c: OuterConstraintChecker) {
+        match c {
+            Money(_) => (),
+            RuntimeUpgrade(_) => (),
+            SecondToken(_) => (),
+        }
+    }
 }
