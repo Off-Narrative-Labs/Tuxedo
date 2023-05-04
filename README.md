@@ -1,11 +1,10 @@
 # Tuxedo DEX Tutorial
 
-This hands-on tutorial will guide Runtime developers through writing their first UTXO-based runtime with Tuxedo
+This hands-on tutorial guides developers in writing their first UTXO-based Substrate runtime with Tuxedo, using a Decentralized Exchange as an example topic.
 
-We will implement a runtime with two fungible tokens and an decentralized exchange between those tokens based on an order book.
-To get familiar with the concepts of an order book se [TODO link from slides]().
+This repository is also the canonical template from which we encourage new projects to begin their Tuxedo runtimes.
 
-## How to Use this Tutorial
+## Use as a Tutorial
 
 We learn best by doing!
 This this tutorial guides you through the process of writing your runtime.
@@ -23,7 +22,25 @@ This entire tutorial is tested using the [trybuild]() crate.
 Thanks to this crate, when a test case would fail to compile against your code, this is treated as a test failure.
 When all the tests pass for the section you are working on, move on to the next section
 
+## Use as a Template
+
+In addition to acting as a tutorial, this repository is also the canonical Tuxedo Template.
+If you are ready to build a new Tuxedo project, fork this repo and get started.
+Using the same repository as both a tutorial and a template allows developers to continue their learning journey from the tutorial into their own project in a seamless and natural way.
+It also lowers the maintenance cost of having separate template and tutorial products.
+
+Because this is the canonical way to get started with Tuxedo, this repository also comes with some real-world niceties including CI to build and test your Rust code as well as a Dockerfile.
+You are free to remove or modify any of these, but we hope they will serve as a useful starting point.
+
+## Git Strategy
+
+The contents of this repository are branches of the same git history as the [upstream Tuxedo repository]().
+This makes it easy to merge, cherry-pick, or rebase your project as changes come into Tuxedo itself.
+
 ## Tutorial Contents
+
+We will implement a runtime with two fungible tokens and an decentralized exchange between those tokens based on an order book.
+To get familiar with the concepts of an order book see [TODO link from slides]().
 
 ### Add a Token
 
