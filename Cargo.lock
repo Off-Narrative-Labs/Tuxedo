@@ -150,6 +150,7 @@ dependencies = [
 [[package]]
 name = "aggregator"
 version = "0.1.0"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
 dependencies = [
  "quote",
  "syn 2.0.15",
@@ -194,17 +195,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67fc08ce920c31afb70f013dcce1bfc3a3195de6a228474e45e1f145b36f8d04"
 dependencies = [
  "memchr",
-]
-
-[[package]]
-name = "amoeba"
-version = "0.1.0"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-runtime",
- "tuxedo-core",
 ]
 
 [[package]]
@@ -291,12 +281,6 @@ name = "array-bytes"
 version = "4.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f52f63c5c1316a16a4b35eaac8b76a98248961a533f061684cb2a7cb0eafb6c6"
-
-[[package]]
-name = "array-bytes"
-version = "6.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9b1c5a481ec30a5abd8dfbd94ab5cf1bb4e9a66be7f1b3b322f2f1170c200fd"
 
 [[package]]
 name = "arrayref"
@@ -1590,16 +1574,7 @@ version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f51c5d4ddabd36886dd3e1438cb358cdcb0d7c499cb99cb4ac2e38e18b5cb210"
 dependencies = [
- "dirs-sys 0.3.7",
-]
-
-[[package]]
-name = "directories"
-version = "5.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a49173b84e034382284f27f1af4dcbbd231ffa358c0fe316541a7337f376a35"
-dependencies = [
- "dirs-sys 0.4.1",
+ "dirs-sys",
 ]
 
 [[package]]
@@ -1621,18 +1596,6 @@ dependencies = [
  "libc",
  "redox_users",
  "winapi",
-]
-
-[[package]]
-name = "dirs-sys"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "520f05a5cbd335fae5a99ff7a6ab8627577660ee5cfd6a94a6a929b52ff0321c"
-dependencies = [
- "libc",
- "option-ext",
- "redox_users",
- "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -2712,7 +2675,6 @@ dependencies = [
  "rustls-native-certs",
  "tokio",
  "tokio-rustls",
- "webpki-roots",
 ]
 
 [[package]]
@@ -2983,7 +2945,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d291e3a5818a2384645fd9756362e6d89cf0541b0b916fa7702ea4a9833608e"
 dependencies = [
  "jsonrpsee-core",
- "jsonrpsee-http-client",
  "jsonrpsee-proc-macros",
  "jsonrpsee-server",
  "jsonrpsee-types",
@@ -3011,25 +2972,6 @@ dependencies = [
  "serde",
  "serde_json",
  "soketto",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "jsonrpsee-http-client"
-version = "0.16.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc345b0a43c6bc49b947ebeb936e886a419ee3d894421790c969cc56040542ad"
-dependencies = [
- "async-trait",
- "hyper",
- "hyper-rustls",
- "jsonrpsee-core",
- "jsonrpsee-types",
- "rustc-hash",
- "serde",
- "serde_json",
  "thiserror",
  "tokio",
  "tracing",
@@ -3104,19 +3046,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3afef3b6eff9ce9d8ff9b3601125eec7f0c8cbac7abd14f355d053fa56c98768"
 dependencies = [
  "cpufeatures",
-]
-
-[[package]]
-name = "kitties"
-version = "0.1.0"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-runtime",
- "sp-std",
- "tuxedo-core",
 ]
 
 [[package]]
@@ -3992,6 +3921,7 @@ dependencies = [
 [[package]]
 name = "money"
 version = "0.1.0"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -4383,12 +4313,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
-name = "option-ext"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
-
-[[package]]
 name = "p256"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4745,19 +4669,6 @@ name = "platforms"
 version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3d7ddaed09e0eb771a79ab0fd64609ba0afb0a8366421957936ad14cbd13630"
-
-[[package]]
-name = "poe"
-version = "0.1.0"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-runtime",
- "sp-std",
- "tuxedo-core",
-]
 
 [[package]]
 name = "polling"
@@ -5458,6 +5369,7 @@ dependencies = [
 [[package]]
 name = "runtime-upgrade"
 version = "0.1.0"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -5709,7 +5621,7 @@ name = "sc-cli"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "chrono",
  "clap",
  "fdlimit",
@@ -5856,7 +5768,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
  "ahash 0.8.3",
- "array-bytes 4.2.0",
+ "array-bytes",
  "async-trait",
  "dyn-clone",
  "finality-grandpa",
@@ -6002,7 +5914,7 @@ name = "sc-keystore"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "async-trait",
  "parking_lot 0.12.1",
  "serde_json",
@@ -6017,7 +5929,7 @@ name = "sc-network"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "async-channel",
  "async-trait",
  "asynchronous-codec",
@@ -6082,7 +5994,7 @@ name = "sc-network-common"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "async-trait",
  "bitflags",
  "bytes",
@@ -6129,7 +6041,7 @@ name = "sc-network-light"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "futures",
  "libp2p",
  "log",
@@ -6151,7 +6063,7 @@ name = "sc-network-sync"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "async-trait",
  "fork-tree",
  "futures",
@@ -6185,7 +6097,7 @@ name = "sc-network-transactions"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "futures",
  "libp2p",
  "log",
@@ -6205,7 +6117,7 @@ name = "sc-offchain"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "bytes",
  "fnv",
  "futures",
@@ -6322,7 +6234,7 @@ name = "sc-rpc-spec-v2"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "futures",
  "futures-util",
  "hex",
@@ -6349,7 +6261,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
  "async-trait",
- "directories 4.0.1",
+ "directories",
  "exit-future",
  "futures",
  "futures-timer",
@@ -6952,22 +6864,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sled"
-version = "0.34.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f96b4737c2ce5987354855aed3797279def4ebf734436c6aa4552cf8e169935"
-dependencies = [
- "crc32fast",
- "crossbeam-epoch",
- "crossbeam-utils",
- "fs2",
- "fxhash",
- "libc",
- "log",
- "parking_lot 0.11.2",
-]
-
-[[package]]
 name = "slice-group-by"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7188,7 +7084,7 @@ name = "sp-core"
 version = "7.0.0"
 source = "git+https://github.com/paritytech/substrate.git?tag=monthly-2023-05#bc8f2db2cca2bac2d780569050c9ba4d751be45c"
 dependencies = [
- "array-bytes 4.2.0",
+ "array-bytes",
  "bitflags",
  "blake2",
  "bounded-collections",
@@ -8417,9 +8313,9 @@ dependencies = [
 [[package]]
 name = "tuxedo-core"
 version = "1.0.0-dev"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
 dependencies = [
  "aggregator",
- "array-bytes 6.1.0",
  "log",
  "parity-scale-codec",
  "parity-util-mem",
@@ -8438,14 +8334,11 @@ dependencies = [
 name = "tuxedo-template-runtime"
 version = "1.0.0-dev"
 dependencies = [
- "amoeba",
  "hex-literal",
- "kitties",
  "log",
  "money",
  "parity-scale-codec",
  "parity-util-mem",
- "poe",
  "runtime-upgrade",
  "scale-info",
  "serde",
@@ -8469,31 +8362,6 @@ dependencies = [
  "sp-version",
  "substrate-wasm-builder",
  "tuxedo-core",
-]
-
-[[package]]
-name = "tuxedo-template-wallet"
-version = "1.0.0-dev"
-dependencies = [
- "anyhow",
- "clap",
- "directories 5.0.1",
- "env_logger",
- "futures",
- "hex",
- "hex-literal",
- "jsonrpsee",
- "log",
- "parity-scale-codec",
- "sc-keystore",
- "serde_json",
- "sled",
- "sp-core",
- "sp-keystore",
- "sp-runtime",
- "tokio",
- "tuxedo-core",
- "tuxedo-template-runtime",
 ]
 
 [[package]]

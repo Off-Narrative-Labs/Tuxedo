@@ -41,10 +41,7 @@ use tuxedo_core::{
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
-pub use amoeba;
-pub use kitties;
 pub use money;
-pub use poe;
 pub use runtime_upgrade;
 
 #[cfg(feature = "std")]
@@ -200,12 +197,6 @@ pub enum OuterVerifier {
     ThresholdMultiSignature(ThresholdMultiSignature),
 }
 
-impl poe::PoeConfig for Runtime {
-    fn block_height() -> u32 {
-        Executive::block_height()
-    }
-}
-
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
@@ -219,21 +210,6 @@ impl poe::PoeConfig for Runtime {
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
-    /// Checks Free Kitty transactions
-    FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
-    /// Checks that an amoeba can split into two new amoebas
-    AmoebaMitosis(amoeba::AmoebaMitosis),
-    /// Checks that a single amoeba is simply removed from the state
-    AmoebaDeath(amoeba::AmoebaDeath),
-    /// Checks that a single amoeba is simply created from the void... and it is good
-    AmoebaCreation(amoeba::AmoebaCreation),
-    /// Checks that new valid proofs of existence are claimed
-    PoeClaim(poe::PoeClaim<Runtime>),
-    /// Checks that proofs of existence are revoked.
-    PoeRevoke(poe::PoeRevoke),
-    /// Checks that one winning claim came earlier than all the other claims, and thus
-    /// the losing claims can be removed from storage.
-    PoeDispute(poe::PoeDispute),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
