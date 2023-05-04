@@ -45,7 +45,10 @@ To get familiar with the concepts of an order book see [TODO link from slides]()
 ### Take a Look Around
 
 To begin with, let's get oriented in this repository.
-There are three main directories.
+You should kick off an initial compilation right now so that the code has time to compile while we are looking through it.
+To compile the entire project run `cargo build`.
+
+While, that compiles, let's have a look around.
 
 #### The `node` Directory
 
@@ -149,6 +152,8 @@ It's code will live in this `dex` directory, and we will spend most of our time 
 
 Before we get to the dex logic itself, we will need some tokens to exchange, and this runtime only has one token at the moment.
 Your task for this part is to extend the runtime's `OuterConstraintChecker` to have a third variant called `SecondToken` that uses token id 1.
+
+When you believe you have completed this section, run `cargo test --test add_token`.
 
 ### `Order` Type
 

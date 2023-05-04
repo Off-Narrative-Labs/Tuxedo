@@ -10,3 +10,9 @@ fn has_three_variants() {
         }
     }
 }
+
+#[test]
+fn second_token_is_id_1() {
+    let coin_1_checker = money::MoneyConstraintChecker::<1>::Mint;
+    let outer_checker = SecondToken(coin_1_checker);
+}
