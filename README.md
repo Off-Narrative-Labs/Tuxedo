@@ -20,7 +20,9 @@ Reading these reference docs as you progress through the process will add valuab
 At any time you can check whether you have completed the task by running the unit tests for the section you are on.
 In many cases, the tests will not eve compile when you begin a section.
 Your job is to make the tests compile _and_ pass.
-When all the tests pass for the section you are working on, move on to the next section
+When all the tests pass for the section you are working on, move on to the next section.
+
+If you are stuck and need a hint, canonical solutions to the tutorial are published on the [`dex-solutions` branch](https://github.com/Off-Narrative-Labs/Tuxedo-Order-Book-Dex-Tutorial/tree/dex-solutions)
 
 ## Use as a Template
 
