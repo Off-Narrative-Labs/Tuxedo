@@ -197,9 +197,7 @@ pub enum OuterVerifier {
     ThresholdMultiSignature(ThresholdMultiSignature),
 }
 
-// Observation: For some applications, it will be invalid to simply delete
-// a UTXO without any further processing. Therefore, we explicitly include
-// AmoebaDeath and PoeRevoke on an application-specific basis
+// TODO Declare a configuration for our dex here.
 
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
@@ -216,6 +214,10 @@ pub enum OuterConstraintChecker {
     // Your new variant should be called `SecondToken` and should use token id 1.
     // The money piece is "instantiable" which means we can add multiple instances of it to
     // a single runtime. This is accomplished by the generic constant.
+
+    // TODO add a fourth variant here to represent making a dex order.
+
+    // TODO add a fifth variant here to represent matching dex orders together.
 }
 
 /// The main struct in this module.
