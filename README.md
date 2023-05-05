@@ -440,7 +440,7 @@ Insert this code just before your `OuterConstraintChecker`:
 #[derive(PartialEq, Eq, TypeInfo)]
 /// A Dex Configuration for the Dex that trades tokens 0 and 1
 pub struct DexConfig01;
-impl dex::Config for DexConfig {
+impl dex::DexConfig for DexConfig01 {
     type Verifier = OuterVerifier;
     type A = money::Coin<0>;
     type B = money::Coin<1>;
@@ -456,6 +456,7 @@ We could choose to manually write a second config that is the opposite of the fi
 So we will choose to write an adapter that lives with the dex and allows reversing the tokens in the config to represent the opposite side of a trade.
 
 ```rust
+#[derive(PartialEq, Eq, TypeInfo)]
 /// This type represents a configuration that has the tokens swapped from
 /// some original configuration.
 ///
@@ -463,9 +464,9 @@ So we will choose to write an adapter that lives with the dex and allows reversi
 /// Similarly, when matching orders we have to be sure that the matched orders are on
 /// opposite sides of the same trading pair. This type allows us to conveniently
 /// express "same pair, but opposite side".
-pub struct OppositeSide<T: Config>(PhantomData<T>);
+pub struct OppositeSide<T: DexConfig>(PhantomData<T>);
 
-impl<T: Config> Config for Opposite<T> {
+impl<T: DexConfig> DexConfig for OppositeSide<T> {
     type Verifier = T::Verifier;
     type A = T::B;
     type B = T::A;
