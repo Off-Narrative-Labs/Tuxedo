@@ -1,7 +1,8 @@
 //! Unit tests for the Dex piece
 
 use super::*;
-use tuxedo_core::dynamic_typing::testing::Bogus;
+use tuxedo_core::verifier::TestVerifier;
+use money::Coin;
 
 /// An simple dex config to use in unit tests.
 struct TestConfig;
