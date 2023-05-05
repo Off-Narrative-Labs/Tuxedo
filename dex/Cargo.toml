@@ -17,6 +17,8 @@ sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-
 # TODO We will remove this dependency when we are making our types generic
 money = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "main", default-features = false }
 
+frame-support = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
+
 [features]
 default = ["std"]
 std = [
@@ -25,6 +27,7 @@ std = [
     "sp-runtime/std",
     "sp-std/std",
     "serde",
+    "frame-support/std",
 
     # TODO, remove it here too
     "money/std",

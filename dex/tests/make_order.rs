@@ -1,6 +1,6 @@
 use dex::*;
 use money::Coin;
-use tuxedo_core::verifier::TestVerifier;
+use tuxedo_core::{verifier::TestVerifier, SimpleConstraintChecker};
 
 type TestOrder = Order<TestVerifier>;
 type MakeTestOrder = MakeOrder<TestVerifier>;

@@ -269,7 +269,7 @@ We do this by creating a type, and implementing the [`ConstraintChecker` trait](
 
 ```rust
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, PartialEq, Eq, TypeInfo)]
+#[derive(Encode, Decode, PartialEq, Eq, Clone, Default, Debug, TypeInfo)]
 /// The Constraint checking logic for opening a new order.
 ///
 /// It is generic over the verifier type which can be used to protect
@@ -277,7 +277,7 @@ We do this by creating a type, and implementing the [`ConstraintChecker` trait](
 /// outer verifier type. By the end of the tutorial, it will also be
 /// generic over the two coins that will trade in this order book.
 /// But to begin, we will keep it simple.
-pub struct MakeOrder<V: Verifier>(PhantomData<V>);
+pub struct MakeOrder<V: Verifier>(pub PhantomData<V>);
 ```
 
 Let us recall how a UTXO transaction works.
@@ -291,7 +291,7 @@ In the case of opening new dex orders, we need to make sure that all of the foll
 * The user has provided exactly enough input collateral to cover the `offer_amount`.
 
 ```rust
-impl<T: Verifier> SimpleConstraintChecker for MakeOrder<V> {
+impl<V: Verifier> SimpleConstraintChecker for MakeOrder<V> {
     type Error = compile_error!("TODO use our dex error enum here");
 
     fn check(
@@ -308,16 +308,16 @@ impl<T: Verifier> SimpleConstraintChecker for MakeOrder<V> {
         // Now that we know there is a single output, we can
         // try to extract it to the proper type. If the input
         // is not an `Order` the extraction will fail.
-        let order: Order<T> = output_data[0].extract()?;
+        let order: Order<V> = output_data[0].extract()?;
 
         // There may be many inputs and they should all be tokens whose combined value
         // equals or exceeds the amount of token they need to provide for this order
-        let mut total_input_amount = 0;
+        let mut total_collateral = 0;
         for input in input_data {
             // TODO here you need to extract each input to the expected type (`Coin<0>`)
             // Look at how we did this above for the order output for inspiration.
             let coin: money::Coin::<0> = todo!();
-            total_input_amount += coin.value();
+            total_collateral += coin.value();
         }
 
         // Now that we know the total amount of input collateral, we
