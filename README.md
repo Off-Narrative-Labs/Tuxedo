@@ -417,6 +417,8 @@ We will not give you the exact code, just know that there are three changes nece
  change.
 If you get completely stuck, remember that the `dex-solutions` branch shows potential solutions.
 
+Finally, now that we have loosely coupled to our tokens through the `Cash` trait, we can remove the dependency on the money piece from our dex's `Cargo.toml` file.
+
 When you believe you have completed this section, run `cargo test --test dex_config`.
 
 > After completing this section, many of the previous sections' test suites will no longer pass.
@@ -425,7 +427,8 @@ When you believe you have completed this section, run `cargo test --test dex_con
 
 ### Add it to Runtime
 
-Allow runtime users to make orders. And also allow them to make opposite side orders. This will require the opposite side adapter.
+With a properly generalized `MakeOrder` constraint checker now written, we are ready to add the order-making logic to our runtime.
+The runtime does not yet depend on the dex piece, so you will need to begin by adding the dex dependency in the runtime's `Cargo.toml` file.
 
 ### Unit Tests
 
