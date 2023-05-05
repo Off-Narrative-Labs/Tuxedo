@@ -39,6 +39,8 @@ tuxedo-core = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "
 money = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "main", default-features = false }
 runtime-upgrade = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "main", default-features = false }
 
+#TODO You will need to add a path dependency on the dex piece here (And also conditionally enable its std feature below)
+
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-05" }
 
@@ -71,4 +73,6 @@ std = [
 	"tuxedo-core/std",
 	"money/std",
 	"runtime-upgrade/std",
+
+	#TODO Enable the dex's std feature here
 ]
