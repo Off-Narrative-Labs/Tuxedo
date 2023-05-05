@@ -417,7 +417,7 @@ We will not give you the exact code, just know that there are three changes nece
  change.
 If you get completely stuck, remember that the `dex-solutions` branch shows potential solutions.
 
-Finally, now that we have loosely coupled to our tokens through the `Cash` trait, we can remove the dependency on the money piece from our dex's `Cargo.toml` file.
+Finally, now that we have loosely coupled to our tokens through the `Cash` trait, we can move the dependency on the money piece in our dex's `Cargo.toml` file to the `[dev-dependencies]` section.
 
 When you believe you have completed this section, run `cargo test --test dex_config`.
 
