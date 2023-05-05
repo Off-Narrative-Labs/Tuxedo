@@ -1,6 +1,7 @@
 var sourcesIndex = JSON.parse('{\
 "aggregator":["",[],["lib.rs"]],\
 "amoeba":["",[],["lib.rs"]],\
+"derive_no_bound":["",[],["clone_no_bound.rs","debug_no_bound.rs","default_no_bound.rs","lib.rs"]],\
 "kitties":["",[],["lib.rs"]],\
 "money":["",[],["lib.rs"]],\
 "node_template":["",[],["chain_spec.rs","lib.rs","rpc.rs","service.rs"]],\
