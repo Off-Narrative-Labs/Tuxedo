@@ -215,9 +215,9 @@ pub enum OuterConstraintChecker {
     // The money piece is "instantiable" which means we can add multiple instances of it to
     // a single runtime. This is accomplished by the generic constant.
 
-    // TODO add a fourth variant here to represent making a dex order.
+    // TODO add a fourth and fifth variant here to represent making a dex orders.
 
-    // TODO add a fifth variant here to represent matching dex orders together.
+    // TODO add a sixth variant here to represent matching dex orders together.
 }
 
 /// The main struct in this module.
