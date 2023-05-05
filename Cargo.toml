@@ -4,6 +4,7 @@ members = [
     "tuxedo-template-runtime",
     "tuxedo-core",
     "tuxedo-core/aggregator",
+    "tuxedo-core/no_bound",
     "wallet",
     "wardrobe/amoeba",
     "wardrobe/money",

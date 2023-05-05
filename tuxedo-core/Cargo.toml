@@ -14,6 +14,7 @@ scale-info = { version = "2.1.1", default-features = false, features = ["derive"
 parity-util-mem = { version = '0.12.0', optional = true }
 
 aggregator = { path = "aggregator" }
+derive-no-bound = { path = "no_bound" }
 
 sp-api = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
 sp-debug-derive = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false, features = ["force-debug"] }
