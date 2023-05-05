@@ -10,9 +10,7 @@ impl DexConfig for TestConfig {
 }
 
 type TestOrder = Order<TestConfig>;
-type ReverseTestOrder = Order<ReverseConfig<TestConfig>>;
 type MakeTestOrder = MakeOrder<TestConfig>;
-type MatchTestOrders = MatchOrders<TestConfig>;
 
 fn a_for_b_order(offer_amount: u128, ask_amount: u128) -> TestOrder {
     Order {

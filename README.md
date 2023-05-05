@@ -375,15 +375,15 @@ And because we won't be using the two token types for any actual fields, we will
 ///
 /// When a match is made, the payment token will be protected with the
 /// verifier contained in this order.
-struct Order<T: Config> {
+pub struct Order<T: DexConfig> {
     /// The amount of token A in this order
-    offer_amount: u128,
+    pub offer_amount: u128,
     /// The amount of token B in this order
-    ask_amount: u128,
+    pub ask_amount: u128,
     /// The verifier that will protect the payout coin
     /// in the event of a successful match.
-    payout_verifier: T::Verifier,
-    _ph_data: PhantomData<T>,
+    pub payout_verifier: T::Verifier,
+    pub _ph_data: PhantomData<T>,
 }
 ```
 
@@ -393,7 +393,7 @@ Now that there is an entire class of `Order` types instead of a single one, we m
 Luckily the `Cash` trait provides a one-byte ID that we can use.
 
 ```rust
-impl<T: Config> UtxoData for Order<T> {
+impl<T: DexConfig> UtxoData for Order<T> {
     const TYPE_ID: [u8; 4] = [b'$', b'$', T::A::ID, T::B::ID];
 }
 ```
@@ -406,12 +406,16 @@ impl<T: Config> UtxoData for Order<T> {
 With our `Order` type properly generalized, we are now ready to generalize our `MakeOrder` constraint checker.
 
 ```rust
-pub struct MakeOrder<T: Config>(PhantomData<T>);
+pub struct MakeOrder<T: DexConfig>(pub PhantomData<T>);
 ```
 
 Of course you will need to update the generics on your implementation of the `SimpleConstraintChecker` trait as well.
-We will not give you the exact code, just know that the `impl` line will need a small change, and the line where you extract the collateral will need a small change.
-If you get completely stuck, remember tha the `dex-solutions` branch shows potential solutions.
+We will not give you the exact code, just know that there are three changes necessary:
+* the `impl` line will need new generics and trait bounds.
+* the line where you extract the order will need a new type annotation.
+* the line where you extract the collateral will need a similar
+ change.
+If you get completely stuck, remember that the `dex-solutions` branch shows potential solutions.
 
 When you believe you have completed this section, run `cargo test --test dex_config`.
 
