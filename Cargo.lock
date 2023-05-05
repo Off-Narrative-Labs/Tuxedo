@@ -1536,6 +1536,7 @@ dependencies = [
 name = "dex"
 version = "0.1.0"
 dependencies = [
+ "money",
  "parity-scale-codec",
  "scale-info",
  "serde",
