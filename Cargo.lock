@@ -150,7 +150,7 @@ dependencies = [
 [[package]]
 name = "aggregator"
 version = "0.1.0"
-source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#32dc5d4e2390fba35cd3c9da7a330934edf58e27"
 dependencies = [
  "quote",
  "syn 2.0.15",
@@ -1480,6 +1480,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-no-bound"
+version = "0.1.0"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#32dc5d4e2390fba35cd3c9da7a330934edf58e27"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
+]
+
+[[package]]
 name = "derive-syn-parse"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1536,7 +1546,6 @@ dependencies = [
 name = "dex"
 version = "0.1.0"
 dependencies = [
- "frame-support",
  "money",
  "parity-scale-codec",
  "scale-info",
@@ -3935,7 +3944,7 @@ dependencies = [
 [[package]]
 name = "money"
 version = "0.1.0"
-source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#32dc5d4e2390fba35cd3c9da7a330934edf58e27"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -5383,7 +5392,7 @@ dependencies = [
 [[package]]
 name = "runtime-upgrade"
 version = "0.1.0"
-source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#32dc5d4e2390fba35cd3c9da7a330934edf58e27"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -8327,9 +8336,10 @@ dependencies = [
 [[package]]
 name = "tuxedo-core"
 version = "1.0.0-dev"
-source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#2487f8516170ce03344343c43491fae028a5b206"
+source = "git+https://github.com/Off-Narrative-Labs/Tuxedo?branch=main#32dc5d4e2390fba35cd3c9da7a330934edf58e27"
 dependencies = [
  "aggregator",
+ "derive-no-bound",
  "log",
  "parity-scale-codec",
  "parity-util-mem",
