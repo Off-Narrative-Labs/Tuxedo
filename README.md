@@ -248,7 +248,17 @@ pub enum DexError {
 }
 ```
 
-TODO!! We should also impl `From<DynamicTypingError>` at this point
+Our `DexError` has a variant for anytime an input or output contained the wrong type of UTXO.
+We will convert all [`DynamicTypingError`]()s we encounter to this same variant.
+For that it will be convenient to have a conversion implemented.
+
+```rust
+impl From<DynamicTypingError> for DexError {
+    fn from(_value: DynamicTypingError) -> Self {
+        todo!()
+    }
+}
+```
 
 When you believe you have completed this section, run `cargo test --test error_enum`.
 
