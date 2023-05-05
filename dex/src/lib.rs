@@ -20,7 +20,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
     Verifier,
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    dynamic_typing::{DynamicallyTypedData, DynamicTypingError, UtxoData},
     ensure,
     traits::Cash,
     SimpleConstraintChecker,
