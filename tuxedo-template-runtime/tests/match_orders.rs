@@ -1,4 +1,17 @@
+use tuxedo_template_runtime::OuterConstraintChecker::{self, *};
+
 #[test]
-fn todo_write_tests() {
-    
+fn has_six_variants() {
+    fn _match_outer_constraint_checker(c: OuterConstraintChecker) {
+        match c {
+            Money(_) => (),
+            RuntimeUpgrade(_) => (),
+            SecondToken(_) => (),
+            MakeOrder01(_) => (),
+            MakeOrder10(_) => (),
+            MatchOrders(_) => (),
+        }
+    }
 }
+
+//TODO is there some way to make sure that the config is the expected one?

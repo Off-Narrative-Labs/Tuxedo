@@ -8,7 +8,7 @@ This time we will be working on the `MatchOrders` type which will be responsible
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, PartialEq, Eq, CloneNoBound, DebugNoBound, DefaultNoBound, TypeInfo)]
 /// Constraint checking logic for matching existing open orders against one another
-pub struct MatchOrders<T: Config>(PhantomData<T>);
+pub struct MatchOrders<T: DexConfig>(pub PhantomData<T>);
 ```
 
 The basic checking logic will be as follows:
@@ -36,7 +36,7 @@ If you get stuck, use the tests to guide you.
 And if you are still stuck, consider peeking at the `dex-solutions` branch only until you are unstuck and then continue on your own.
 
 ```rust
-impl<T: Config> ConstraintChecker<T::Verifier> for MatchOrders<T> {
+impl<T: DexConfig> ConstraintChecker<T::Verifier> for MatchOrders<T> {
     type Error = DexError;
 
     fn check(
@@ -80,7 +80,7 @@ impl<T: Config> ConstraintChecker<T::Verifier> for MatchOrders<T> {
                     todo!(),
                     DexError::VerifierMismatchForTrade
                 )
-            } else if let Ok(order) = input.payload.extract::<Order<ReverseConfig<T>>>() {
+            } else if let Ok(order) = input.payload.extract::<Order<OppositeSide<T>>>() {
                 todo!("repeat similar but reversed logic for the opposite side of the order");
             } else {
                 // If the order doesn't decode to either side of this pair, then it is not the
