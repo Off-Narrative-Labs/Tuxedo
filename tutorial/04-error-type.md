@@ -38,7 +38,7 @@ pub enum DexError {
 ```
 
 Our `DexError` has a variant for anytime an input or output contained the wrong type of UTXO.
-We will convert all [`DynamicTypingError`]()s we encounter to this same variant.
+We will convert all [`DynamicTypingError`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/dynamic_typing/enum.DynamicTypingError.html)s we encounter to this same variant.
 For that it will be convenient to have a conversion implemented.
 
 ```rust
