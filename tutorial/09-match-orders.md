@@ -25,10 +25,11 @@ Thinking through this logic, we can see that there will be several new error var
 * `InsufficientTokenBForMatch` - The amount of token B supplied by the orders is not enough to match with the demand.
 * `VerifierMismatchForTrade` - The verifier who is receiving the tokens is not correct one that was specified in the original order.
 
-With our `DexError` enum properly extended, we are now ready to implement the [`ConstraintChecker` trait]().
-We are using the full `ConstraintChecker` this time as opposed to the `SimpleConstraintChecker` that we used when making orders because we need to ensure that outputs are guarded by specific `Verifiers`.
+With our `DexError` enum properly extended, we are now ready to implement the [`ConstraintChecker` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/constraint_checker/trait.ConstraintChecker.html).
+We are using the full `ConstraintChecker` this time as opposed to the [`SimpleConstraintChecker`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/constraint_checker/trait.SimpleConstraintChecker.html) that we used when making orders because we need to ensure that outputs are guarded by specific `Verifiers`.
 Specifically we need to make sure that payouts are guarded by the proper `payout_verifiers` that were specified in the order.
 This is the one and only difference between the `ConstraintChecker` and `SimpleConstraintChecker`: The simple one does not give you access to information about the verifiers on the inputs or outputs.
+As the name implies, any type that implements `SimpleConstraintChecker` automatically implements `ConstraintChecker`.
 
 Here is a sketch of the implementation with several `todo!()`s left for the learner to implement.
 If you get stuck, use the tests to guide you.
