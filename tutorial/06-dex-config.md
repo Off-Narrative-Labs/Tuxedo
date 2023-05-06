@@ -5,7 +5,7 @@ But there is one significant limitation still.
 So far our types are not generic over the token types that the orders are made in.
 So far every order is offering `Coin<0>` and there is no way to specify what coin you want in exchange.
 We have learned a lot with this toy example so far, but it is now time to make this dex much more realistic by giving it a configuration trait to contain all of the generic configuration information.
-We need these token types to both represent fungible assets that can be stored in the Utxo set, so we bound them with the [`Cash` trait]() and the [`UtxoData` trait]() which guarantee these properties.
+We need these token types to both represent fungible assets that can be stored in the Utxo set, so we bound them with the [`Cash` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/traits/trait.Cash.html) and the [`UtxoData` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/dynamic_typing/trait.UtxoData.html) which guarantee these properties.
 
 ```rust
 /// A Configuration for a Decentralized Exchange.
@@ -24,8 +24,8 @@ Our configuration trait contains the Verifier which was previously a stand-alone
 It also has two tokens added.
 These two tokens represent the trading pair that this dex is trading.
 
-We will need to make our order type generic over this entire config rather than just the verifer.
-And because we won't be using the two token types for any actual fields, we will need to use Rust's [`PhantomData` marker]().
+We will need to make our order type generic over this entire config rather than just the verifier.
+And because we won't be using the two token types for any actual fields, we will need to use Rust's [`PhantomData` marker](https://doc.rust-lang.org/std/marker/struct.PhantomData.html).
 
 ```rust
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
