@@ -27,7 +27,7 @@ If you are stuck and need a hint, canonical solutions to the tutorial are publis
 In this tutorial, we will implement a Tuxedo runtime with two fungible tokens and an decentralized exchange between those tokens based on an order book.
 Make sure you are familiar with the [fundamentals of an order book](https://blog.atani.com/dex-orderbook-vs-liquidity-pool/) before diving in.
 
-* [Take a Look Around](turorial/01-look-around.md)
+* [Take a Look Around](tutorial/01-look-around.md)
 * [Add a Token](tutorial/02-add-a-token.md)
 * [`Order` Type](tutorial/03-order-type.md)
 * [Error Type](tutorial/04-error-type.md)
@@ -35,8 +35,8 @@ Make sure you are familiar with the [fundamentals of an order book](https://blog
 * [Generic Parameters and `DexConfig`](tutorial/06-dex-config.md)
 * [Install `MakeOrder` in Runtime](tutorial/07-runtime-orders.md)
 * [Unit Testing the Dex](tutorial/08-unit-tests.md)
-* [`MatchOrders` Constraint Checker](tutorials/09-match-orders.md)
-* [Additional Ideas](tutorials/10-additional-ideas.md)
+* [`MatchOrders` Constraint Checker](tutorial/09-match-orders.md)
+* [Additional Ideas](tutorial/10-additional-ideas.md)
 ## Use as a Template
 
 In addition to acting as a tutorial, this repository is also the canonical Tuxedo Template.
