@@ -9,7 +9,7 @@ They do not need to read from state or write to it; all of that is passed in as 
 Those who are familiar with FRAME will recognize that this is a lot less overhead than setting up a mock runtime and building test externalities.
 
 Typically the tests will live in a dedicated file called `tests.rs` in the piece's `src` folder until there are enough that they warrant being split into multiple files.
-A [`dex/src/tests.rs`](dex/src/tests.rs) file already exists in this repository and is mostly empty.
+A [`dex/src/tests.rs`](../dex/src/tests.rs) file already exists in this repository and is mostly empty.
 Let's use it to add two new tests to the runtime.
 
 For our first test case, we will ensure that opening a simple order to trade 100 A for 150 B works when the user uses two different input coins to sum to the total collateral.
