@@ -24,7 +24,7 @@ We import items from Substrate, Tuxedo Core, and two Tuxedo pieces (Money and Ru
 ### The Opaque Module
 
 The Opaque module houses definitions of types that will be used on the client side.
-This includes a few consensus keys types as well as our `OpaqueBlock` type which is based on Substrates [`OpaqueExtrinsic`]() type.
+This includes a few consensus keys types as well as our `OpaqueBlock` type which is based on Substrates [`OpaqueExtrinsic`](https://paritytech.github.io/substrate/master/sp_runtime/struct.OpaqueExtrinsic.html) type.
 
 The idea behind opaque types is that they are all basically `Vec<u8>` under the hood.
 This allows the client side to just see them as bytes and have no understanding of their structure or meaning.
@@ -32,11 +32,11 @@ Only when these types enter the runtime will they be decoded into Rust types.
 
 ### Runtime Version
 
-All Runtimes must provide an implementation of Substrate's [RuntimeVersion](). This looks nearly identical to a FRAME runtime.
+All Runtimes must provide an implementation of Substrate's [RuntimeVersion](https://paritytech.github.io/substrate/master/sp_version/struct.RuntimeVersion.html). This looks nearly identical to a FRAME runtime.
 
 ### Genesis Config
 
-Each runtime needs to provide an implementation of `BuildStorage` to allow a chain to begin with some initial, or "genesis" state.
+Each runtime needs to provide an implementation of [`BuildStorage`](https://paritytech.github.io/substrate/master/sp_runtime/trait.BuildStorage.html) to allow a chain to begin with some initial, or "genesis" state.
 
 This runtime begins with two coins in its storage.
 One is owned by a private key, and the other by a multisignature.
@@ -44,20 +44,20 @@ We will be able to mint our own tokens when working with the chain, so we don't 
 
 ### Concrete Types
 
-Next we encounter several type aliases including, `Transaction`, `Header`, `Block`, `Executive`, and `Output`.
+Next we encounter several type aliases including, [`Transaction`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/type.Transaction.html), [`Header`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/type.Header.html), [`Block`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/type.Block.html), [`Executive`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/type.Executive.html), and [`Output`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/type.Output.html).
 Each of these aliases takes a generic type from either Substrate or Tuxedo core, and fills in the generics to provide fully-concrete runtime-specific types.
 
 ### Outer Verifier
 
-Next we see the `OuterVerifier` enum.
-Every Tuxedo runtime will have one of these Verifiers and it is required to implement the [`Verifier` trait]().
+Next we see the [`OuterVerifier`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/enum.OuterVerifier.html) enum.
+Every Tuxedo runtime will have one of these Verifiers and it is required to implement the [`Verifier` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/trait.Verifier.html).
 
 This enum is an amalgamation of several other individual verifiers.
 In this case, we use the three that come standard with Tuxedo:
 
-* [`UpForGrabs`]() - Allows anyone to spend a UTXO.
-* [`SigCheck`]() - Allows a UTXO to be spent with a signature from the proper key. This is the most common and represents simple private ownership.
-* [`ThresholdMultiSignature`]() - Allows a UTXO to be spent when enough members have signed.
+* [`UpForGrabs`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/struct.UpForGrabs.html) - Allows anyone to spend a UTXO.
+* [`SigCheck`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/struct.SigCheck.html) - Allows a UTXO to be spent with a signature from the proper key. This is the most common and represents simple private ownership.
+* [`ThresholdMultiSignature`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/struct.ThresholdMultiSignature.html) - Allows a UTXO to be spent when enough members have signed.
 
 Tuxedo developers can extend this enum by writing their own implementations of the `Verifier` trait.
 However, we will not need to extend this while writing our dex.
@@ -70,21 +70,21 @@ We will need to add a configuration for our dex later on, and you can see a comm
 
 ### Outer Constraint Checker
 
-The `OuterConstraintChecker` enum is also an amalgamation enum that implements the [`ConstraintChecker`]() trait.
+The [`OuterConstraintChecker`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/enum.OuterConstraintChecker.html) enum is also an amalgamation enum that implements the [`ConstraintChecker`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/constraint_checker/trait.ConstraintChecker.html) trait.
 That means that each of its variants represents a separate constraint checker.
 
 This enum represents all of the different transaction types in the runtime.
 This template runtime includes two pieces currently.
-The first is a fungible token (token id 1) provided by the [Money Piece]().
+The first is a fungible token (token id 1) provided by the [Money Piece](https://off-narrative-labs.github.io/Tuxedo/money/index.html).
 Second is the ability to perform wasm runtime upgrades using Substrate's forkless upgrade mechanism.
 These pieces are included because nearly all runtimes will need them.
-As a runtime developer, you can remove either of these pieces, or add more from the [wardrobe] or that you have written yourself.
+As a runtime developer, you can remove either of these pieces, or add more from the [wardrobe](https://github.com/off-Narrative-Labs/tuxedo/tree/main/wardrobe) or that you have written yourself.
 
 We will add to it this enum several times throughout the tutorial.
 
 ### `Runtime` and Helper Functions
 
-We declare the `Runtime` struct.
+Next we declare the [`Runtime` struct](https://off-narrative-labs.github.io/Tuxedo/tuxedo_template_runtime/struct.Runtime.html).
 And on it we implement a few consensus-related helper functions.
 If you find that you need a helper function in the runtime, you can consider implementing it on the `Runtime` struct.
 
