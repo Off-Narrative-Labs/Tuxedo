@@ -1,7 +1,7 @@
 # `MakeOrder` Constraint Checker
 
 We're now ready to write our first constraint checker.
-We do this by creating a type, and implementing the [`ConstraintChecker` trait]() for it.
+We do this by creating a type, and implementing the [`SimpleConstraintChecker` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/constraint_checker/trait.SimpleConstraintChecker.html) for it.
 
 ```rust
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
