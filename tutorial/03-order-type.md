@@ -39,7 +39,7 @@ pub struct Order<V: Verifier> {
 }
 ```
 
-Now that we have declared our type, we need to indicate that this type can be stored in a UTXO by implementing the [`UtxoData` trait]().
+Now that we have declared our type, we need to indicate that this type can be stored in a UTXO by implementing the [`UtxoData` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/dynamic_typing/trait.UtxoData.html).
 We just need to be sure we provide a unique four-byte type identifier.
 
 ```rust
