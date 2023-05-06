@@ -1,7 +1,7 @@
 # Unit Testing the Dex
 
 If you were developing this pallet from your own designs, now would be a great time to stop and write unit tests for your constraint checker.
-Because this is a tutorial, many [`MakeOrder` tests]() are already written, and you should inspect them carefully.
+Because this is a tutorial, many [`MakeOrder` tests](../dex/tests/dex_config.rs) are already written, and you should inspect them carefully.
 
 Although there are several tests provided, we will still discuss Tuxedo tests, and practice adding them.
 One very nice thing about writing tests for `ConstraintChecker`s is that they are pure functions.
