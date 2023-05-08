@@ -18,7 +18,7 @@ In many places we link to the [Tuxedo Rust Docs](https://github.com/Off-Narrativ
 Reading these reference docs as you progress through the process will add valuable context to the tasks you are completing.
 
 At any time you can check whether you have completed the task by running the unit tests for the section you are on.
-In many cases, the tests will not eve compile when you begin a section.
+In many cases, the tests will not even compile when you begin a section.
 Your job is to make the tests compile _and_ pass.
 When all the tests pass for the section you are working on, move on to the next section.
 
