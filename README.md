@@ -2,10 +2,11 @@
 
 Write UTXO-based Substrate Runtimes
 
+Browse this repository, or get hands on with the [Tuxedo Order Book Dex Tutorial](https://github.com/Off-Narrative-Labs/Tuxedo-Order-Book-Dex-Tutorial/).
+
 ## Table of Contents
 
-- [Architecture](#architecture)
-- [Repository Contents](#repository-contents)
+- [Repository Layout](#repository-layout)
   - [Tuxedo Core](#tuxedo-core)
   - [Template Runtime](#template-runtime)
   - [Template Node](#template-node)
@@ -16,35 +17,10 @@ Write UTXO-based Substrate Runtimes
 - [Testing and Code Quality](#testing-and-code-quality)
 - [License](#license)
 
-## Architecture
+## Repository Layout
 
-Tuxedo is a framework for developing Substrate runtimes with the UTXO model.
-
-In the standard UTXO model each transaction provides some inputs that represent pieces of current state to be consumed, and provides some outputs which are new pieces of state to be added to the UTXO set. The chain logic then checks that the input and output sets satisfy some constraints. For example, the input coins must have value greater or equal to the output coins. Tuxedo generalizes this model slightly in two ways. First, by adding a notion of peeks, which are pieces of state to be read only, and not modified or consumed. This reduces the frequency with with transactions race for particular UTXOs. Second, by abstracting the notion of checking a transactions so that runtime developers can plug in their own custom "Tuxedo Pieces" or use some from a standard library. Rather than being constrained to build only a cryptocurrency, developers can build _proof of stake_, _governance_, _NFT games_ or anything else they choose.
-
-Tuxedo makes the process of developing UTXO-based runtimes faster and safer by freeing developers from having to re-implement all of the common and error-prone UTXO logic in each chain. It also makes the process more standard by providing developers with simple interfaces for their Tuxedo Pieces. When developing a Tuxedo piece, a developer will complete some or all of these following tasks.
-
-### Declaring Data Types
-
-If the Tuxedo piece has any custom data types, they must be declared by implementing the [`UtxoData` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/dynamic_typing/trait.UtxoData.html). For example, a crytpocurrency may have a data type called `Coin` or a voting solution may have data types called `Poll` and `Vote`. The developer only has to declare the data type; there is no notion of a "storage item" because there is no global state in the UTXO model. All state is local to individual UTXOs.
-
-### Defining Transaction Constraints
-
-All Tuxedo pieces will define one or more sets of constraints that a transaction must satisfy to be valid. This is done through a [`ConstraintChecker` trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/constraint_checker/trait.ConstraintChecker.html). Unlike the accounts model, the Tuxedo piece is not responsible for calculating the final state after the transaction. Rather, the final state is passed in as the transaction's output set. The piece only checks that the appropriate constraints are met. For example, it may check that in an on-chain chess game, the input piece really is allowed to move to the location specified in the output. In a more classic example, it will check that the tokens being spent are of greater or equal value to the tokens being created.
-
-### Declaring Verification Logic
-
-Each individual UTXO in the UTXO set is protected by a piece of associated logic that determines when it may be spent. This logic is defined in the [`Verifier` Trait](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/trait.Verifier.html). The most classic example is that the UTXO is owned by a particular public key and the transaction must be signed by that key in order to unlock the input. Other examples also exist, such as, the UTXO may be claimable by anyone, or by nobody at all, or it may require a valid proof or work to be consumed.
-
-Tuxedo core provides the most common verification logic already, so it is uncommon that individual pieces need to add custom verification logic, but the possibility exists none-the-less.
-
-### Note on Unit Testing
-
-A Tuxedo piece should be thoroughly unit tests, like any quality piece of software. It is worth noting that, because all state is local to UTXOs and there are no global storage items, the unit tests can be much simpler than a typical account-based Substrate runtime. It is not even necessary to uses storage externalities when testing Tuxedo pieces because Tuxedo core handles all of the storage access itself. The piece developers only have to focus on the actual constraint-checking logic.
-
-## Repository Contents
-
-This mono-repo contains the core Tuxedo code as well as an example node built with Tuxedo and a proof-of-concept wallet to transfer tokens.
+This repository contains the Tuxedo Core code as well as an example runtime built with Tuxedo, a simple node to execute the example runtime, and a proof-of-concept wallet to transfer tokens.
+The next few sections describe each of these in a little more detail
 
 ### Tuxedo Core
 
@@ -75,23 +51,22 @@ From a developer perspective, this wallet can serve as a starting point for buil
 
 ## Funding and Roadmap
 
-Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their support of Tuxedo through their grants program.
+Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their [support of Tuxedo](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md) through their grants program.
 
-As part of this grant we will deliver three milestones. More details are available in the [Tuxedo grant application](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md).
+With the grant work nearly complete, we intend to continue developing Tuxedo.
+The future is less clear, but our current ideas include:
 
-- ✅ Core Tuxedo Functionality (complete)
-- ✅ Template wallet (complete)
-- 🏗️ Full Documentation and Tutorial (in progress)
-
-After the grant work is complete we intend to continue developing Tuxedo. The future is less clear, but our current ideas include:
-
-- 🔮 Cumulus and Parachain support including cross-chain UTXOs
 - 🔮 Zero-knowledge runtimes a-la [zero-cash](https://www.ieee-security.org/TC/SP2014/papers/Zerocash_c_DecentralizedAnonymousPaymentsfromBitcoin.pdf) and [zexe](https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=9152634&ref=)
+- 🔮 Cumulus and Parachain support including cross-chain UTXOs
 - 🔮 UTXO-native Smart Contracts based on the pi-calculus
 
 ## Building and Running Locally
 
-First you'll need to have a working Rust and [Substrate development environment](https://docs.substrate.io/install/). Then you can build Tuxedo like any other Rust project
+If you want to learn how to use Tuxedo in your runtime, we recommend starting with the [Tuxedo Order Book Dex Tutorial](https://youtu.be/aeTmAvVJlx4).
+
+If you want to develop closer to Tuxedo core, you can build this repository.
+First you'll need to have a working Rust and [Substrate development environment](https://docs.substrate.io/install/).
+Then you can build Tuxedo like any other Rust project
 
 ```sh
 # Clone to repository
