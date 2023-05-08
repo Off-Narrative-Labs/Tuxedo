@@ -313,7 +313,7 @@
 
                     err.extend(
                         additional
-                            .into_iter()
+                            .iter()
                             .map(|variant| syn::Error::new_spanned(variant, <span class="string">&quot;additional default&quot;</span>)),
                     );
 
