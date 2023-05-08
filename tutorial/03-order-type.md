@@ -7,9 +7,11 @@ That means we will need an `Order` type.
 This type is responsible for storing the order's ask amount and offer amount.
 
 An Order is also responsible for storing something called the `payout_verifier`.
+A [`Verifier`](https://off-narrative-labs.github.io/Tuxedo/tuxedo_core/verifier/trait.Verifier.html) is a bit of logic that determines whether a UTXO can be spent or consumed.
 When some orders are matched together, the corresponding payouts must be made.
 The payouts will be protected by this `payout_verifier`.
 So when a user makes an order, they provide the verifier that will be used to protect their eventual payout, should the order ever match.
+Typically users will just make sure that their new tokens are protected by a signature from their public key.
 
 For now, we will not worry about making our `Order` type generic over token types.
 We will add that later after we have understood the fundamentals of piece design.
