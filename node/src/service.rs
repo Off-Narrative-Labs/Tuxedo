@@ -161,8 +161,8 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
     );
 
     net_config.add_notification_protocol(sc_consensus_grandpa::grandpa_peers_set_config(
-		grandpa_protocol_name.clone(),
-	));
+        grandpa_protocol_name.clone(),
+    ));
 
     let warp_sync = Arc::new(sc_consensus_grandpa::warp_proof::NetworkProvider::new(
         backend.clone(),
