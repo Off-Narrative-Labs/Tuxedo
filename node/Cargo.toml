@@ -35,7 +35,6 @@ sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "month
 sp-timestamp = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sp-inherents = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sp-keyring = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
-pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 
 # These dependencies are used for the node template's RPCs
 jsonrpsee = { version = "0.16.2", features = ["server"] }
@@ -45,7 +44,6 @@ sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", tag = "month
 sp-blockchain = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
-pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 
 # Local Dependencies
 node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
