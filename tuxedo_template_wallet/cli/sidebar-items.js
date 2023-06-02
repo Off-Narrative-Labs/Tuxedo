@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Command"],"static":["DEFAULT_VALUE"],"struct":["Cli","SpendArgs"]};
+window.SIDEBAR_ITEMS = {"enum":["Command"],"struct":["Cli","SpendArgs"]};
