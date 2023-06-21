@@ -11,8 +11,8 @@ tuxedo-core = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "
 serde = { version = "1.0", optional = true, features = ["derive"] }
 parity-scale-codec = { version = '3.4.0', default-features = false, features = ['derive'] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
-sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-05", default_features = false}
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
 
 # TODO We will move this to the [dev-dependencies] section when we are making our types generic
 money = { git = "https://github.com/Off-Narrative-Labs/Tuxedo", branch = "main", default-features = false }
