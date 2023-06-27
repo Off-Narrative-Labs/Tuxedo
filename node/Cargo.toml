@@ -30,6 +30,7 @@ sp-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "mon
 sc-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-network = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sc-client-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }

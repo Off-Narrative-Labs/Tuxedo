@@ -80,6 +80,7 @@ pub mod opaque {
 }
 
 /// This runtime version.
+#[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("tuxedo-template-runtime"),
     impl_name: create_runtime_str!("tuxedo-template-runtime"),
