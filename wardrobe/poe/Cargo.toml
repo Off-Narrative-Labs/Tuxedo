@@ -11,9 +11,9 @@ tuxedo-core = { path = '../../tuxedo-core', default-features = false }
 serde = { version = "1.0", optional = true, features = ["derive"] }
 parity-scale-codec = { version = '3.4.0', default-features = false, features = ['derive'] }
 scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
-sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
-sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07", default_features = false}
+sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07", default_features = false}
+sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07", default_features = false}
 
 [features]
 default = ["std"]
