@@ -138,7 +138,7 @@ impl Verifier for ThresholdMultiSignature {
 /// A testing verifier that passes or depending on the enclosed
 /// boolean value.
 #[cfg(feature = "std")]
-#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct TestVerifier {
     /// Whether the verifier should pass
     pub verifies: bool,
