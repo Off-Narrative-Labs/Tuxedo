@@ -1,4 +1,6 @@
 [workspace]
+resolver = "2"
+
 members = [
     "node",
     "tuxedo-template-runtime",
@@ -12,5 +14,6 @@ members = [
     "wardrobe/kitties",
     "wardrobe/runtime_upgrade",
 ]
+
 [profile.release]
 panic = "unwind"
