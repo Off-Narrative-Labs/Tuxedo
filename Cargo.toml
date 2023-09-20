@@ -17,3 +17,71 @@ members = [
 
 [profile.release]
 panic = "unwind"
+
+[workspace.dependencies]
+# generic dependencies
+log = "0.4"
+serde =  "1.0"
+parity-scale-codec = { version = "3.4.0", default-features = false }
+scale-info = { version = "2.1.1", default-features = false }
+parity-util-mem = "0.12.0"
+jsonrpsee = "0.16.2"
+hex-literal = "0.4.1"
+clap = "4.3.0"
+
+# core-only dependencies
+array-bytes = "6.0.0"
+
+# wallet-only dependencies
+serde_json = "1.0"
+tokio = "1.25.0"
+anyhow = "1.0.69"
+hex = "0.4.3"
+directories = "5.0.0"
+sled = "0.34.7"
+futures = "0.3"
+env_logger = "0.10.0"
+
+# node-only dependencies
+substrate-build-script-utils = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+
+# runtime-only dependencies
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+
+# substrate primitives and client
+sc-cli = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-core = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sc-executor = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-service = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-telemetry = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-keystore = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-session = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sc-transaction-pool = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-network = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-client-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default-features = false }
+sp-version = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default-features = false }
+sp-timestamp = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sp-inherents = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sp-keyring = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sc-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-block-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06", default_features = false }
+sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-06" }
+sp-debug-derive = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false }
+sp-io = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false }
+sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-storage = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-offchain = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-consensus-aura = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-application-crypto = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-consensus-grandpa = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false}
+sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-06", default_features = false }

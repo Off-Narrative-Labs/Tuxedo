@@ -380,7 +380,9 @@ fn spend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
     let unspent_tree = db.open_tree(UNSPENT)?;
     let spent_tree = db.open_tree(SPENT)?;
 
-    let Some(ivec) = unspent_tree.remove(output_ref.encode())? else { return Ok(())};
+    let Some(ivec) = unspent_tree.remove(output_ref.encode())? else {
+        return Ok(());
+    };
     let (owner, amount) = <(H256, u128)>::decode(&mut &ivec[..])?;
     spent_tree.insert(output_ref.encode(), (owner, amount).encode())?;
 
@@ -392,7 +394,9 @@ fn unspend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
     let unspent_tree = db.open_tree(UNSPENT)?;
     let spent_tree = db.open_tree(SPENT)?;
 
-    let Some(ivec) = spent_tree.remove(output_ref.encode())? else { return Ok(())};
+    let Some(ivec) = spent_tree.remove(output_ref.encode())? else {
+        return Ok(());
+    };
     let (owner, amount) = <(H256, u128)>::decode(&mut &ivec[..])?;
     unspent_tree.insert(output_ref.encode(), (owner, amount).encode())?;
 
@@ -431,13 +435,17 @@ pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
 
     // Take the hash from the block_hashes tables
     let Some(ivec) = wallet_block_hashes_tree.remove(height.encode())? else {
-        return Err(anyhow!("No block hash found at height reported as best. DB is inconsistent."))
+        return Err(anyhow!(
+            "No block hash found at height reported as best. DB is inconsistent."
+        ));
     };
     let hash = H256::decode(&mut &ivec[..])?;
 
     // Take the block from the blocks table
     let Some(ivec) = wallet_blocks_tree.remove(hash.encode())? else {
-        return Err(anyhow!("Block was not present in db but block hash was. DB is corrupted."));
+        return Err(anyhow!(
+            "Block was not present in db but block hash was. DB is corrupted."
+        ));
     };
 
     let block = Block::decode(&mut &ivec[..])?;
