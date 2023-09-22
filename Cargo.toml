@@ -29,6 +29,11 @@ jsonrpsee = "0.16.2"
 hex-literal = "0.4.1"
 clap = "4.3.0"
 
+# proc macro dependencies
+syn = "2.0.15"
+quote = "1.0.23"
+proc-macro2 = "1.0.67"
+
 # core-only dependencies
 array-bytes = "6.0.0"
 
