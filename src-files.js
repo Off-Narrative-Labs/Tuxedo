@@ -1,4 +1,4 @@
-var sourcesIndex = JSON.parse('{\
+var srcIndex = JSON.parse('{\
 "aggregator":["",[],["lib.rs"]],\
 "amoeba":["",[],["lib.rs"]],\
 "derive_no_bound":["",[],["clone_no_bound.rs","debug_no_bound.rs","default_no_bound.rs","lib.rs"]],\
@@ -11,4 +11,4 @@ var sourcesIndex = JSON.parse('{\
 "tuxedo_template_runtime":["",[],["lib.rs"]],\
 "tuxedo_template_wallet":["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","rpc.rs","sync.rs"]]\
 }');
-createSourceSidebar();
+createSrcSidebar();
