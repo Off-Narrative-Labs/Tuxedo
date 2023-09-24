@@ -1,55 +1,55 @@
 [package]
-name = "tuxedo-template-runtime"
-version = "1.0.0-dev"
-repository = 'https://github.com/Off-Narative-Labs/Tuxedo'
+description = "An example and template runtime built with Tuxedo."
 edition = "2021"
 license = "Apache-2.0"
-description = "An example and template runtime built with Tuxedo."
+name = "tuxedo-template-runtime"
+repository = "https://github.com/Off-Narative-Labs/Tuxedo"
+version = "1.0.0-dev"
 
 [dependencies]
 log = { workspace = true }
-serde = { workspace = true, optional = true, features = ["derive"] }
-parity-scale-codec = { workspace = true, features = ['derive'] }
-scale-info = { workspace = true, features = ["derive"] }
-parity-util-mem = { workspace = true, optional = true }
+parity-scale-codec = { features = [ "derive" ], workspace = true }
+parity-util-mem = { optional = true, workspace = true }
+scale-info = { features = [ "derive" ], workspace = true }
+serde = { features = [ "derive" ], optional = true, workspace = true }
 
-sp-api = { workspace = true, default_features = false}
-sp-debug-derive = { workspace = true, default_features = false, features = ["force-debug"] }
-sp-block-builder = { workspace = true, default_features = false}
-sp-core = { workspace = true, default_features = false}
-sp-inherents = { workspace = true, default_features = false}
-sp-io = { workspace = true, default_features = false, features = ["with-tracing"] }
-sp-offchain = { workspace = true, default_features = false}
-sp-runtime = { workspace = true, default_features = false}
-sp-session = { workspace = true, default_features = false}
-sp-std = { workspace = true, default_features = false}
-sp-storage = { workspace = true, default_features = false}
-sp-transaction-pool = { workspace = true, default_features = false}
-sp-version = { workspace = true, default_features = false}
-sp-timestamp = { workspace = true, default_features = false}
+sp-api = { default_features = false, workspace = true }
+sp-block-builder = { default_features = false, workspace = true }
+sp-core = { default_features = false, workspace = true }
+sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
+sp-inherents = { default_features = false, workspace = true }
+sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
+sp-offchain = { default_features = false, workspace = true }
+sp-runtime = { default_features = false, workspace = true }
+sp-session = { default_features = false, workspace = true }
+sp-std = { default_features = false, workspace = true }
+sp-storage = { default_features = false, workspace = true }
+sp-timestamp = { default_features = false, workspace = true }
+sp-transaction-pool = { default_features = false, workspace = true }
+sp-version = { default_features = false, workspace = true }
 
 # These were added for Aura / Grandpa API support
 hex-literal = { workspace = true }
-sp-consensus-aura = { workspace = true, default_features = false}
-sp-application-crypto = { workspace = true, default_features = false}
-sp-consensus-grandpa = { workspace = true, default_features = false}
+sp-application-crypto = { default_features = false, workspace = true }
+sp-consensus-aura = { default_features = false, workspace = true }
+sp-consensus-grandpa = { default_features = false, workspace = true }
 
 # Tuxedo Core and Pieces
-tuxedo-core = { path = '../tuxedo-core', default-features = false }
-amoeba = { path = '../wardrobe/amoeba', default-features = false }
-money = { path = '../wardrobe/money', default-features = false }
-poe = { path = '../wardrobe/poe', default-features = false }
-kitties = { path = '../wardrobe/kitties', default-features = false }
-runtime-upgrade = { path = '../wardrobe/runtime_upgrade', default-features = false }
+amoeba = { default-features = false, path = "../wardrobe/amoeba" }
+kitties = { default-features = false, path = "../wardrobe/kitties" }
+money = { default-features = false, path = "../wardrobe/money" }
+poe = { default-features = false, path = "../wardrobe/poe" }
+runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
+tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
 
 [dev-dependencies]
-sp-keystore = { workspace = true, default_features = false }
+sp-keystore = { default_features = false, workspace = true }
 
 [features]
-default = ["std"]
+default = [ "std" ]
 std = [
 	"sp-debug-derive/std",
 	"sp-block-builder/std",
@@ -70,7 +70,6 @@ std = [
 	"sp-consensus-aura/std",
 	"sp-application-crypto/std",
 	"sp-consensus-grandpa/std",
-
 	"tuxedo-core/std",
 	"amoeba/std",
 	"money/std",

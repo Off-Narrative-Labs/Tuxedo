@@ -15,7 +15,6 @@ members = [
 	"wardrobe/kitties",
 	"wardrobe/runtime_upgrade",
 ]
-
 resolver = "2"
 
 [workspace.dependencies]
