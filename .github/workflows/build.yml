@@ -96,3 +96,24 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+
+
+  toml-sort:
+    name: Toml Sort
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install tooling
+        run: |
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+          override: true
+      - run: cargo install --git https://github.com/Moonsong-Labs/toml_sort/
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
+      - run: find . -name Cargo.toml | xargs -L1 toml-sort --check
