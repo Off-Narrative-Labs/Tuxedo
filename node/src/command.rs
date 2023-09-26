@@ -4,7 +4,7 @@ use crate::{
     service,
 };
 use node_template_runtime::Runtime;
-use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
+use sc_cli::SubstrateCli;
 use sc_service::PartialComponents;
 
 impl SubstrateCli for Cli {
@@ -40,10 +40,6 @@ impl SubstrateCli for Cli {
                 std::path::PathBuf::from(path),
             )?),
         })
-    }
-
-    fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-        &node_template_runtime::VERSION
     }
 }
 
