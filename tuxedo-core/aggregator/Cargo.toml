@@ -1,13 +1,13 @@
 [package]
+edition = "2021"
 name = "aggregator"
 version = "0.1.0"
-edition = "2021"
+
+[dependencies]
+quote = { workspace = true }
+syn = { features = [ "extra-traits", "full" ], workspace = true }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 proc-macro = true
-
-[dependencies]
-syn = { workspace = true, features = ["extra-traits", "full"] }
-quote = { workspace = true }
