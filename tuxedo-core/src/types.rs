@@ -35,7 +35,7 @@ pub struct OutputRef {
 /// and evictions (inputs that are forcefully consumed.)
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct Transaction<V, C> {
+pub struct Transaction<V: TypeInfo, C: TypeInfo> {
     pub inputs: Vec<Input>,
     //Todo peeks: Vec<Input>,
     pub outputs: Vec<Output<V>>,
@@ -44,7 +44,7 @@ pub struct Transaction<V, C> {
 
 // Manually implement Encode and Decode for the Transaction type
 // so that its encoding is the same as an opaque Vec<u8>.
-impl<V: Encode, C: Encode> Encode for Transaction<V, C> {
+impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
         let inputs = self.inputs.encode();
         let outputs = self.outputs.encode();
@@ -60,7 +60,7 @@ impl<V: Encode, C: Encode> Encode for Transaction<V, C> {
     }
 }
 
-impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
+impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
     fn decode<I: parity_scale_codec::Input>(
         input: &mut I,
     ) -> Result<Self, parity_scale_codec::Error> {
@@ -85,7 +85,7 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
 // This trait's design has a preference for transactions that will have a single signature over the
 // entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
 // so we do a minimal implementation.
-impl<V, C> Extrinsic for Transaction<V, C> {
+impl<V: TypeInfo + 'static, C: TypeInfo + 'static> Extrinsic for Transaction<V, C> {
     type Call = Self;
     type SignaturePayload = ();
 
