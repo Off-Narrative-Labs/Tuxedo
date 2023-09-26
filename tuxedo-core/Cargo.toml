@@ -1,34 +1,34 @@
 [package]
-name = "tuxedo-core"
-version = "1.0.0-dev"
-repository = 'https://github.com/Off-Narrative-Labs/Tuxedo'
+description = "Core components that all Tuxedo runtimes will use."
 edition = "2021"
 license = "Apache-2.0"
-description = "Core components that all Tuxedo runtimes will use."
+name = "tuxedo-core"
+repository = "https://github.com/Off-Narrative-Labs/Tuxedo"
+version = "1.0.0-dev"
 
 [dependencies]
 log = { workspace = true }
-serde = { workspace = true, optional = true, features = ["derive"] }
-parity-scale-codec = { workspace = true, features = ['derive'] }
-scale-info = { workspace = true, features = ["derive"] }
-parity-util-mem = { workspace = true, optional = true }
+parity-scale-codec = { features = [ "derive" ], workspace = true }
+parity-util-mem = { optional = true, workspace = true }
+scale-info = { features = [ "derive" ], workspace = true }
+serde = { features = [ "derive" ], optional = true, workspace = true }
 
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
 
-sp-api = { workspace = true, default_features = false}
-sp-debug-derive = { workspace = true, default_features = false, features = ["force-debug"] }
-sp-core = { workspace = true, default_features = false}
-sp-io = { workspace = true, default_features = false, features = ["with-tracing"] }
-sp-runtime = { workspace = true, default_features = false}
-sp-std = { workspace = true, default_features = false}
-sp-storage = { workspace = true, default_features = false}
+sp-api = { default_features = false, workspace = true }
+sp-core = { default_features = false, workspace = true }
+sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
+sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
+sp-runtime = { default_features = false, workspace = true }
+sp-std = { default_features = false, workspace = true }
+sp-storage = { default_features = false, workspace = true }
 
 [dev-dependencies]
 array-bytes = { workspace = true }
 
 [features]
-default = ["std"]
+default = [ "std" ]
 std = [
 	"sp-debug-derive/std",
 	"parity-scale-codec/std",

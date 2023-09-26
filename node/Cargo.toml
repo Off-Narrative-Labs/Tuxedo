@@ -1,53 +1,53 @@
 [package]
-name = "node-template"
-version = "4.0.0-dev"
+build = "build.rs"
 description = "A fresh Substrate node, ready for hacking."
 edition = "2021"
 license = "Unlicense"
+name = "node-template"
 publish = false
-build = "build.rs"
+version = "4.0.0-dev"
 
 [package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
-
-[[bin]]
-name = "node-template"
+targets = [ "x86_64-unknown-linux-gnu" ]
 
 [dependencies]
-clap = { workspace = true, features = ["derive"] }
+clap = { features = [ "derive" ], workspace = true }
 
 sc-cli = { workspace = true }
-sp-core = { workspace = true }
+sc-client-api = { workspace = true }
+sc-consensus = { workspace = true }
+sc-consensus-aura = { workspace = true }
+sc-consensus-grandpa = { workspace = true }
 sc-executor = { workspace = true }
+sc-keystore = { workspace = true }
+sc-network = { workspace = true }
 sc-service = { workspace = true }
 sc-telemetry = { workspace = true }
-sc-keystore = { workspace = true }
 sc-transaction-pool = { workspace = true }
 sc-transaction-pool-api = { workspace = true }
-sc-consensus-aura = { workspace = true }
-sp-consensus-aura = { workspace = true }
 sp-consensus = { workspace = true }
-sc-consensus = { workspace = true }
-sc-consensus-grandpa = { workspace = true }
+sp-consensus-aura = { workspace = true }
 sp-consensus-grandpa = { workspace = true }
-sc-network = { workspace = true }
-sc-client-api = { workspace = true }
-sp-runtime = { workspace = true }
-sp-timestamp = { workspace = true }
+sp-core = { workspace = true }
 sp-inherents = { workspace = true }
 sp-keyring = { workspace = true }
+sp-runtime = { workspace = true }
+sp-timestamp = { workspace = true }
 
 # These dependencies are used for the node template's RPCs
-jsonrpsee = { workspace = true, features = ["server"] }
-sc-rpc = { workspace = true }
-sp-api = { workspace = true }
-sc-rpc-api = { workspace = true }
-sp-blockchain = { workspace = true }
-sp-block-builder = { workspace = true }
+jsonrpsee = { features = [ "server" ], workspace = true }
 sc-basic-authorship = { workspace = true }
+sc-rpc = { workspace = true }
+sc-rpc-api = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-blockchain = { workspace = true }
 
 # Local Dependencies
 node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+
+[[bin]]
+name = "node-template"
 
 [build-dependencies]
 substrate-build-script-utils = { workspace = true }
