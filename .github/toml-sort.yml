@@ -21,6 +21,4 @@ jobs:
           target: wasm32-unknown-unknown
           override: true
       - run: cargo install --git https://github.com/Moonsong-Labs/toml_sort/
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
       - run: find . -name Cargo.toml | xargs -L1 toml-sort --check
