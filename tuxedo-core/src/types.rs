@@ -75,7 +75,7 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
 
         let inputs = <Vec<Input>>::decode(input)?;
         let outputs = <Vec<Output<V>>>::decode(input)?;
-        let peeks = <Vec<Input>>::decode(input)?;
+        let peeks = <Vec<OutputRef>>::decode(input)?;
         let checker = C::decode(input)?;
 
         Ok(Transaction {
