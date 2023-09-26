@@ -8,9 +8,9 @@ use sc_consensus_grandpa::SharedVoterState;
 pub use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpSyncParams};
 use sc_telemetry::{Telemetry, TelemetryWorker};
+use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use std::{sync::Arc, time::Duration};
-use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -289,7 +289,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             telemetry: telemetry.as_ref().map(|x| x.handle()),
             protocol_name: grandpa_protocol_name,
         };
-        
+
         // start the full GRANDPA voter
         // NOTE: non-authorities could run the GRANDPA observer protocol, but at
         // this point the full voter should provide better guarantees of block
