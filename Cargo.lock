@@ -1139,9 +1139,9 @@ dependencies = [
 
 [[package]]
 name = "curve25519-dalek"
-version = "4.1.1"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e89b8c6a2e4b1f45971ad09761aafb85514a84744b67a95e32c3cc1352d1f65c"
+checksum = "f711ade317dd348950a9910f81c5947e3d8907ebd2b83f76203ff1807e6a2bc2"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -1471,7 +1471,7 @@ version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7277392b266383ef8396db7fdeb1e77b6c52fed775f5df15bb24f35b72156980"
 dependencies = [
- "curve25519-dalek 4.1.1",
+ "curve25519-dalek 4.0.0",
  "ed25519 2.2.2",
  "rand_core 0.6.4",
  "serde",
@@ -1650,9 +1650,9 @@ dependencies = [
 
 [[package]]
 name = "fiat-crypto"
-version = "0.2.1"
+version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0870c84016d4b481be5c9f323c24f65e31e901ae618f0e80f4308fb00de1d2d"
+checksum = "e825f6987101665dea6ec934c09ec6d721de7bc1bf92248e1d5810c8cd636b77"
 
 [[package]]
 name = "file-per-thread-logger"
@@ -2898,7 +2898,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71ce70757f2c0d82e9a3ef738fb10ea0723d16cec37f078f719e2c247704c1bb"
 dependencies = [
  "bytes",
- "curve25519-dalek 4.1.1",
+ "curve25519-dalek 4.0.0",
  "futures",
  "libp2p-core",
  "libp2p-identity",
@@ -6107,7 +6107,7 @@ dependencies = [
  "aes-gcm 0.9.4",
  "blake2",
  "chacha20poly1305",
- "curve25519-dalek 4.1.1",
+ "curve25519-dalek 4.0.0",
  "rand_core 0.6.4",
  "ring",
  "rustc_version",
@@ -8358,7 +8358,7 @@ version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb66477291e7e8d2b0ff1bcb900bf29489a9692816d79874bea351e7a8b6de96"
 dependencies = [
- "curve25519-dalek 4.1.1",
+ "curve25519-dalek 4.0.0",
  "rand_core 0.6.4",
  "serde",
  "zeroize",
