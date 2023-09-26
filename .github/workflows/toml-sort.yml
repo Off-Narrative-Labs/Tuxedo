@@ -17,5 +17,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
+          toolchain: stable
       - run: cargo install --git https://github.com/Moonsong-Labs/toml_sort/
       - run: find . -name Cargo.toml | xargs -L1 toml-sort --check
