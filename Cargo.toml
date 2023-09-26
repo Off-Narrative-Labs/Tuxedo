@@ -85,7 +85,6 @@ sp-debug-derive = { git = "https://github.com/paritytech/polkadot-sdk", tag = "p
 sp-io = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false }
 sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false}
 sp-storage = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false}
-sp-offchain = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false}
 sp-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false}
 sp-application-crypto = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false}
 sp-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0", default_features = false}

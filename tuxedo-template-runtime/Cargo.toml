@@ -19,7 +19,6 @@ sp-block-builder = { workspace = true, default_features = false}
 sp-core = { workspace = true, default_features = false}
 sp-inherents = { workspace = true, default_features = false}
 sp-io = { workspace = true, default_features = false, features = ["with-tracing"] }
-sp-offchain = { workspace = true, default_features = false}
 sp-runtime = { workspace = true, default_features = false}
 sp-session = { workspace = true, default_features = false}
 sp-std = { workspace = true, default_features = false}
@@ -54,7 +53,6 @@ std = [
 	"sp-debug-derive/std",
 	"sp-block-builder/std",
 	"sp-inherents/std",
-	"sp-offchain/std",
 	"parity-scale-codec/std",
 	"sp-core/std",
 	"sp-std/std",
