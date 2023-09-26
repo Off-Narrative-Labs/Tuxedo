@@ -182,15 +182,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             warp_sync_params: Some(WarpSyncParams::WithProvider(warp_sync)),
         })?;
 
-    if config.offchain_worker.enabled {
-        sc_service::build_offchain_workers(
-            &config,
-            task_manager.spawn_handle(),
-            client.clone(),
-            network.clone(),
-        );
-    }
-
     let role = config.role.clone();
     let force_authoring = config.force_authoring;
     let backoff_authoring_blocks: Option<()> = None;
