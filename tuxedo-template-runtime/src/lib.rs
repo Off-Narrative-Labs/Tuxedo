@@ -368,12 +368,6 @@ impl_runtime_apis! {
         }
     }
 
-    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
-        fn offchain_worker(_header: &<Block as BlockT>::Header) {
-            // Tuxedo does not yet support offchain workers, and maybe never will.
-        }
-    }
-
     impl sp_session::SessionKeys<Block> for Runtime {
         fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
             opaque::SessionKeys::generate(seed)
