@@ -320,11 +320,6 @@
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
 <a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::rpc;
@@ -335,6 +330,7 @@
 <span class="kw">pub use </span>sc_executor::NativeElseWasmExecutor;
 <span class="kw">use </span>sc_service::{error::Error <span class="kw">as </span>ServiceError, Configuration, TaskManager, WarpSyncParams};
 <span class="kw">use </span>sc_telemetry::{Telemetry, TelemetryWorker};
+<span class="kw">use </span>sc_transaction_pool_api::OffchainTransactionPoolFactory;
 <span class="kw">use </span>sp_consensus_aura::sr25519::AuthorityPair <span class="kw">as </span>AuraPair;
 <span class="kw">use </span>std::{sync::Arc, time::Duration};
 
@@ -358,6 +354,10 @@
 <span class="kw">type </span>FullBackend = sc_service::TFullBackend&lt;Block&gt;;
 <span class="kw">type </span>FullSelectChain = sc_consensus::LongestChain&lt;FullBackend, Block&gt;;
 
+<span class="doccomment">/// The minimum period of blocks on which justifications will be
+/// imported and generated.
+</span><span class="kw">const </span>GRANDPA_JUSTIFICATION_PERIOD: u32 = <span class="number">512</span>;
+
 <span class="attr">#[allow(clippy::type_complexity)]
 </span><span class="kw">pub fn </span>new_partial(
     config: <span class="kw-2">&amp;</span>Configuration,
@@ -366,7 +366,7 @@
         FullClient,
         FullBackend,
         FullSelectChain,
-        sc_consensus::DefaultImportQueue&lt;Block, FullClient&gt;,
+        sc_consensus::DefaultImportQueue&lt;Block&gt;,
         sc_transaction_pool::FullPool&lt;Block, FullClient&gt;,
         (
             sc_consensus_grandpa::GrandpaBlockImport&lt;
@@ -421,6 +421,7 @@
 
     <span class="kw">let </span>(grandpa_block_import, grandpa_link) = sc_consensus_grandpa::block_import(
         client.clone(),
+        GRANDPA_JUSTIFICATION_PERIOD,
         <span class="kw-2">&amp;</span>Arc::clone(<span class="kw-2">&amp;</span>client),
         select_chain.clone(),
         telemetry.as_ref().map(|x| x.handle()),
@@ -509,15 +510,6 @@
             warp_sync_params: <span class="prelude-val">Some</span>(WarpSyncParams::WithProvider(warp_sync)),
         })<span class="question-mark">?</span>;
 
-    <span class="kw">if </span>config.offchain_worker.enabled {
-        sc_service::build_offchain_workers(
-            <span class="kw-2">&amp;</span>config,
-            task_manager.spawn_handle(),
-            client.clone(),
-            network.clone(),
-        );
-    }
-
     <span class="kw">let </span>role = config.role.clone();
     <span class="kw">let </span>force_authoring = config.force_authoring;
     <span class="kw">let </span>backoff_authoring_blocks: <span class="prelude-ty">Option</span>&lt;()&gt; = <span class="prelude-val">None</span>;
@@ -558,7 +550,7 @@
         <span class="kw">let </span>proposer_factory = sc_basic_authorship::ProposerFactory::new(
             task_manager.spawn_handle(),
             client.clone(),
-            transaction_pool,
+            transaction_pool.clone(),
             prometheus_registry.as_ref(),
             telemetry.as_ref().map(|x| x.handle()),
         );
@@ -602,27 +594,24 @@
             .spawn_blocking(<span class="string">&quot;aura&quot;</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;block-authoring&quot;</span>), aura);
     }
 
-    <span class="comment">// if the node isn&#39;t actively participating in consensus then it doesn&#39;t
-    // need a keystore, regardless of which protocol we use below.
-    </span><span class="kw">let </span>keystore = <span class="kw">if </span>role.is_authority() {
-        <span class="prelude-val">Some</span>(keystore_container.keystore())
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>};
-
-    <span class="kw">let </span>grandpa_config = sc_consensus_grandpa::Config {
-        <span class="comment">// FIXME #1578 make this available through chainspec
-        </span>gossip_duration: Duration::from_millis(<span class="number">333</span>),
-        justification_period: <span class="number">512</span>,
-        name: <span class="prelude-val">Some</span>(name),
-        observer_enabled: <span class="bool-val">false</span>,
-        keystore,
-        local_role: role,
-        telemetry: telemetry.as_ref().map(|x| x.handle()),
-        protocol_name: grandpa_protocol_name,
-    };
-
     <span class="kw">if </span>enable_grandpa {
+        <span class="kw">let </span>keystore = <span class="kw">if </span>role.is_authority() {
+            <span class="prelude-val">Some</span>(keystore_container.keystore())
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+        <span class="kw">let </span>grandpa_config = sc_consensus_grandpa::Config {
+            <span class="comment">// FIXME #1578 make this available through chainspec
+            </span>gossip_duration: Duration::from_millis(<span class="number">333</span>),
+            justification_generation_period: GRANDPA_JUSTIFICATION_PERIOD,
+            name: <span class="prelude-val">Some</span>(name),
+            observer_enabled: <span class="bool-val">false</span>,
+            keystore,
+            local_role: role,
+            telemetry: telemetry.as_ref().map(|x| x.handle()),
+            protocol_name: grandpa_protocol_name,
+        };
+
         <span class="comment">// start the full GRANDPA voter
         // NOTE: non-authorities could run the GRANDPA observer protocol, but at
         // this point the full voter should provide better guarantees of block
@@ -638,6 +627,7 @@
             prometheus_registry,
             shared_voter_state: SharedVoterState::empty(),
             telemetry: telemetry.as_ref().map(|x| x.handle()),
+            offchain_tx_pool_factory: OffchainTransactionPoolFactory::new(transaction_pool),
         };
 
         <span class="comment">// the GRANDPA voter task is considered infallible, i.e.
