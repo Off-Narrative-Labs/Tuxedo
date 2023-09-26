@@ -1,16 +1,17 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{fetch_storage, SpendArgs};
+use crate::{cli::SpendArgs, fetch_storage, sync};
 
-use std::{thread::sleep, time::Duration};
-
+use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
     OuterConstraintChecker, OuterVerifier, Transaction,
 };
-use sp_core::{crypto::Pair as PairT, sr25519::Pair};
+use sc_keystore::LocalKeystore;
+use sled::Db;
+use sp_core::sr25519::Public;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef},
@@ -18,9 +19,13 @@ use tuxedo_core::{
 };
 
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result<()> {
-    println!("The args are:: {:?}", args);
-    let (provided_pair, _) = Pair::from_phrase(&args.seed, None)?;
+pub async fn spend_coins(
+    db: &Db,
+    client: &HttpClient,
+    keystore: &LocalKeystore,
+    args: SpendArgs,
+) -> anyhow::Result<()> {
+    log::debug!("The args are:: {:?}", args);
 
     // Construct a template Transaction to push coins into later
     let mut transaction = Transaction {
@@ -30,36 +35,74 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
         checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
     };
 
-    // Make sure each input decodes and is present in storage, and then push to transaction.
-    for input in &args.input {
-        let output_ref = OutputRef::decode(&mut &hex::decode(input)?[..])?;
-        print_coin_from_storage(&output_ref, client).await?;
+    // Construct each output and then push to the transactions
+    let mut total_output_amount = 0;
+    for amount in &args.output_amount {
+        let output = Output {
+            payload: Coin::<0>::new(*amount).into(),
+            verifier: OuterVerifier::SigCheck(SigCheck {
+                owner_pubkey: args.recipient,
+            }),
+        };
+        total_output_amount += amount;
+        transaction.outputs.push(output);
+    }
+
+    // The total input set will consist of any manually chosen inputs
+    // plus any automatically chosen to make the input amount high enough
+    let mut total_input_amount = 0;
+    let mut all_input_refs = args.input;
+    for output_ref in &all_input_refs {
+        let (_owner_pubkey, amount) = sync::get_unspent(db, output_ref)?.ok_or(anyhow!(
+            "user-specified output ref not found in local database"
+        ))?;
+        total_input_amount += amount;
+    }
+    //TODO filtering on a specific sender
+
+    // If the supplied inputs are not valuable enough to cover the output amount
+    // we select the rest arbitrarily from the local db. (In many cases, this will be all the inputs.)
+    if total_input_amount < total_output_amount {
+        match sync::get_arbitrary_unspent_set(db, total_output_amount - total_input_amount)? {
+            Some(more_inputs) => {
+                all_input_refs.extend(more_inputs);
+            }
+            None => Err(anyhow!(
+                "Not enough value in database to construct transaction"
+            ))?,
+        }
+    }
+
+    // Make sure each input decodes and is still present in the node's storage,
+    // and then push to transaction.
+    for output_ref in &all_input_refs {
+        get_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
-            output_ref,
+            output_ref: output_ref.clone(),
             redeemer: vec![], // We will sign the total transaction so this should be empty
         });
     }
 
-    // Construct each output and then push to the transactions
-    for amount in &args.output_amount {
-        let output = Output {
-            payload: Coin::new(*amount).into(),
-            verifier: OuterVerifier::SigCheck(SigCheck {
-                owner_pubkey: provided_pair.public().into(),
-            }),
-        };
-        transaction.outputs.push(output);
-    }
+    // Keep a copy of the stripped encoded transaction for signing purposes
+    let stripped_encoded_transaction = transaction.clone().encode();
 
-    // Create a signature over the entire transaction
-    // TODO this will need to generalize. We will need to loop through the inputs
-    // producing the signature for whichever owner it is, or even more generally,
-    // producing the verifier for whichever verifier it is.
-    let signature = provided_pair.sign(&transaction.encode());
-
-    // Iterate back through the inputs putting the signature in place.
+    // Iterate back through the inputs, signing, and putting the signatures in place.
     for input in &mut transaction.inputs {
-        input.redeemer = signature.encode();
+        // Fetch the output from storage
+        let utxo = fetch_storage::<OuterVerifier>(&input.output_ref, client).await?;
+
+        // Construct the proof that it can be consumed
+        let redeemer = match utxo.verifier {
+            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+                let public = Public::from_h256(owner_pubkey);
+                crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?
+            }
+            OuterVerifier::UpForGrabs(_) => Vec::new(),
+            OuterVerifier::ThresholdMultiSignature(_) => todo!(),
+        };
+
+        // insert the proof
+        input.redeemer = redeemer;
     }
 
     // Send the transaction
@@ -67,47 +110,38 @@ pub async fn spend_coins(client: &HttpClient, args: SpendArgs) -> anyhow::Result
     let params = rpc_params![genesis_spend_hex];
     let genesis_spend_response: Result<String, _> =
         client.request("author_submitExtrinsic", params).await;
-    println!(
+    log::info!(
         "Node's response to spend transaction: {:?}",
         genesis_spend_response
     );
 
-    // Wait a few seconds to make sure a block has been authored.
-    sleep(Duration::from_secs(3));
-
-    // Retrieve new coins from storage
-    for i in 0..transaction.outputs.len() {
+    // Print new output refs for user to check later
+    let tx_hash = <BlakeTwo256 as Hash>::hash_of(&transaction.encode());
+    for (i, output) in transaction.outputs.iter().enumerate() {
         let new_coin_ref = OutputRef {
-            tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
+            tx_hash,
             index: i as u32,
         };
+        let amount = output.payload.extract::<Coin<0>>()?.0;
 
-        print_coin_from_storage(&new_coin_ref, client).await?;
+        print!(
+            "Created {:?} worth {amount}. ",
+            hex::encode(new_coin_ref.encode())
+        );
+        crate::pretty_print_verifier(&output.verifier);
     }
 
     Ok(())
 }
 
-/// Pretty print the details of a coin in storage given the OutputRef
-pub async fn print_coin_from_storage(
+/// Given an output ref, fetch the details about this coin from the node's
+/// storage.
+pub async fn get_coin_from_storage(
     output_ref: &OutputRef,
     client: &HttpClient,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<(Coin<0>, OuterVerifier)> {
     let utxo = fetch_storage::<OuterVerifier>(output_ref, client).await?;
-    let coin_in_storage: Coin = utxo.payload.extract()?;
+    let coin_in_storage: Coin<0> = utxo.payload.extract()?;
 
-    print!(
-        "{}: Found coin worth {:?} units ",
-        hex::encode(output_ref.encode()),
-        coin_in_storage.0
-    );
-
-    match utxo.verifier {
-        OuterVerifier::SigCheck(sig_check) => {
-            println! {"owned by 0x{}", hex::encode(sig_check.owner_pubkey)}
-        }
-        OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
-    }
-
-    Ok(())
+    Ok((coin_in_storage, utxo.verifier))
 }

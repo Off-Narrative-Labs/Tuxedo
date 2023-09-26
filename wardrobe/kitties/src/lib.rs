@@ -14,7 +14,9 @@
 //!
 //! There are a only a finite amount of free breedings available before it starts to cost money
 //! to breed kitties.
-//!
+
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -30,17 +32,14 @@ use tuxedo_core::{
     ensure, SimpleConstraintChecker,
 };
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg(test)]
+mod tests;
+
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct FreeKittyConstraintChecker;
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum DadKittyStatus {
     #[default]
@@ -48,10 +47,7 @@ pub enum DadKittyStatus {
     Tired,
 }
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MomKittyStatus {
     #[default]
@@ -59,10 +55,7 @@ pub enum MomKittyStatus {
     HadBirthRecently,
 }
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum Parent {
     Mom(MomKittyStatus),
@@ -75,33 +68,35 @@ impl Default for Parent {
     }
 }
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittyDNA(H256);
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct KittyData {
-    parent: Parent,
-    free_breedings: u64, // Ignore in breed for money case
-    dna: KittyDNA,
-    num_breedings: u128,
+    pub parent: Parent,
+    pub free_breedings: u64, // Ignore in breed for money case
+    pub dna: KittyDNA,
+    pub num_breedings: u128,
+}
+
+impl Default for KittyData {
+    fn default() -> Self {
+        Self {
+            parent: Parent::Mom(MomKittyStatus::RearinToGo),
+            free_breedings: 2,
+            dna: KittyDNA(H256::from_slice(b"mom_kitty_1asdfasdfasdfasdfasdfa")),
+            num_breedings: 3,
+        }
+    }
 }
 
 impl UtxoData for KittyData {
     const TYPE_ID: [u8; 4] = *b"Kitt";
 }
 
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
@@ -396,7 +391,7 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
         ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
 
         let mom = KittyData::try_from(&input_data[0])?;
-        let dad = KittyData::try_from(&input_data[0])?;
+        let dad = KittyData::try_from(&input_data[1])?;
         KittyHelpers::can_breed(&mom, &dad)?;
 
         // Output must be Mom, Dad, Child
@@ -405,157 +400,5 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
         KittyHelpers::check_new_family(&mom, &dad, output_data)?;
 
         Ok(0)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-    /// A bogus data type used in tests for type validation
-    #[derive(Encode, Decode)]
-    struct Bogus;
-
-    impl UtxoData for Bogus {
-        const TYPE_ID: [u8; 4] = *b"bogs";
-    }
-
-    #[test]
-    fn breed_wrong_input_type_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn breed_wrong_output_type_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn inputs_dont_contain_two_parents_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn outputs_dont_contain_all_family_members_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn breed_two_dads_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn breed_two_moms_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn first_input_not_mom_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn second_input_not_dad_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn first_output_not_mom_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn second_output_not_dad_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn third_output_not_child_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn breed_mom_when_she_gave_birth_recently_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn breed_dad_when_he_is_tired_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_mom_breedings_overflow_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_dad_breedings_overflow_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_mom_free_breedings_zero_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_dad_free_breedings_zero_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_new_mom_free_breedings_incorrect_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_new_dad_free_breedings_incorrect_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_new_mom_num_breedings_incorrect_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_new_dad_num_breedings_incorrect_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_new_mom_dna_doesnt_match_old_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_new_dad_dna_doesnt_match_old_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_child_dna_incorrect_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_child_dad_parent_tired_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_child_mom_parent_recently_gave_birth_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_child_free_breedings_incorrect_fails() {
-        // TODO
-    }
-
-    #[test]
-    fn check_child_num_breedings_non_zero_fails() {
-        // TODO
     }
 }

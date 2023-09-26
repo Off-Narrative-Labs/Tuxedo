@@ -14,8 +14,9 @@ use crate::{
     verifier::Verifier,
     EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
 };
-use log::info;
+use log::debug;
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_runtime::{
     traits::BlakeTwo256,
@@ -32,8 +33,11 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker>
-    Executive<B, V, C>
+impl<
+        B: BlockT<Extrinsic = Transaction<V, C>>,
+        V: Verifier + TypeInfo,
+        C: ConstraintChecker<V> + TypeInfo,
+    > Executive<B, V, C>
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
@@ -99,10 +103,9 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
                 index: index as u32,
             };
 
-            log::debug!(
+            debug!(
                 target: LOG_TARGET,
-                "Checking for pre-existing output {:?}",
-                output_ref
+                "Checking for pre-existing output {:?}", output_ref
             );
 
             ensure!(
@@ -155,10 +158,9 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     /// Most of the validation happens in the call to `validate_tuxedo_transaction`.
     /// Once those checks are done we make sure there are no missing inputs and then update storage.
     pub fn apply_tuxedo_transaction(transaction: Transaction<V, C>) -> DispatchResult<C::Error> {
-        log::debug!(
+        debug!(
             target: LOG_TARGET,
-            "applying tuxedo transaction {:?}",
-            transaction
+            "applying tuxedo transaction {:?}", transaction
         );
 
         // Re-do the pre-checks. These should have been done in the pool, but we can't
@@ -188,10 +190,9 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             TransparentUtxoSet::<V>::consume_utxo(&input.output_ref);
         }
 
-        log::debug!(
+        debug!(
             target: LOG_TARGET,
-            "Transaction before updating storage {:?}",
-            transaction
+            "Transaction before updating storage {:?}", transaction
         );
         // Write the newly created utxos
         for (index, output) in transaction.outputs.iter().enumerate() {
@@ -220,7 +221,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     // Open the block, apply zero or more extrinsics, close the block
 
     pub fn open_block(header: &<B as BlockT>::Header) {
-        info!(
+        debug!(
             target: LOG_TARGET,
             "Entering initialize_block. header: {:?}", header
         );
@@ -231,7 +232,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     }
 
     pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
-        info!(
+        debug!(
             target: LOG_TARGET,
             "Entering apply_extrinsic: {:?}", extrinsic
         );
@@ -275,14 +276,14 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
         header.set_state_root(state_root);
 
-        info!(target: LOG_TARGET, "finalizing block {:?}", header);
+        debug!(target: LOG_TARGET, "finalizing block {:?}", header);
         header
     }
 
     // This one is for the Core api. It is used to import blocks authored by foreign nodes.
 
     pub fn execute_block(block: B) {
-        info!(
+        debug!(
             target: LOG_TARGET,
             "Entering execute_block. block: {:?}", block
         );
@@ -295,7 +296,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Apply each extrinsic
         for extrinsic in block.extrinsics() {
             match Self::apply_tuxedo_transaction(extrinsic.clone()) {
-                Ok(()) => info!(
+                Ok(()) => debug!(
                     target: LOG_TARGET,
                     "Successfully executed extrinsic: {:?}", extrinsic
                 ),
@@ -353,7 +354,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         tx: <B as BlockT>::Extrinsic,
         block_hash: <B as BlockT>::Hash,
     ) -> TransactionValidity {
-        log::debug!(
+        debug!(
             target: LOG_TARGET,
             "Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}",
             source,
@@ -366,7 +367,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // For now, I just make them all custom zero
         let r = Self::validate_tuxedo_transaction(&tx);
 
-        log::debug!(target: LOG_TARGET, "Validation result: {:?}", r);
+        debug!(target: LOG_TARGET, "Validation result: {:?}", r);
 
         r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
     }
@@ -993,7 +994,7 @@ mod tests {
                         "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        "367027fa247a01cda117851f4a6404622eacaf276c5592221e59d2004f994c7c",
+                        "b3dd85732bb51b79d7c5c3518cfb1b202210743b9dc7b8ccf848f9a66e0a0f6b",
                     ),
                     digest: Default::default(),
                 },

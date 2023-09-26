@@ -1,10 +1,16 @@
+//! The Tuxedo Template Runtime is an example runtime that uses
+//! most of the pieces provided in the wardrobe.
+//!
+//! Runtime developers wishing to get started with Tuxedo should
+//! consider copying this template.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use amoeba::{AmoebaCreation, AmoebaMitosis};
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
@@ -28,17 +34,18 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-pub mod amoeba;
-pub mod kitties;
-pub mod money;
-mod poe;
-mod runtime_upgrade;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    types::{Output, Transaction as TuxedoTransaction},
-    verifier::{SigCheck, UpForGrabs},
-    ConstraintChecker, Verifier,
+    tuxedo_constraint_checker, tuxedo_verifier,
+    types::Transaction as TuxedoTransaction,
+    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
+
+pub use amoeba;
+pub use kitties;
+pub use money;
+pub use poe;
+pub use runtime_upgrade;
 
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;
@@ -49,14 +56,9 @@ use tuxedo_core::types::OutputRef;
 /// to even the core data structures.
 pub mod opaque {
     use super::*;
-    // TODO: eventually you will have to change this.
-    type OpaqueExtrinsic = Transaction;
-    // type OpaqueExtrinsic = Vec<u8>;
 
-    /// Opaque block header type.
-    pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
     /// Opaque block type.
-    pub type Block = sp_runtime::generic::Block<Header, OpaqueExtrinsic>;
+    pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
 
     // This part is necessary for generating session keys in the runtime
     impl_opaque_keys! {
@@ -81,6 +83,7 @@ pub mod opaque {
 }
 
 /// This runtime version.
+#[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
     spec_name: create_runtime_str!("tuxedo-template-runtime"),
     impl_name: create_runtime_str!("tuxedo-template-runtime"),
@@ -104,7 +107,7 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-    pub genesis_utxos: Vec<Output<OuterVerifier>>,
+    pub genesis_utxos: Vec<Output>,
 }
 
 impl Default for GenesisConfig {
@@ -113,18 +116,32 @@ impl Default for GenesisConfig {
 
         const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
+        const ANDREW_PUB_KEY_BYTES: [u8; 32] =
+            hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
 
         // Initial Config just for a Money UTXO
         GenesisConfig {
-            genesis_utxos: vec![Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
-                    owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                }),
-                payload: DynamicallyTypedData {
-                    data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+            genesis_utxos: vec![
+                Output {
+                    verifier: OuterVerifier::SigCheck(SigCheck {
+                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
+                    }),
+                    payload: DynamicallyTypedData {
+                        data: 100u128.encode(),
+                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
+                    },
                 },
-            }],
+                Output {
+                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
+                        threshold: 1,
+                        signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
+                    }),
+                    payload: DynamicallyTypedData {
+                        data: 100u128.encode(),
+                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
+                    },
+                },
+            ],
         }
 
         // TODO: Initial UTXO for Kitties
@@ -160,6 +177,7 @@ pub type BlockNumber = u32;
 pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, Transaction>;
 pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
+pub type Output = tuxedo_core::types::Output<OuterVerifier>;
 
 impl sp_runtime::traits::GetNodeBlockType for Runtime {
     type NodeBlock = opaque::Block;
@@ -172,38 +190,20 @@ impl sp_runtime::traits::GetRuntimeBlockType for Runtime {
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
 
-//TODO this should be implemented by the aggregation macro I guess
 /// A verifier checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[tuxedo_verifier]
 pub enum OuterVerifier {
     SigCheck(SigCheck),
     UpForGrabs(UpForGrabs),
+    ThresholdMultiSignature(ThresholdMultiSignature),
 }
 
-//TODO this should be implemented by the aggregation macro I guess
-impl Verifier for OuterVerifier {
-    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
-        match self {
-            Self::SigCheck(sig_check) => sig_check.verify(simplified_tx, redeemer),
-            Self::UpForGrabs(up_for_grabs) => up_for_grabs.verify(simplified_tx, redeemer),
-        }
-    }
-}
-
-impl From<UpForGrabs> for OuterVerifier {
-    fn from(value: UpForGrabs) -> Self {
-        Self::UpForGrabs(value)
-    }
-}
-
-impl From<SigCheck> for OuterVerifier {
-    fn from(value: SigCheck) -> Self {
-        Self::SigCheck(value)
+impl poe::PoeConfig for Runtime {
+    fn block_height() -> u32 {
+        Executive::block_height()
     }
 }
 
@@ -211,18 +211,15 @@ impl From<SigCheck> for OuterVerifier {
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
-//TODO this should be implemented by the aggregation macro I guess
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[tuxedo_constraint_checker(OuterVerifier)]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
-    Money(money::MoneyConstraintChecker),
+    Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
     FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
     /// Checks that an amoeba can split into two new amoebas
@@ -232,7 +229,7 @@ pub enum OuterConstraintChecker {
     /// Checks that a single amoeba is simply created from the void... and it is good
     AmoebaCreation(amoeba::AmoebaCreation),
     /// Checks that new valid proofs of existence are claimed
-    PoeClaim(poe::PoeClaim),
+    PoeClaim(poe::PoeClaim<Runtime>),
     /// Checks that proofs of existence are revoked.
     PoeRevoke(poe::PoeRevoke),
     /// Checks that one winning claim came earlier than all the other claims, and thus
@@ -242,100 +239,8 @@ pub enum OuterConstraintChecker {
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
 
-/// An aggregated error type with a variant for each tuxedo piece
-/// TODO This should probably be macro generated
-#[derive(Debug)]
-pub enum OuterConstraintCheckerError {
-    /// Error from the Money piece
-    Money(money::ConstraintCheckerError),
-    /// Error for the Kitties piece
-    Kitty(kitties::ConstraintCheckerError),
-    /// Error from the Amoeba piece
-    Amoeba(amoeba::ConstraintCheckerError),
-    /// Error from the PoE piece
-    Poe(poe::ConstraintCheckerError),
-    /// Error from the Runtime Upgrade piece
-    RuntimeUpgrade(runtime_upgrade::ConstraintCheckerError),
-}
-
-// We impl conversions from each of the inner error types to the outer error type.
-// This should also be done by a macro
-
-impl From<money::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: money::ConstraintCheckerError) -> Self {
-        Self::Money(e)
-    }
-}
-
-impl From<kitties::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: kitties::ConstraintCheckerError) -> Self {
-        Self::Kitty(e)
-    }
-}
-
-impl From<amoeba::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: amoeba::ConstraintCheckerError) -> Self {
-        Self::Amoeba(e)
-    }
-}
-
-impl From<poe::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: poe::ConstraintCheckerError) -> Self {
-        Self::Poe(e)
-    }
-}
-
-impl From<runtime_upgrade::ConstraintCheckerError> for OuterConstraintCheckerError {
-    fn from(e: runtime_upgrade::ConstraintCheckerError) -> Self {
-        Self::RuntimeUpgrade(e)
-    }
-}
-
-impl ConstraintChecker for OuterConstraintChecker {
-    type Error = OuterConstraintCheckerError;
-
-    fn check<V: Verifier>(
-        &self,
-        inputs: &[Output<V>],
-        peeks: &[Output<V>],
-        outputs: &[Output<V>],
-    ) -> Result<TransactionPriority, OuterConstraintCheckerError> {
-        Ok(match self {
-            Self::Money(money) => money.check(inputs, peeks, outputs)?,
-            Self::FreeKittyConstraintChecker(free_breed) => {
-                free_breed.check(inputs, peeks, outputs)?
-            }
-            Self::AmoebaMitosis(amoeba_mitosis) => amoeba_mitosis.check(inputs, peeks, outputs)?,
-            Self::AmoebaDeath(amoeba_death) => amoeba_death.check(inputs, peeks, outputs)?,
-            Self::AmoebaCreation(amoeba_creation) => {
-                amoeba_creation.check(inputs, peeks, outputs)?
-            }
-            Self::PoeClaim(poe_claim) => poe_claim.check(inputs, peeks, outputs)?,
-            Self::PoeRevoke(poe_revoke) => poe_revoke.check(inputs, peeks, outputs)?,
-            Self::PoeDispute(poe_dispute) => poe_dispute.check(inputs, peeks, outputs)?,
-            Self::RuntimeUpgrade(runtime_upgrade) => {
-                runtime_upgrade.check(inputs, peeks, outputs)?
-            }
-        })
-    }
-}
-
-impl From<AmoebaCreation> for OuterConstraintChecker {
-    fn from(value: AmoebaCreation) -> Self {
-        Self::AmoebaCreation(value)
-    }
-}
-
-impl From<AmoebaMitosis> for OuterConstraintChecker {
-    fn from(value: AmoebaMitosis) -> Self {
-        Self::AmoebaMitosis(value)
-    }
-}
-
-//TODO the rest of these impl blocks. For now I'm only doing these two
-// because they are the only two I use in my wallet prototype
-
 /// The main struct in this module.
+#[derive(Encode, Decode, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Runtime;
 
 // Here we hard-code consensus authority IDs for the well-known identities that work with the CLI flags
@@ -448,11 +353,18 @@ impl_runtime_apis! {
         }
     }
 
-    // Ignore everything after this.
+    // Tuxedo does not yet support metadata
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            // Tuxedo does not yet support metadata
             OpaqueMetadata::new(Default::default())
+        }
+
+        fn metadata_at_version(_version: u32) -> Option<OpaqueMetadata> {
+            None
+        }
+
+        fn metadata_versions() -> sp_std::vec::Vec<u32> {
+            Default::default()
         }
     }
 
@@ -517,17 +429,19 @@ mod tests {
     use super::*;
     use parity_scale_codec::Encode;
     use sp_core::testing::SR25519;
-    use sp_keystore::testing::KeyStore;
-    use sp_keystore::{KeystoreExt, SyncCryptoStore};
+    use sp_keystore::testing::MemoryKeystore;
+    use sp_keystore::{Keystore, KeystoreExt};
 
     use std::sync::Arc;
 
     // other random account generated with subkey
     const SHAWN_PHRASE: &str =
         "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
+    const ANDREW_PHRASE: &str =
+        "monkey happy total rib lumber scrap guide photo country online rose diet";
 
     fn new_test_ext() -> sp_io::TestExternalities {
-        let keystore = KeyStore::new();
+        let keystore = MemoryKeystore::new();
 
         let t = GenesisConfig::default()
             .build_storage()
@@ -541,7 +455,7 @@ mod tests {
     #[test]
     fn utxo_money_test_genesis() {
         new_test_ext().execute_with(|| {
-            let keystore = KeyStore::new();
+            let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
                 .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
                 .unwrap();
@@ -553,7 +467,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin as UtxoData>::TYPE_ID,
+                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
@@ -565,9 +479,43 @@ mod tests {
 
             let encoded_utxo =
                 sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-            let utxo = Output::<OuterVerifier>::decode(&mut &encoded_utxo[..])
-                .expect("Can Decode UTXO correctly");
+            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
             assert_eq!(utxo, genesis_utxo);
+        })
+    }
+
+    #[test]
+    fn utxo_money_multi_sig_genesis_test() {
+        new_test_ext().execute_with(|| {
+            let keystore = MemoryKeystore::new();
+            let shawn_pub_key = keystore
+                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
+                .unwrap();
+            let andrew_pub_key = keystore
+                .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
+                .unwrap();
+
+            let genesis_multi_sig_utxo = Output {
+                verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
+                    threshold: 1,
+                    signatories: vec![shawn_pub_key.into(), andrew_pub_key.into()],
+                }),
+                payload: DynamicallyTypedData {
+                    data: 100u128.encode(),
+                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
+                },
+            };
+
+            let output_ref = OutputRef {
+                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
+                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                index: 1 as u32,
+            };
+
+            let encoded_utxo =
+                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis MultiSig UTXO");
+            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
+            assert_eq!(utxo, genesis_multi_sig_utxo);
         })
     }
 }

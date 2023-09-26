@@ -1,57 +1,56 @@
 [package]
-name = "node-template"
-version = "4.0.0-dev"
+build = "build.rs"
 description = "A fresh Substrate node, ready for hacking."
 edition = "2021"
 license = "Unlicense"
+name = "node-template"
 publish = false
-build = "build.rs"
+version = "4.0.0-dev"
 
 [package.metadata.docs.rs]
-targets = ["x86_64-unknown-linux-gnu"]
-
-[[bin]]
-name = "node-template"
+targets = [ "x86_64-unknown-linux-gnu" ]
 
 [dependencies]
-clap = { version = "4.0.29", features = ["derive"] }
+clap = { features = [ "derive" ], workspace = true }
 
-sc-cli = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-core = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-executor = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-service = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-telemetry = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-keystore = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-transaction-pool = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-consensus-aura = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-consensus = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-consensus-grandpa = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-client-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-runtime = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-timestamp = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-inherents = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-keyring = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-pallet-transaction-payment = { default-features = false, git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
+sc-cli = { workspace = true }
+sc-client-api = { workspace = true }
+sc-consensus = { workspace = true }
+sc-consensus-aura = { workspace = true }
+sc-consensus-grandpa = { workspace = true }
+sc-executor = { workspace = true }
+sc-keystore = { workspace = true }
+sc-network = { workspace = true }
+sc-service = { workspace = true }
+sc-telemetry = { workspace = true }
+sc-transaction-pool = { workspace = true }
+sc-transaction-pool-api = { workspace = true }
+sp-consensus = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-consensus-grandpa = { workspace = true }
+sp-core = { workspace = true }
+sp-inherents = { workspace = true }
+sp-keyring = { workspace = true }
+sp-runtime = { workspace = true }
+sp-timestamp = { workspace = true }
 
 # These dependencies are used for the node template's RPCs
-jsonrpsee = { version = "0.16.2", features = ["server"] }
-sc-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sp-block-builder = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
-pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
+jsonrpsee = { features = [ "server" ], workspace = true }
+sc-basic-authorship = { workspace = true }
+sc-rpc = { workspace = true }
+sc-rpc-api = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-blockchain = { workspace = true }
 
 # Local Dependencies
 node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 
+[[bin]]
+name = "node-template"
+
 [build-dependencies]
-substrate-build-script-utils = { git = "https://github.com/paritytech/substrate.git", tag = "monthly-2023-03" }
+substrate-build-script-utils = { workspace = true }
 
 [features]
 default = []

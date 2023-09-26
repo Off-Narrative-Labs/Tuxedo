@@ -11,7 +11,10 @@
 //! wasm code. Then we pass the full wasm code as part of the constraint checker and write
 //! it to the well-known key as a side effect.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -22,11 +25,11 @@ use tuxedo_core::{
     ensure, SimpleConstraintChecker,
 };
 
+#[cfg(test)]
+mod tests;
+
 /// A reference to a runtime wasm blob. It is just a hash.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 struct RuntimeRef {
     hash: [u8; 32],
@@ -65,11 +68,8 @@ pub enum ConstraintCheckerError {
 /// This constraint checker is somewhat non-standard in that it has a side-effect that
 /// writes the full wasm code to the well-known `:code` storage key. This is
 /// necessary to satisfy Substrate's assumptions that this will happen.
-#[cfg_attr(
-    feature = "std",
-    derive(Serialize, Deserialize, parity_util_mem::MallocSizeOf)
-)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct RuntimeUpgrade {
     full_wasm: Vec<u8>,
 }
