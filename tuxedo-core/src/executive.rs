@@ -16,6 +16,7 @@ use crate::{
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_runtime::{
     traits::BlakeTwo256,
@@ -32,8 +33,11 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker<V>>
-    Executive<B, V, C>
+impl<
+        B: BlockT<Extrinsic = Transaction<V, C>>,
+        V: Verifier + TypeInfo,
+        C: ConstraintChecker<V> + TypeInfo,
+    > Executive<B, V, C>
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
