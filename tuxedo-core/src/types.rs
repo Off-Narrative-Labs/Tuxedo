@@ -51,8 +51,8 @@ pub struct Transaction<V: TypeInfo, C: TypeInfo> {
 impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
         let inputs = self.inputs.encode();
-        let outputs = self.outputs.encode();
         let peeks = self.peeks.encode();
+        let outputs = self.outputs.encode();
         let checker = self.checker.encode();
 
         let total_len = (inputs.len() + outputs.len() + peeks.len() + checker.len()) as u32;
@@ -60,8 +60,8 @@ impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
 
         dest.write(&size);
         dest.write(&inputs);
-        dest.write(&outputs);
         dest.write(&peeks);
+        dest.write(&outputs);
         dest.write(&checker);
     }
 }
@@ -74,14 +74,14 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
         <parity_scale_codec::Compact<u32>>::skip(input)?;
 
         let inputs = <Vec<Input>>::decode(input)?;
-        let outputs = <Vec<Output<V>>>::decode(input)?;
         let peeks = <Vec<OutputRef>>::decode(input)?;
+        let outputs = <Vec<Output<V>>>::decode(input)?;
         let checker = C::decode(input)?;
 
         Ok(Transaction {
             inputs,
-            outputs,
             peeks,
+            outputs,
             checker,
         })
     }
