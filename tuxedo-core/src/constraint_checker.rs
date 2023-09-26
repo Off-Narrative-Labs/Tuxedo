@@ -7,6 +7,7 @@ use sp_std::{fmt::Debug, vec::Vec};
 
 use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier};
 use parity_scale_codec::{Decode, Encode};
+use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -82,7 +83,7 @@ pub mod testing {
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
-    #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, PartialEq, Eq)]
+    #[derive(Serialize, Deserialize, Encode, Decode, Debug, Clone, PartialEq, Eq, TypeInfo)]
     pub struct TestConstraintChecker {
         /// Whether the checker should pass.
         pub checks: bool,
