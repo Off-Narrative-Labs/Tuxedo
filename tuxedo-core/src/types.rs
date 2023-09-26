@@ -35,7 +35,7 @@ pub struct OutputRef {
 /// and evictions (inputs that are forcefully consumed.)
 /// Existing state to be read and consumed from storage
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Transaction<V: TypeInfo, C: TypeInfo> {
     pub inputs: Vec<Input>,
     /// Existing state to be read, but not consumed, from storage
@@ -52,14 +52,16 @@ impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
         let inputs = self.inputs.encode();
         let outputs = self.outputs.encode();
+        let peeks = self.peeks.encode();
         let checker = self.checker.encode();
 
-        let total_len = (inputs.len() + outputs.len() + checker.len()) as u32;
+        let total_len = (inputs.len() + outputs.len() + peeks.len() + checker.len()) as u32;
         let size = parity_scale_codec::Compact::<u32>(total_len).encode();
 
         dest.write(&size);
         dest.write(&inputs);
         dest.write(&outputs);
+        dest.write(&peeks);
         dest.write(&checker);
     }
 }
@@ -73,11 +75,13 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
 
         let inputs = <Vec<Input>>::decode(input)?;
         let outputs = <Vec<Output<V>>>::decode(input)?;
+        let peeks = <Vec<Input>>::decode(input)?;
         let checker = C::decode(input)?;
 
         Ok(Transaction {
             inputs,
             outputs,
+            peeks,
             checker,
         })
     }
