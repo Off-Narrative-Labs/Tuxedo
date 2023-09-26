@@ -10,21 +10,21 @@ description = "A simple example / template wallet built for the tuxedo template 
 runtime = { path = "../tuxedo-template-runtime", package = "tuxedo-template-runtime"}
 tuxedo-core = { path = "../tuxedo-core" }
 
-serde_json = "1.0"
-parity-scale-codec = { version = '3.4.0', default-features = false }
-jsonrpsee = { version = "0.16.2", features = ["http-client"] }
-tokio = { version = "1.25.0", features = ["full"] }
-anyhow = "1.0.69"
-hex = "0.4.3"
-hex-literal = "0.4.1"
-clap = { version = "4.1.8", features = [ "derive"] }
-directories = "5.0.0"
-sled = "0.34.7"
-futures = "0.3"
-env_logger = "0.10.0"
-log = "0.4.17"
+serde_json = { workspace = true }
+parity-scale-codec = { workspace = true }
+jsonrpsee = { workspace = true, features = ["http-client"] }
+tokio = { workspace = true, features = ["full"] }
+anyhow = { workspace = true }
+hex = { workspace = true }
+hex-literal = { workspace = true }
+clap = { workspace = true, features = [ "derive"] }
+directories = { workspace = true }
+sled = { workspace = true }
+futures = { workspace = true }
+env_logger = { workspace = true }
+log = { workspace = true }
 
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07" }
-sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07" }
-sp-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07" }
-sc-keystore = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07" }
+sp-runtime = { workspace = true }
+sp-core = { workspace = true }
+sp-keystore = { workspace = true }
+sc-keystore = { workspace = true }

@@ -8,12 +8,12 @@ description = "A Tuxedo piece that register proofs of existence on chain"
 
 [dependencies]
 tuxedo-core = { path = '../../tuxedo-core', default-features = false }
-serde = { version = "1.0", optional = true, features = ["derive"] }
-parity-scale-codec = { version = '3.4.0', default-features = false, features = ['derive'] }
-scale-info = { version = "2.1.1", default-features = false, features = ["derive"] }
-sp-runtime = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07", default_features = false}
-sp-core = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07", default_features = false}
-sp-std = { git = 'https://github.com/paritytech/substrate', tag = "monthly-2023-07", default_features = false}
+serde = { workspace = true, optional = true, features = ["derive"] }
+parity-scale-codec = { workspace = true, features = ['derive'] }
+scale-info = { workspace = true, features = ["derive"] }
+sp-runtime = { workspace = true, default_features = false}
+sp-core = { workspace = true, default_features = false}
+sp-std = { workspace = true, default_features = false}
 
 [features]
 default = ["std"]
