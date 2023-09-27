@@ -82,7 +82,6 @@ impl SimpleConstraintChecker for SetTimestamp {
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-
         log::info!(
             target: LOG_TARGET,
             "🕰️🖴 Checking constraints for SetTimestamp."
