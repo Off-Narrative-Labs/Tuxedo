@@ -235,6 +235,8 @@ pub enum OuterConstraintChecker {
     /// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
+    /// Set the block's timestamp via an inherent extrinsic.
+    SetTimestamp(timestamp::SetTimestamp),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
@@ -329,8 +331,43 @@ impl_runtime_apis! {
             Executive::close_block()
         }
 
-        fn inherent_extrinsics(_data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-            // Tuxedo does not yet support inherents
+        fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+            use timestamp::StorableTimestamp;
+            const LOG_TARGET: &str = "tuxedo-template-runtime";
+
+            log::info!(
+                target: LOG_TARGET,
+                "In `inherent_extrinsics`."
+            );
+
+            let timestamp_millis: u64 = data
+                .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
+                .expect("Inherent data should decode properly")
+                .expect("Timestamp inherent data should be present.");
+            let storable_timestamp = StorableTimestamp(timestamp_millis);
+
+            log::info!(
+                target: LOG_TARGET,
+                "timestamp_millis:: {timestamp_millis}"
+            );
+
+            let output = Output {
+                payload: storable_timestamp.into(),
+                verifier: OuterVerifier::UpForGrabs(UpForGrabs),
+            };
+
+            let timestamp_tx = Transaction {
+                inputs: Vec::new(),
+                peeks: Vec::new(),
+                outputs: vec![output],
+                checker: OuterConstraintChecker::SetTimestamp(timestamp::SetTimestamp),
+            };
+
+            log::info!(
+                target: LOG_TARGET,
+                "Timestamp transaction is: \n{:#?}", timestamp_tx
+            );
+
             Default::default()
         }
 
@@ -338,7 +375,8 @@ impl_runtime_apis! {
             _block: Block,
             _data: sp_inherents::InherentData
         ) -> sp_inherents::CheckInherentsResult {
-            // Tuxedo does not yet support inherents
+            //TODO We need to check that the timestamp in the block is close to the current time, and we also need to
+            // check that it is greater than the previous best
             Default::default()
         }
     }

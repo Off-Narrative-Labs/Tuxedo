@@ -1,10 +1,10 @@
 //! Allow block authors to include a timestamp via an inherent transaction
-//! 
+//!
 //! This strives to be roughly analogous to FRAME's pallet timestamp and uses the same client-side inherent data provider logic.
-//! 
+//!
 //! In this first iteration, block authors set timestamp once per block by adding a new utxo. The timestamps are never cleaned up. There are no incentives.
 //! In the future, it may make sense to have them consume the previous timestamp or a timestamp from n blocks ago, or just provide incentives for users to clean up old ones.
-//! 
+//!
 //! Some things that are still a little unclear. How do we make sure that this function is only called via inherent? Maybe forbid it in the pool.
 //! If forbidding them in the pool is the answer, then we need to  consider a way to make it easy / nice for piece developers to declare that their transactions are inherents.
 //! One way to make it work for users would be to adapt the macro so that you can add an `#[inherent]` to some call variants, then the macro creates a function called is_inherent that checks if it is an inherent or not.
@@ -16,11 +16,11 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_timestamp::Timestamp;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleConstraintChecker,
 };
-use sp_timestamp::Timestamp;
 
 #[cfg(test)]
 mod tests;
@@ -28,16 +28,16 @@ mod tests;
 /// A wrapper around a u64 that holds the Unix epoch time in milliseconds.
 /// Basically the same as sp_timestamp::Timestamp, but we need this type
 /// to implement the UtxoData trait since they are both foreign.
-#[derive(Debug, Encode, Decode, Eq, Clone, Copy, Default, Ord)]
-struct StorableTimestamp(u64);
+#[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
+pub struct StorableTimestamp(pub u64);
 
-impl From<Timestamp> for StorableTimestamp {
-    //todo
-}
+// impl From<Timestamp> for StorableTimestamp {
+//     //todo
+// }
 
-impl From<StorableTimestamp> for Timestamp {
-    //todo
-}
+// impl From<StorableTimestamp> for Timestamp {
+//     //todo
+// }
 
 impl UtxoData for StorableTimestamp {
     const TYPE_ID: [u8; 4] = *b"time";
@@ -51,7 +51,6 @@ pub enum TimestampError {
 
     // TODO I'm getting tired of checking the right number of inputs and outputs in every single piece, maybe we should ahve some helpers for this common task.
     // Like it expects exactly N inputs (or outputs) and you give it an error for when there are too many and another for when there are too few.
-
     /// UTXO data has an unexpected type
     BadlyTypedOutput,
     /// No outputs were specified when setting the timestamp, but exactly one is required.
@@ -71,7 +70,7 @@ pub enum TimestampError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct SetTimestamp;
 
-impl SimpleConstraintChecker for AmoebaCreation {
+impl SimpleConstraintChecker for SetTimestamp {
     type Error = TimestampError;
 
     fn check(
@@ -87,10 +86,7 @@ impl SimpleConstraintChecker for AmoebaCreation {
         // the call type in the pool, and not propagate ones that were marked as inherents.
 
         // Make sure there is a single output of the correct type
-        ensure!(
-            !output_data.is_empty(),
-            Self::Error::MissingTimestamp
-        );
+        ensure!(!output_data.is_empty(), Self::Error::MissingTimestamp);
         ensure!(
             output_data.len() == 1,
             Self::Error::TooManyOutputsWhileSettingTimestamp

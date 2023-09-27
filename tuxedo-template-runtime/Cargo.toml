@@ -38,6 +38,7 @@ amoeba = { default-features = false, path = "../wardrobe/amoeba" }
 kitties = { default-features = false, path = "../wardrobe/kitties" }
 money = { default-features = false, path = "../wardrobe/money" }
 poe = { default-features = false, path = "../wardrobe/poe" }
+timestamp = { default-features = false, path = "../wardrobe/timestamp" }
 runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
@@ -73,5 +74,6 @@ std = [
 	"money/std",
 	"poe/std",
 	"kitties/std",
+	"timestamp/std",
 	"runtime-upgrade/std",
 ]
