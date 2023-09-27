@@ -994,7 +994,7 @@ mod tests {
                         "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        "b3dd85732bb51b79d7c5c3518cfb1b202210743b9dc7b8ccf848f9a66e0a0f6b",
+                        "4680cf9e9383d16183adcc1bf1ab6ce66133af3b5e650405ebe94a943849f4d4",
                     ),
                     digest: Default::default(),
                 },
