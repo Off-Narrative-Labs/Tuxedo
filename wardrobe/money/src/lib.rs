@@ -90,6 +90,7 @@ impl<const ID: u8> SimpleConstraintChecker for MoneyConstraintChecker<ID> {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {

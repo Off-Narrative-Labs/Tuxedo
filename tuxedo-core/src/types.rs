@@ -33,12 +33,16 @@ pub struct OutputRef {
 ///
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
+/// Existing state to be read and consumed from storage
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Transaction<V: TypeInfo, C: TypeInfo> {
     pub inputs: Vec<Input>,
-    //Todo peeks: Vec<Input>,
+    /// Existing state to be read, but not consumed, from storage
+    pub peeks: Vec<OutputRef>,
+    /// New state to be placed into storage
     pub outputs: Vec<Output<V>>,
+    /// Which piece of constraint checking logic is used to determine whether this transaction is valid
     pub checker: C,
 }
 
@@ -47,14 +51,16 @@ pub struct Transaction<V: TypeInfo, C: TypeInfo> {
 impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
         let inputs = self.inputs.encode();
+        let peeks = self.peeks.encode();
         let outputs = self.outputs.encode();
         let checker = self.checker.encode();
 
-        let total_len = (inputs.len() + outputs.len() + checker.len()) as u32;
+        let total_len = (inputs.len() + outputs.len() + peeks.len() + checker.len()) as u32;
         let size = parity_scale_codec::Compact::<u32>(total_len).encode();
 
         dest.write(&size);
         dest.write(&inputs);
+        dest.write(&peeks);
         dest.write(&outputs);
         dest.write(&checker);
     }
@@ -68,11 +74,13 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
         <parity_scale_codec::Compact<u32>>::skip(input)?;
 
         let inputs = <Vec<Input>>::decode(input)?;
+        let peeks = <Vec<OutputRef>>::decode(input)?;
         let outputs = <Vec<Output<V>>>::decode(input)?;
         let checker = C::decode(input)?;
 
         Ok(Transaction {
             inputs,
+            peeks,
             outputs,
             checker,
         })
@@ -152,6 +160,7 @@ pub mod tests {
         let checker = TestConstraintChecker { checks: true };
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
+            peeks: Vec::new(),
             outputs: Vec::new(),
             checker,
         };
@@ -166,6 +175,7 @@ pub mod tests {
         let checker = TestConstraintChecker { checks: true };
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
+            peeks: Vec::new(),
             outputs: Vec::new(),
             checker,
         };

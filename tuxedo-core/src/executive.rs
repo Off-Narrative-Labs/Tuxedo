@@ -47,6 +47,7 @@ impl<
         transaction: &Transaction<V, C>,
     ) -> Result<ValidTransaction, UtxoError<C::Error>> {
         // Make sure there are no duplicate inputs
+        // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
             let input_set: BTreeSet<_> = transaction.inputs.iter().map(|o| o.encode()).collect();
             ensure!(
@@ -79,6 +80,18 @@ impl<
                 input_utxos.push(input_utxo);
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
+            }
+        }
+
+        // Make a Vec of the peek utxos for passing to the constraint checker
+        // Keep track of any missing peeks for use in the tagged transaction pool
+        // Use the same vec as previously to keep track of missing peeks
+        let mut peek_utxos = Vec::new();
+        for output_ref in transaction.peeks.iter() {
+            if let Some(peek_utxo) = TransparentUtxoSet::<V>::peek_utxo(output_ref) {
+                peek_utxos.push(peek_utxo);
+            } else {
+                missing_inputs.push(output_ref.encode());
             }
         }
 
@@ -128,7 +141,7 @@ impl<
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &transaction.outputs)
+            .check(&input_utxos, &peek_utxos, &transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
@@ -154,7 +167,7 @@ impl<
         // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
         let valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
 
-        // If there are still missing inputs, so we cannot execute this,
+        // If there are still missing inputs, we cannot execute this,
         // although it would be valid in the pool
         ensure!(
             valid_transaction.requires.is_empty(),
@@ -394,6 +407,42 @@ mod tests {
         }
     }
 
+    /// Builder pattern for test transactions.
+    #[derive(Default)]
+    struct TestTransactionBuilder {
+        inputs: Vec<Input>,
+        peeks: Vec<OutputRef>,
+        outputs: Vec<Output<TestVerifier>>,
+    }
+
+    impl TestTransactionBuilder {
+        fn with_input(mut self, input: Input) -> Self {
+            self.inputs.push(input);
+            self
+        }
+
+        fn with_peek(mut self, peek: OutputRef) -> Self {
+            self.peeks.push(peek);
+            self
+        }
+
+        fn with_output(mut self, output: Output<TestVerifier>) -> Self {
+            self.outputs.push(output);
+            self
+        }
+
+        fn build(self, should_check: bool) -> TestTransaction {
+            TestTransaction {
+                inputs: self.inputs,
+                peeks: self.peeks,
+                outputs: self.outputs,
+                checker: TestConstraintChecker {
+                    checks: should_check,
+                },
+            }
+        }
+    }
+
     /// Builds test externalities using a minimal builder pattern.
     #[derive(Default)]
     struct ExternalityBuilder {
@@ -406,20 +455,18 @@ mod tests {
         /// Add the given Utxo to the storage.
         ///
         /// There are no real transactions to calculate OutputRefs so instead we
-        /// provide a transaction number (a simple u32), and an index in that transaction,
-        /// (also a u32). From this information, a mock output ref is constructed.
+        /// provide an output ref as a parameter. See the function `mock_output_ref`
+        /// for a convenient way to construct testing output refs.
         ///
         /// For the Outputs themselves, this function accepts payloads of any type that
         /// can be represented as DynamicallyTypedData, and a boolean about whether the
         /// verifier should succeed or not.
         fn with_utxo<T: UtxoData>(
             mut self,
-            tx_num: u32,
-            index: u32,
+            output_ref: OutputRef,
             payload: T,
             verifies: bool,
         ) -> Self {
-            let output_ref = mock_output_ref(tx_num, index);
             let output = Output {
                 payload: payload.into(),
                 verifier: TestVerifier { verifies },
@@ -490,11 +537,7 @@ mod tests {
 
     #[test]
     fn validate_empty_works() {
-        let tx = TestTransaction {
-            inputs: Vec::new(),
-            outputs: Vec::new(),
-            checker: TestConstraintChecker { checks: true },
-        };
+        let tx = TestTransactionBuilder::default().build(true);
 
         let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -505,21 +548,40 @@ mod tests {
 
     #[test]
     fn validate_with_input_works() {
+        let output_ref = mock_output_ref(0, 0);
+
         ExternalityBuilder::default()
-            .with_utxo(0, 0, Bogus, true)
+            .with_utxo(output_ref.clone(), Bogus, true)
             .build()
             .execute_with(|| {
-                let output_ref = mock_output_ref(0, 0);
                 let input = Input {
                     output_ref,
                     redeemer: Vec::new(),
                 };
 
-                let tx = TestTransaction {
-                    inputs: vec![input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: true },
-                };
+                let tx = TestTransactionBuilder::default()
+                    .with_input(input)
+                    .build(true);
+
+                let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
+
+                let expected_result = ValidTransactionBuilder::default().into();
+
+                assert_eq!(vt, expected_result);
+            });
+    }
+
+    #[test]
+    fn validate_with_peek_works() {
+        let output_ref = mock_output_ref(0, 0);
+
+        ExternalityBuilder::default()
+            .with_utxo(output_ref.clone(), Bogus, true)
+            .build()
+            .execute_with(|| {
+                let tx = TestTransactionBuilder::default()
+                    .with_peek(output_ref)
+                    .build(true);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -536,11 +598,9 @@ mod tests {
                 payload: Bogus.into(),
                 verifier: TestVerifier { verifies: false },
             };
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: vec![output],
-                checker: TestConstraintChecker { checks: true },
-            };
+            let tx = TestTransactionBuilder::default()
+                .with_output(output)
+                .build(true);
 
             // This is a real transaction, so we need to calculate a real OutputRef
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
@@ -565,11 +625,28 @@ mod tests {
                 redeemer: Vec::new(),
             };
 
-            let tx = TestTransaction {
-                inputs: vec![input],
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: true },
-            };
+            let tx = TestTransactionBuilder::default()
+                .with_input(input)
+                .build(true);
+
+            let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
+
+            let expected_result = ValidTransactionBuilder::default()
+                .and_requires(output_ref)
+                .into();
+
+            assert_eq!(vt, expected_result);
+        });
+    }
+
+    #[test]
+    fn validate_with_missing_peek_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let output_ref = mock_output_ref(0, 0);
+
+            let tx = TestTransactionBuilder::default()
+                .with_peek(output_ref.clone())
+                .build(true);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -583,21 +660,21 @@ mod tests {
 
     #[test]
     fn validate_with_duplicate_input_fails() {
+        let output_ref = mock_output_ref(0, 0);
+
         ExternalityBuilder::default()
-            .with_utxo(0, 0, Bogus, false)
+            .with_utxo(output_ref.clone(), Bogus, false)
             .build()
             .execute_with(|| {
-                let output_ref = mock_output_ref(0, 0);
                 let input = Input {
                     output_ref,
                     redeemer: Vec::new(),
                 };
 
-                let tx = TestTransaction {
-                    inputs: vec![input.clone(), input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: true },
-                };
+                let tx = TestTransactionBuilder::default()
+                    .with_input(input.clone())
+                    .with_input(input)
+                    .build(true);
 
                 let result = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -606,22 +683,45 @@ mod tests {
     }
 
     #[test]
-    fn validate_with_unsatisfied_redeemer_fails() {
+    fn validate_with_duplicate_peek_works() {
+        // Peeking at the same input twice is considered valid. However, wallets should do their best
+        // not to construct such transactions whenever possible because it makes the transactions space inefficient.
+
+        let output_ref = mock_output_ref(0, 0);
+
         ExternalityBuilder::default()
-            .with_utxo(0, 0, Bogus, false)
+            .with_utxo(output_ref.clone(), Bogus, false)
             .build()
             .execute_with(|| {
-                let output_ref = mock_output_ref(0, 0);
+                let tx = TestTransactionBuilder::default()
+                    .with_peek(output_ref.clone())
+                    .with_peek(output_ref)
+                    .build(true);
+
+                let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
+
+                let expected_result = ValidTransactionBuilder::default().into();
+
+                assert_eq!(vt, expected_result);
+            });
+    }
+
+    #[test]
+    fn validate_with_unsatisfied_verifier_fails() {
+        let output_ref = mock_output_ref(0, 0);
+
+        ExternalityBuilder::default()
+            .with_utxo(output_ref.clone(), Bogus, false)
+            .build()
+            .execute_with(|| {
                 let input = Input {
                     output_ref,
                     redeemer: Vec::new(),
                 };
 
-                let tx = TestTransaction {
-                    inputs: vec![input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: true },
-                };
+                let tx = TestTransactionBuilder::default()
+                    .with_input(input)
+                    .build(true);
 
                 let result = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -631,43 +731,37 @@ mod tests {
 
     #[test]
     fn validate_with_pre_existing_output_fails() {
-        ExternalityBuilder::default().build().execute_with(|| {
-            // This test requires a transaction to create an output at a location where
-            // an output already exists. Rather than complicate the builder with an additional
-            // method to put an output at a specific location before the test begins, I'll submit
-            // two transactions during the test. The main reason is that doing this serves as
-            // documentation for how this could happen in the wild. Specifically two transactions
-            // that don't have inputs and have the same outputs could make it happen. I initially
-            // couldn't think of how this could happen, so I think giving an example is wise.
+        // This test requires a transaction to create an output at a location where
+        // an output already exists. This could happen in the wild when two transactions
+        // don't have inputs and have the same outputs. I initially couldn't think of how
+        // this could happen.
 
-            let output = Output {
-                payload: Bogus.into(),
-                verifier: TestVerifier { verifies: false },
-            };
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: vec![output],
-                checker: TestConstraintChecker { checks: true },
-            };
+        // First we create the transaction that will be submitted in the test.
+        let output = Output {
+            payload: Bogus.into(),
+            verifier: TestVerifier { verifies: false },
+        };
+        let tx = TestTransactionBuilder::default()
+            .with_output(output)
+            .build(true);
 
-            // Submit the transaction once and make sure it works
-            let result1 = TestExecutive::apply_tuxedo_transaction(tx.clone());
-            assert!(result1.is_ok());
+        // Now calculate the output ref that the transaction creates so we can pre-populate the state.
+        let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+        let output_ref = OutputRef { tx_hash, index: 0 };
 
-            // Submit it a second time and make sure it fails
-            let result2 = TestExecutive::validate_tuxedo_transaction(&tx);
-            assert_eq!(result2, Err(UtxoError::PreExistingOutput));
-        });
+        ExternalityBuilder::default()
+            .with_utxo(output_ref, Bogus, false)
+            .build()
+            .execute_with(|| {
+                let result = TestExecutive::validate_tuxedo_transaction(&tx);
+                assert_eq!(result, Err(UtxoError::PreExistingOutput));
+            });
     }
 
     #[test]
     fn validate_with_constraint_error_fails() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: false },
-            };
+            let tx = TestTransactionBuilder::default().build(false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -678,11 +772,7 @@ mod tests {
     #[test]
     fn apply_empty_works() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: true },
-            };
+            let tx = TestTransactionBuilder::default().build(true);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -699,11 +789,24 @@ mod tests {
                 redeemer: Vec::new(),
             };
 
-            let tx = TestTransaction {
-                inputs: vec![input],
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: true },
-            };
+            let tx = TestTransactionBuilder::default()
+                .with_input(input)
+                .build(true);
+
+            let vt = TestExecutive::apply_tuxedo_transaction(tx);
+
+            assert_eq!(vt, Err(UtxoError::MissingInput));
+        });
+    }
+
+    #[test]
+    fn apply_with_missing_peek_fails() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let output_ref = mock_output_ref(0, 0);
+
+            let tx = TestTransactionBuilder::default()
+                .with_peek(output_ref)
+                .build(true);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -713,21 +816,20 @@ mod tests {
 
     #[test]
     fn update_storage_consumes_input() {
+        let output_ref = mock_output_ref(0, 0);
+
         ExternalityBuilder::default()
-            .with_utxo(0, 0, Bogus, true)
+            .with_utxo(output_ref.clone(), Bogus, true)
             .build()
             .execute_with(|| {
-                let output_ref = mock_output_ref(0, 0);
                 let input = Input {
                     output_ref: output_ref.clone(),
                     redeemer: Vec::new(),
                 };
 
-                let tx = TestTransaction {
-                    inputs: vec![input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: true },
-                };
+                let tx = TestTransactionBuilder::default()
+                    .with_input(input)
+                    .build(true);
 
                 // Commit the tx to storage
                 TestExecutive::update_storage(tx);
@@ -745,11 +847,9 @@ mod tests {
                 verifier: TestVerifier { verifies: false },
             };
 
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: vec![output.clone()],
-                checker: TestConstraintChecker { checks: true },
-            };
+            let tx = TestTransactionBuilder::default()
+                .with_output(output.clone())
+                .build(true);
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef { tx_hash, index: 0 };
@@ -791,11 +891,7 @@ mod tests {
     #[test]
     fn apply_valid_extrinsic_work() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: true },
-            };
+            let tx = TestTransactionBuilder::default().build(true);
 
             let apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -814,11 +910,7 @@ mod tests {
     #[test]
     fn apply_invalid_extrinsic_rejects() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: false },
-            };
+            let tx = TestTransactionBuilder::default().build(false);
 
             let apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -902,15 +994,11 @@ mod tests {
                         "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        "b3dd85732bb51b79d7c5c3518cfb1b202210743b9dc7b8ccf848f9a66e0a0f6b",
+                        "4680cf9e9383d16183adcc1bf1ab6ce66133af3b5e650405ebe94a943849f4d4",
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: vec![TestTransaction {
-                    inputs: Vec::new(),
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: true },
-                }],
+                extrinsics: vec![TestTransactionBuilder::default().build(true)],
             };
 
             TestExecutive::execute_block(b);
@@ -933,11 +1021,7 @@ mod tests {
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: vec![TestTransaction {
-                    inputs: Vec::new(),
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: false },
-                }],
+                extrinsics: vec![TestTransactionBuilder::default().build(false)],
             };
 
             TestExecutive::execute_block(b);
