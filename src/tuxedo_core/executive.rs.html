@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (0288f2e19 2023-09-25)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (5ae769f06 2023-09-26)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../tuxedo_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -986,6 +986,90 @@
 <a href="#986" id="986">986</a>
 <a href="#987" id="987">987</a>
 <a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1035,6 +1119,7 @@
         transaction: <span class="kw-2">&amp;</span>Transaction&lt;V, C&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ValidTransaction, UtxoError&lt;C::Error&gt;&gt; {
         <span class="comment">// Make sure there are no duplicate inputs
+        // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         </span>{
             <span class="kw">let </span>input_set: BTreeSet&lt;<span class="kw">_</span>&gt; = transaction.inputs.iter().map(|o| o.encode()).collect();
             <span class="macro">ensure!</span>(
@@ -1067,6 +1152,18 @@
                 input_utxos.push(input_utxo);
             } <span class="kw">else </span>{
                 missing_inputs.push(input.output_ref.clone().encode());
+            }
+        }
+
+        <span class="comment">// Make a Vec of the peek utxos for passing to the constraint checker
+        // Keep track of any missing peeks for use in the tagged transaction pool
+        // Use the same vec as previously to keep track of missing peeks
+        </span><span class="kw">let </span><span class="kw-2">mut </span>peek_utxos = Vec::new();
+        <span class="kw">for </span>output_ref <span class="kw">in </span>transaction.peeks.iter() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(peek_utxo) = TransparentUtxoSet::&lt;V&gt;::peek_utxo(output_ref) {
+                peek_utxos.push(peek_utxo);
+            } <span class="kw">else </span>{
+                missing_inputs.push(output_ref.encode());
             }
         }
 
@@ -1116,7 +1213,7 @@
         <span class="comment">// Call the constraint checker
         </span>transaction
             .checker
-            .check(<span class="kw-2">&amp;</span>input_utxos, <span class="kw-2">&amp;</span>transaction.outputs)
+            .check(<span class="kw-2">&amp;</span>input_utxos, <span class="kw-2">&amp;</span>peek_utxos, <span class="kw-2">&amp;</span>transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)<span class="question-mark">?</span>;
 
         <span class="comment">// Return the valid transaction
@@ -1142,7 +1239,7 @@
         // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
         </span><span class="kw">let </span>valid_transaction = <span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>transaction)<span class="question-mark">?</span>;
 
-        <span class="comment">// If there are still missing inputs, so we cannot execute this,
+        <span class="comment">// If there are still missing inputs, we cannot execute this,
         // although it would be valid in the pool
         </span><span class="macro">ensure!</span>(
             valid_transaction.requires.is_empty(),
@@ -1382,6 +1479,42 @@
         }
     }
 
+    <span class="doccomment">/// Builder pattern for test transactions.
+    </span><span class="attr">#[derive(Default)]
+    </span><span class="kw">struct </span>TestTransactionBuilder {
+        inputs: Vec&lt;Input&gt;,
+        peeks: Vec&lt;OutputRef&gt;,
+        outputs: Vec&lt;Output&lt;TestVerifier&gt;&gt;,
+    }
+
+    <span class="kw">impl </span>TestTransactionBuilder {
+        <span class="kw">fn </span>with_input(<span class="kw-2">mut </span><span class="self">self</span>, input: Input) -&gt; <span class="self">Self </span>{
+            <span class="self">self</span>.inputs.push(input);
+            <span class="self">self
+        </span>}
+
+        <span class="kw">fn </span>with_peek(<span class="kw-2">mut </span><span class="self">self</span>, peek: OutputRef) -&gt; <span class="self">Self </span>{
+            <span class="self">self</span>.peeks.push(peek);
+            <span class="self">self
+        </span>}
+
+        <span class="kw">fn </span>with_output(<span class="kw-2">mut </span><span class="self">self</span>, output: Output&lt;TestVerifier&gt;) -&gt; <span class="self">Self </span>{
+            <span class="self">self</span>.outputs.push(output);
+            <span class="self">self
+        </span>}
+
+        <span class="kw">fn </span>build(<span class="self">self</span>, should_check: bool) -&gt; TestTransaction {
+            TestTransaction {
+                inputs: <span class="self">self</span>.inputs,
+                peeks: <span class="self">self</span>.peeks,
+                outputs: <span class="self">self</span>.outputs,
+                checker: TestConstraintChecker {
+                    checks: should_check,
+                },
+            }
+        }
+    }
+
     <span class="doccomment">/// Builds test externalities using a minimal builder pattern.
     </span><span class="attr">#[derive(Default)]
     </span><span class="kw">struct </span>ExternalityBuilder {
@@ -1394,20 +1527,18 @@
         <span class="doccomment">/// Add the given Utxo to the storage.
         ///
         /// There are no real transactions to calculate OutputRefs so instead we
-        /// provide a transaction number (a simple u32), and an index in that transaction,
-        /// (also a u32). From this information, a mock output ref is constructed.
+        /// provide an output ref as a parameter. See the function `mock_output_ref`
+        /// for a convenient way to construct testing output refs.
         ///
         /// For the Outputs themselves, this function accepts payloads of any type that
         /// can be represented as DynamicallyTypedData, and a boolean about whether the
         /// verifier should succeed or not.
         </span><span class="kw">fn </span>with_utxo&lt;T: UtxoData&gt;(
             <span class="kw-2">mut </span><span class="self">self</span>,
-            tx_num: u32,
-            index: u32,
+            output_ref: OutputRef,
             payload: T,
             verifies: bool,
         ) -&gt; <span class="self">Self </span>{
-            <span class="kw">let </span>output_ref = mock_output_ref(tx_num, index);
             <span class="kw">let </span>output = Output {
                 payload: payload.into(),
                 verifier: TestVerifier { verifies },
@@ -1478,11 +1609,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_empty_works() {
-        <span class="kw">let </span>tx = TestTransaction {
-            inputs: Vec::new(),
-            outputs: Vec::new(),
-            checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-        };
+        <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>);
 
         <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1493,21 +1620,40 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_with_input_works() {
+        <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
         ExternalityBuilder::default()
-            .with_utxo(<span class="number">0</span>, <span class="number">0</span>, Bogus, <span class="bool-val">true</span>)
+            .with_utxo(output_ref.clone(), Bogus, <span class="bool-val">true</span>)
             .build()
             .execute_with(|| {
-                <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref,
                     redeemer: Vec::new(),
                 };
 
-                <span class="kw">let </span>tx = TestTransaction {
-                    inputs: <span class="macro">vec!</span>[input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-                };
+                <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                    .with_input(input)
+                    .build(<span class="bool-val">true</span>);
+
+                <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
+
+                <span class="kw">let </span>expected_result = ValidTransactionBuilder::default().into();
+
+                <span class="macro">assert_eq!</span>(vt, expected_result);
+            });
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>validate_with_peek_works() {
+        <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
+        ExternalityBuilder::default()
+            .with_utxo(output_ref.clone(), Bogus, <span class="bool-val">true</span>)
+            .build()
+            .execute_with(|| {
+                <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                    .with_peek(output_ref)
+                    .build(<span class="bool-val">true</span>);
 
                 <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1524,11 +1670,9 @@
                 payload: Bogus.into(),
                 verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
             };
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: <span class="macro">vec!</span>[output],
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                .with_output(output)
+                .build(<span class="bool-val">true</span>);
 
             <span class="comment">// This is a real transaction, so we need to calculate a real OutputRef
             </span><span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
@@ -1553,11 +1697,28 @@
                 redeemer: Vec::new(),
             };
 
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: <span class="macro">vec!</span>[input],
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                .with_input(input)
+                .build(<span class="bool-val">true</span>);
+
+            <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
+
+            <span class="kw">let </span>expected_result = ValidTransactionBuilder::default()
+                .and_requires(output_ref)
+                .into();
+
+            <span class="macro">assert_eq!</span>(vt, expected_result);
+        });
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>validate_with_missing_peek_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
+            <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                .with_peek(output_ref.clone())
+                .build(<span class="bool-val">true</span>);
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1571,21 +1732,21 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_with_duplicate_input_fails() {
+        <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
         ExternalityBuilder::default()
-            .with_utxo(<span class="number">0</span>, <span class="number">0</span>, Bogus, <span class="bool-val">false</span>)
+            .with_utxo(output_ref.clone(), Bogus, <span class="bool-val">false</span>)
             .build()
             .execute_with(|| {
-                <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref,
                     redeemer: Vec::new(),
                 };
 
-                <span class="kw">let </span>tx = TestTransaction {
-                    inputs: <span class="macro">vec!</span>[input.clone(), input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-                };
+                <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                    .with_input(input.clone())
+                    .with_input(input)
+                    .build(<span class="bool-val">true</span>);
 
                 <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
@@ -1594,22 +1755,45 @@
     }
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>validate_with_unsatisfied_redeemer_fails() {
+    </span><span class="kw">fn </span>validate_with_duplicate_peek_works() {
+        <span class="comment">// Peeking at the same input twice is considered valid. However, wallets should do their best
+        // not to construct such transactions whenever possible because it makes the transactions space inefficient.
+
+        </span><span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
         ExternalityBuilder::default()
-            .with_utxo(<span class="number">0</span>, <span class="number">0</span>, Bogus, <span class="bool-val">false</span>)
+            .with_utxo(output_ref.clone(), Bogus, <span class="bool-val">false</span>)
             .build()
             .execute_with(|| {
-                <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+                <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                    .with_peek(output_ref.clone())
+                    .with_peek(output_ref)
+                    .build(<span class="bool-val">true</span>);
+
+                <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
+
+                <span class="kw">let </span>expected_result = ValidTransactionBuilder::default().into();
+
+                <span class="macro">assert_eq!</span>(vt, expected_result);
+            });
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>validate_with_unsatisfied_verifier_fails() {
+        <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
+        ExternalityBuilder::default()
+            .with_utxo(output_ref.clone(), Bogus, <span class="bool-val">false</span>)
+            .build()
+            .execute_with(|| {
                 <span class="kw">let </span>input = Input {
                     output_ref,
                     redeemer: Vec::new(),
                 };
 
-                <span class="kw">let </span>tx = TestTransaction {
-                    inputs: <span class="macro">vec!</span>[input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-                };
+                <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                    .with_input(input)
+                    .build(<span class="bool-val">true</span>);
 
                 <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
@@ -1619,43 +1803,37 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_with_pre_existing_output_fails() {
-        ExternalityBuilder::default().build().execute_with(|| {
-            <span class="comment">// This test requires a transaction to create an output at a location where
-            // an output already exists. Rather than complicate the builder with an additional
-            // method to put an output at a specific location before the test begins, I&#39;ll submit
-            // two transactions during the test. The main reason is that doing this serves as
-            // documentation for how this could happen in the wild. Specifically two transactions
-            // that don&#39;t have inputs and have the same outputs could make it happen. I initially
-            // couldn&#39;t think of how this could happen, so I think giving an example is wise.
+        <span class="comment">// This test requires a transaction to create an output at a location where
+        // an output already exists. This could happen in the wild when two transactions
+        // don&#39;t have inputs and have the same outputs. I initially couldn&#39;t think of how
+        // this could happen.
 
-            </span><span class="kw">let </span>output = Output {
-                payload: Bogus.into(),
-                verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
-            };
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: <span class="macro">vec!</span>[output],
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+        // First we create the transaction that will be submitted in the test.
+        </span><span class="kw">let </span>output = Output {
+            payload: Bogus.into(),
+            verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
+        };
+        <span class="kw">let </span>tx = TestTransactionBuilder::default()
+            .with_output(output)
+            .build(<span class="bool-val">true</span>);
 
-            <span class="comment">// Submit the transaction once and make sure it works
-            </span><span class="kw">let </span>result1 = TestExecutive::apply_tuxedo_transaction(tx.clone());
-            <span class="macro">assert!</span>(result1.is_ok());
+        <span class="comment">// Now calculate the output ref that the transaction creates so we can pre-populate the state.
+        </span><span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
+        <span class="kw">let </span>output_ref = OutputRef { tx_hash, index: <span class="number">0 </span>};
 
-            <span class="comment">// Submit it a second time and make sure it fails
-            </span><span class="kw">let </span>result2 = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
-            <span class="macro">assert_eq!</span>(result2, <span class="prelude-val">Err</span>(UtxoError::PreExistingOutput));
-        });
+        ExternalityBuilder::default()
+            .with_utxo(output_ref, Bogus, <span class="bool-val">false</span>)
+            .build()
+            .execute_with(|| {
+                <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
+                <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Err</span>(UtxoError::PreExistingOutput));
+            });
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_with_constraint_error_fails() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: <span class="bool-val">false </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
@@ -1666,11 +1844,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_empty_works() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>);
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -1687,11 +1861,24 @@
                 redeemer: Vec::new(),
             };
 
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: <span class="macro">vec!</span>[input],
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                .with_input(input)
+                .build(<span class="bool-val">true</span>);
+
+            <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
+
+            <span class="macro">assert_eq!</span>(vt, <span class="prelude-val">Err</span>(UtxoError::MissingInput));
+        });
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>apply_with_missing_peek_fails() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
+            <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                .with_peek(output_ref)
+                .build(<span class="bool-val">true</span>);
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -1701,21 +1888,20 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>update_storage_consumes_input() {
+        <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
+
         ExternalityBuilder::default()
-            .with_utxo(<span class="number">0</span>, <span class="number">0</span>, Bogus, <span class="bool-val">true</span>)
+            .with_utxo(output_ref.clone(), Bogus, <span class="bool-val">true</span>)
             .build()
             .execute_with(|| {
-                <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
                 <span class="kw">let </span>input = Input {
                     output_ref: output_ref.clone(),
                     redeemer: Vec::new(),
                 };
 
-                <span class="kw">let </span>tx = TestTransaction {
-                    inputs: <span class="macro">vec!</span>[input],
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-                };
+                <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                    .with_input(input)
+                    .build(<span class="bool-val">true</span>);
 
                 <span class="comment">// Commit the tx to storage
                 </span>TestExecutive::update_storage(tx);
@@ -1733,11 +1919,9 @@
                 verifier: TestVerifier { verifies: <span class="bool-val">false </span>},
             };
 
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: <span class="macro">vec!</span>[output.clone()],
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default()
+                .with_output(output.clone())
+                .build(<span class="bool-val">true</span>);
 
             <span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
             <span class="kw">let </span>output_ref = OutputRef { tx_hash, index: <span class="number">0 </span>};
@@ -1779,11 +1963,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_valid_extrinsic_work() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>);
 
             <span class="kw">let </span>apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -1802,11 +1982,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_invalid_extrinsic_rejects() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransaction {
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-                checker: TestConstraintChecker { checks: <span class="bool-val">false </span>},
-            };
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">false</span>);
 
             <span class="kw">let </span>apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -1890,15 +2066,11 @@
                         <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;b3dd85732bb51b79d7c5c3518cfb1b202210743b9dc7b8ccf848f9a66e0a0f6b&quot;</span>,
+                        <span class="string">&quot;4680cf9e9383d16183adcc1bf1ab6ce66133af3b5e650405ebe94a943849f4d4&quot;</span>,
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: <span class="macro">vec!</span>[TestTransaction {
-                    inputs: Vec::new(),
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: <span class="bool-val">true </span>},
-                }],
+                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">true</span>)],
             };
 
             TestExecutive::execute_block(b);
@@ -1921,11 +2093,7 @@
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: <span class="macro">vec!</span>[TestTransaction {
-                    inputs: Vec::new(),
-                    outputs: Vec::new(),
-                    checker: TestConstraintChecker { checks: <span class="bool-val">false </span>},
-                }],
+                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">false</span>)],
             };
 
             TestExecutive::execute_block(b);
