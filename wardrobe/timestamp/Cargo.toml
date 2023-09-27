@@ -1,0 +1,25 @@
+[package]
+description = "A Tuxedo piece that allows block authors to include a wall-clock time stamp in a block via an inherent extrinsic."
+edition = "2021"
+name = "timestamp"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+parity-scale-codec = { features = [ "derive" ], workspace = true }
+scale-info = { features = [ "derive" ], workspace = true }
+serde = { features = [ "derive" ], optional = true, workspace = true }
+sp-runtime = { default_features = false, workspace = true }
+sp-timestamp = { default_features = false, workspace = true }
+tuxedo-core = { default-features = false, path = "../../tuxedo-core" }
+
+[features]
+default = [ "std" ]
+std = [
+	"tuxedo-core/std",
+	"parity-scale-codec/std",
+	"sp-runtime/std",
+	"sp-timestamp/std",
+	"serde",
+]

@@ -7901,6 +7901,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "timestamp"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "sp-timestamp",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "tiny-bip39"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

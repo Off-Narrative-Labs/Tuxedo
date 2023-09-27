@@ -12,6 +12,7 @@ members = [
 	"wardrobe/amoeba",
 	"wardrobe/money",
 	"wardrobe/poe",
+	"wardrobe/timestamp",
 	"wardrobe/kitties",
 	"wardrobe/runtime_upgrade",
 ]
