@@ -50,6 +50,10 @@ pub use runtime_upgrade;
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;
 
+/// Target for logging from the template runtime.
+/// Individual pieces should not use this target, nor should Tuxedo client or core.
+const LOG_TARGET: &str = "tuxedo-template-runtime";
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -324,6 +328,10 @@ impl_runtime_apis! {
     // https://substrate.dev/rustdocs/master/sc_block_builder/trait.BlockBuilderApi.html
     impl sp_block_builder::BlockBuilder<Block> for Runtime {
         fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 In `apply_extrinsic`"
+            );
             Executive::apply_extrinsic(extrinsic)
         }
 
@@ -333,11 +341,9 @@ impl_runtime_apis! {
 
         fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
             use timestamp::StorableTimestamp;
-            const LOG_TARGET: &str = "tuxedo-template-runtime";
-
             log::info!(
                 target: LOG_TARGET,
-                "In `inherent_extrinsics`."
+                "🕰️🖴 In `inherent_extrinsics`."
             );
 
             let timestamp_millis: u64 = data
@@ -348,7 +354,7 @@ impl_runtime_apis! {
 
             log::info!(
                 target: LOG_TARGET,
-                "timestamp_millis:: {timestamp_millis}"
+                "🕰️🖴 timestamp_millis:: {timestamp_millis}"
             );
 
             let output = Output {
@@ -365,7 +371,7 @@ impl_runtime_apis! {
 
             log::info!(
                 target: LOG_TARGET,
-                "Timestamp transaction is: \n{:#?}", timestamp_tx
+                "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
             );
 
             Default::default()
@@ -377,6 +383,11 @@ impl_runtime_apis! {
         ) -> sp_inherents::CheckInherentsResult {
             //TODO We need to check that the timestamp in the block is close to the current time, and we also need to
             // check that it is greater than the previous best
+
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 In `check_inherents`"
+            );
             Default::default()
         }
     }

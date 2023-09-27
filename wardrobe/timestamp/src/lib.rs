@@ -25,6 +25,9 @@ use tuxedo_core::{
 #[cfg(test)]
 mod tests;
 
+/// A piece-wide target for logging
+const LOG_TARGET: &str = "timestamp-piece";
+
 /// A wrapper around a u64 that holds the Unix epoch time in milliseconds.
 /// Basically the same as sp_timestamp::Timestamp, but we need this type
 /// to implement the UtxoData trait since they are both foreign.
@@ -79,6 +82,12 @@ impl SimpleConstraintChecker for SetTimestamp {
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 Checking constraints for SetTimestamp."
+        );
+
         // In FRAME we use ensure_none! to make sure this is an inherent (no origin means inherent).
         // The implementation is easy in FRAME where nearly every transaction is signed.
         // However in the UTXO model, no transactions are signed in their entirety, so there is no simple way to

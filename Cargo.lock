@@ -7904,6 +7904,7 @@ dependencies = [
 name = "timestamp"
 version = "0.1.0"
 dependencies = [
+ "log",
  "parity-scale-codec",
  "scale-info",
  "serde",
