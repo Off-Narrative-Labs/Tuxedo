@@ -144,12 +144,12 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             fn check (
                 &self,
                 inputs: &[tuxedo_core::types::Output<#verifier>],
-                outputs: &[tuxedo_core::types::Output<#verifier>],
                 peeks: &[tuxedo_core::types::Output<#verifier>],
+                outputs: &[tuxedo_core::types::Output<#verifier>],
             ) -> Result<TransactionPriority, Self::Error> {
                 match self {
                     #(
-                        Self::#variants2(inner) => inner.check(inputs, outputs, peeks).map_err(|e| Self::Error::#variants2(e)),
+                        Self::#variants2(inner) => inner.check(inputs, peeks, outputs).map_err(|e| Self::Error::#variants2(e)),
                     )*
                 }
             }
