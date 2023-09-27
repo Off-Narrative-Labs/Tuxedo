@@ -374,7 +374,7 @@ impl_runtime_apis! {
                 "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
             );
 
-            Default::default()
+            vec![timestamp_tx]
         }
 
         fn check_inherents(
