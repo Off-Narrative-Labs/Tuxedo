@@ -16,7 +16,6 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
-use sp_timestamp::Timestamp;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleConstraintChecker,
@@ -27,6 +26,10 @@ mod tests;
 
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";
+
+/// The minimum amount by which the timestamp may be updated. This should probably
+/// be a configuration traint value, but for now I'm hard-coding it.
+const MINIMUM_TIME_INTERVAL: u64 = 200;
 
 /// A wrapper around a u64 that holds the Unix epoch time in milliseconds.
 /// Basically the same as sp_timestamp::Timestamp, but we need this type
@@ -55,13 +58,17 @@ pub enum TimestampError {
     // TODO I'm getting tired of checking the right number of inputs and outputs in every single piece, maybe we should ahve some helpers for this common task.
     // Like it expects exactly N inputs (or outputs) and you give it an error for when there are too many and another for when there are too few.
     /// UTXO data has an unexpected type
-    BadlyTypedOutput,
+    BadlyTyped,
     /// No outputs were specified when setting the timestamp, but exactly one is required.
-    MissingTimestamp,
+    MissingNewTimestamp,
     /// Multiple outputs were specified while setting the timestamp, but exactly one is required.
     TooManyOutputsWhileSettingTimestamp,
-    /// No inputs are expected when setting the timestamp. But this transaction specified one.
-    UnexpectedInputWhileSettingTimestamp,
+    /// No inputs were specified when setting the timestamp, but exactly one is required.
+    MissingPreviousTimestamp,
+    /// Multiple inputs were specified while setting the timestamp, but exactly one is required.
+    TooManyInputsWhileSettingTimestamp,
+    /// The new timestamp is either before the previous timestamp or not sufficiently far after it.
+    TimestampTooOld,
 }
 
 /// A constraint checker for the simple act of setting the timetamp.
@@ -94,26 +101,31 @@ impl SimpleConstraintChecker for SetTimestamp {
         // the call type in the pool, and not propagate ones that were marked as inherents.
 
         // Make sure there is a single output of the correct type
-        ensure!(!output_data.is_empty(), Self::Error::MissingTimestamp);
+        ensure!(!output_data.is_empty(), Self::Error::MissingNewTimestamp);
         ensure!(
             output_data.len() == 1,
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
-        let millis_since_epoch = output_data[0]
-            .extract::<StorableTimestamp>()
-            .map_err(|_| Self::Error::BadlyTypedOutput)?
-            .0;
 
-        // TODO We really need to make sure that the new timestamp is greater than the previous high water mark.
-        // Im not handling this right now. It will require more inputs and outputs. I just want to get something basic working right meow.
-
-        // Make sure there are no inputs.
-        // We may require cleaning up an old timestamp in the future, or may provide incentives for anyone to do that.
-        // For now they stick around as storage bloat.
+        // Make sure there is exactly one input which is the previous timestamp
+        ensure!(!output_data.is_empty(), Self::Error::MissingPreviousTimestamp);
         ensure!(
-            input_data.is_empty(),
-            Self::Error::UnexpectedInputWhileSettingTimestamp
+            input_data.len() == 1,
+            Self::Error::TooManyInputsWhileSettingTimestamp
         );
+        
+
+        // Compare the new timestamp to the previous timestamp
+        let old_timestamp = input_data[0]
+            .extract::<StorableTimestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .0;
+        let new_timestamp = output_data[0]
+            .extract::<StorableTimestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .0;
+        ensure!(new_timestamp >= old_timestamp + MINIMUM_TIME_INTERVAL, Self::Error::TimestampTooOld);
+
 
         Ok(0)
     }
