@@ -211,6 +211,12 @@ impl poe::PoeConfig for Runtime {
     }
 }
 
+impl timestamp::TimestampConfig for Runtime {
+    fn block_height() -> u32 {
+        Executive::block_height()
+    }
+}
+
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
@@ -240,7 +246,7 @@ pub enum OuterConstraintChecker {
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
     /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp),
+    SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
@@ -423,7 +429,7 @@ impl_runtime_apis! {
                 inputs,
                 peeks: Vec::new(),
                 outputs: vec![output],
-                checker: OuterConstraintChecker::SetTimestamp(timestamp::SetTimestamp),
+                checker: timestamp::SetTimestamp(Default::default()).into(),
             };
 
             log::info!(

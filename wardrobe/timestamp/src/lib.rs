@@ -11,6 +11,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use core::marker::PhantomData;
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -18,7 +20,9 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure,
+    support_macros::{CloneNoBound, DebugNoBound},
+    SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -49,6 +53,15 @@ impl UtxoData for StorableTimestamp {
     const TYPE_ID: [u8; 4] = *b"time";
 }
 
+/// Options to configure the timestamp piece in your runtime.
+/// Currently we only need access to a block number.
+/// In the future maybe the minimum interval will be configurable too.
+pub trait TimestampConfig {
+    /// A means of getting the current block height.
+    /// Probably this will be the Tuxedo Executive
+    fn block_height() -> u32;
+}
+
 /// Reasons that setting or reading the timestamp may go wrong.
 #[derive(Debug, Eq, PartialEq)]
 pub enum TimestampError {
@@ -77,10 +90,23 @@ pub enum TimestampError {
 /// The earlier it happens in the block the better, and concretely we expect authoring nodes to
 /// insert this information first via an inehrent extrinsic.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct SetTimestamp;
+#[derive(Encode, Decode, DebugNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
+pub struct SetTimestamp<T>(pub PhantomData<T>);
 
-impl SimpleConstraintChecker for SetTimestamp {
+//TODO clean this up in the PoE one as well
+// impl<T> Clone for SetTimestamp<T> {
+//     fn clone(&self) -> Self {
+//         Self(Default::default())
+//     }
+// }
+
+// impl<T> core::fmt::Debug for SetTimestamp<T> {
+//     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+//         f.debug_tuple("SetTimestamp").finish()
+//     }
+// }
+
+impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
     type Error = TimestampError;
 
     fn check(
@@ -107,13 +133,21 @@ impl SimpleConstraintChecker for SetTimestamp {
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
 
+        // We lax the rules a lot for the first block so that we can initialize the timestamp.
+        if T::block_height() == 1 {
+            //TODO should probably make sure there are no inputs here?
+            return Ok(0);
+        }
+
         // Make sure there is exactly one input which is the previous timestamp
-        ensure!(!output_data.is_empty(), Self::Error::MissingPreviousTimestamp);
+        ensure!(
+            !output_data.is_empty(),
+            Self::Error::MissingPreviousTimestamp
+        );
         ensure!(
             input_data.len() == 1,
             Self::Error::TooManyInputsWhileSettingTimestamp
         );
-        
 
         // Compare the new timestamp to the previous timestamp
         let old_timestamp = input_data[0]
@@ -124,8 +158,10 @@ impl SimpleConstraintChecker for SetTimestamp {
             .extract::<StorableTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
-        ensure!(new_timestamp >= old_timestamp + MINIMUM_TIME_INTERVAL, Self::Error::TimestampTooOld);
-
+        ensure!(
+            new_timestamp >= old_timestamp + MINIMUM_TIME_INTERVAL,
+            Self::Error::TimestampTooOld
+        );
 
         Ok(0)
     }
