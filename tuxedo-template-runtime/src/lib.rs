@@ -340,13 +340,24 @@ impl_runtime_apis! {
         }
 
         fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-            use timestamp::StorableTimestamp;
+
             log::info!(
                 target: LOG_TARGET,
                 "🕰️🖴 In `inherent_extrinsics`."
             );
 
+            // TODO extract the complete parent block from the inheret data
+            // use sp_runtime::traits::Block as _;
+            let parent: Block = todo!();
+
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 The previous block had {} extrinsics.", parent.extrinsics().len()
+            );
+
             // Extract the timestamp
+            use timestamp::StorableTimestamp;
+
             let timestamp_millis: u64 = data
                 .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
                 .expect("Inherent data should decode properly")
@@ -363,6 +374,7 @@ impl_runtime_apis! {
                 verifier: OuterVerifier::UpForGrabs(UpForGrabs),
             };
 
+            //TODO Scrape the parent block for the old timestamp to consume
             let timestamp_tx = Transaction {
                 inputs: Vec::new(),
                 peeks: Vec::new(),
