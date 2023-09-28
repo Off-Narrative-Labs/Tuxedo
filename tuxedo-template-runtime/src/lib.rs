@@ -380,7 +380,7 @@ impl_runtime_apis! {
             use sp_api::HashT;
 
             let mut inputs = Vec::new();
-            if parent.header.number != 1 { 
+            if parent.header.number != 0 {
                 let prev_set_timestamp = parent
                     .extrinsics()
                     .iter()
