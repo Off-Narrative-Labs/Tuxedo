@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
-    types::Transaction as TuxedoTransaction,
+    types::{Input, Transaction as TuxedoTransaction},
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
@@ -346,9 +346,12 @@ impl_runtime_apis! {
                 "🕰️🖴 In `inherent_extrinsics`."
             );
 
-            // TODO extract the complete parent block from the inheret data
-            // use sp_runtime::traits::Block as _;
-            let parent: Block = todo!();
+            // Extract the complete parent block from the inheret data
+            use tuxedo_core::inherents::PARENT_INHERENT_IDENTIFIER;
+            let parent: Block = data
+                .get_data(&PARENT_INHERENT_IDENTIFIER)
+                .expect("1")
+                .expect("2");
 
             log::info!(
                 target: LOG_TARGET,
@@ -369,14 +372,55 @@ impl_runtime_apis! {
                 "🕰️🖴 timestamp_millis:: {timestamp_millis}"
             );
 
+            // We need to initialize the timestamp somehow, and right now the was we do it
+            // is to allow a transaction that does not consume any previous best on block height 1 only.
+            // A much more elegant solution would be to allow transactions in the genesis block, then we
+            // could use the same scraping logic as always.
+            use tuxedo_core::types::OutputRef;
+            use sp_api::HashT;
+
+            let mut inputs = Vec::new();
+            if parent.header.number != 1 { 
+                let prev_set_timestamp = parent
+                    .extrinsics()
+                    .iter()
+                    .find(|extrinsic| {
+                        matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
+                    })
+                    .expect("SetTimestamp extrinsic should appear in every block.");
+
+                let index = prev_set_timestamp
+                    .outputs
+                    .iter()
+                    .position(|output| {
+                        output.payload.extract::<StorableTimestamp>().is_ok()
+                    })
+                    .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
+                    .try_into()
+                    .expect("There should not be more than u32::max_value transactions in a block.");
+
+                let output_ref = OutputRef {
+                    tx_hash: BlakeTwo256::hash_of(&prev_set_timestamp.encode()),
+                    index,
+                };
+
+                let input = Input {
+                    output_ref,
+                    // The best time needs to be easily taken. For now I'll assume it is up for grabs.
+                    // We can make this an eviction once that is implemented.
+                    redeemer: Vec::new(),
+                };
+
+                inputs.push(input);
+            }
+
             let output = Output {
                 payload: storable_timestamp.into(),
                 verifier: OuterVerifier::UpForGrabs(UpForGrabs),
             };
 
-            //TODO Scrape the parent block for the old timestamp to consume
             let timestamp_tx = Transaction {
-                inputs: Vec::new(),
+                inputs,
                 peeks: Vec::new(),
                 outputs: vec![output],
                 checker: OuterConstraintChecker::SetTimestamp(timestamp::SetTimestamp),

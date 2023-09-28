@@ -42,5 +42,12 @@
 //! I would argue that the task of inserting data should not be tied to block authorship, and instead left to some kind of on-chain
 //! game or dao that anyone can participate in.
 
+use sp_inherents::InherentIdentifier;
+
+/// An inherent identifier for the Tuxedo parent block inherent
+pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
+
 //TODO create an inherent data provider that includes the previous block.
 // We may have to actually look it up in the database.
+
+
