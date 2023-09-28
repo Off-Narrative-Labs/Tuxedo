@@ -237,7 +237,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         let client_for_cidp = client.clone();
 
         let create_inherent_data_providers = move |parent_hash, ()| {
-            
             let parent_block = client_for_cidp
                 .clone()
                 .block(parent_hash)
@@ -246,8 +245,8 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
                 .block;
 
             async move {
-                
-                let parent_idp = tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
+                let parent_idp =
+                    tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
                 let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
                 let slot =
