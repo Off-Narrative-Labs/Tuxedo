@@ -407,8 +407,8 @@ impl_runtime_apis! {
                 target: LOG_TARGET,
                 "🕰️🖴 Aura slot is: {:#?}", slot
             );
-    
-            
+
+
             // Return just the timestamp extrinsic for now.
             // Later we will either handle Aura properly or switch to nimbus.
             // Soon we will add the parachain inherent in here.
