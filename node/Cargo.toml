@@ -45,6 +45,7 @@ sp-blockchain = { workspace = true }
 
 # Local Dependencies
 node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+tuxedo-core = { path = "../tuxedo-core" }
 
 [[bin]]
 name = "node-template"

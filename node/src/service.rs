@@ -234,6 +234,31 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         );
 
         let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+        let client_for_cidp = client.clone();
+
+        let create_inherent_data_providers = move |parent_hash, ()| {
+            
+            let parent_block = client_for_cidp
+                .clone()
+                .block(parent_hash)
+                .expect("a")
+                .expect("b")
+                .block;
+
+            async move {
+                
+                let parent_idp = tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
+                let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+                let slot =
+                    sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+                        *timestamp,
+                        slot_duration,
+                    );
+
+                Ok((slot, parent_idp, timestamp))
+            }
+        };
 
         let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _>(
             StartAuraParams {
@@ -242,17 +267,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
                 select_chain,
                 block_import,
                 proposer_factory,
-                create_inherent_data_providers: move |_, ()| async move {
-                    let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
-
-                    let slot =
-						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-							*timestamp,
-							slot_duration,
-						);
-
-                    Ok((slot, timestamp))
-                },
+                create_inherent_data_providers,
                 force_authoring,
                 backoff_authoring_blocks,
                 keystore: keystore_container.keystore(),

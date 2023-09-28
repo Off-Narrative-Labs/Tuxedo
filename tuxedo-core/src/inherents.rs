@@ -51,8 +51,16 @@ pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
 
 /// An inherent data provider that inserts the previous block into the inherent data.
 /// This data does NOT go into an extrinsic.
-pub struct ParentBlockInherentDataProvider<Block>(Block);
+pub struct ParentBlockInherentDataProvider<Block>(pub Block);
 
+#[cfg(feature = "std")]
+impl<B> sp_std::ops::Deref for ParentBlockInherentDataProvider<B> {
+	type Target = B;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
 #[cfg(feature = "std")]
 #[async_trait::async_trait]
 impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataProvider<B> {
