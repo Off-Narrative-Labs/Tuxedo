@@ -42,12 +42,39 @@
 //! I would argue that the task of inserting data should not be tied to block authorship, and instead left to some kind of on-chain
 //! game or dao that anyone can participate in.
 
-use sp_inherents::InherentIdentifier;
+use sp_inherents::{InherentIdentifier, InherentData};
+use sp_runtime::traits::Block as BlockT;
+use parity_scale_codec::Decode;
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
 
-//TODO create an inherent data provider that includes the previous block.
-// We may have to actually look it up in the database.
+/// An inherent data provider that inserts the previous block into the inherent data.
+/// This data does NOT go into an extrinsic.
+pub struct ParentBlockInherentDataProvider<Block>(Block);
 
+#[cfg(feature = "std")]
+#[async_trait::async_trait]
+impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataProvider<B> {
+	async fn provide_inherent_data(
+		&self,
+		inherent_data: &mut InherentData,
+	) -> Result<(), sp_inherents::Error> {
+		inherent_data.put_data(PARENT_INHERENT_IDENTIFIER, &self.0)
+	}
 
+	async fn try_handle_error(
+		&self,
+		identifier: &InherentIdentifier,
+		error: &[u8],
+	) -> Option<Result<(), sp_inherents::Error>> {
+		if identifier == &PARENT_INHERENT_IDENTIFIER {
+            println!("UH OH! INHERENT ERROR!!!!!!!!!!!!!!!!!!!!!!");
+			Some(Err(
+                sp_inherents::Error::Application(Box::from(String::decode(&mut &error[..]).ok()?))
+            ))
+		} else {
+			None
+		}
+	}
+}

@@ -20,6 +20,7 @@ resolver = "2"
 
 [workspace.dependencies]
 # Generic dependencies
+async-trait = "0.1.73"
 clap = "4.3.0"
 hex-literal = "0.4.1"
 jsonrpsee = "0.16.2"

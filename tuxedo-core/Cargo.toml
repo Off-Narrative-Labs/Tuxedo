@@ -7,6 +7,7 @@ repository = "https://github.com/Off-Narrative-Labs/Tuxedo"
 version = "1.0.0-dev"
 
 [dependencies]
+async-trait = { workspace = true, optional = true }
 log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 parity-util-mem = { optional = true, workspace = true }
@@ -31,6 +32,7 @@ array-bytes = { workspace = true }
 [features]
 default = [ "std" ]
 std = [
+	"async-trait",
 	"sp-debug-derive/std",
 	"parity-scale-codec/std",
 	"sp-core/std",
