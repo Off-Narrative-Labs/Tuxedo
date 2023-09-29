@@ -12,6 +12,38 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
+/// A type representing a successful result of checking a transaction's constraints.
+pub struct ConstraintCheckingSuccess<ValueType> {
+    /// The priority of this transaction that should be reported to the transaction pool.
+    priority: TransactionPriority,
+    /// An intermediate value that should be passed to an accumulator that track transient intra-block data.
+    accumulator_value: ValueType,
+}
+
+pub trait Accumulator {
+
+    /// The type that is given and also the type of the accumulation result.
+    /// I realize that the most general accumulator swill use two different types for those,
+    /// but let's do that iff we ever need it. I probably will need to so I can do a simple counter.
+    type ValueType;
+
+    const ID: [u8; 8];
+
+    const INITIAL_VALUE: Self::ValueType;
+
+    fn accumulate(a: Self::ValueType, b: Self::ValueType) -> Self::ValueType;
+}
+
+impl Accumulator for () {
+    type ValueType = ();
+
+    const ID: [u8; 8] = *b"stub_acc";
+
+    const INITIAL_VALUE: () = ();
+
+    fn accumulate(_: (), _: ()) { () }
+}
+
 /// A simplified constraint checker that a transaction can choose to call. Checks whether the input
 /// and output data from a transaction meets the codified constraints.
 ///
@@ -22,13 +54,16 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
+    /// A transient accumulator that can be used to track intermediate data during the course of a block's execution.
+    type Accumulator: Accumulator;
+
     /// The actual check validation logic
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error>;
+    ) -> Result<ConstraintCheckingSuccess<<Self::Accumulator as Accumulator>::ValueType>, Self::Error>;
 }
 
 /// A single constraint checker that a transaction can choose to call. Checks whether the input
@@ -44,13 +79,16 @@ pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone {
     /// the error type that this constraint checker may return
     type Error: Debug;
 
+    /// A transient accumulator that can be used to track intermediate data during the course of a block's execution.
+    type Accumulator: Accumulator;
+
     /// The actual check validation logic
     fn check(
         &self,
         inputs: &[Output<V>],
         peeks: &[Output<V>],
         outputs: &[Output<V>],
-    ) -> Result<TransactionPriority, Self::Error>;
+    ) -> Result<ConstraintCheckingSuccess<<Self::Accumulator as Accumulator>::ValueType>, Self::Error>;
 }
 
 // This blanket implementation makes it so that any type that chooses to
@@ -60,12 +98,15 @@ impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker>::Error;
 
+    // Use the same accumulator type used in the simple implementation.
+    type Accumulator = <T as SimpleConstraintChecker>::Accumulator;
+
     fn check(
         &self,
         inputs: &[Output<V>],
         peeks: &[Output<V>],
         outputs: &[Output<V>],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<<Self::Accumulator as Accumulator>::ValueType>, Self::Error> {
         // Extract the input data
         let input_data: Vec<DynamicallyTypedData> =
             inputs.iter().map(|o| o.payload.clone()).collect();
@@ -99,14 +140,19 @@ pub mod testing {
     impl SimpleConstraintChecker for TestConstraintChecker {
         type Error = ();
 
+        type Accumulator = ();
+
         fn check(
             &self,
             _input_data: &[DynamicallyTypedData],
             _peek_data: &[DynamicallyTypedData],
             _output_data: &[DynamicallyTypedData],
-        ) -> Result<TransactionPriority, ()> {
+        ) -> Result<ConstraintCheckingSuccess<()>, ()> {
             if self.checks {
-                Ok(0)
+                Ok(ConstraintCheckingSuccess{
+                    priority: 0,
+                    accumulator_value: (),
+                })
             } else {
                 Err(())
             }
@@ -117,7 +163,10 @@ pub mod testing {
     fn test_checker_passes() {
         let result =
             SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
-        assert_eq!(result, Ok(0));
+        assert_eq!(result, Ok(ConstraintCheckingSuccess{
+            priority: 0,
+            accumulator_value: (),
+        }));
     }
 
     #[test]
@@ -126,4 +175,6 @@ pub mod testing {
             SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
         assert_eq!(result, Err(()));
     }
+
+    // TODO add tests for accumulator stuff.
 }
