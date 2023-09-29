@@ -147,7 +147,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         // Although we expect there to typically be no peeks, there is no harm in allowing them.
 
         // Make sure the first output is a new best timestamp
-        ensure!(output_data.len() >= 1, Self::Error::MissingNewBestTimestamp);
+        ensure!(!output_data.is_empty(), Self::Error::MissingNewBestTimestamp);
         let new_best = output_data[0]
             .extract::<BestTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
