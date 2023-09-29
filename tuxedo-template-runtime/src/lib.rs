@@ -217,8 +217,10 @@ impl poe::PoeConfig for Runtime {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
 pub enum OuterConstraintChecker {
-    /// Checks monetary transactions in a basic fungible cryptocurrency
-    Money(money::MoneyConstraintChecker<0>),
+    /// Checks monetary transfers transactions in a basic fungible cryptocurrency
+    SpendMoney(money::SpendMoney<0>),
+    /// Mints new in a basic fungible cryptocurrency
+    MintMoney(money::MintMoney<0>),
     /// Checks Free Kitty transactions
     FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
     /// Checks that an amoeba can split into two new amoebas

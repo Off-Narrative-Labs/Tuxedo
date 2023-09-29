@@ -6,7 +6,7 @@ use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
-    money::{Coin, MoneyConstraintChecker},
+    money::{Coin, SpendMoney},
     OuterConstraintChecker, OuterVerifier, Transaction,
 };
 use sc_keystore::LocalKeystore;
@@ -32,7 +32,7 @@ pub async fn spend_coins(
         inputs: Vec::new(),
         peeks: Vec::new(),
         outputs: Vec::new(),
-        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
+        checker: OuterConstraintChecker::SpendMoney(SpendMoney),
     };
 
     // Construct each output and then push to the transactions
