@@ -83,8 +83,31 @@ pub struct SpendMoney<const ID: u8>;
 #[derive(PartialEq, Eq, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct MintMoney<const ID: u8>;
 
+
+
+
+
+/// Accumulates the funds that have not been accounted for in transactions
+/// so far in this block. The idea is that in the future we can give this money
+/// to block authors as a reward or put it in a treasury or whatever.
+pub struct ImbalancedFundsAccumulator;
+
+impl Accumulator for ImbalancedFundsAccumulator {
+    type ValueType = u64;
+
+    const ID: [u8; 8] = *b"imbalanc";
+
+    const INITIAL_VALUE: u64 = 0;
+
+    fn accumulate(a: u64, b: u64) -> u64 {
+        a + b
+    }
+}
+
+
 impl<const ID: u8> SimpleConstraintChecker for SpendMoney<ID> {
     type Error = ConstraintCheckerError;
+    type Accumulator = ImbalancedFundsAccumulator;
 
     fn check(
         &self,
@@ -131,13 +154,35 @@ impl<const ID: u8> SimpleConstraintChecker for SpendMoney<ID> {
         // Priority is based on how many token are burned
         // Type stuff is kinda ugly. Maybe division would be better?
         let burned = total_input_value - total_output_value;
-        Ok(if burned < u64::max_value() as u128 {
+
+        // Just a saturated version of the burned amount.
+        // TODO can't I use saturating_into or something here instead of writing it myself?
+        let priority = if burned < u64::max_value() as u128 {
             burned as u64
         } else {
             u64::max_value()
-        })
+        };
+
+        Ok(
+            ConstraintCheckingSuccess {
+                priority,
+                accumulator_value: burned,
+            }
+        )
     }
 }
+
+/// A temporary scratchpad to account for details as a block executes.
+/// This is temporary storage that is available while executing a block only.
+/// It is cleared at the end of the block and is not available after that.
+/// It is reset to its starting value in each block.
+pub trait ScratchpadT<T: Encode + Decode> {
+
+}
+
+/// A scratchpad that is used to tally up the number of tokens that have been burned
+/// so far in this block as a result of unbalanced token transfers.
+
 
 impl<const ID: u8> SimpleConstraintChecker for MintMoney<ID> {
     type Error = ConstraintCheckerError;
