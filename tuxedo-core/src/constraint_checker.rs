@@ -16,9 +16,9 @@ use sp_runtime::transaction_validity::TransactionPriority;
 #[derive(Debug, Clone, Default)]
 pub struct ConstraintCheckingSuccess<ValueType> {
     /// The priority of this transaction that should be reported to the transaction pool.
-    priority: TransactionPriority,
+    pub priority: TransactionPriority,
     /// An intermediate value that should be passed to an accumulator that track transient intra-block data.
-    accumulator_value: ValueType,
+    pub accumulator_value: ValueType,
 }
 
 pub trait Accumulator {
