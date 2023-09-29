@@ -15,8 +15,9 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use tuxedo_core::{
+    constraint_checker::ConstraintCheckingSuccess,
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker, constraint_checker::ConstraintCheckingSuccess,
+    ensure, SimpleConstraintChecker,
 };
 
 #[cfg(test)]

@@ -26,11 +26,11 @@ use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_std::fmt::Debug;
 use tuxedo_core::{
+    constraint_checker::ConstraintCheckingSuccess,
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     support_macros::{CloneNoBound, DebugNoBound},
     SimpleConstraintChecker,
-    constraint_checker::ConstraintCheckingSuccess,
 };
 
 #[cfg(test)]

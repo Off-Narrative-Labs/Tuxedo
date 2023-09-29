@@ -22,13 +22,12 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_runtime::{
-    traits::{BlakeTwo256, Hash as HashT},
-};
+use sp_runtime::traits::{BlakeTwo256, Hash as HashT};
 use sp_std::prelude::*;
 use tuxedo_core::{
+    constraint_checker::ConstraintCheckingSuccess,
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker, constraint_checker::ConstraintCheckingSuccess,
+    ensure, SimpleConstraintChecker,
 };
 
 #[cfg(test)]

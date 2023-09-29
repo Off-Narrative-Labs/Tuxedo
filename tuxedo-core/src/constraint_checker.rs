@@ -22,7 +22,6 @@ pub struct ConstraintCheckingSuccess<ValueType> {
 }
 
 pub trait Accumulator {
-
     /// The type that is given and also the type of the accumulation result.
     /// I realize that the most general accumulator swill use two different types for those,
     /// but let's do that iff we ever need it. I probably will need to so I can do a simple counter.
@@ -42,7 +41,9 @@ impl Accumulator for () {
 
     const INITIAL_VALUE: () = ();
 
-    fn accumulate(_: (), _: ()) { () }
+    fn accumulate(_: (), _: ()) {
+        ()
+    }
 }
 
 /// A simplified constraint checker that a transaction can choose to call. Checks whether the input
@@ -107,7 +108,8 @@ impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
         inputs: &[Output<V>],
         peeks: &[Output<V>],
         outputs: &[Output<V>],
-    ) -> Result<ConstraintCheckingSuccess<<Self::Accumulator as Accumulator>::ValueType>, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<<Self::Accumulator as Accumulator>::ValueType>, Self::Error>
+    {
         // Extract the input data
         let input_data: Vec<DynamicallyTypedData> =
             inputs.iter().map(|o| o.payload.clone()).collect();
@@ -150,7 +152,7 @@ pub mod testing {
             _output_data: &[DynamicallyTypedData],
         ) -> Result<ConstraintCheckingSuccess<()>, ()> {
             if self.checks {
-                Ok(ConstraintCheckingSuccess{
+                Ok(ConstraintCheckingSuccess {
                     priority: 0,
                     accumulator_value: (),
                 })
@@ -164,10 +166,13 @@ pub mod testing {
     fn test_checker_passes() {
         let result =
             SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
-        assert_eq!(result, Ok(ConstraintCheckingSuccess{
-            priority: 0,
-            accumulator_value: (),
-        }));
+        assert_eq!(
+            result,
+            Ok(ConstraintCheckingSuccess {
+                priority: 0,
+                accumulator_value: (),
+            })
+        );
     }
 
     #[test]

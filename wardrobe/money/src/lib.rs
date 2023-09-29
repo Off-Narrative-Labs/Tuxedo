@@ -9,11 +9,11 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
 use tuxedo_core::{
+    constraint_checker::{Accumulator, ConstraintCheckingSuccess},
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     traits::Cash,
     SimpleConstraintChecker,
-    constraint_checker::{ConstraintCheckingSuccess, Accumulator},
 };
 
 #[cfg(test)]
@@ -83,10 +83,6 @@ pub struct SpendMoney<const ID: u8>;
 #[derive(PartialEq, Eq, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct MintMoney<const ID: u8>;
 
-
-
-
-
 /// Accumulates the funds that have not been accounted for in transactions
 /// so far in this block. The idea is that in the future we can give this money
 /// to block authors as a reward or put it in a treasury or whatever.
@@ -103,7 +99,6 @@ impl Accumulator for ImbalancedFundsAccumulator {
         a + b
     }
 }
-
 
 impl<const ID: u8> SimpleConstraintChecker for SpendMoney<ID> {
     type Error = ConstraintCheckerError;
@@ -163,12 +158,10 @@ impl<const ID: u8> SimpleConstraintChecker for SpendMoney<ID> {
             u64::max_value()
         };
 
-        Ok(
-            ConstraintCheckingSuccess {
-                priority,
-                accumulator_value: burned,
-            }
-        )
+        Ok(ConstraintCheckingSuccess {
+            priority,
+            accumulator_value: burned,
+        })
     }
 }
 
@@ -176,13 +169,10 @@ impl<const ID: u8> SimpleConstraintChecker for SpendMoney<ID> {
 /// This is temporary storage that is available while executing a block only.
 /// It is cleared at the end of the block and is not available after that.
 /// It is reset to its starting value in each block.
-pub trait ScratchpadT<T: Encode + Decode> {
-
-}
+pub trait ScratchpadT<T: Encode + Decode> {}
 
 /// A scratchpad that is used to tally up the number of tokens that have been burned
 /// so far in this block as a result of unbalanced token transfers.
-
 
 impl<const ID: u8> SimpleConstraintChecker for MintMoney<ID> {
     type Error = ConstraintCheckerError;

@@ -20,8 +20,9 @@ use serde::{Deserialize, Serialize};
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
+    constraint_checker::ConstraintCheckingSuccess,
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker, constraint_checker::ConstraintCheckingSuccess,
+    ensure, SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -76,7 +77,7 @@ pub struct RuntimeUpgrade {
 impl SimpleConstraintChecker for RuntimeUpgrade {
     type Error = ConstraintCheckerError;
     type Accumulator = ();
-    
+
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
