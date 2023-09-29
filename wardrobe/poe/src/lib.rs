@@ -24,13 +24,13 @@ use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::fmt::Debug;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     support_macros::{CloneNoBound, DebugNoBound},
     SimpleConstraintChecker,
+    constraint_checker::ConstraintCheckingSuccess,
 };
 
 #[cfg(test)]
@@ -87,13 +87,14 @@ pub struct PoeClaim<T>(PhantomData<T>);
 
 impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Make sure there are no inputs
         ensure!(
             input_data.is_empty(),
@@ -118,7 +119,7 @@ impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
             );
         }
 
-        Ok(0)
+        Ok(Default::default())
     }
 }
 
@@ -131,13 +132,14 @@ pub struct PoeRevoke;
 
 impl SimpleConstraintChecker for PoeRevoke {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Make sure there are no outputs
         ensure!(
             output_data.is_empty(),
@@ -151,7 +153,7 @@ impl SimpleConstraintChecker for PoeRevoke {
                 .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
         }
 
-        Ok(0)
+        Ok(Default::default())
     }
 }
 
@@ -171,13 +173,14 @@ pub struct PoeDispute;
 
 impl SimpleConstraintChecker for PoeDispute {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         _input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         _output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         todo!("implement this once we have at least peeks and maybe evictions")
 
         // Make sure there is at least one input (once peek is ready, it will become a peek)

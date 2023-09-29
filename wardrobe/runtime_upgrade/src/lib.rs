@@ -17,12 +17,11 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure, SimpleConstraintChecker, constraint_checker::ConstraintCheckingSuccess,
 };
 
 #[cfg(test)]
@@ -76,13 +75,14 @@ pub struct RuntimeUpgrade {
 
 impl SimpleConstraintChecker for RuntimeUpgrade {
     type Error = ConstraintCheckerError;
-
+    type Accumulator = ();
+    
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Make sure there is a single input that matches the hash of the previous runtime logic
         ensure!(
             input_data.len() == 1,
@@ -117,6 +117,6 @@ impl SimpleConstraintChecker for RuntimeUpgrade {
         sp_io::storage::set(CODE, &self.full_wasm);
 
         //TODO Figure out a better priority
-        Ok(0)
+        Ok(Default::default())
     }
 }

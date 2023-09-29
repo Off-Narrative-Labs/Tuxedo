@@ -14,10 +14,9 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure, SimpleConstraintChecker, constraint_checker::ConstraintCheckingSuccess,
 };
 
 #[cfg(test)]
@@ -86,13 +85,14 @@ pub struct AmoebaMitosis;
 
 impl SimpleConstraintChecker for AmoebaMitosis {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, ConstraintCheckerError> {
+    ) -> Result<ConstraintCheckingSuccess<()>, ConstraintCheckerError> {
         // Make sure there is exactly one mother.
         ensure!(
             input_data.len() == 1,
@@ -131,7 +131,7 @@ impl SimpleConstraintChecker for AmoebaMitosis {
         // they are coins in some native currency. Then it will call the inner constraint checker with the remaining input
         // and if the inner constraint checker succeeds, it will prioritize based on the tip given in the first few inputs.
         // Such a wrapper should live with the money piece, and thus returning 0 here is fine.
-        Ok(0)
+        Ok(Default::default())
     }
 }
 
@@ -145,13 +145,14 @@ pub struct AmoebaDeath;
 
 impl SimpleConstraintChecker for AmoebaDeath {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Make sure there is a single victim
         ensure!(!input_data.is_empty(), ConstraintCheckerError::NoVictim);
         ensure!(
@@ -171,7 +172,7 @@ impl SimpleConstraintChecker for AmoebaDeath {
             ConstraintCheckerError::DeathMayNotCreate
         );
 
-        Ok(0)
+        Ok(Default::default())
     }
 }
 
@@ -185,13 +186,14 @@ pub struct AmoebaCreation;
 
 impl SimpleConstraintChecker for AmoebaCreation {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Make sure there is a single created amoeba
         ensure!(
             !output_data.is_empty(),
@@ -214,6 +216,6 @@ impl SimpleConstraintChecker for AmoebaCreation {
             ConstraintCheckerError::CreationMayNotConsume
         );
 
-        Ok(0)
+        Ok(Default::default())
     }
 }

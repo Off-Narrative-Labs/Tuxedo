@@ -24,12 +24,11 @@ use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::{
     traits::{BlakeTwo256, Hash as HashT},
-    transaction_validity::TransactionPriority,
 };
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure, SimpleConstraintChecker, constraint_checker::ConstraintCheckingSuccess,
 };
 
 #[cfg(test)]
@@ -377,6 +376,7 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
 
 impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
     /// Checks:
     ///     - `input_data` is of length 2
     ///     - `output_data` is of length 3
@@ -386,7 +386,7 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Input must be a Mom and a Dad
         ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
 
@@ -399,6 +399,6 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
 
         KittyHelpers::check_new_family(&mom, &dad, output_data)?;
 
-        Ok(0)
+        Ok(Default::default())
     }
 }
