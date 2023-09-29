@@ -28,7 +28,9 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::fmt::Debug;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure,
+    support_macros::{CloneNoBound, DebugNoBound},
+    SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -80,20 +82,8 @@ pub trait PoeConfig {
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, PartialEq, Eq, TypeInfo)]
+#[derive(Encode, Decode, DebugNoBound, CloneNoBound, PartialEq, Eq, TypeInfo)]
 pub struct PoeClaim<T>(PhantomData<T>);
-
-impl<T> Clone for PoeClaim<T> {
-    fn clone(&self) -> Self {
-        Self(Default::default())
-    }
-}
-
-impl<T> Debug for PoeClaim<T> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_tuple("PoeClaim").finish()
-    }
-}
 
 impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
     type Error = ConstraintCheckerError;
