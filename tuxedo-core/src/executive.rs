@@ -266,7 +266,7 @@ impl<
             .unwrap_or_default();
         let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
             extrinsics,
-            StateVersion::V1,
+            StateVersion::V0,
         );
         sp_io::storage::clear(EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
@@ -338,7 +338,7 @@ impl<
             .collect::<Vec<_>>();
         let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
             extrinsics,
-            StateVersion::V1,
+            StateVersion::V0,
         );
         assert_eq!(
             *block.header().extrinsics_root(),
@@ -948,7 +948,7 @@ mod tests {
                     state_root,
                     extrinsics_root: BlakeTwo256::ordered_trie_root(
                         vec![extrinsic],
-                        StateVersion::V1,
+                        StateVersion::V0,
                     ),
                     digest: Default::default(),
                 };
