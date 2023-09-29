@@ -93,19 +93,6 @@ pub enum TimestampError {
 #[derive(Encode, Decode, DebugNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
-//TODO clean this up in the PoE one as well
-// impl<T> Clone for SetTimestamp<T> {
-//     fn clone(&self) -> Self {
-//         Self(Default::default())
-//     }
-// }
-
-// impl<T> core::fmt::Debug for SetTimestamp<T> {
-//     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-//         f.debug_tuple("SetTimestamp").finish()
-//     }
-// }
-
 impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
     type Error = TimestampError;
 
