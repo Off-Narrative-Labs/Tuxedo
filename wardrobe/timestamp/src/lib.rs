@@ -112,7 +112,7 @@ pub enum TimestampError {
 /// This is expected to be performed through an inherent, and to happen exactly once per block.
 /// The earlier it happens in the block the better, and concretely we expect authoring nodes to
 /// insert this information first via an inehrent extrinsic.
-/// 
+///
 /// This transaction comsumes a single input which is the previous best timestamp,
 /// And it creates two new outputs. A best timestamp, and a noted timestamp, both of which
 /// include the same timestamp. The puspose of the best timestamp is to be consumed immediately
@@ -147,7 +147,10 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         // Although we expect there to typically be no peeks, there is no harm in allowing them.
 
         // Make sure the first output is a new best timestamp
-        ensure!(!output_data.is_empty(), Self::Error::MissingNewBestTimestamp);
+        ensure!(
+            !output_data.is_empty(),
+            Self::Error::MissingNewBestTimestamp
+        );
         let new_best = output_data[0]
             .extract::<BestTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
@@ -170,7 +173,10 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         );
 
         // Make sure that the new best and new noted timestamps are actually for the same time.
-        ensure!(new_best == new_noted, Self::Error::InconsistentBestAndNotedTimestamps);
+        ensure!(
+            new_best == new_noted,
+            Self::Error::InconsistentBestAndNotedTimestamps
+        );
 
         // Next we need to check inputs, but there is a special case for block 1.
         // We need to initialize the timestamp in block 1, so there are no requirements on
