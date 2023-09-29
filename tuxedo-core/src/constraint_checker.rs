@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A type representing a successful result of checking a transaction's constraints.
+#[derive(Debug, Clone, Default)]
 pub struct ConstraintCheckingSuccess<ValueType> {
     /// The priority of this transaction that should be reported to the transaction pool.
     priority: TransactionPriority,
