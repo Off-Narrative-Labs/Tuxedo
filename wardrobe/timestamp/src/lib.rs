@@ -75,23 +75,26 @@ pub trait TimestampConfig {
 /// Reasons that setting or reading the timestamp may go wrong.
 #[derive(Debug, Eq, PartialEq)]
 pub enum TimestampError {
-    /// The timetamp may not eb set more than once in a block, but this block attempts to do so.
-    TimestampAlreadySet,
-
     // TODO I'm getting tired of checking the right number of inputs and outputs in every single piece, maybe we should ahve some helpers for this common task.
     // Like it expects exactly N inputs (or outputs) and you give it an error for when there are too many and another for when there are too few.
     /// UTXO data has an unexpected type
     BadlyTyped,
-    /// No outputs were specified when setting the timestamp, but exactly one is required.
-    MissingNewTimestamp,
+
+    /// When attempting to set a new best timestamp, you have not included a best timestamp utxo.
+    MissingNewBestTimestamp,
+    /// When attempting to set a new best timestamp, you have not included a noted timestamp utxo.
+    MissingNewNotedTimestamp,
     /// Multiple outputs were specified while setting the timestamp, but exactly one is required.
     TooManyOutputsWhileSettingTimestamp,
     /// No inputs were specified when setting the timestamp, but exactly one is required.
-    MissingPreviousTimestamp,
+    MissingPreviousBestTimestamp,
     /// Multiple inputs were specified while setting the timestamp, but exactly one is required.
     TooManyInputsWhileSettingTimestamp,
-    /// The new timestamp is either before the previous timestamp or not sufficiently far after it.
+    /// The new timestamp is not sufficiently far after the previous (or may even be before it).
     TimestampTooOld,
+    /// The best timestamp and noted timestamp outputs are not for the same time.
+    /// The two outputs must be for the exact same time in order for the timestamp to be successfully updated.
+    InconsistentBestAndNotedTimestamps,
 
     /// When cleaning up old timestamps, you must supply exactly one peek input which is the "new time reference"
     /// All the timestamps that will be cleaned up must be at least the CLEANUP_AGE older than this reference.
@@ -104,11 +107,19 @@ pub enum TimestampError {
     DontBeSoHasty,
 }
 
-/// A constraint checker for the simple act of setting the timetamp.
+/// A constraint checker for the simple act of setting a new best timetamp.
 ///
 /// This is expected to be performed through an inherent, and to happen exactly once per block.
 /// The earlier it happens in the block the better, and concretely we expect authoring nodes to
 /// insert this information first via an inehrent extrinsic.
+/// 
+/// This transaction comsumes a single input which is the previous best timestamp,
+/// And it creates two new outputs. A best timestamp, and a noted timestamp, both of which
+/// include the same timestamp. The puspose of the best timestamp is to be consumed immediately
+/// in the next block and guarantees that the timestamp is always increasing by enough.
+/// On the other hand the noted timestamps stick around in storage for a while so that other
+/// transactions that need to peek at them are not immediately invsalidated. Noted timestamps
+/// can be voluntarily cleand up later by another transaction.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, DebugNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
 pub struct SetTimestamp<T>(pub PhantomData<T>);
@@ -119,7 +130,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
-        _peeks: &[DynamicallyTypedData],
+        _peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         log::info!(
@@ -133,23 +144,48 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         // tell that this is an inherent at this point. My plan to address this (at the moment) is to match on
         // the call type in the pool, and not propagate ones that were marked as inherents.
 
-        // Make sure there is a single output of the correct type
-        ensure!(!output_data.is_empty(), Self::Error::MissingNewTimestamp);
+        // Although we expect there to typically be no peeks, there is no harm in allowing them.
+
+        // Make sure the first output is a new best timestamp
+        ensure!(output_data.len() >= 1, Self::Error::MissingNewBestTimestamp);
+        let new_best = output_data[0]
+            .extract::<StorableTimestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .0;
+
+        // Make sure the second output is a new noted timestamp
         ensure!(
-            output_data.len() == 1,
+            output_data.len() >= 2,
+            Self::Error::MissingNewNotedTimestamp
+        );
+        let new_noted = output_data[1]
+            .extract::<StorableTimestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .0;
+
+        // Make sure there are no extra outputs
+        ensure!(
+            output_data.len() == 2,
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
 
-        // We lax the rules a lot for the first block so that we can initialize the timestamp.
+        // Make sure that the new best and new noted timestamps are actually for the same time.
+        ensure!(new_best == new_noted, Self::Error::InconsistentBestAndNotedTimestamps);
+
+        // Next we need to check inputs, but there is a special case for block 1.
+        // We need to initialize the timestamp in block 1, so there are no requirements on
+        // the inputs at that height.
+        // Ideally this will go away soon. And if it makes it to production, we should add some checks for empty inputs here.
         if T::block_height() == 1 {
-            //TODO should probably make sure there are no inputs here?
+            // If this special case remains for a while, we should do some checks here like
+            // making sure there are no inputs at all. For now, We'll just leave it as is.
             return Ok(0);
         }
 
-        // Make sure there is exactly one input which is the previous timestamp
+        // Make sure there is exactly one input which is the previous best timestamp
         ensure!(
             !output_data.is_empty(),
-            Self::Error::MissingPreviousTimestamp
+            Self::Error::MissingPreviousBestTimestamp
         );
         ensure!(
             input_data.len() == 1,
@@ -157,16 +193,12 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         );
 
         // Compare the new timestamp to the previous timestamp
-        let old_timestamp = input_data[0]
-            .extract::<StorableTimestamp>()
-            .map_err(|_| Self::Error::BadlyTyped)?
-            .0;
-        let new_timestamp = output_data[0]
+        let old_best = input_data[0]
             .extract::<StorableTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
         ensure!(
-            new_timestamp >= old_timestamp + MINIMUM_TIME_INTERVAL,
+            new_best >= old_best + MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
         );
 
@@ -193,9 +225,10 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        // Make sure there is a single peek that is the new reference time
+        // Make sure there at least one peek that is the new reference time.
+        // We don;t expect any additional peeks typically, but as above, they are harmless.
         ensure!(
-            peek_data.len() == 1,
+            !peek_data.is_empty(),
             Self::Error::CleanupRequiresOneReference
         );
         let new_reference_time = peek_data[0]
