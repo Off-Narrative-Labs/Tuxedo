@@ -13,6 +13,7 @@ use tuxedo_core::{
     ensure,
     traits::Cash,
     SimpleConstraintChecker,
+    constraint_checker::{ConstraintCheckingSuccess, Accumulator},
 };
 
 #[cfg(test)]
@@ -75,7 +76,6 @@ pub enum ConstraintCheckerError {
 #[derive(PartialEq, Eq, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct SpendMoney<const ID: u8>;
 
-
 /// A mint transaction that creates no coins out of the void. In a real-world chain,
 /// this should be protected somehow, or not included at all. For now it is publicly
 /// available. I'm adding it to explore multiple validation paths in a single piece.
@@ -93,13 +93,13 @@ pub struct MintMoney<const ID: u8>;
 pub struct ImbalancedFundsAccumulator;
 
 impl Accumulator for ImbalancedFundsAccumulator {
-    type ValueType = u64;
+    type ValueType = u128;
 
     const ID: [u8; 8] = *b"imbalanc";
 
-    const INITIAL_VALUE: u64 = 0;
+    const INITIAL_VALUE: u128 = 0;
 
-    fn accumulate(a: u64, b: u64) -> u64 {
+    fn accumulate(a: u128, b: u128) -> u128 {
         a + b
     }
 }
@@ -114,7 +114,7 @@ impl<const ID: u8> SimpleConstraintChecker for SpendMoney<ID> {
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<u128>, Self::Error> {
         // Check that we are consuming at least one input
         ensure!(
             !input_data.is_empty(),
@@ -186,13 +186,14 @@ pub trait ScratchpadT<T: Encode + Decode> {
 
 impl<const ID: u8> SimpleConstraintChecker for MintMoney<ID> {
     type Error = ConstraintCheckerError;
+    type Accumulator = ();
 
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
+    ) -> Result<ConstraintCheckingSuccess<()>, Self::Error> {
         // Make sure there are no inputs being consumed
         ensure!(
             input_data.is_empty(),
@@ -215,6 +216,6 @@ impl<const ID: u8> SimpleConstraintChecker for MintMoney<ID> {
         }
 
         // No priority for minting
-        Ok(0)
+        Ok(Default::default())
     }
 }
