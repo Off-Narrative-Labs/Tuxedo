@@ -1338,7 +1338,7 @@
             .unwrap_or_default();
         <span class="kw">let </span>extrinsics_root = &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hashing::ordered_trie_root(
             extrinsics,
-            StateVersion::V1,
+            StateVersion::V0,
         );
         sp_io::storage::clear(EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
@@ -1410,7 +1410,7 @@
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>extrinsics_root = &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hashing::ordered_trie_root(
             extrinsics,
-            StateVersion::V1,
+            StateVersion::V0,
         );
         <span class="macro">assert_eq!</span>(
             <span class="kw-2">*</span>block.header().extrinsics_root(),
@@ -2020,7 +2020,7 @@
                     state_root,
                     extrinsics_root: BlakeTwo256::ordered_trie_root(
                         <span class="macro">vec!</span>[extrinsic],
-                        StateVersion::V1,
+                        StateVersion::V0,
                     ),
                     digest: Default::default(),
                 };
