@@ -35,14 +35,13 @@ const LOG_TARGET: &str = "timestamp-piece";
 /// be a configuration traint value, but for now I'm hard-coding it.
 const MINIMUM_TIME_INTERVAL: u64 = 200;
 
-
 // It might make sense to have a minimum number of blocks in addition or instead so
 // that if the chai nstalls, all the transactions in the pool can still be used when
 // it comes back alive.
 
 /// The minimum amount of time that a timestamp utxo must have been stored before it
 /// can be cleaned up.
-/// 
+///
 /// Currently set to 1 day
 const CLEANUP_AGE: u64 = 1000 * 60 * 60 * 24;
 
@@ -177,7 +176,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
 
 /// Allows users to voluntarily clean up old timestamps by showing that there
 /// exists another timestamp that is at least the CLEANUP_AGE newer.
-/// 
+///
 /// You can clean up multiple timestamps at once, but you only peek at a single
 /// new reference. Although it is useless to do so, it is valid for a transaction
 /// to clean up zero timestampe
@@ -195,14 +194,20 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there is a single peek that is the new reference time
-        ensure!(peek_data.len() == 1, Self::Error::CleanupRequiresOneReference);
+        ensure!(
+            peek_data.len() == 1,
+            Self::Error::CleanupRequiresOneReference
+        );
         let new_reference_time = peek_data[0]
             .extract::<StorableTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
         // Make sure there are no outputs
-        ensure!(output_data.is_empty(), Self::Error::CleanupCannotCreateState);
+        ensure!(
+            output_data.is_empty(),
+            Self::Error::CleanupCannotCreateState
+        );
 
         // Make sure each input is old enough to be cleaned up
         for input_datum in input_data {
@@ -211,7 +216,10 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
                 .map_err(|_| Self::Error::BadlyTyped)?
                 .0;
 
-            ensure!(old_time + CLEANUP_AGE < new_reference_time, Self::Error::DontBeSoHasty);
+            ensure!(
+                old_time + CLEANUP_AGE < new_reference_time,
+                Self::Error::DontBeSoHasty
+            );
         }
 
         Ok(0)
