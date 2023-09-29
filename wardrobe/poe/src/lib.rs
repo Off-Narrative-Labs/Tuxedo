@@ -70,6 +70,8 @@ pub enum ConstraintCheckerError {
     EffectiveHeightInPast,
 }
 
+/// Configuration items for the Prrof of Existence piece when it is
+/// instantiated in a concrete runtime.
 pub trait PoeConfig {
     /// A means of getting the current block height.
     /// Probably this will be the Tuxedo Executive
