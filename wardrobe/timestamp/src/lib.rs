@@ -45,22 +45,22 @@ const MINIMUM_TIME_INTERVAL: u64 = 200;
 /// Currently set to 1 day
 const CLEANUP_AGE: u64 = 1000 * 60 * 60 * 24;
 
-/// A wrapper around a u64 that holds the Unix epoch time in milliseconds.
-/// Basically the same as sp_timestamp::Timestamp, but we need this type
-/// to implement the UtxoData trait since they are both foreign.
+/// A timestamp, since the unix epoch, that is the latest time ever seen in the history
+/// of this chain.
 #[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
-pub struct StorableTimestamp(pub u64);
+pub struct BestTimestamp(pub u64);
 
-// impl From<Timestamp> for StorableTimestamp {
-//     //todo
-// }
+impl UtxoData for BestTimestamp {
+    const TYPE_ID: [u8; 4] = *b"best";
+}
 
-// impl From<StorableTimestamp> for Timestamp {
-//     //todo
-// }
+/// A timestamp, since the unix epoch, that was noted at some point in the history of
+/// this chain.
+#[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
+pub struct NotedTimestamp(pub u64);
 
-impl UtxoData for StorableTimestamp {
-    const TYPE_ID: [u8; 4] = *b"time";
+impl UtxoData for NotedTimestamp {
+    const TYPE_ID: [u8; 4] = *b"note";
 }
 
 /// Options to configure the timestamp piece in your runtime.
@@ -149,7 +149,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         // Make sure the first output is a new best timestamp
         ensure!(output_data.len() >= 1, Self::Error::MissingNewBestTimestamp);
         let new_best = output_data[0]
-            .extract::<StorableTimestamp>()
+            .extract::<BestTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
@@ -159,7 +159,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
             Self::Error::MissingNewNotedTimestamp
         );
         let new_noted = output_data[1]
-            .extract::<StorableTimestamp>()
+            .extract::<NotedTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
@@ -194,7 +194,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
 
         // Compare the new timestamp to the previous timestamp
         let old_best = input_data[0]
-            .extract::<StorableTimestamp>()
+            .extract::<BestTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
         ensure!(
@@ -232,7 +232,7 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
             Self::Error::CleanupRequiresOneReference
         );
         let new_reference_time = peek_data[0]
-            .extract::<StorableTimestamp>()
+            .extract::<NotedTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
@@ -245,7 +245,7 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
         // Make sure each input is old enough to be cleaned up
         for input_datum in input_data {
             let old_time = input_datum
-                .extract::<StorableTimestamp>()
+                .extract::<NotedTimestamp>()
                 .map_err(|_| Self::Error::BadlyTyped)?
                 .0;
 

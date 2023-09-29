@@ -364,20 +364,21 @@ impl_runtime_apis! {
             );
 
             // Extract the timestamp
-            use timestamp::StorableTimestamp;
+            use timestamp::{BestTimestamp, NotedTimestamp};
 
             let timestamp_millis: u64 = data
                 .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
                 .expect("Inherent data should decode properly")
                 .expect("Timestamp inherent data should be present.");
-            let storable_timestamp = StorableTimestamp(timestamp_millis);
+            let new_best_timestamp = BestTimestamp(timestamp_millis);
+            let new_noted_timestamp = NotedTimestamp(timestamp_millis);
 
             log::info!(
                 target: LOG_TARGET,
                 "🕰️🖴 timestamp_millis:: {timestamp_millis}"
             );
 
-            // We need to initialize the timestamp somehow, and right now the was we do it
+            // We need to initialize the timestamp somehow, and right now the way we do it
             // is to allow a transaction that does not consume any previous best on block height 1 only.
             // A much more elegant solution would be to allow transactions in the genesis block, then we
             // could use the same scraping logic as always.
@@ -398,7 +399,7 @@ impl_runtime_apis! {
                     .outputs
                     .iter()
                     .position(|output| {
-                        output.payload.extract::<StorableTimestamp>().is_ok()
+                        output.payload.extract::<BestTimestamp>().is_ok()
                     })
                     .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
                     .try_into()
@@ -419,15 +420,19 @@ impl_runtime_apis! {
                 inputs.push(input);
             }
 
-            let output = Output {
-                payload: storable_timestamp.into(),
+            let best_output = Output {
+                payload: new_best_timestamp.into(),
+                verifier: OuterVerifier::UpForGrabs(UpForGrabs),
+            };
+            let noted_output = Output {
+                payload: new_noted_timestamp.into(),
                 verifier: OuterVerifier::UpForGrabs(UpForGrabs),
             };
 
             let timestamp_tx = Transaction {
                 inputs,
                 peeks: Vec::new(),
-                outputs: vec![output],
+                outputs: vec![best_output, noted_output],
                 checker: timestamp::SetTimestamp(Default::default()).into(),
             };
 
@@ -473,7 +478,7 @@ impl_runtime_apis! {
             let mut results = CheckInherentsResult::new();
 
             // Timestamp: We need to check that the timestamp in the block is close to the current time
-            use timestamp::StorableTimestamp;
+            use timestamp::BestTimestamp;
 
             /// The maximum amount by which a valid block's timestamp may be ahead of our current local time.
             /// 1 minute.
@@ -511,12 +516,12 @@ impl_runtime_apis! {
                 .outputs
                 .iter()
                 .find(|output| {
-                    output.payload.extract::<StorableTimestamp>().is_ok()
+                    output.payload.extract::<BestTimestamp>().is_ok()
                 })
                 .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
                 .payload
                 // TODO sucks that we have to extract it twice. Is there some way to use the extracted one from before?
-                .extract::<StorableTimestamp>()
+                .extract::<BestTimestamp>()
                 .expect("It should decode because we already checked that.")
                 .0;
 
