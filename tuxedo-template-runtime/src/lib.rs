@@ -492,6 +492,11 @@ impl_runtime_apis! {
                 .expect("Inherent data should decode properly")
                 .expect("Timestamp inherent data should be present.");
 
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 Local timestamp is:    {:#?}", local_timestamp
+            );
+
             // Extract the timestamp from the block
             // I guess this is done by scraping the transactions, right?
             // TODO figure out Where this is done in FRAME world and make sure I'm not doing something stupid here.
@@ -516,8 +521,17 @@ impl_runtime_apis! {
                 .expect("It should decode because we already checked that.")
                 .0;
 
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 In-block timestamp is: {:#?}", on_chain_timestamp
+            );
+
             // Make the comparison for too far in future
             if on_chain_timestamp > local_timestamp  + MAX_DRIFT {
+                log::info!(
+                    target: LOG_TARGET,
+                    "🕰️🖴 Block timestamp is too far in future. About to push an error"
+                );
                 results
                     .put_error(sp_timestamp::INHERENT_IDENTIFIER, &sp_timestamp::InherentError::TooFarInFuture)
                     .expect("Should be able to put some errors");
@@ -528,6 +542,10 @@ impl_runtime_apis! {
             // That's where we have easy access to the timestamp of the previous block
             // FRAME's checks: github.com/paritytech/polkadot-sdk/blob/945ebbbc/substrate/frame/timestamp/src/lib.rs#L299-L306
 
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.okay(), results.fatal_error()
+            );
             results
         }
     }
