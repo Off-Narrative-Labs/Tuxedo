@@ -432,10 +432,10 @@ impl_runtime_apis! {
                 checker: timestamp::SetTimestamp(Default::default()).into(),
             };
 
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
-            );
+            // log::info!(
+            //     target: LOG_TARGET,
+            //     "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
+            // );
 
             // Extract the Aura slot (although we are not using it yet)
             // Actually, I wonder how Aura is working so well without this inherent...
@@ -544,7 +544,7 @@ impl_runtime_apis! {
 
             log::info!(
                 target: LOG_TARGET,
-                "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.okay(), results.fatal_error()
+                "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.ok(), results.fatal_error()
             );
             results
         }
