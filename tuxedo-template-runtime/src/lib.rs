@@ -517,7 +517,7 @@ impl_runtime_apis! {
                 .0;
 
             // Make the comparison for too far in future
-            if on_chain_timestamp + MAX_DRIFT > local_timestamp {
+            if on_chain_timestamp > local_timestamp  + MAX_DRIFT {
                 results
                     .put_error(sp_timestamp::INHERENT_IDENTIFIER, &sp_timestamp::InherentError::TooFarInFuture)
                     .expect("Should be able to put some errors");
