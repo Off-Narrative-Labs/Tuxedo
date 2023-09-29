@@ -35,6 +35,17 @@ const LOG_TARGET: &str = "timestamp-piece";
 /// be a configuration traint value, but for now I'm hard-coding it.
 const MINIMUM_TIME_INTERVAL: u64 = 200;
 
+
+// It might make sense to have a minimum number of blocks in addition or instead so
+// that if the chai nstalls, all the transactions in the pool can still be used when
+// it comes back alive.
+
+/// The minimum amount of time that a timestamp utxo must have been stored before it
+/// can be cleaned up.
+/// 
+/// Currently set to 1 day
+const CLEANUP_AGE: u64 = 1000 * 60 * 60 * 24;
+
 /// A wrapper around a u64 that holds the Unix epoch time in milliseconds.
 /// Basically the same as sp_timestamp::Timestamp, but we need this type
 /// to implement the UtxoData trait since they are both foreign.
@@ -82,6 +93,16 @@ pub enum TimestampError {
     TooManyInputsWhileSettingTimestamp,
     /// The new timestamp is either before the previous timestamp or not sufficiently far after it.
     TimestampTooOld,
+
+    /// When cleaning up old timestamps, you must supply exactly one peek input which is the "new time reference"
+    /// All the timestamps that will be cleaned up must be at least the CLEANUP_AGE older than this reference.
+    CleanupRequiresOneReference,
+    /// When cleaning up old timestamps, you may not create any new state at all.
+    /// However, you have supplied some new outputs in this transaction.
+    CleanupCannotCreateState,
+    /// You may not clean up old timestamps until they are at least the CLEANUP_AGE older than another
+    /// noted timestamp on-chain.
+    DontBeSoHasty,
 }
 
 /// A constraint checker for the simple act of setting the timetamp.
@@ -149,6 +170,49 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
             new_timestamp >= old_timestamp + MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
         );
+
+        Ok(0)
+    }
+}
+
+/// Allows users to voluntarily clean up old timestamps by showing that there
+/// exists another timestamp that is at least the CLEANUP_AGE newer.
+/// 
+/// You can clean up multiple timestamps at once, but you only peek at a single
+/// new reference. Although it is useless to do so, it is valid for a transaction
+/// to clean up zero timestampe
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct CleanUpTimestamp;
+
+impl SimpleConstraintChecker for CleanUpTimestamp {
+    type Error = TimestampError;
+
+    fn check(
+        &self,
+        input_data: &[DynamicallyTypedData],
+        peek_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
+    ) -> Result<TransactionPriority, Self::Error> {
+        // Make sure there is a single peek that is the new reference time
+        ensure!(peek_data.len() == 1, Self::Error::CleanupRequiresOneReference);
+        let new_reference_time = peek_data[0]
+            .extract::<StorableTimestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .0;
+
+        // Make sure there are no outputs
+        ensure!(output_data.is_empty(), Self::Error::CleanupCannotCreateState);
+
+        // Make sure each input is old enough to be cleaned up
+        for input_datum in input_data {
+            let old_time = input_datum
+                .extract::<StorableTimestamp>()
+                .map_err(|_| Self::Error::BadlyTyped)?
+                .0;
+
+            ensure!(old_time + CLEANUP_AGE < new_reference_time, Self::Error::DontBeSoHasty);
+        }
 
         Ok(0)
     }
