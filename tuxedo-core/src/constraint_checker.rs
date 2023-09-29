@@ -41,7 +41,7 @@ impl Accumulator for () {
 
     const INITIAL_VALUE: () = ();
 
-    fn accumulate(_: (), _: ()) {
+    fn accumulate(_: (), _: ()) -> () {
         ()
     }
 }
