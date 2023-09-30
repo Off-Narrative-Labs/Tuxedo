@@ -213,6 +213,8 @@
 <a href="#213" id="213">213</a>
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This file represents a simple Proof of Existence application, identical in behavior
 //! to the tutorial https://docs.substrate.io/tutorials/work-with-pallets/use-macros-in-a-custom-pallet/
 //! Of course, this implementation is based on UTXOs and works with Tuxedo rather than FRAME.
@@ -285,7 +287,9 @@
     </span>EffectiveHeightInPast,
 }
 
-<span class="kw">pub trait </span>PoeConfig {
+<span class="doccomment">/// Configuration items for the Proof of Existence piece when it is
+/// instantiated in a concrete runtime.
+</span><span class="kw">pub trait </span>PoeConfig {
     <span class="doccomment">/// A means of getting the current block height.
     /// Probably this will be the Tuxedo Executive
     </span><span class="kw">fn </span>block_height() -&gt; u32;
