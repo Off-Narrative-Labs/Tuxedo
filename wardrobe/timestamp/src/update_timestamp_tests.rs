@@ -18,17 +18,28 @@ use tuxedo_core::dynamic_typing::testing::Bogus;
 // Set timestamp noted not equal to best
 // Set timestamp too many outputs
 
-// #[test]
-// fn creation_valid_transaction_works() {
-//     let to_spawn = AmoebaDetails {
-//         generation: 0,
-//         four_bytes: *b"test",
-//     };
-//     let input_data = Vec::new();
-//     let output_data = vec![to_spawn.into()];
+/// The mock config always says the block number is two.
+/// We only need this to work around the first block hack.
+pub struct AlwaysBlockTwo;
 
-//     assert_eq!(AmoebaCreation.check(&input_data, &[], &output_data), Ok(0),);
-// }
+impl TimestampConfig for AlwaysBlockTwo {
+    fn block_height() -> u32 {
+        2
+    }
+}
+
+#[test]
+fn update_timestamp_happy_path() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = BestTimestamp(100);
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(400);
+    let input_data = vec![old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Ok(0),);
+}
 
 // #[test]
 // fn creation_invalid_generation_fails() {
