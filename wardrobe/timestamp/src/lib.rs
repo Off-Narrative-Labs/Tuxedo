@@ -26,7 +26,9 @@ use tuxedo_core::{
 };
 
 #[cfg(test)]
-mod tests;
+mod update_timestamp_tests;
+mod first_block_special_case_tests;
+mod cleanup_tests;
 
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";

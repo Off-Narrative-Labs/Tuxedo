@@ -1,4 +1,5 @@
-//! Unit tests for the Timestamp piece
+//! Unit tests for the Timestamp piece.
+//! This module tests the primary flow of updating the timestamp via an inherent after it has been initialized.
 
 use super::*;
 use tuxedo_core::dynamic_typing::testing::Bogus;
