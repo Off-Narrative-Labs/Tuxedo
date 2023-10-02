@@ -109,6 +109,9 @@ pub enum TimestampError {
     DontBeSoHasty,
 }
 
+//TODO Should this be called update_timestamp?
+// Set feels more appropriate for FRAME where you're simply overwriting the old one.
+// The only thing that still feels "set"y here is the first block hack.
 /// A constraint checker for the simple act of setting a new best timetamp.
 ///
 /// This is expected to be performed through an inherent, and to happen exactly once per block.
