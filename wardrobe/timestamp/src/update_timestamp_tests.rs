@@ -4,7 +4,19 @@
 use super::*;
 use tuxedo_core::dynamic_typing::testing::Bogus;
 
-//TODO The below tests are copied from the amoeba piece. These need to be written for timestamp.
+// Set timestamp happy case
+// Set timestamp bogus input
+// Set timestamp, input is noted, not best
+// Set timestamp no input
+// Set timestamp output earlier than input
+// Set timestamp output later than input but not by enough
+// Set timestamp too many inputs
+
+// Set timestamp no outputs
+// Set timestamp no new best
+// Set timestamp no new noted
+// Set timestamp noted not equal to best
+// Set timestamp too many outputs
 
 // #[test]
 // fn creation_valid_transaction_works() {
