@@ -25,10 +25,10 @@ use tuxedo_core::{
     SimpleConstraintChecker,
 };
 
+mod cleanup_tests;
+mod first_block_special_case_tests;
 #[cfg(test)]
 mod update_timestamp_tests;
-mod first_block_special_case_tests;
-mod cleanup_tests;
 
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";
