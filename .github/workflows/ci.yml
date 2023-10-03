@@ -18,24 +18,17 @@ jobs:
         run: |
           sudo apt-get install -y protobuf-compiler
           protoc --version
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          target: wasm32-unknown-unknown
-          override: true
-      - run: rustup component add rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      - name: Install Rustfmt
+        run: rustup component add rustfmt
+      - name: Run Rustfmt
+        run: cargo fmt --all -- --check
 
   toml-sort:
     name: TOML Sort check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: Off-Narrative-Labs/toml_sort@action
+      - uses: Off-Narrative-Labs/toml_sort@v1
         with:
           all: true
 
@@ -52,23 +45,16 @@ jobs:
           run: |
             sudo apt-get install -y protobuf-compiler
             protoc --version
-        - uses: actions-rs/toolchain@v1
-          with:
-            profile: minimal
-            toolchain: nightly
-            target: wasm32-unknown-unknown
-            override: true
         - name: Install latest nextest release
           uses: taiki-e/install-action@nextest
         - name: Install cargo-llvm-cov
           uses: taiki-e/install-action@cargo-llvm-cov
         - name: Rust Cache
           uses: Swatinem/rust-cache@v2
-        - name: Collect coverage data
-          uses: actions-rs/cargo@v1
-          with:
-            command: llvm-cov
-            args: nextest --lcov --ignore-filename-regex "node/" --output-path lcov.info
+        - name: Run tests
+          run: cargo llvm-cov nextest --lcov
+               --ignore-filename-regex "node/"
+               --output-path lcov.info
         - if: github.event_name == 'pull_request'
           name: Report code coverage
           uses: Nef10/lcov-reporter-action@v0.4.0
@@ -86,16 +72,9 @@ jobs:
         run: |
           sudo apt-get install -y protobuf-compiler
           protoc --version
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          target: wasm32-unknown-unknown
-          override: true
-      - run: rustup component add clippy
+      - name: Install Clippy
+        run: rustup component add clippy
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --no-deps -- -D warnings
+      - name: Run Clippy
+        run: cargo clippy --no-deps -- -D warnings
