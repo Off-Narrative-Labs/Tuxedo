@@ -1,0 +1,100 @@
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+name: Continuous integration
+
+jobs:
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install tooling
+        run: |
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+          override: true
+      - run: rustup component add rustfmt
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  toml-sort:
+    name: TOML Sort check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Off-Narrative-Labs/toml_sort@action
+        with:
+          all: true
+
+  test:
+      name: Test and code coverage
+      needs: [fmt, toml-sort]
+      runs-on: ubuntu-latest
+      permissions:
+          issues: write
+          pull-requests: write
+      steps:
+        - uses: actions/checkout@v3
+        - name: Install tooling
+          run: |
+            sudo apt-get install -y protobuf-compiler
+            protoc --version
+        - uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            toolchain: nightly
+            target: wasm32-unknown-unknown
+            override: true
+        - name: Install latest nextest release
+          uses: taiki-e/install-action@nextest
+        - name: Install cargo-llvm-cov
+          uses: taiki-e/install-action@cargo-llvm-cov
+        - name: Rust Cache
+          uses: Swatinem/rust-cache@v1
+        - name: Collect coverage data
+          uses: actions-rs/cargo@v1
+          with:
+            command: llvm-cov
+            args: nextest --lcov --ignore-filename-regex "node/" --output-path lcov.info
+        - if: github.event_name == 'pull_request'
+          name: Report code coverage
+          uses: Nef10/lcov-reporter-action@v0.4.0
+          with:
+            lcov-file: lcov.info
+            pr-number: ${{ github.event.pull_request.number }}
+
+  clippy:
+    name: Clippy
+    needs: [fmt, toml-sort]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install tooling
+        run: |
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          target: wasm32-unknown-unknown
+          override: true
+      - run: rustup component add clippy
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --no-deps -- -D warnings
