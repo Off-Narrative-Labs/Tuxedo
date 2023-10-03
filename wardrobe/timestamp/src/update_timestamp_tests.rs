@@ -3,20 +3,8 @@
 
 use super::*;
 use tuxedo_core::dynamic_typing::testing::Bogus;
+use TimestampError::*;
 
-// Set timestamp happy case
-// Set timestamp bogus input
-// Set timestamp, input is noted, not best
-// Set timestamp no input
-// Set timestamp output earlier than input
-// Set timestamp output later than input but not by enough
-// Set timestamp too many inputs
-
-// Set timestamp no outputs
-// Set timestamp no new best
-// Set timestamp no new noted
-// Set timestamp noted not equal to best
-// Set timestamp too many outputs
 
 /// The mock config always says the block number is two.
 /// We only need this to work around the first block hack.
@@ -40,6 +28,66 @@ fn update_timestamp_happy_path() {
 
     assert_eq!(checker.check(&input_data, &[], &output_data), Ok(0),);
 }
+
+#[test]
+fn update_timestamp_bogus_input() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = Bogus;
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(400);
+    let input_data = vec![old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(BadlyTyped));
+}
+
+#[test]
+fn update_timestamp_input_noted_not_best() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = NotedTimestamp(100);
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(400);
+    let input_data = vec![old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(BadlyTyped));
+}
+
+#[test]
+fn update_timestamp_no_input() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(400);
+    let input_data = vec![];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(MissingPreviousBestTimestamp),);
+}
+
+// Set timestamp output earlier than input
+// Set timestamp output later than input but not by enough
+// Set timestamp too many inputs
+
+// Set timestamp no outputs
+// Set timestamp no new best
+// Set timestamp no new noted
+// Set timestamp noted not equal to best
+// Set timestamp too many outputs
+
+
+
+
+
+
+
+
+
+
+
+
 
 // #[test]
 // fn creation_invalid_generation_fails() {
