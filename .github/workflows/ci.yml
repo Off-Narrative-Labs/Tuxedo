@@ -13,7 +13,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install tooling
         run: |
           sudo apt-get install -y protobuf-compiler
@@ -34,6 +34,7 @@ jobs:
     name: TOML Sort check
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: Off-Narrative-Labs/toml_sort@action
         with:
           all: true
@@ -46,7 +47,7 @@ jobs:
           issues: write
           pull-requests: write
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Install tooling
           run: |
             sudo apt-get install -y protobuf-compiler
@@ -62,7 +63,7 @@ jobs:
         - name: Install cargo-llvm-cov
           uses: taiki-e/install-action@cargo-llvm-cov
         - name: Rust Cache
-          uses: Swatinem/rust-cache@v1
+          uses: Swatinem/rust-cache@v2
         - name: Collect coverage data
           uses: actions-rs/cargo@v1
           with:
@@ -80,7 +81,7 @@ jobs:
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install tooling
         run: |
           sudo apt-get install -y protobuf-compiler
@@ -93,7 +94,7 @@ jobs:
           override: true
       - run: rustup component add clippy
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
