@@ -60,8 +60,22 @@ fn cleanup_timestamp_missing_reference() {
 }
 
 #[test]
+fn cleanup_timestamp_multiple_happy_path() {
+    let old1 = NotedTimestamp(100);
+    let old2 = NotedTimestamp(200);
+    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+
+    let input_data = vec![old1.into(), old2.into()];
+    let peek_data = vec![newer.into()];
+
+    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Ok(0),);
+}
+
+#[test]
 fn cleanup_timestamp_missing_input() {
-    // 
+    // The logic allows cleaning up "multiple", or more precisely, zero or more,
+    // stale inputs. This test ensures that cleaning up zero is considered valid.
+    // Of course there is little reason to do this in real life; it only wastes resources.
 
     let newer = NotedTimestamp(100);
 
@@ -71,9 +85,17 @@ fn cleanup_timestamp_missing_input() {
     assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Ok(0));
 }
 
-// cleanup multiple happy path
+#[test]
+fn cleanup_timestamp_multiple_first_valid_second_invalid() {
+    let old = NotedTimestamp(100);
+    let supposedly_old = NotedTimestamp(2 * CLEANUP_AGE);
+    let newer = NotedTimestamp(2 * CLEANUP_AGE);
 
-// cleanup multiple, first is valid, second is not
+    let input_data = vec![old.into(), supposedly_old.into()];
+    let peek_data = vec![newer.into()];
+
+    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(DontBeSoHasty));
+}
 
 // Cleanup input is wrong type
 // Reference is wrong type
