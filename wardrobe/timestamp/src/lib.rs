@@ -25,7 +25,9 @@ use tuxedo_core::{
     SimpleConstraintChecker,
 };
 
+#[cfg(test)]
 mod cleanup_tests;
+#[cfg(test)]
 mod first_block_special_case_tests;
 #[cfg(test)]
 mod update_timestamp_tests;
