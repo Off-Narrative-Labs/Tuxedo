@@ -5,7 +5,6 @@ use super::*;
 use tuxedo_core::dynamic_typing::testing::Bogus;
 use TimestampError::*;
 
-
 /// The mock config always says the block number is two.
 /// We only need this to work around the first block hack.
 pub struct AlwaysBlockTwo;
@@ -39,7 +38,10 @@ fn update_timestamp_bogus_input() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(BadlyTyped));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(BadlyTyped)
+    );
 }
 
 #[test]
@@ -52,7 +54,10 @@ fn update_timestamp_input_noted_not_best() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(BadlyTyped));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(BadlyTyped)
+    );
 }
 
 #[test]
@@ -64,7 +69,10 @@ fn update_timestamp_no_input() {
     let input_data = vec![];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(MissingPreviousBestTimestamp),);
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(MissingPreviousBestTimestamp),
+    );
 }
 
 #[test]
@@ -77,7 +85,10 @@ fn update_timestamp_output_earlier_than_input() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TimestampTooOld));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(TimestampTooOld)
+    );
 }
 
 #[test]
@@ -90,7 +101,10 @@ fn update_timestamp_output_newer_than_previous_best_nut_not_enough_to_meet_thres
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TimestampTooOld));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(TimestampTooOld)
+    );
 }
 
 #[test]
@@ -103,7 +117,10 @@ fn update_timestamp_too_many_inputs() {
     let input_data = vec![old_best.clone().into(), old_best.into()];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TooManyInputsWhileSettingTimestamp));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(TooManyInputsWhileSettingTimestamp)
+    );
 }
 
 #[test]
@@ -116,7 +133,10 @@ fn update_timestamp_new_best_and_new_noted_inconsistent() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(InconsistentBestAndNotedTimestamps));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(InconsistentBestAndNotedTimestamps)
+    );
 }
 
 #[test]
@@ -127,7 +147,10 @@ fn update_timestamp_no_outputs() {
     let input_data = vec![old_best.into()];
     let output_data = vec![];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(MissingNewBestTimestamp));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(MissingNewBestTimestamp)
+    );
 }
 
 #[test]
@@ -139,7 +162,10 @@ fn update_timestamp_no_new_best() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(BadlyTyped));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(BadlyTyped)
+    );
 }
 
 #[test]
@@ -151,7 +177,10 @@ fn update_timestamp_no_new_noted() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(MissingNewNotedTimestamp));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(MissingNewNotedTimestamp)
+    );
 }
 
 #[test]
@@ -164,20 +193,11 @@ fn update_timestamp_too_many_outputs() {
     let input_data = vec![old_best.into()];
     let output_data = vec![new_best.into(), new_noted.clone().into(), new_noted.into()];
 
-    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TooManyOutputsWhileSettingTimestamp));
+    assert_eq!(
+        checker.check(&input_data, &[], &output_data),
+        Err(TooManyOutputsWhileSettingTimestamp)
+    );
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 // #[test]
 // fn creation_invalid_generation_fails() {

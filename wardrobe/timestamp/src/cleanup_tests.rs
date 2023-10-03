@@ -24,7 +24,10 @@ fn cleanup_timestamp_input_is_best_not_noted() {
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(BadlyTyped));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(BadlyTyped)
+    );
 }
 
 #[test]
@@ -35,7 +38,10 @@ fn cleanup_timestamp_input_newer_than_reference() {
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(DontBeSoHasty));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(DontBeSoHasty)
+    );
 }
 
 #[test]
@@ -46,7 +52,10 @@ fn cleanup_timestamp_input_not_yet_ripe_for_cleaning() {
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(DontBeSoHasty));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(DontBeSoHasty)
+    );
 }
 
 #[test]
@@ -56,7 +65,10 @@ fn cleanup_timestamp_missing_reference() {
     let input_data = vec![old.into()];
     let peek_data = vec![];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(CleanupRequiresOneReference));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(CleanupRequiresOneReference)
+    );
 }
 
 #[test]
@@ -94,7 +106,10 @@ fn cleanup_timestamp_multiple_first_valid_second_invalid() {
     let input_data = vec![old.into(), supposedly_old.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(DontBeSoHasty));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(DontBeSoHasty)
+    );
 }
 
 #[test]
@@ -105,7 +120,10 @@ fn cleanup_timestamp_input_is_wong_type() {
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(BadlyTyped));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(BadlyTyped)
+    );
 }
 
 #[test]
@@ -116,7 +134,10 @@ fn cleanup_timestamp_reference_is_wong_type() {
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(BadlyTyped));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        Err(BadlyTyped)
+    );
 }
 
 #[test]
@@ -129,5 +150,8 @@ fn cleanup_timestamp_rcannot_create_state() {
     let peek_data = vec![newer.into()];
     let output_data = vec![new.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &output_data), Err(CleanupCannotCreateState));
+    assert_eq!(
+        CleanUpTimestamp.check(&input_data, &peek_data, &output_data),
+        Err(CleanupCannotCreateState)
+    );
 }
