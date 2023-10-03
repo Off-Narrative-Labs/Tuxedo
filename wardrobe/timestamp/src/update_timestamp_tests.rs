@@ -67,9 +67,57 @@ fn update_timestamp_no_input() {
     assert_eq!(checker.check(&input_data, &[], &output_data), Err(MissingPreviousBestTimestamp),);
 }
 
-// Set timestamp output earlier than input
-// Set timestamp output later than input but not by enough
-// Set timestamp too many inputs
+#[test]
+fn update_timestamp_output_earlier_than_input() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = BestTimestamp(500);
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(400);
+    let input_data = vec![old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TimestampTooOld));
+}
+
+#[test]
+fn update_timestamp_output_newer_than_previous_best_nut_not_enough_to_meet_threshold() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = BestTimestamp(100);
+    let new_best = BestTimestamp(200);
+    let new_noted = NotedTimestamp(200);
+    let input_data = vec![old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TimestampTooOld));
+}
+
+#[test]
+fn update_timestamp_too_many_inputs() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = BestTimestamp(100);
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(400);
+    let input_data = vec![old_best.clone().into(), old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(TooManyInputsWhileSettingTimestamp));
+}
+
+#[test]
+fn update_timestamp_new_best_and_new_noted_inconsistent() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let old_best = BestTimestamp(100);
+    let new_best = BestTimestamp(400);
+    let new_noted = NotedTimestamp(401);
+    let input_data = vec![old_best.into()];
+    let output_data = vec![new_best.into(), new_noted.into()];
+
+    assert_eq!(checker.check(&input_data, &[], &output_data), Err(InconsistentBestAndNotedTimestamps));
+}
 
 // Set timestamp no outputs
 // Set timestamp no new best
