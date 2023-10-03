@@ -195,7 +195,7 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
 
         // Make sure there is exactly one input which is the previous best timestamp
         ensure!(
-            !output_data.is_empty(),
+            !input_data.is_empty(),
             Self::Error::MissingPreviousBestTimestamp
         );
         ensure!(
