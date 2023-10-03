@@ -97,6 +97,37 @@ fn cleanup_timestamp_multiple_first_valid_second_invalid() {
     assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(DontBeSoHasty));
 }
 
-// Cleanup input is wrong type
-// Reference is wrong type
-// Cleanup output is wrong type
+#[test]
+fn cleanup_timestamp_input_is_wong_type() {
+    let old = Bogus;
+    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+
+    let input_data = vec![old.into()];
+    let peek_data = vec![newer.into()];
+
+    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(BadlyTyped));
+}
+
+#[test]
+fn cleanup_timestamp_reference_is_wong_type() {
+    let old = NotedTimestamp(100);
+    let newer = Bogus;
+
+    let input_data = vec![old.into()];
+    let peek_data = vec![newer.into()];
+
+    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Err(BadlyTyped));
+}
+
+#[test]
+fn cleanup_timestamp_rcannot_create_state() {
+    let old = NotedTimestamp(100);
+    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+    let new = NotedTimestamp(CLEANUP_AGE);
+
+    let input_data = vec![old.into()];
+    let peek_data = vec![newer.into()];
+    let output_data = vec![new.into()];
+
+    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &output_data), Err(CleanupCannotCreateState));
+}
