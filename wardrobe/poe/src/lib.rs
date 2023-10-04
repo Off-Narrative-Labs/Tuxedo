@@ -30,7 +30,7 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     support_macros::{CloneNoBound, DebugNoBound},
-    SimpleConstraintChecker,
+    SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -86,8 +86,9 @@ pub trait PoeConfig {
 #[scale_info(skip_type_params(T))]
 pub struct PoeClaim<T>(PhantomData<T>);
 
-impl<T: PoeConfig + 'static> SimpleConstraintChecker for PoeClaim<T> {
+impl<T: PoeConfig + 'static, V: Verifier> SimpleConstraintChecker<V> for PoeClaim<T> {
     type Error = ConstraintCheckerError;
+    type InherentHooks = ();
 
     fn check(
         &self,
@@ -130,8 +131,10 @@ impl<T: PoeConfig + 'static> SimpleConstraintChecker for PoeClaim<T> {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeRevoke;
 
-impl SimpleConstraintChecker for PoeRevoke {
+impl<V: Verifier> SimpleConstraintChecker<V> for PoeRevoke {
     type Error = ConstraintCheckerError;
+    type InherentHooks = ();
+    
 
     fn check(
         &self,
@@ -170,8 +173,9 @@ impl SimpleConstraintChecker for PoeRevoke {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeDispute;
 
-impl SimpleConstraintChecker for PoeDispute {
+impl<V: Verifier> SimpleConstraintChecker<V> for PoeDispute {
     type Error = ConstraintCheckerError;
+    type InherentHooks = ();
 
     fn check(
         &self,

@@ -5,7 +5,7 @@
 
 use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier};
+use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier, inherents::{TuxedoInherent, InherentInternal}};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -18,9 +18,13 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone + TypeInfo {
+pub trait SimpleConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + TypeInfo {
     /// The error type that this constraint checker may return
     type Error: Debug;
+
+    /// Optional Associated Inherent processing logic. If this transaction type is not
+    /// an inherent, use (). If it is an inherent, use Self, and implement the TuxedoInherent trait
+    type InherentHooks: InherentInternal<V, Self>;
 
     /// The actual check validation logic
     fn check(
@@ -41,8 +45,12 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone + TypeInfo {
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
 pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + TypeInfo {
-    /// the error type that this constraint checker may return
+    /// The error type that this constraint checker may return
     type Error: Debug;
+
+    /// Optional Associated Inherent processing logic. If this transaction type is not
+    /// an inherent, use (). If it is an inherent, use Self, and implement the TuxedoInherent trait
+    type InherentHooks: InherentInternal<V, Self>;
 
     /// The actual check validation logic
     fn check(
@@ -56,9 +64,11 @@ pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + Type
 // This blanket implementation makes it so that any type that chooses to
 // implement the Simple trait also implements the more Powerful trait. This way
 // the executive can always just call the more Powerful trait.
-impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
+impl<T: SimpleConstraintChecker<V>, V: Verifier> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
-    type Error = <T as SimpleConstraintChecker>::Error;
+    type Error = <T as SimpleConstraintChecker<V>>::Error;
+
+    type InherentHooks = <T as SimpleConstraintChecker<V>>::InherentHooks;
 
     fn check(
         &self,
@@ -86,6 +96,8 @@ impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(feature = "std")]
 pub mod testing {
+    use crate::verifier::TestVerifier;
+
     use super::*;
 
     /// A testing checker that passes (with zero priority) or not depending on
@@ -96,8 +108,9 @@ pub mod testing {
         pub checks: bool,
     }
 
-    impl SimpleConstraintChecker for TestConstraintChecker {
+    impl<V: Verifier> SimpleConstraintChecker<V> for TestConstraintChecker {
         type Error = ();
+        type InherentHooks = ();
 
         fn check(
             &self,
@@ -116,14 +129,14 @@ pub mod testing {
     #[test]
     fn test_checker_passes() {
         let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
+            SimpleConstraintChecker::<TestVerifier>::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
         let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
+            SimpleConstraintChecker::<TestVerifier>::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

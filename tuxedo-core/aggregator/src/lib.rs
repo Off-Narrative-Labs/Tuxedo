@@ -141,6 +141,10 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
         impl tuxedo_core::ConstraintChecker<#verifier> for #outer_type {
             type Error = #error_type;
 
+            //TODO We for sure need to fix this, and do some carefully-considered aggregating.
+            // But for now we can make it compile this way.
+            type InherentHooks = ();
+
             fn check (
                 &self,
                 inputs: &[tuxedo_core::types::Output<#verifier>],

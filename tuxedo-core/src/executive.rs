@@ -46,6 +46,11 @@ impl<
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<V, C>,
     ) -> Result<ValidTransaction, UtxoError<C::Error>> {
+        debug!(
+            target: LOG_TARGET,
+            "validating tuxedo transaction",
+        );
+
         // Make sure there are no duplicate inputs
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
@@ -55,6 +60,10 @@ impl<
                 UtxoError::DuplicateInput
             );
         }
+        debug!(
+            target: LOG_TARGET,
+            "1",
+        );
 
         // Build the stripped transaction (with the redeemers stripped) and encode it
         // This will be passed to the verifiers
@@ -63,6 +72,10 @@ impl<
             input.redeemer = Vec::new();
         }
         let stripped_encoded = stripped.encode();
+        debug!(
+            target: LOG_TARGET,
+            "2",
+        );
 
         // Check that the verifiers of all inputs are satisfied
         // Keep a Vec of the input utxos for passing to the constraint checker
@@ -82,6 +95,10 @@ impl<
                 missing_inputs.push(input.output_ref.clone().encode());
             }
         }
+        debug!(
+            target: LOG_TARGET,
+            "3",
+        );
 
         // Make a Vec of the peek utxos for passing to the constraint checker
         // Keep track of any missing peeks for use in the tagged transaction pool
@@ -113,6 +130,10 @@ impl<
                 UtxoError::PreExistingOutput
             );
         }
+        debug!(
+            target: LOG_TARGET,
+            "4",
+        );
 
         // Calculate the tx-pool tags provided by this transaction, which
         // are just the encoded OutputRefs
@@ -129,6 +150,10 @@ impl<
         // If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the constraint checker
         if !missing_inputs.is_empty() {
+            debug!(
+                target: LOG_TARGET,
+                "Transaction is valid but still has missing inputs. Returning early.",
+            );
             return Ok(ValidTransaction {
                 requires: missing_inputs,
                 provides,
@@ -137,6 +162,11 @@ impl<
                 propagate: true,
             });
         }
+
+        debug!(
+            target: LOG_TARGET,
+            "5",
+        );
 
         // Call the constraint checker
         transaction

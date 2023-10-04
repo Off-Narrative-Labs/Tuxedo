@@ -27,7 +27,7 @@ use tuxedo_core::{
     support_macros::{CloneNoBound, DebugNoBound},
     types::{Input, Output, Transaction},
     verifier::UpForGrabs,
-    SimpleConstraintChecker, Verifier,
+    SimpleConstraintChecker, Verifier, ConstraintChecker,
 };
 
 #[cfg(test)]
@@ -138,8 +138,9 @@ pub enum TimestampError {
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
 //TODO what about this static? Is that a problem?
-impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
+impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstraintChecker<V> for SetTimestamp<T> {
     type Error = TimestampError;
+    type InherentHooks = Self;
 
     fn check(
         &self,
@@ -170,6 +171,11 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 a"
+        );
+
         // Make sure the second output is a new noted timestamp
         ensure!(
             output_data.len() >= 2,
@@ -180,16 +186,31 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 ba"
+        );
+
         // Make sure there are no extra outputs
         ensure!(
             output_data.len() == 2,
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
 
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 c"
+        );
+
         // Make sure that the new best and new noted timestamps are actually for the same time.
         ensure!(
             new_best == new_noted,
             Self::Error::InconsistentBestAndNotedTimestamps
+        );
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 d"
         );
 
         // Next we need to check inputs, but there is a special case for block 1.
@@ -199,6 +220,10 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
         if T::block_height() == 1 {
             // If this special case remains for a while, we should do some checks here like
             // making sure there are no inputs at all. For now, We'll just leave it as is.
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 e"
+            );
             return Ok(0);
         }
 
@@ -207,9 +232,17 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
             !input_data.is_empty(),
             Self::Error::MissingPreviousBestTimestamp
         );
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 f"
+        );
         ensure!(
             input_data.len() == 1,
             Self::Error::TooManyInputsWhileSettingTimestamp
+        );
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 g"
         );
 
         // Compare the new timestamp to the previous timestamp
@@ -221,18 +254,22 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
             new_best >= old_best + MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
         );
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 h"
+        );
 
         Ok(0)
     }
 }
 
-impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V>
+impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig + 'static> TuxedoInherent<V, C>
     for SetTimestamp<T>
 {
     fn create(
         authoring_inherent_data: &InherentData,
-        previous_inherent: tuxedo_core::types::Transaction<V, Self>,
-    ) -> tuxedo_core::types::Transaction<V, Self> {
+        previous_inherent: tuxedo_core::types::Transaction<V, C>,
+    ) -> tuxedo_core::types::Transaction<V, C> {
         // Extract the current timestamp from the inherent data
         let timestamp_millis: u64 = authoring_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
@@ -292,7 +329,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             inputs,
             peeks: Vec::new(),
             outputs: vec![best_output, noted_output],
-            checker: SetTimestamp::<T>(Default::default()),
+            checker: previous_inherent.checker,
         };
 
         // log::info!(
@@ -300,12 +337,17 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         //     "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
         // );
 
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 Timestamp transaction has is: \n{:#?}", BlakeTwo256::hash_of(&timestamp_tx.encode())
+        );
+
         timestamp_tx
     }
 
     fn check(
         importing_inherent_data: &InherentData,
-        inherent: tuxedo_core::types::Transaction<V, Self>,
+        inherent: tuxedo_core::types::Transaction<V, C>,
     ) -> bool {
         todo!()
     }
@@ -321,8 +363,9 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct CleanUpTimestamp;
 
-impl SimpleConstraintChecker for CleanUpTimestamp {
+impl<V: Verifier> SimpleConstraintChecker<V> for CleanUpTimestamp {
     type Error = TimestampError;
+    type InherentHooks = ();
 
     fn check(
         &self,

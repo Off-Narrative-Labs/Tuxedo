@@ -337,7 +337,7 @@ impl_runtime_apis! {
         fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
             log::info!(
                 target: LOG_TARGET,
-                "🕰️🖴 In `apply_extrinsic`"
+                "🕰️🖴 In `apply_extrinsic`. extrinsic is {:#?}", extrinsic
             );
             Executive::apply_extrinsic(extrinsic)
         }
@@ -371,36 +371,25 @@ impl_runtime_apis! {
             // is to allow a transaction that does not consume any previous best on block height 1 only.
             // A much more elegant solution would be to allow transactions in the genesis block, then we
             // could use the same scraping logic as always.
-            let prev_set_timestamp = parent
+            let prev_set_timestamp: Transaction = parent
                 .extrinsics()
                 .iter()
                 .find(|extrinsic| {
                     matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
                 })
-                .map(|t| TuxedoTransaction {
-                    inputs: t.inputs.clone(),
-                    outputs: t.outputs.clone(),
-                    peeks: t.peeks.clone(),
-                    checker: SetTimestamp::<Runtime>(Default::default()),
-                })
+                .cloned()
                 .unwrap_or(
                     // A dummy transaction for the first block hack
-                    TuxedoTransaction {
+                    Transaction {
                         inputs: vec![],
                         outputs: vec![],
                         peeks: vec![],
-                        checker: SetTimestamp::<Runtime>(Default::default()),
+                        checker: OuterConstraintChecker::SetTimestamp(SetTimestamp::<Runtime>(Default::default())),
                     }
                 );
 
             // Call into the timestamp helper, then map the checker
-            let timestamp_tx = timestamp::SetTimestamp::create(&data, prev_set_timestamp);
-            let timestamp_tx = Transaction {
-                inputs: timestamp_tx.inputs,
-                peeks: timestamp_tx.peeks,
-                outputs: timestamp_tx.outputs,
-                checker: timestamp_tx.checker.into(),
-            };
+            let timestamp_tx = timestamp::SetTimestamp::<Runtime>::create(&data, prev_set_timestamp);
 
             // Return just the timestamp extrinsic for now.
             // Later we will either handle Aura properly or switch to nimbus.

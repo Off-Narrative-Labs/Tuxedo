@@ -22,7 +22,7 @@ use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure, SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -74,8 +74,9 @@ pub struct RuntimeUpgrade {
     full_wasm: Vec<u8>,
 }
 
-impl SimpleConstraintChecker for RuntimeUpgrade {
+impl<V: Verifier> SimpleConstraintChecker<V> for RuntimeUpgrade {
     type Error = ConstraintCheckerError;
+    type InherentHooks = ();
 
     fn check(
         &self,
