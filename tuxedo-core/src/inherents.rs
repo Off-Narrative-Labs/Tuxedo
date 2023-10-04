@@ -42,9 +42,9 @@
 //! I would argue that the task of inserting data should not be tied to block authorship, and instead left to some kind of on-chain
 //! game or dao that anyone can participate in.
 
-use parity_scale_codec::Decode;
+use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-use sp_inherents::{InherentData, InherentIdentifier};
+use sp_inherents::{InherentData, InherentIdentifier, IsFatalError, MakeFatalError};
 use sp_runtime::traits::Block as BlockT;
 use sp_std::{vec, vec::Vec};
 
@@ -99,6 +99,8 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
 ///
 /// This interface is stricter and more structured, and therefore simpler than FRAME's.
 pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
+    type Error: Encode + IsFatalError;
+
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create(
@@ -110,15 +112,20 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, C>) -> bool;
+    fn check(
+        importing_inherent_data: &InherentData,
+        inherent: Transaction<V, C>,
+    ) -> Result<(), Self::Error>;
 }
 
 impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
+    type Error = MakeFatalError<()>;
+
     fn create(_: &InherentData, _: Transaction<V, C>) -> Transaction<V, C> {
         panic!("Attempting to create an inherent for a constraint checker that does not support inherents.")
     }
 
-    fn check(_: &InherentData, _: Transaction<V, C>) -> bool {
+    fn check(_: &InherentData, _: Transaction<V, C>) -> Result<(), Self::Error> {
         panic!("Attemping to perform inherent checks for a constraint checker that does not support inherents.")
     }
 }
@@ -130,6 +137,8 @@ impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
 /// requirement that the generic outer constraint checker be buildable
 /// from `Self` so we can implement it for ().
 pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
+    type Error: Encode + IsFatalError;
+
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create(
@@ -141,10 +150,15 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, C>) -> bool;
+    fn check(
+        importing_inherent_data: &InherentData,
+        inherent: Transaction<V, C>,
+    ) -> Result<(), Self::Error>;
 }
 
 impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInternal<V, C> for T {
+    type Error = <T as TuxedoInherent<V, C>>::Error;
+
     fn create(
         authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, C>,
@@ -157,7 +171,10 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
         )]
     }
 
-    fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, C>) -> bool {
+    fn check(
+        importing_inherent_data: &InherentData,
+        inherent: Transaction<V, C>,
+    ) -> Result<(), Self::Error> {
         <T as TuxedoInherent<V, C>>::check(importing_inherent_data, inherent)
     }
 }

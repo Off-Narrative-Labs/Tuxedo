@@ -402,34 +402,15 @@ impl_runtime_apis! {
             data: sp_inherents::InherentData
         ) -> sp_inherents::CheckInherentsResult {
 
-            use sp_inherents::CheckInherentsResult;
+            use sp_inherents::{IsFatalError, CheckInherentsResult};
             let mut results = CheckInherentsResult::new();
-
-            // Timestamp: We need to check that the timestamp in the block is close to the current time
-            use timestamp::BestTimestamp;
-
-            /// The maximum amount by which a valid block's timestamp may be ahead of our current local time.
-            /// 1 minute.
-            /// TODO make it part of the config trait.
-            const MAX_DRIFT: u64 = 60_000;
 
             log::info!(
                 target: LOG_TARGET,
                 "🕰️🖴 In `check_inherents`"
             );
 
-            // Extract the local view of time from the inherent data
-            let local_timestamp: u64 = data
-                .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
-                .expect("Inherent data should decode properly")
-                .expect("Timestamp inherent data should be present.");
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 Local timestamp is:    {:#?}", local_timestamp
-            );
-
-            // Extract the timestamp from the block
+            // Extract the timestamp inherent from the block
             // I guess this is done by scraping the transactions, right?
             // TODO figure out Where this is done in FRAME world and make sure I'm not doing something stupid here.
             let set_timestamp_ext = block
@@ -438,46 +419,37 @@ impl_runtime_apis! {
                 .find(|extrinsic| {
                     matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
                 })
+                .cloned()
                 .expect("SetTimestamp extrinsic should appear in every block.");
 
-            let on_chain_timestamp = set_timestamp_ext
-                .outputs
-                .iter()
-                .find(|output| {
-                    output.payload.extract::<BestTimestamp>().is_ok()
-                })
-                .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
-                .payload
-                // TODO sucks that we have to extract it twice. Is there some way to use the extracted one from before?
-                .extract::<BestTimestamp>()
-                .expect("It should decode because we already checked that.")
-                .0;
+            let result = timestamp::SetTimestamp::<Runtime>::check(&data, set_timestamp_ext);
 
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 In-block timestamp is: {:#?}", on_chain_timestamp
-            );
-
-            // Make the comparison for too far in future
-            if on_chain_timestamp > local_timestamp  + MAX_DRIFT {
+            if let Err(e) = result {
                 log::info!(
                     target: LOG_TARGET,
-                    "🕰️🖴 Block timestamp is too far in future. About to push an error"
+                    "🕰️🖴 Got an error when checking an inherent: {:?}", e,
                 );
+                //TODO I need a better way to access the inherent identifier. I guess it needs to be assiciated
+                // with the TuxedoInherent trait. For now I leave it here.
                 results
-                    .put_error(sp_timestamp::INHERENT_IDENTIFIER, &sp_timestamp::InherentError::TooFarInFuture)
+                    .put_error(sp_timestamp::INHERENT_IDENTIFIER, &e)
                     .expect("Should be able to put some errors");
-            }
 
-            // Although FRAME makes the check for the minimum interval here, we don't.
-            // We make that check in the on-chain constraint checker.
-            // That's where we have easy access to the timestamp of the previous block
-            // FRAME's checks: github.com/paritytech/polkadot-sdk/blob/945ebbbc/substrate/frame/timestamp/src/lib.rs#L299-L306
+                if e.is_fatal_error() {
+                    log::info!(
+                        target: LOG_TARGET,
+                        "🕰️🖴 Error is fatal, exiting early."
+                    );
+
+                    return results;
+                }
+            };
 
             log::info!(
                 target: LOG_TARGET,
                 "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.ok(), results.fatal_error()
             );
+
             results
         }
     }

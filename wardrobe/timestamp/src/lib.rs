@@ -54,6 +54,11 @@ const MINIMUM_TIME_INTERVAL: u64 = 200;
 /// Currently set to 1 day
 const CLEANUP_AGE: u64 = 1000 * 60 * 60 * 24;
 
+/// The maximum amount by which a valid block's timestamp may be ahead of an importing
+/// node's current local time. 1 minute.
+/// TODO make it part of the config trait.
+const MAX_DRIFT: u64 = 60_000;
+
 /// A timestamp, since the unix epoch, that is the latest time ever seen in the history
 /// of this chain.
 #[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
@@ -268,6 +273,8 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
 impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig + 'static>
     TuxedoInherent<V, C> for SetTimestamp<T>
 {
+    type Error = sp_timestamp::InherentError;
+
     fn create(
         authoring_inherent_data: &InherentData,
         previous_inherent: tuxedo_core::types::Transaction<V, C>,
@@ -350,8 +357,53 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
     fn check(
         importing_inherent_data: &InherentData,
         inherent: tuxedo_core::types::Transaction<V, C>,
-    ) -> bool {
-        todo!()
+    ) -> Result<(), Self::Error> {
+        // Extract the local view of time from the inherent data
+        let local_timestamp: u64 = importing_inherent_data
+            .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
+            .expect("Inherent data should decode properly")
+            .expect("Timestamp inherent data should be present.");
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 Local timestamp is:    {:#?}", local_timestamp
+        );
+
+        let on_chain_timestamp = inherent
+            .outputs
+            .iter()
+            .find(|output| output.payload.extract::<BestTimestamp>().is_ok())
+            .expect(
+                "SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.",
+            )
+            .payload
+            // TODO sucks that we have to extract it twice. Is there some way to use the extracted one from before?
+            .extract::<BestTimestamp>()
+            .expect("It should decode because we already checked that.")
+            .0;
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 In-block timestamp is: {:#?}", on_chain_timestamp
+        );
+
+        // Although FRAME makes the check for the minimum interval here, we don't.
+        // We make that check in the on-chain constraint checker.
+        // That is a deterministic check that all nodes should agree upon and thus it belongs onchain.
+        // Plus, That's where we have easy access to the timestamp of the previous block
+        // FRAME's checks: github.com/paritytech/polkadot-sdk/blob/945ebbbc/substrate/frame/timestamp/src/lib.rs#L299-L306
+
+        // Make the comparison for too far in future
+        if on_chain_timestamp > local_timestamp + MAX_DRIFT {
+            log::info!(
+                target: LOG_TARGET,
+                "🕰️🖴 Block timestamp is too far in future. About to push an error"
+            );
+
+            Err(sp_timestamp::InherentError::TooFarInFuture)
+        } else {
+            Ok(())
+        }
     }
 }
 
