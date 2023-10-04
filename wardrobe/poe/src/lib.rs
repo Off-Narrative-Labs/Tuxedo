@@ -83,9 +83,10 @@ pub trait PoeConfig {
 /// waste of caller fees.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, DebugNoBound, CloneNoBound, PartialEq, Eq, TypeInfo)]
+#[scale_info(skip_type_params(T))]
 pub struct PoeClaim<T>(PhantomData<T>);
 
-impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
+impl<T: PoeConfig + 'static> SimpleConstraintChecker for PoeClaim<T> {
     type Error = ConstraintCheckerError;
 
     fn check(
