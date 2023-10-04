@@ -7909,6 +7909,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "sp-inherents",
  "sp-runtime",
  "sp-timestamp",
  "tuxedo-core",

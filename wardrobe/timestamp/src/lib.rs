@@ -21,9 +21,11 @@ use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
+    inherents::TuxedoInherent,
     support_macros::{CloneNoBound, DebugNoBound},
-    SimpleConstraintChecker,
+    SimpleConstraintChecker, Verifier,
 };
+use sp_inherents::InherentData;
 
 #[cfg(test)]
 mod cleanup_tests;
@@ -129,9 +131,11 @@ pub enum TimestampError {
 /// can be voluntarily cleand up later by another transaction.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, DebugNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
+#[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
-impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
+//TODO what about this static? Is that a problem?
+impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
     type Error = TimestampError;
 
     fn check(
@@ -216,6 +220,24 @@ impl<T: TimestampConfig> SimpleConstraintChecker for SetTimestamp<T> {
         );
 
         Ok(0)
+    }
+}
+
+impl<V: Verifier, T: TimestampConfig + 'static> TuxedoInherent<V> for SetTimestamp<T> {
+    type InherentDataType = u64;
+
+    fn create(
+        authoring_inherent_data: Self::InherentDataType,
+        previous_inherent: tuxedo_core::types::Transaction<V, Self>,
+    ) -> tuxedo_core::types::Transaction<V, Self> {
+        todo!()
+    }
+
+    fn check(
+        importing_inherent_data: InherentData,
+        inherent: tuxedo_core::types::Transaction<V, Self>,
+    ) -> bool {
+        todo!()
     }
 }
 

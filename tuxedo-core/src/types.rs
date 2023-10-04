@@ -35,7 +35,7 @@ pub struct OutputRef {
 /// and evictions (inputs that are forcefully consumed.)
 /// Existing state to be read and consumed from storage
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Default, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Transaction<V: TypeInfo, C: TypeInfo> {
     pub inputs: Vec<Input>,
     /// Existing state to be read, but not consumed, from storage

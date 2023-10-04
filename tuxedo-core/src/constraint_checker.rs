@@ -18,7 +18,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
+pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone + TypeInfo {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
@@ -40,7 +40,7 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone {
+pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + TypeInfo {
     /// the error type that this constraint checker may return
     type Error: Debug;
 

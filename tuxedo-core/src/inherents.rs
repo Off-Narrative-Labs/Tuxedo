@@ -43,8 +43,11 @@
 //! game or dao that anyone can participate in.
 
 use parity_scale_codec::Decode;
+use scale_info::TypeInfo;
 use sp_inherents::{InherentData, InherentIdentifier};
 use sp_runtime::traits::Block as BlockT;
+
+use crate::{types::Transaction, Verifier};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
@@ -87,27 +90,83 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
     }
 }
 
-
 /// Tuxedo's interface around Substrate's concept of inherents.
-/// 
+///
 /// Tuxedo assumes that each inherent will appear exactly once in each block.
 /// It is recommended that inherent constraint checkers use their Accumulator to verify this
 /// at the end of each block.
-/// 
+///
 /// This interface is stricter and more structured, and therefore simpler than FRAME's.
-trait TuxedoInherent<Extrinsic> {
+pub trait TuxedoInherent<V: Verifier>: Sized + TypeInfo {
     /// The type that the encoded inherent data should be decoded into.
     type InherentDataType: Decode;
 
-    /// Create the inherent extrinsics to insert into a block that is being authored locally.
+    /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    fn create(authoring_inherent_data: InherentData) -> Vec<Extrinsic>;
+    fn create(
+        authoring_inherent_data: Self::InherentDataType,
+        previous_inherent: Transaction<V, Self>,
+    ) -> Transaction<V, Self>;
 
     /// Perform off-chain pre-execution checks on the inherents.
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(importing_inherent_data: InherentData, ext: Extrinsic) -> bool;
+    fn check(importing_inherent_data: InherentData, inherent: Transaction<V, Self>) -> bool;
+
+    /// A simple check for whether this extrinsic is an inherent or not.
+    /// Any non-trivial implementation should return true.
+    /// Only the provided implementation for the `()` type is expected to
+    /// return false and it should be used for any extrinsic that is not an inherent.
+    fn is_inherent() -> bool {
+        true
+    }
+}
+
+impl<V: Verifier, T: TuxedoInherent<V>> InherentInternal<V> for T {
+    type InherentDataType = <T as TuxedoInherent<V>>::InherentDataType;
+
+    fn create(
+        authoring_inherent_data: Self::InherentDataType,
+        previous_inherent: Transaction<V, Self>,
+    ) -> Vec<Transaction<V, Self>> {
+        // This is the magic. We just take the single transaction from the individual piece
+        // and put it into a vec so it can be aggregated.
+        vec![<T as TuxedoInherent<V>>::create(
+            authoring_inherent_data,
+            previous_inherent,
+        )]
+    }
+
+    fn check(importing_inherent_data: InherentData, inherent: Transaction<V, Self>) -> bool {
+        <T as TuxedoInherent<V>>::check(importing_inherent_data, inherent)
+    }
+
+    fn is_inherent() -> bool {
+        <T as TuxedoInherent<V>>::is_inherent()
+    }
+}
+
+/// Almost identical to TuxedoInherent, but allows returning multiple
+/// exrinsics (as aggregate runtimes will need to) and removes the
+/// requirement that the generic outer constraint checker be buildable
+/// from `Self` so we can implement it for ().
+trait InherentInternal<V: Verifier>: Sized + TypeInfo {
+    /// The type that the encoded inherent data should be decoded into.
+    type InherentDataType: Decode;
+
+    /// Create the inherent extrinsic to insert into a block that is being authored locally.
+    /// The inherent data is supplied by the authoring node.
+    fn create(
+        authoring_inherent_data: Self::InherentDataType,
+        previous_inherent: Transaction<V, Self>,
+    ) -> Vec<Transaction<V, Self>>;
+
+    /// Perform off-chain pre-execution checks on the inherents.
+    /// The inherent data is supplied by the importing node.
+    /// The inherent data available here is not guaranteed to be the
+    /// same as what is available at authoring time.
+    fn check(importing_inherent_data: InherentData, inherent: Transaction<V, Self>) -> bool;
 
     /// A simple check for whether this extrinsic is an inherent or not.
     /// Any non-trivial implementation should return true.
@@ -116,14 +175,19 @@ trait TuxedoInherent<Extrinsic> {
     fn is_inherent() -> bool;
 }
 
-impl<E> TuxedoInherent<E> for () {
+impl<V: Verifier> TuxedoInherent<V> for () {
     type InherentDataType = ();
 
-    fn create(_: InherentData) -> Vec<E> {
-        Vec::new()
+    fn create(_: Self::InherentDataType, _: Transaction<V, ()>) -> Transaction<V, ()> {
+        Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: Vec::new(),
+            checker: (),
+        }
     }
 
-    fn check(_: InherentData, _: E) -> bool {
+    fn check(_: InherentData, _: Transaction<V, ()>) -> bool {
         true
     }
 
