@@ -250,7 +250,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         use tuxedo_core::types::OutputRef;
 
         let mut inputs = Vec::new();
-        if T::block_height() != 0 {
+        if T::block_height() != 1 {
             let prev_best_index = previous_inherent
                 .outputs
                 .iter()
