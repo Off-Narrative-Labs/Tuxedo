@@ -7,9 +7,6 @@
 //! https://github.com/Off-Narrative-Labs/Tuxedo/issues/107
 
 use super::*;
-use tuxedo_core::dynamic_typing::testing::Bogus;
-
-use TimestampError::*;
 
 /// The mock config always says the block number is one.
 pub struct AlwaysBlockOne;
