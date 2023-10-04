@@ -404,30 +404,6 @@ impl_runtime_apis! {
                 checker: timestamp_tx.checker.into(),
             };
 
-            ///////////// Aura //////////////////
-
-            // Extract the Aura slot (although we are not using it yet)
-            // Actually, I wonder how Aura is working so well without this inherent...
-            // Maybe we are failing to check something important and aura-related.
-
-            // I guess we can probably author in other peoples' slots...
-            // This could be an expert exercise for Substrate students. We launch a chain that doesn't
-            // check for the right author in each slot. Then start a chain, and author all the blocks,
-            // and challenge students to figure out the problem and fix it.
-
-            use sp_consensus_aura::Slot;
-
-            let slot: Slot = data
-                .get_data(&sp_consensus_aura::inherents::INHERENT_IDENTIFIER)
-                .unwrap()
-                .unwrap();
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 Aura slot is: {:#?}", slot
-            );
-
-
             // Return just the timestamp extrinsic for now.
             // Later we will either handle Aura properly or switch to nimbus.
             // Soon we will add the parachain inherent in here.
