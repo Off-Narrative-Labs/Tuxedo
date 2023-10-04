@@ -51,6 +51,8 @@ jobs:
           uses: taiki-e/install-action@cargo-llvm-cov
         - name: Rust Cache
           uses: Swatinem/rust-cache@v2
+          with:
+            cache-on-failure: true
         - name: Run tests
           run: cargo llvm-cov nextest --lcov
                --ignore-filename-regex "node/"
@@ -76,5 +78,7 @@ jobs:
         run: rustup component add clippy
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Run Clippy
         run: cargo clippy --no-deps -- -D warnings
