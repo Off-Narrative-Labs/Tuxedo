@@ -18,9 +18,7 @@ use sp_api::impl_runtime_apis;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
-    transaction_validity::{
-        InvalidTransaction, TransactionPriority, TransactionSource, TransactionValidity,
-    },
+    transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;
@@ -501,17 +499,6 @@ impl_runtime_apis! {
             tx: <Block as BlockT>::Extrinsic,
             block_hash: <Block as BlockT>::Hash,
         ) -> TransactionValidity {
-
-            // Check if the transaction in question is an inherent. If so return invalid transaction.
-            // Inherents are never valid in the pool
-            match tx.checker {
-                OuterConstraintChecker::SetTimestamp(_) => {
-                    return Err(InvalidTransaction::Call.into());
-                }
-                _ => ()
-            }
-
-
             Executive::validate_transaction(source, tx, block_hash)
         }
     }
