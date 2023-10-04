@@ -86,3 +86,48 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
         }
     }
 }
+
+
+/// Tuxedo's interface around Substrate's concept of inherents.
+/// 
+/// Tuxedo assumes that each inherent will appear exactly once in each block.
+/// It is recommended that inherent constraint checkers use their Accumulator to verify this
+/// at the end of each block.
+/// 
+/// This interface is stricter and more structured, and therefore simpler than FRAME's.
+trait TuxedoInherent<Extrinsic> {
+    /// The type that the encoded inherent data should be decoded into.
+    type InherentDataType: Decode;
+
+    /// Create the inherent extrinsics to insert into a block that is being authored locally.
+    /// The inherent data is supplied by the authoring node.
+    fn create(authoring_inherent_data: InherentData) -> Vec<Extrinsic>;
+
+    /// Perform off-chain pre-execution checks on the inherents.
+    /// The inherent data is supplied by the importing node.
+    /// The inherent data available here is not guaranteed to be the
+    /// same as what is available at authoring time.
+    fn check(importing_inherent_data: InherentData, ext: Extrinsic) -> bool;
+
+    /// A simple check for whether this extrinsic is an inherent or not.
+    /// Any non-trivial implementation should return true.
+    /// Only the provided implementation for the `()` type is expected to
+    /// return false and it should be used for any extrinsic that is not an inherent.
+    fn is_inherent() -> bool;
+}
+
+impl<E> TuxedoInherent<E> for () {
+    type InherentDataType = ();
+
+    fn create(_: InherentData) -> Vec<E> {
+        Vec::new()
+    }
+
+    fn check(_: InherentData, _: E) -> bool {
+        true
+    }
+
+    fn is_inherent() -> bool {
+        false
+    }
+}
