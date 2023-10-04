@@ -227,7 +227,7 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
 impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V> for SetTimestamp<T> {
     
     fn create(
-        authoring_inherent_data: InherentData,
+        authoring_inherent_data: &InherentData,
         previous_inherent: tuxedo_core::types::Transaction<V, Self>,
     ) -> tuxedo_core::types::Transaction<V, Self> {
         // Extract the current timestamp from the inherent data
@@ -301,7 +301,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
     }
 
     fn check(
-        importing_inherent_data: InherentData,
+        importing_inherent_data: &InherentData,
         inherent: tuxedo_core::types::Transaction<V, Self>,
     ) -> bool {
         todo!()

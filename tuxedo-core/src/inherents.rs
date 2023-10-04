@@ -102,7 +102,7 @@ pub trait TuxedoInherent<V: Verifier>: Sized + TypeInfo {
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create(
-        authoring_inherent_data: InherentData,
+        authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, Self>,
     ) -> Transaction<V, Self>;
 
@@ -110,7 +110,7 @@ pub trait TuxedoInherent<V: Verifier>: Sized + TypeInfo {
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(importing_inherent_data: InherentData, inherent: Transaction<V, Self>) -> bool;
+    fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, Self>) -> bool;
 
     /// A simple check for whether this extrinsic is an inherent or not.
     /// Any non-trivial implementation should return true.
@@ -123,7 +123,7 @@ pub trait TuxedoInherent<V: Verifier>: Sized + TypeInfo {
 
 impl<V: Verifier, T: TuxedoInherent<V>> InherentInternal<V> for T {
     fn create(
-        authoring_inherent_data: InherentData,
+        authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, Self>,
     ) -> Vec<Transaction<V, Self>> {
         // This is the magic. We just take the single transaction from the individual piece
@@ -134,7 +134,7 @@ impl<V: Verifier, T: TuxedoInherent<V>> InherentInternal<V> for T {
         )]
     }
 
-    fn check(importing_inherent_data: InherentData, inherent: Transaction<V, Self>) -> bool {
+    fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, Self>) -> bool {
         <T as TuxedoInherent<V>>::check(importing_inherent_data, inherent)
     }
 
@@ -151,7 +151,7 @@ trait InherentInternal<V: Verifier>: Sized + TypeInfo {
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create(
-        authoring_inherent_data: InherentData,
+        authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, Self>,
     ) -> Vec<Transaction<V, Self>>;
 
@@ -159,7 +159,7 @@ trait InherentInternal<V: Verifier>: Sized + TypeInfo {
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(importing_inherent_data: InherentData, inherent: Transaction<V, Self>) -> bool;
+    fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, Self>) -> bool;
 
     /// A simple check for whether this extrinsic is an inherent or not.
     /// Any non-trivial implementation should return true.
@@ -169,7 +169,7 @@ trait InherentInternal<V: Verifier>: Sized + TypeInfo {
 }
 
 impl<V: Verifier> TuxedoInherent<V> for () {
-    fn create(_: InherentData, _: Transaction<V, ()>) -> Transaction<V, ()> {
+    fn create(_: &InherentData, _: Transaction<V, ()>) -> Transaction<V, ()> {
         Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
@@ -178,7 +178,7 @@ impl<V: Verifier> TuxedoInherent<V> for () {
         }
     }
 
-    fn check(_: InherentData, _: Transaction<V, ()>) -> bool {
+    fn check(_: &InherentData, _: Transaction<V, ()>) -> bool {
         true
     }
 

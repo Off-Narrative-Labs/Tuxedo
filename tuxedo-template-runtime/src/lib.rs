@@ -36,10 +36,12 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
+use timestamp::SetTimestamp;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
+    inherents::TuxedoInherent,
     tuxedo_constraint_checker, tuxedo_verifier,
-    types::{Input, Transaction as TuxedoTransaction},
+    types::{Transaction as TuxedoTransaction},
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
@@ -375,13 +377,13 @@ impl_runtime_apis! {
                 .extrinsics()
                 .iter()
                 .find(|extrinsic| {
-                    matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(inner_checker))
+                    matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
                 })
                 .map(|t| TuxedoTransaction {
-                    inputs: t.inputs,
-                    outputs: t.outputs,
-                    peeks: t.peeks,
-                    checker: inner_checker,
+                    inputs: t.inputs.clone(),
+                    outputs: t.outputs.clone(),
+                    peeks: t.peeks.clone(),
+                    checker: SetTimestamp::<Runtime>(Default::default()),
                 })
                 .unwrap_or(
                     // A dummy transaction for the first block hack
@@ -389,18 +391,18 @@ impl_runtime_apis! {
                         inputs: vec![],
                         outputs: vec![],
                         peeks: vec![],
-                        checker: SetTimestamp,
+                        checker: SetTimestamp::<Runtime>(Default::default()),
                     }
                 );
 
             // Call into the timestamp helper, then map the checker
-            let timestamp_tx = timestamp::SetTimestamp::create(data, prev_set_timestamp);
+            let timestamp_tx = timestamp::SetTimestamp::create(&data, prev_set_timestamp);
             let timestamp_tx = Transaction {
                 inputs: timestamp_tx.inputs,
                 peeks: timestamp_tx.peeks,
                 outputs: timestamp_tx.outputs,
                 checker: timestamp_tx.checker.into(),
-            }
+            };
 
             ///////////// Aura //////////////////
 
