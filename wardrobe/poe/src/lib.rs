@@ -134,7 +134,6 @@ pub struct PoeRevoke;
 impl<V: Verifier> SimpleConstraintChecker<V> for PoeRevoke {
     type Error = ConstraintCheckerError;
     type InherentHooks = ();
-    
 
     fn check(
         &self,

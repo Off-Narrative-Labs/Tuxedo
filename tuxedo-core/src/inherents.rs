@@ -48,7 +48,7 @@ use sp_inherents::{InherentData, InherentIdentifier};
 use sp_runtime::traits::Block as BlockT;
 use sp_std::{vec, vec::Vec};
 
-use crate::{types::Transaction, Verifier, ConstraintChecker};
+use crate::{types::Transaction, ConstraintChecker, Verifier};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";

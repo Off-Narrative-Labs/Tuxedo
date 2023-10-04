@@ -27,7 +27,7 @@ use tuxedo_core::{
     support_macros::{CloneNoBound, DebugNoBound},
     types::{Input, Output, Transaction},
     verifier::UpForGrabs,
-    SimpleConstraintChecker, Verifier, ConstraintChecker,
+    ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -138,7 +138,9 @@ pub enum TimestampError {
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
 //TODO what about this static? Is that a problem?
-impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstraintChecker<V> for SetTimestamp<T> {
+impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstraintChecker<V>
+    for SetTimestamp<T>
+{
     type Error = TimestampError;
     type InherentHooks = Self;
 
@@ -263,8 +265,8 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
     }
 }
 
-impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig + 'static> TuxedoInherent<V, C>
-    for SetTimestamp<T>
+impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig + 'static>
+    TuxedoInherent<V, C> for SetTimestamp<T>
 {
     fn create(
         authoring_inherent_data: &InherentData,

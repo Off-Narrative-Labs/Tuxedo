@@ -5,7 +5,9 @@
 
 use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier, inherents::{InherentInternal}};
+use crate::{
+    dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output, Verifier,
+};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -108,8 +110,6 @@ impl<T: SimpleConstraintChecker<V>, V: Verifier> ConstraintChecker<V> for T {
     fn is_inherent(&self) -> bool {
         <Self as SimpleConstraintChecker<V>>::is_inherent(self)
     }
-
-    
 }
 
 /// Utilities for writing constraint-checker-related unit tests
@@ -148,15 +148,23 @@ pub mod testing {
 
     #[test]
     fn test_checker_passes() {
-        let result =
-            SimpleConstraintChecker::<TestVerifier>::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
+        let result = SimpleConstraintChecker::<TestVerifier>::check(
+            &TestConstraintChecker { checks: true },
+            &[],
+            &[],
+            &[],
+        );
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
-        let result =
-            SimpleConstraintChecker::<TestVerifier>::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
+        let result = SimpleConstraintChecker::<TestVerifier>::check(
+            &TestConstraintChecker { checks: false },
+            &[],
+            &[],
+            &[],
+        );
         assert_eq!(result, Err(()));
     }
 }
