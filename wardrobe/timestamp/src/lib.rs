@@ -19,14 +19,16 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_inherents::InherentData;
 use sp_runtime::{traits::BlakeTwo256, transaction_validity::TransactionPriority};
+use sp_std::{vec, vec::Vec};
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     inherents::TuxedoInherent,
     support_macros::{CloneNoBound, DebugNoBound},
-    SimpleConstraintChecker, Verifier, types::{Input, Output, Transaction}, verifier::UpForGrabs,
+    types::{Input, Output, Transaction},
+    verifier::UpForGrabs,
+    SimpleConstraintChecker, Verifier,
 };
-use sp_std::{vec, vec::Vec};
 
 #[cfg(test)]
 mod cleanup_tests;
@@ -224,8 +226,9 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
     }
 }
 
-impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V> for SetTimestamp<T> {
-    
+impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V>
+    for SetTimestamp<T>
+{
     fn create(
         authoring_inherent_data: &InherentData,
         previous_inherent: tuxedo_core::types::Transaction<V, Self>,

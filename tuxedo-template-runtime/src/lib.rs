@@ -41,7 +41,7 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     inherents::TuxedoInherent,
     tuxedo_constraint_checker, tuxedo_verifier,
-    types::{Transaction as TuxedoTransaction},
+    types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
