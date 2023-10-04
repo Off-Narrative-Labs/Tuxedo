@@ -5,11 +5,9 @@
 
 use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier, inherents::{TuxedoInherent, InherentInternal}};
+use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier, inherents::{InherentInternal}};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A simplified constraint checker that a transaction can choose to call. Checks whether the input
@@ -23,7 +21,8 @@ pub trait SimpleConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone 
     type Error: Debug;
 
     /// Optional Associated Inherent processing logic. If this transaction type is not
-    /// an inherent, use (). If it is an inherent, use Self, and implement the TuxedoInherent trait
+    /// an inherent, use (). If it is an inherent, use Self, implement the TuxedoInherent
+    /// trait, and override the `is_inherent` function to return true.
     type InherentHooks: InherentInternal<V, Self>;
 
     /// The actual check validation logic
@@ -33,6 +32,13 @@ pub trait SimpleConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone 
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
+
+    /// Tells whether this extrinsic is an inherent or not.
+    /// The default implementation returns false as most transaction types are not inherents.
+    /// If you override this to return true, you must supply meaningful Inherent Hooks.
+    fn is_inherent(&self) -> bool {
+        false
+    }
 }
 
 /// A single constraint checker that a transaction can choose to call. Checks whether the input
@@ -59,6 +65,13 @@ pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + Type
         peeks: &[Output<V>],
         outputs: &[Output<V>],
     ) -> Result<TransactionPriority, Self::Error>;
+
+    /// Tells whether this extrinsic is an inherent or not.
+    /// The default implementation returns false as most transaction types are not inherents.
+    /// If you override this to return true, you must supply meaningful Inherent Hooks.
+    fn is_inherent(&self) -> bool {
+        false
+    }
 }
 
 // This blanket implementation makes it so that any type that chooses to
@@ -91,12 +104,19 @@ impl<T: SimpleConstraintChecker<V>, V: Verifier> ConstraintChecker<V> for T {
         // Call the simple constraint checker
         SimpleConstraintChecker::check(self, &input_data, &peek_data, &output_data)
     }
+
+    fn is_inherent(&self) -> bool {
+        <Self as SimpleConstraintChecker<V>>::is_inherent(self)
+    }
+
+    
 }
 
 /// Utilities for writing constraint-checker-related unit tests
-#[cfg(feature = "std")]
+#[cfg(test)]
 pub mod testing {
     use crate::verifier::TestVerifier;
+    use serde::{Deserialize, Serialize};
 
     use super::*;
 

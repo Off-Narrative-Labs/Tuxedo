@@ -111,14 +111,6 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
     fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, C>) -> bool;
-
-    /// A simple check for whether this extrinsic is an inherent or not.
-    /// Any non-trivial implementation should return true.
-    /// Only the provided implementation for the `()` type is expected to
-    /// return false and it should be used for any extrinsic that is not an inherent.
-    fn is_inherent() -> bool {
-        true
-    }
 }
 
 impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
@@ -127,11 +119,7 @@ impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
     }
 
     fn check(_: &InherentData, _: Transaction<V, C>) -> bool {
-        false
-    }
-
-    fn is_inherent() -> bool {
-        false
+        panic!("Attemping to perform inherent checks for a constraint checker that does not support inherents.")
     }
 }
 
@@ -154,12 +142,6 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
     fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, C>) -> bool;
-
-    /// A simple check for whether this extrinsic is an inherent or not.
-    /// Any non-trivial implementation should return true.
-    /// Only the provided implementation for the `()` type is expected to
-    /// return false and it should be used for any extrinsic that is not an inherent.
-    fn is_inherent() -> bool;
 }
 
 impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInternal<V, C> for T {
@@ -177,9 +159,5 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
 
     fn check(importing_inherent_data: &InherentData, inherent: Transaction<V, C>) -> bool {
         <T as TuxedoInherent<V, C>>::check(importing_inherent_data, inherent)
-    }
-
-    fn is_inherent() -> bool {
-        <T as TuxedoInherent<V, C>>::is_inherent()
     }
 }

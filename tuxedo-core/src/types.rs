@@ -1,6 +1,6 @@
 //! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
-use crate::dynamic_typing::DynamicallyTypedData;
+use crate::{dynamic_typing::DynamicallyTypedData, ConstraintChecker, Verifier};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -93,7 +93,7 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
 // This trait's design has a preference for transactions that will have a single signature over the
 // entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
 // so we do a minimal implementation.
-impl<V: TypeInfo + 'static, C: TypeInfo + 'static> Extrinsic for Transaction<V, C> {
+impl<V: Verifier + 'static, C: ConstraintChecker<V> + 'static> Extrinsic for Transaction<V, C> {
     type Call = Self;
     type SignaturePayload = ();
 
@@ -101,10 +101,24 @@ impl<V: TypeInfo + 'static, C: TypeInfo + 'static> Extrinsic for Transaction<V, 
         Some(data)
     }
 
-    // This function has a default implementation that returns None.
-    // TODO what are the consequences of returning Some(false) vs None?
+    // The signature on this function is not the best. Ultimately it is
+    // trying to distinguish between three potential types of transactions:
+    // 1. Signed user transactions: `Some(true)`
+    // 2. Unsigned user transactions: `None`
+    // 3. Unsigned inherents: `Some(false)`
+    //
+    // In Substrate generally, and also in FRAME, all three of these could exist.
+    // But in Tuxedo we will never have signed user transactions, and therefore
+    // will never return `Some(true)`.
+    //
+    // Perhaps a dedicated enum makes more sense as the return type?
+    // That would be a Substrate PR after this is more tried and true.
     fn is_signed(&self) -> Option<bool> {
-        Some(false)
+        if self.checker.is_inherent() {
+            Some(false)
+        } else {
+            None
+        }
     }
 }
 
