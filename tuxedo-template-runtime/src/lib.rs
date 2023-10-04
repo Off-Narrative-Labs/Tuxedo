@@ -365,83 +365,44 @@ impl_runtime_apis! {
                 "🕰️🖴 The previous block had {} extrinsics.", parent.extrinsics().len()
             );
 
-            // Extract the timestamp
-            use timestamp::{BestTimestamp, NotedTimestamp};
-
-            let timestamp_millis: u64 = data
-                .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
-                .expect("Inherent data should decode properly")
-                .expect("Timestamp inherent data should be present.");
-            let new_best_timestamp = BestTimestamp(timestamp_millis);
-            let new_noted_timestamp = NotedTimestamp(timestamp_millis);
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 timestamp_millis:: {timestamp_millis}"
-            );
+            /////////////// Timestamp /////////////
 
             // We need to initialize the timestamp somehow, and right now the way we do it
             // is to allow a transaction that does not consume any previous best on block height 1 only.
             // A much more elegant solution would be to allow transactions in the genesis block, then we
             // could use the same scraping logic as always.
-            use tuxedo_core::types::OutputRef;
-            use sp_api::HashT;
+            let prev_set_timestamp = parent
+                .extrinsics()
+                .iter()
+                .find(|extrinsic| {
+                    matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(inner_checker))
+                })
+                .map(|t| TuxedoTransaction {
+                    inputs: t.inputs,
+                    outputs: t.outputs,
+                    peeks: t.peeks,
+                    checker: inner_checker,
+                })
+                .unwrap_or(
+                    // A dummy transaction for the first block hack
+                    TuxedoTransaction {
+                        inputs: vec![],
+                        outputs: vec![],
+                        peeks: vec![],
+                        checker: SetTimestamp,
+                    }
+                );
 
-            let mut inputs = Vec::new();
-            if parent.header.number != 0 {
-                let prev_set_timestamp = parent
-                    .extrinsics()
-                    .iter()
-                    .find(|extrinsic| {
-                        matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
-                    })
-                    .expect("SetTimestamp extrinsic should appear in every block.");
-
-                let index = prev_set_timestamp
-                    .outputs
-                    .iter()
-                    .position(|output| {
-                        output.payload.extract::<BestTimestamp>().is_ok()
-                    })
-                    .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
-                    .try_into()
-                    .expect("There should not be more than u32::max_value transactions in a block.");
-
-                let output_ref = OutputRef {
-                    tx_hash: BlakeTwo256::hash_of(&prev_set_timestamp.encode()),
-                    index,
-                };
-
-                let input = Input {
-                    output_ref,
-                    // The best time needs to be easily taken. For now I'll assume it is up for grabs.
-                    // We can make this an eviction once that is implemented.
-                    redeemer: Vec::new(),
-                };
-
-                inputs.push(input);
+            // Call into the timestamp helper, then map the checker
+            let timestamp_tx = timestamp::SetTimestamp::create(data, prev_set_timestamp);
+            let timestamp_tx = Transaction {
+                inputs: timestamp_tx.inputs,
+                peeks: timestamp_tx.peeks,
+                outputs: timestamp_tx.outputs,
+                checker: timestamp_tx.checker.into(),
             }
 
-            let best_output = Output {
-                payload: new_best_timestamp.into(),
-                verifier: OuterVerifier::UpForGrabs(UpForGrabs),
-            };
-            let noted_output = Output {
-                payload: new_noted_timestamp.into(),
-                verifier: OuterVerifier::UpForGrabs(UpForGrabs),
-            };
-
-            let timestamp_tx = Transaction {
-                inputs,
-                peeks: Vec::new(),
-                outputs: vec![best_output, noted_output],
-                checker: timestamp::SetTimestamp(Default::default()).into(),
-            };
-
-            // log::info!(
-            //     target: LOG_TARGET,
-            //     "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
-            // );
+            ///////////// Aura //////////////////
 
             // Extract the Aura slot (although we are not using it yet)
             // Actually, I wonder how Aura is working so well without this inherent...

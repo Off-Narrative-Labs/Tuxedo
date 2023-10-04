@@ -46,6 +46,7 @@ use parity_scale_codec::Decode;
 use scale_info::TypeInfo;
 use sp_inherents::{InherentData, InherentIdentifier};
 use sp_runtime::traits::Block as BlockT;
+use sp_std::{vec, vec::Vec};
 
 use crate::{types::Transaction, Verifier};
 
@@ -98,13 +99,10 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
 ///
 /// This interface is stricter and more structured, and therefore simpler than FRAME's.
 pub trait TuxedoInherent<V: Verifier>: Sized + TypeInfo {
-    /// The type that the encoded inherent data should be decoded into.
-    type InherentDataType: Decode;
-
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create(
-        authoring_inherent_data: Self::InherentDataType,
+        authoring_inherent_data: InherentData,
         previous_inherent: Transaction<V, Self>,
     ) -> Transaction<V, Self>;
 
@@ -124,10 +122,8 @@ pub trait TuxedoInherent<V: Verifier>: Sized + TypeInfo {
 }
 
 impl<V: Verifier, T: TuxedoInherent<V>> InherentInternal<V> for T {
-    type InherentDataType = <T as TuxedoInherent<V>>::InherentDataType;
-
     fn create(
-        authoring_inherent_data: Self::InherentDataType,
+        authoring_inherent_data: InherentData,
         previous_inherent: Transaction<V, Self>,
     ) -> Vec<Transaction<V, Self>> {
         // This is the magic. We just take the single transaction from the individual piece
@@ -152,13 +148,10 @@ impl<V: Verifier, T: TuxedoInherent<V>> InherentInternal<V> for T {
 /// requirement that the generic outer constraint checker be buildable
 /// from `Self` so we can implement it for ().
 trait InherentInternal<V: Verifier>: Sized + TypeInfo {
-    /// The type that the encoded inherent data should be decoded into.
-    type InherentDataType: Decode;
-
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create(
-        authoring_inherent_data: Self::InherentDataType,
+        authoring_inherent_data: InherentData,
         previous_inherent: Transaction<V, Self>,
     ) -> Vec<Transaction<V, Self>>;
 
@@ -176,9 +169,7 @@ trait InherentInternal<V: Verifier>: Sized + TypeInfo {
 }
 
 impl<V: Verifier> TuxedoInherent<V> for () {
-    type InherentDataType = ();
-
-    fn create(_: Self::InherentDataType, _: Transaction<V, ()>) -> Transaction<V, ()> {
+    fn create(_: InherentData, _: Transaction<V, ()>) -> Transaction<V, ()> {
         Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),

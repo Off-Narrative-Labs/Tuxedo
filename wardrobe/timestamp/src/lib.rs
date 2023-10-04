@@ -17,15 +17,16 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_runtime::transaction_validity::TransactionPriority;
+use sp_inherents::InherentData;
+use sp_runtime::{traits::BlakeTwo256, transaction_validity::TransactionPriority};
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     inherents::TuxedoInherent,
     support_macros::{CloneNoBound, DebugNoBound},
-    SimpleConstraintChecker, Verifier,
+    SimpleConstraintChecker, Verifier, types::{Input, Output, Transaction}, verifier::UpForGrabs,
 };
-use sp_inherents::InherentData;
+use sp_std::{vec, vec::Vec};
 
 #[cfg(test)]
 mod cleanup_tests;
@@ -223,14 +224,80 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
     }
 }
 
-impl<V: Verifier, T: TimestampConfig + 'static> TuxedoInherent<V> for SetTimestamp<T> {
-    type InherentDataType = u64;
-
+impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V> for SetTimestamp<T> {
+    
     fn create(
-        authoring_inherent_data: Self::InherentDataType,
+        authoring_inherent_data: InherentData,
         previous_inherent: tuxedo_core::types::Transaction<V, Self>,
     ) -> tuxedo_core::types::Transaction<V, Self> {
-        todo!()
+        // Extract the current timestamp from the inherent data
+        let timestamp_millis: u64 = authoring_inherent_data
+            .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
+            .expect("Inherent data should decode properly")
+            .expect("Timestamp inherent data should be present.");
+        let new_best_timestamp = BestTimestamp(timestamp_millis);
+        let new_noted_timestamp = NotedTimestamp(timestamp_millis);
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 local timestamp while authoring:: {timestamp_millis}"
+        );
+
+        use sp_api::HashT;
+        use tuxedo_core::types::OutputRef;
+
+        let mut inputs = Vec::new();
+        if T::block_height() != 0 {
+            let prev_best_index = previous_inherent
+                .outputs
+                .iter()
+                .position(|output| {
+                    output.payload.extract::<BestTimestamp>().is_ok()
+                })
+                .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
+                .try_into()
+                .expect("There should not be more than u32::max_value transactions in a block.");
+
+            // TODO should we have some generic way to refer to the hashing algo?
+            let output_ref = OutputRef {
+                tx_hash: BlakeTwo256::hash_of(&previous_inherent.encode()),
+                index: prev_best_index,
+            };
+
+            let input = Input {
+                output_ref,
+                // The best time needs to be easily taken. For now I'll assume it is up for grabs.
+                // We can make this an eviction once that is implemented.
+                // Once this is fixed more properly (like by using evictions)
+                // I should be able to not mention UpForGrabs here at all.
+                redeemer: Vec::new(),
+            };
+
+            inputs.push(input);
+        }
+
+        let best_output = Output {
+            payload: new_best_timestamp.into(),
+            verifier: UpForGrabs.into(),
+        };
+        let noted_output = Output {
+            payload: new_noted_timestamp.into(),
+            verifier: UpForGrabs.into(),
+        };
+
+        let timestamp_tx = Transaction {
+            inputs,
+            peeks: Vec::new(),
+            outputs: vec![best_output, noted_output],
+            checker: SetTimestamp::<T>(Default::default()),
+        };
+
+        // log::info!(
+        //     target: LOG_TARGET,
+        //     "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
+        // );
+
+        timestamp_tx
     }
 
     fn check(
