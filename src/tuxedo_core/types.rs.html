@@ -185,6 +185,7 @@
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
 </span><span class="kw">use </span><span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData;
@@ -224,7 +225,8 @@
 </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;std&quot;</span>, derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
 </span><span class="kw">pub struct </span>Transaction&lt;V: TypeInfo, C: TypeInfo&gt; {
-    <span class="kw">pub </span>inputs: Vec&lt;Input&gt;,
+    <span class="doccomment">/// Existing pieces of state to be read and consumed from storage
+    </span><span class="kw">pub </span>inputs: Vec&lt;Input&gt;,
     <span class="doccomment">/// Existing state to be read, but not consumed, from storage
     </span><span class="kw">pub </span>peeks: Vec&lt;OutputRef&gt;,
     <span class="doccomment">/// New state to be placed into storage
