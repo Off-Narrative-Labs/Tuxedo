@@ -51,23 +51,14 @@ jobs:
           uses: Swatinem/rust-cache@v2
           with:
             cache-on-failure: true
-        # push on main, or pull request in different repos,
-        # eg from contributor/Tuxedo to Off-Narrative-Labs/Tuxedo
-        - if: github.event_name == 'push' ||
-              (github.event_name == 'pull_request' &&
-              github.event.pull_request.base.repo != github.event.pull_request.head.repo)
-          name: Run tests and print coverage data
-          run: cargo llvm-cov nextest --json
-               --ignore-filename-regex "node/"
-               --output-path lcov.json &&
-               jq ".data[0].totals.lines.percent" lcov.json
-        # pull request in the same repo, able to report coverage using comment on PR
-        - if: github.event_name == 'pull_request' &&
-              github.event.pull_request.base.repo == github.event.pull_request.head.repo
-          name: Run tests and collect coverage data
+        - name: Run tests and print coverage data
           run: cargo llvm-cov nextest --lcov
                --ignore-filename-regex "node/"
-               --output-path lcov.info
+               --output-path lcov.info &&
+               cargo llvm-cov report --json --output-path lcov.json &&
+               echo "Lines coverage " &&
+               jq ".data[0].totals.lines.percent" lcov.json
+        # if the PR is on the same repo, the coverage data can be reported as a comment
         - if: github.event_name == 'pull_request' &&
               github.event.pull_request.base.repo == github.event.pull_request.head.repo
           name: Report code coverage
