@@ -52,13 +52,15 @@ jobs:
           with:
             cache-on-failure: true
         - name: Run tests and print coverage data
-          run: cargo llvm-cov nextest --lcov
-               --ignore-filename-regex "node/"
-               --output-path lcov.info &&
-               cargo llvm-cov report --json --output-path lcov.json &&
-               echo "Lines coverage " &&
-               jq ".data[0].totals.lines.percent" lcov.json
+          run: cargo llvm-cov nextest --json --output-path lcov.json
+               --ignore-filename-regex "node/" --summary-only &&
+               echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
         # if the PR is on the same repo, the coverage data can be reported as a comment
+        - if: github.event_name == 'pull_request' &&
+              github.event.pull_request.base.repo == github.event.pull_request.head.repo
+          name: Generate lcov report
+          run: cargo llvm-cov report --lcov --output-path lcov.info
+               --ignore-filename-regex "node/"
         - if: github.event_name == 'pull_request' &&
               github.event.pull_request.base.repo == github.event.pull_request.head.repo
           name: Report code coverage
