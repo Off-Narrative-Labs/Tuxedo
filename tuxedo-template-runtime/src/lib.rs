@@ -15,6 +15,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use sp_api::impl_runtime_apis;
+use sp_inherents::{InherentData, InherentIdentifier};
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
@@ -37,7 +38,7 @@ use serde::{Deserialize, Serialize};
 use timestamp::SetTimestamp;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    inherents::TuxedoInherent,
+    inherents::InherentInternal,
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
@@ -389,20 +390,21 @@ impl_runtime_apis! {
                 );
 
             // Call into the timestamp helper, then map the checker
-            let timestamp_tx = timestamp::SetTimestamp::<Runtime>::create(&data, prev_set_timestamp);
+            let transactions = <timestamp::SetTimestamp::<Runtime> as InherentInternal<OuterVerifier, OuterConstraintChecker>>::create_inherent(&data, prev_set_timestamp);
 
             // Return just the timestamp extrinsic for now.
             // Later we will either handle Aura properly or switch to nimbus.
             // Soon we will add the parachain inherent in here.
-            vec![timestamp_tx]
+            transactions
         }
 
         fn check_inherents(
             block: Block,
-            data: sp_inherents::InherentData
+            data: InherentData
         ) -> sp_inherents::CheckInherentsResult {
 
             use sp_inherents::{IsFatalError, CheckInherentsResult};
+            use tuxedo_core::ConstraintChecker;
             let mut results = CheckInherentsResult::new();
 
             log::info!(
@@ -422,17 +424,17 @@ impl_runtime_apis! {
                 .cloned()
                 .expect("SetTimestamp extrinsic should appear in every block.");
 
-            let result = timestamp::SetTimestamp::<Runtime>::check(&data, set_timestamp_ext);
+            let result = <timestamp::SetTimestamp::<Runtime> as InherentInternal<OuterVerifier, OuterConstraintChecker>>::check_inherent(&data, set_timestamp_ext);
 
             if let Err(e) = result {
                 log::info!(
                     target: LOG_TARGET,
                     "🕰️🖴 Got an error when checking an inherent: {:?}", e,
                 );
-                //TODO I need a better way to access the inherent identifier. I guess it needs to be assiciated
-                // with the TuxedoInherent trait. For now I leave it here.
+
+                const INHERENT_ID: InherentIdentifier = <<timestamp::SetTimestamp<Runtime> as ConstraintChecker<OuterVerifier>>::InherentHooks as InherentInternal<OuterVerifier, OuterConstraintChecker>>::INHERENT_IDENTIFIER;
                 results
-                    .put_error(sp_timestamp::INHERENT_IDENTIFIER, &e)
+                    .put_error(INHERENT_ID, &e)
                     .expect("Should be able to put some errors");
 
                 if e.is_fatal_error() {

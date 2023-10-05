@@ -274,8 +274,9 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
     TuxedoInherent<V, C> for SetTimestamp<T>
 {
     type Error = sp_timestamp::InherentError;
+    const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = sp_timestamp::INHERENT_IDENTIFIER;
 
-    fn create(
+    fn create_inherent(
         authoring_inherent_data: &InherentData,
         previous_inherent: tuxedo_core::types::Transaction<V, C>,
     ) -> tuxedo_core::types::Transaction<V, C> {
@@ -354,7 +355,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
         timestamp_tx
     }
 
-    fn check(
+    fn check_inherent(
         importing_inherent_data: &InherentData,
         inherent: tuxedo_core::types::Transaction<V, C>,
     ) -> Result<(), Self::Error> {

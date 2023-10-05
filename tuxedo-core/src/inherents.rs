@@ -101,9 +101,11 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
 pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
     type Error: Encode + IsFatalError;
 
+    const INHERENT_IDENTIFIER: InherentIdentifier;
+
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    fn create(
+    fn create_inherent(
         authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, C>,
     ) -> Transaction<V, C>;
@@ -112,7 +114,7 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(
+    fn check_inherent(
         importing_inherent_data: &InherentData,
         inherent: Transaction<V, C>,
     ) -> Result<(), Self::Error>;
@@ -120,12 +122,13 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
 
 impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
     type Error = MakeFatalError<()>;
+    const INHERENT_IDENTIFIER: InherentIdentifier = *b"no_inher";
 
-    fn create(_: &InherentData, _: Transaction<V, C>) -> Transaction<V, C> {
+    fn create_inherent(_: &InherentData, _: Transaction<V, C>) -> Transaction<V, C> {
         panic!("Attempting to create an inherent for a constraint checker that does not support inherents.")
     }
 
-    fn check(_: &InherentData, _: Transaction<V, C>) -> Result<(), Self::Error> {
+    fn check_inherent(_: &InherentData, _: Transaction<V, C>) -> Result<(), Self::Error> {
         panic!("Attemping to perform inherent checks for a constraint checker that does not support inherents.")
     }
 }
@@ -139,9 +142,11 @@ impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
 pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
     type Error: Encode + IsFatalError;
 
+    const INHERENT_IDENTIFIER: InherentIdentifier;
+
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    fn create(
+    fn create_inherent(
         authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, C>,
     ) -> Vec<Transaction<V, C>>;
@@ -150,7 +155,7 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check(
+    fn check_inherent(
         importing_inherent_data: &InherentData,
         inherent: Transaction<V, C>,
     ) -> Result<(), Self::Error>;
@@ -159,22 +164,25 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
 impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInternal<V, C> for T {
     type Error = <T as TuxedoInherent<V, C>>::Error;
 
-    fn create(
+    const INHERENT_IDENTIFIER: InherentIdentifier =
+        <T as TuxedoInherent<V, C>>::INHERENT_IDENTIFIER;
+
+    fn create_inherent(
         authoring_inherent_data: &InherentData,
         previous_inherent: Transaction<V, C>,
     ) -> Vec<Transaction<V, C>> {
         // This is the magic. We just take the single transaction from the individual piece
         // and put it into a vec so it can be aggregated.
-        vec![<T as TuxedoInherent<V, C>>::create(
+        vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
             previous_inherent,
         )]
     }
 
-    fn check(
+    fn check_inherent(
         importing_inherent_data: &InherentData,
         inherent: Transaction<V, C>,
     ) -> Result<(), Self::Error> {
-        <T as TuxedoInherent<V, C>>::check(importing_inherent_data, inherent)
+        <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent)
     }
 }
