@@ -50,6 +50,7 @@ jobs:
         - name: Rust Cache
           uses: Swatinem/rust-cache@v2
           with:
+            cache-targets: true
             cache-on-failure: true
         - name: Run tests and print coverage data
           run: cargo llvm-cov nextest --json --output-path lcov.json
@@ -82,6 +83,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
+          cache-targets: true
           cache-on-failure: true
       - name: Run Clippy
         run: cargo clippy --no-deps -- -D warnings
@@ -99,6 +101,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
+          cache-targets: true
           cache-on-failure: true
       - name: Build
         run: cargo build --release
