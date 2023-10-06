@@ -85,3 +85,23 @@ jobs:
           cache-on-failure: true
       - name: Run Clippy
         run: cargo clippy --no-deps -- -D warnings
+
+  wallet:
+    name: Wallet end-to-end test
+    #needs: [test, clippy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tooling
+        run: |
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+      - name: Build
+        run: cargo build --release
+      - name: Run wallet test
+        # let's run the wallet without the node to see if it fails successfully
+        run: ./target/release/tuxedo-template-wallet
