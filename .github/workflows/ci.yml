@@ -90,7 +90,7 @@ jobs:
 
   wallet:
     name: Wallet end-to-end test
-    # needs: [test, clippy]
+    needs: [test, clippy]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
