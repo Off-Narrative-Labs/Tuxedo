@@ -103,5 +103,7 @@ jobs:
       - name: Build
         run: cargo build --release
       - name: Run wallet test
-        # let's run the wallet without the node to see if it fails successfully
-        run: ./target/release/tuxedo-template-wallet
+        run: |
+          ./target/release/node-template --dev &
+          sleep 10 &&
+          ./target/release/tuxedo-template-wallet
