@@ -69,6 +69,7 @@ jobs:
           with:
             lcov-file: lcov.info
             pr-number: ${{ github.event.pull_request.number }}
+            delete-old-comments: true
 
   clippy:
     name: Clippy
@@ -90,7 +91,7 @@ jobs:
 
   wallet:
     name: Wallet end-to-end test
-    needs: [test, clippy]
+    needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,9 +105,9 @@ jobs:
           cache-targets: true
           cache-on-failure: true
       - name: Build
-        run: cargo build --release
+        run: cargo build
       - name: Run wallet test
         run: |
-          ./target/release/node-template --dev &
+          ./target/debug/node-template --dev &
           sleep 10 &&
-          ./target/release/tuxedo-template-wallet --endpoint http://localhost:9944
+          ./target/debug/tuxedo-template-wallet --endpoint http://localhost:9944
