@@ -91,7 +91,7 @@ pub struct ImbalancedFundsAccumulator;
 impl Accumulator for ImbalancedFundsAccumulator {
     type ValueType = u128;
 
-    fn key_path(accumulated_value: Self::ValueType) -> & 'static str {
+    fn key_path(_: Self::ValueType) -> & 'static str {
         "imbalanc"
     }
 

@@ -61,7 +61,7 @@ pub trait Accumulator {
 impl Accumulator for () {
     type ValueType = ();
 
-    fn key_path(accumulated_value: Self::ValueType) -> & 'static str {
+    fn key_path(_: Self::ValueType) -> & 'static str {
         "stub_acc"
     }
 
