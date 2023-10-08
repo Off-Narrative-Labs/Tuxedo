@@ -91,12 +91,14 @@ pub struct ImbalancedFundsAccumulator;
 impl Accumulator for ImbalancedFundsAccumulator {
     type ValueType = u128;
 
-    const ID: [u8; 8] = *b"imbalanc";
+    fn key_path(accumulated_value: Self::ValueType) -> & 'static str {
+        "imbalanc"
+    }
 
     const INITIAL_VALUE: u128 = 0;
 
-    fn accumulate(a: u128, b: u128) -> u128 {
-        a + b
+    fn accumulate(a: u128, b: u128) -> Result<u128, ()> {
+        a.checked_add(b).ok_or(())
     }
 }
 

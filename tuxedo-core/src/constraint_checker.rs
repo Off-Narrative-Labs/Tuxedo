@@ -21,28 +21,54 @@ pub struct ConstraintCheckingSuccess<ValueType> {
     pub accumulator_value: ValueType,
 }
 
+/// An accumulator allows a Tuxedo piece to do some internal bookkeeping during the course
+/// of a single block. The Bookkeeping must be done through this accumulator-like interface
+/// where each transaction yields some intermediate value that is them folded into the accumulator
+/// via som logic that is encapsulated in the impelementation.
+/// 
+/// Many Tuxedo pieces will not need accumulators. In such a case, the constraint checker should
+/// simply use () as the accumulator type.
+/// 
+/// Some typical usecases for an accumulator would be making sure that the block author reward
+/// does not exceed the block's transaction fees. Or making sure that a timestamp transaction occurs
+/// at most once in a single block.
+/// 
+/// The accumulator is reset automatically at the end of every block. It is not possible to store
+/// data here for use in subsequent blocks.
 pub trait Accumulator {
     /// The type that is given and also the type of the accumulation result.
     /// I realize that the most general accumulator swill use two different types for those,
     /// but let's do that iff we ever need it. I probably will need to so I can do a simple counter.
     type ValueType;
 
-    const ID: [u8; 8];
-
+    /// The accumulator value that should be used to start a fresh accumulation
+    /// at the beginning of each new block.
     const INITIAL_VALUE: Self::ValueType;
 
-    fn accumulate(a: Self::ValueType, b: Self::ValueType) -> Self::ValueType;
+    // TODO This needs to be improved because it is kind of a footgun right now.
+    // It is a function and not a const because in aggregate runtimes, we will need to determine,
+    // at the executive level, what the key is, which means we need to match in the aggregate implementation.
+    /// A unique key for this accumulator in the runtime. Like with storage types,
+    /// Runtime authors must take care that this key is not used anywhere else in the runtime.
+    fn key_path(accumulated_value: Self::ValueType) -> & 'static str;
+    
+
+    /// This function is responsible for combining or "folding" the intermediate value
+    /// from the current transaction into the accumulatoed value so far in this block.
+    fn accumulate(a: Self::ValueType, b: Self::ValueType) -> Result<Self::ValueType, ()>;
 }
 
 impl Accumulator for () {
     type ValueType = ();
 
-    const ID: [u8; 8] = *b"stub_acc";
+    fn key_path(accumulated_value: Self::ValueType) -> & 'static str {
+        "stub_acc"
+    }
 
     const INITIAL_VALUE: () = ();
 
-    fn accumulate(_: (), _: ()) -> () {
-        ()
+    fn accumulate(_: (), _: ()) -> Result<(), ()> {
+        Ok(())
     }
 }
 
