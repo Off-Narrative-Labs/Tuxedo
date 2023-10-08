@@ -196,16 +196,17 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             }
 
             fn accumulate(acc: Self::ValueType, next: Self::ValueType) -> Result<Self::ValueType, ()> {
-                match (acc, next) {
-                    #(
-                        (Self::ValueType::#variants5(inner_acc), Self::ValueType::#variants5(inner_next)) => {
-                            <<#inner_types5 as tuxedo_core::ConstraintChecker<#verifier>>::Accumulator as tuxedo_core::constraint_checker::Accumulator>::accumulate(inner_acc, inner_next)
-                                .map(|inner_result| {
-                                    Self::ValueType::#variants5(inner_result)
-                                })
-                        }
-                    )*
-                }
+                // match (acc, next) {
+                //     #(
+                //         (Self::ValueType::#variants5(inner_acc), Self::ValueType::#variants5(inner_next)) => {
+                //             <<#inner_types5 as tuxedo_core::ConstraintChecker<#verifier>>::Accumulator as tuxedo_core::constraint_checker::Accumulator>::accumulate(inner_acc, inner_next)
+                //                 .map(|inner_result| {
+                //                     Self::ValueType::#variants5(inner_result)
+                //                 })
+                //         }
+                //     )*
+                // }
+                todo!()
             }
         }
 
@@ -226,7 +227,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                             //TODO I would really rather have an into or from impl for ConstraintCheckingSuccess, but that's just won't compile
                             tuxedo_core::constraint_checker::ConstraintCheckingSuccess {
                                 priority: old.priority,
-                                accumulator_value: old.accumulator_value.into(),
+                                accumulator_value: <Self::Accumulator as tuxedo_core::constraint_checker::Accumulator>::ValueType::#variants6(old.accumulator_value),
                             }
                         })
                         .map_err(|e| Self::Error::#variants6(e)),
