@@ -52,7 +52,7 @@ pub trait Accumulator {
 
     /// The accumulator value that should be used to start a fresh accumulation
     /// at the beginning of each new block.
-    /// 
+    ///
     /// This is a function and takes a value, as opposed to being a constant for an important reason.
     /// Aggregate runtimes made from multiple pieces will need to give a different initial value depending
     /// which of the constituent constraint checkers is being called.
@@ -63,7 +63,7 @@ pub trait Accumulator {
     // at the executive level, what the key is, which means we need to match in the aggregate implementation.
     /// A unique key for this accumulator in the runtime. Like with storage types,
     /// Runtime authors must take care that this key is not used anywhere else in the runtime.
-    /// 
+    ///
     /// This is a function and takes a value, as opposed to being a constant for an important reason.
     /// Aggregate runtimes made from multiple pieces will need to give a different initial value depending
     /// which of the constituent constraint checkers is being called.
@@ -174,8 +174,8 @@ impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(feature = "std")]
 pub mod testing {
-    use scale_info::TypeInfo;
     use super::*;
+    use scale_info::TypeInfo;
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
