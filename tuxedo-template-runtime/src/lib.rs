@@ -18,7 +18,7 @@ use sp_api::impl_runtime_apis;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
-    transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
+    transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
 use sp_std::prelude::*;

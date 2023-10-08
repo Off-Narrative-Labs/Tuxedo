@@ -7,7 +7,6 @@ use sp_std::{fmt::Debug, vec::Vec};
 
 use crate::{dynamic_typing::DynamicallyTypedData, types::Output, Verifier};
 use parity_scale_codec::{Decode, Encode};
-use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
@@ -175,6 +174,7 @@ impl<T: SimpleConstraintChecker, V: Verifier> ConstraintChecker<V> for T {
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(feature = "std")]
 pub mod testing {
+    use scale_info::TypeInfo;
     use super::*;
 
     /// A testing checker that passes (with zero priority) or not depending on
