@@ -21,18 +21,28 @@ pub struct ConstraintCheckingSuccess<ValueType> {
     pub accumulator_value: ValueType,
 }
 
+// TODO Damn it, is there really no way to make this work?
+// impl<T, U: From<T>> Into<ConstraintCheckingSuccess<T>> for ConstraintCheckingSuccess<U> {
+//     fn into(old: Self) -> ConstraintCheckingSuccess<T> {
+//         ConstraintCheckingSuccess::<T> {
+//             priority: old.priority,
+//             accumulator_value: old.accumulator_value.into(),
+//         }
+//     }
+// }
+
 /// An accumulator allows a Tuxedo piece to do some internal bookkeeping during the course
 /// of a single block. The Bookkeeping must be done through this accumulator-like interface
 /// where each transaction yields some intermediate value that is them folded into the accumulator
 /// via som logic that is encapsulated in the impelementation.
-/// 
+///
 /// Many Tuxedo pieces will not need accumulators. In such a case, the constraint checker should
 /// simply use () as the accumulator type.
-/// 
+///
 /// Some typical usecases for an accumulator would be making sure that the block author reward
 /// does not exceed the block's transaction fees. Or making sure that a timestamp transaction occurs
 /// at most once in a single block.
-/// 
+///
 /// The accumulator is reset automatically at the end of every block. It is not possible to store
 /// data here for use in subsequent blocks.
 pub trait Accumulator {
@@ -50,8 +60,7 @@ pub trait Accumulator {
     // at the executive level, what the key is, which means we need to match in the aggregate implementation.
     /// A unique key for this accumulator in the runtime. Like with storage types,
     /// Runtime authors must take care that this key is not used anywhere else in the runtime.
-    fn key_path(accumulated_value: Self::ValueType) -> & 'static str;
-    
+    fn key_path(accumulated_value: Self::ValueType) -> &'static str;
 
     /// This function is responsible for combining or "folding" the intermediate value
     /// from the current transaction into the accumulatoed value so far in this block.
@@ -61,7 +70,7 @@ pub trait Accumulator {
 impl Accumulator for () {
     type ValueType = ();
 
-    fn key_path(_: Self::ValueType) -> & 'static str {
+    fn key_path(_: Self::ValueType) -> &'static str {
         "stub_acc"
     }
 

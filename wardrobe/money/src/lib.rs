@@ -86,12 +86,13 @@ pub struct MintMoney<const ID: u8>;
 /// Accumulates the funds that have not been accounted for in transactions
 /// so far in this block. The idea is that in the future we can give this money
 /// to block authors as a reward or put it in a treasury or whatever.
+#[derive(Debug)]
 pub struct ImbalancedFundsAccumulator;
 
 impl Accumulator for ImbalancedFundsAccumulator {
     type ValueType = u128;
 
-    fn key_path(_: Self::ValueType) -> & 'static str {
+    fn key_path(_: Self::ValueType) -> &'static str {
         "imbalanc"
     }
 
