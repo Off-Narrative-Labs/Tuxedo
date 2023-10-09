@@ -54,8 +54,8 @@ impl<ValueType> From<(TransactionPriority, ValueType)> for ConstraintCheckingSuc
 
 /// An accumulator allows a Tuxedo piece to do some internal bookkeeping during the course
 /// of a single block. The Bookkeeping must be done through this accumulator-like interface
-/// where each transaction yields some intermediate value that is them folded into the accumulator
-/// via som logic that is encapsulated in the impelementation.
+/// where each transaction yields some intermediate value that is then folded into the accumulator
+/// via some logic that is encapsulated in the implementation.
 ///
 /// Many Tuxedo pieces will not need accumulators. In such a case, the constraint checker should
 /// simply use () as the accumulator type.
@@ -68,8 +68,8 @@ impl<ValueType> From<(TransactionPriority, ValueType)> for ConstraintCheckingSuc
 /// data here for use in subsequent blocks.
 pub trait Accumulator {
     /// The type that is given and also the type of the accumulation result.
-    /// I realize that the most general accumulator swill use two different types for those,
-    /// but let's do that iff we ever need it. I probably will need to so I can do a simple counter.
+    /// The most general accumulators will use two different types for those,
+    /// but let's do that iff we ever need it. Probably will need to so a simple counter can be implemented.
     type ValueType: Debug + Encode + Decode;
 
     /// The accumulator value that should be used to start a fresh accumulation
@@ -87,12 +87,12 @@ pub trait Accumulator {
     /// Runtime authors must take care that this key is not used anywhere else in the runtime.
     ///
     /// This is a function and takes a value, as opposed to being a constant for an important reason.
-    /// Aggregate runtimes made from multiple pieces will need to give a different initial value depending
+    /// Aggregate runtimes made from multiple pieces will need to give a different key path depending
     /// which of the constituent constraint checkers is being called.
     fn key_path(_: Self::ValueType) -> &'static [u8];
 
     /// This function is responsible for combining or "folding" the intermediate value
-    /// from the current transaction into the accumulatoed value so far in this block.
+    /// from the current transaction into the accumulated value so far in this block.
     fn accumulate(a: Self::ValueType, b: Self::ValueType) -> Result<Self::ValueType, ()>;
 }
 
