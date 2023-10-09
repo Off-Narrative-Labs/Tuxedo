@@ -10,8 +10,8 @@ fn spend_valid_transaction_work() {
     let expected_priority = 1u64;
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
-        Ok(expected_priority),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
+        Ok(expected_priority.into()),
     );
 }
 
@@ -25,7 +25,7 @@ fn spend_with_zero_value_output_fails() {
     ]; // total 11
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::ZeroValueCoin),
     );
 }
@@ -37,8 +37,8 @@ fn spend_no_outputs_is_a_burn() {
     let expected_priority = 12u64;
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
-        Ok(expected_priority),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
+        Ok(expected_priority.into()),
     );
 }
 
@@ -48,7 +48,7 @@ fn spend_no_inputs_fails() {
     let output_data = vec![Coin::<0>(10).into(), Coin::<0>(1).into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::SpendingNothing),
     );
 }
@@ -59,7 +59,7 @@ fn spend_wrong_input_type_fails() {
     let output_data = vec![Coin::<0>(10).into(), Coin::<0>(1).into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::BadlyTyped),
     );
 }
@@ -70,7 +70,7 @@ fn spend_wrong_output_type_fails() {
     let output_data = vec![Bogus.into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::BadlyTyped),
     );
 }
@@ -81,7 +81,7 @@ fn spend_output_value_exceeds_input_value_fails() {
     let output_data = vec![Coin::<0>(5).into(), Coin::<0>(7).into()]; // total 12
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Spend.check(&input_data, &[], &output_data),
+        SpendMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::OutputsExceedInputs),
     );
 }
@@ -92,8 +92,8 @@ fn mint_valid_transaction_works() {
     let output_data = vec![Coin::<0>(10).into(), Coin::<0>(1).into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Mint.check(&input_data, &[], &output_data),
-        Ok(0),
+        MintMoney::<0> {}.check(&input_data, &[], &output_data),
+        Ok(0.into()),
     );
 }
 
@@ -103,7 +103,7 @@ fn mint_with_zero_value_output_fails() {
     let output_data = vec![Coin::<0>(0).into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Mint.check(&input_data, &[], &output_data),
+        MintMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::ZeroValueCoin),
     );
 }
@@ -114,7 +114,7 @@ fn mint_with_inputs_fails() {
     let output_data = vec![Coin::<0>(10).into(), Coin::<0>(1).into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Mint.check(&input_data, &[], &output_data),
+        MintMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::MintingWithInputs),
     );
 }
@@ -125,7 +125,7 @@ fn mint_with_no_outputs_fails() {
     let output_data = vec![];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Mint.check(&input_data, &[], &output_data),
+        MintMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::MintingNothing),
     );
 }
@@ -136,7 +136,7 @@ fn mint_wrong_output_type_fails() {
     let output_data = vec![Coin::<0>(10).into(), Bogus.into()];
 
     assert_eq!(
-        MoneyConstraintChecker::<0>::Mint.check(&input_data, &[], &output_data),
+        MintMoney::<0> {}.check(&input_data, &[], &output_data),
         Err(ConstraintCheckerError::BadlyTyped),
     );
 }

@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A type representing a successful result of checking a transaction's constraints.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ConstraintCheckingSuccess<ValueType> {
     /// The priority of this transaction that should be reported to the transaction pool.
     pub priority: TransactionPriority,
@@ -20,15 +20,37 @@ pub struct ConstraintCheckingSuccess<ValueType> {
     pub accumulator_value: ValueType,
 }
 
-// TODO Damn it, is there really no way to make this work?
-// impl<T, U: From<T>> Into<ConstraintCheckingSuccess<T>> for ConstraintCheckingSuccess<U> {
-//     fn into(old: Self) -> ConstraintCheckingSuccess<T> {
-//         ConstraintCheckingSuccess::<T> {
-//             priority: old.priority,
-//             accumulator_value: old.accumulator_value.into(),
-//         }
-//     }
-// }
+impl<ValueType> ConstraintCheckingSuccess<ValueType> {
+    pub fn transform<NewValueType: From<ValueType>>(
+        self,
+    ) -> ConstraintCheckingSuccess<NewValueType> {
+        ConstraintCheckingSuccess::<NewValueType> {
+            priority: self.priority,
+            accumulator_value: self.accumulator_value.into(),
+        }
+    }
+}
+
+impl<ValueType> From<TransactionPriority> for ConstraintCheckingSuccess<ValueType>
+where
+    ValueType: Default,
+{
+    fn from(priority: TransactionPriority) -> ConstraintCheckingSuccess<ValueType> {
+        ConstraintCheckingSuccess::<ValueType> {
+            priority,
+            accumulator_value: ValueType::default(),
+        }
+    }
+}
+
+impl<ValueType> From<(TransactionPriority, ValueType)> for ConstraintCheckingSuccess<ValueType> {
+    fn from(t: (TransactionPriority, ValueType)) -> ConstraintCheckingSuccess<ValueType> {
+        ConstraintCheckingSuccess::<ValueType> {
+            priority: t.0,
+            accumulator_value: t.1,
+        }
+    }
+}
 
 /// An accumulator allows a Tuxedo piece to do some internal bookkeeping during the course
 /// of a single block. The Bookkeeping must be done through this accumulator-like interface
@@ -48,7 +70,7 @@ pub trait Accumulator {
     /// The type that is given and also the type of the accumulation result.
     /// I realize that the most general accumulator swill use two different types for those,
     /// but let's do that iff we ever need it. I probably will need to so I can do a simple counter.
-    type ValueType;
+    type ValueType: Debug + Encode + Decode;
 
     /// The accumulator value that should be used to start a fresh accumulation
     /// at the beginning of each new block.
@@ -67,7 +89,7 @@ pub trait Accumulator {
     /// This is a function and takes a value, as opposed to being a constant for an important reason.
     /// Aggregate runtimes made from multiple pieces will need to give a different initial value depending
     /// which of the constituent constraint checkers is being called.
-    fn key_path(_: Self::ValueType) -> &'static str;
+    fn key_path(_: Self::ValueType) -> &'static [u8];
 
     /// This function is responsible for combining or "folding" the intermediate value
     /// from the current transaction into the accumulatoed value so far in this block.
@@ -81,8 +103,8 @@ impl Accumulator for () {
         ()
     }
 
-    fn key_path(_: Self::ValueType) -> &'static str {
-        "stub_acc"
+    fn key_path(_: Self::ValueType) -> &'static [u8] {
+        b"stub_acc"
     }
 
     fn accumulate(_: (), _: ()) -> Result<(), ()> {
@@ -197,10 +219,7 @@ pub mod testing {
             _output_data: &[DynamicallyTypedData],
         ) -> Result<ConstraintCheckingSuccess<()>, ()> {
             if self.checks {
-                Ok(ConstraintCheckingSuccess {
-                    priority: 0,
-                    accumulator_value: (),
-                })
+                Ok(0.into())
             } else {
                 Err(())
             }
@@ -211,13 +230,7 @@ pub mod testing {
     fn test_checker_passes() {
         let result =
             SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
-        assert_eq!(
-            result,
-            Ok(ConstraintCheckingSuccess {
-                priority: 0,
-                accumulator_value: (),
-            })
-        );
+        assert_eq!(result, Ok(0.into()));
     }
 
     #[test]

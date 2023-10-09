@@ -187,7 +187,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 }
             }
 
-            fn key_path(intermediate: Self::ValueType) -> & 'static str {
+            fn key_path(intermediate: Self::ValueType) -> & 'static [u8] {
                 match intermediate {
                     #(
                         Self::ValueType::#variants4(inner) => <<#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::Accumulator as tuxedo_core::constraint_checker::Accumulator>::key_path(inner),

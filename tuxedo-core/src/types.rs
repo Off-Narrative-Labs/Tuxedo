@@ -7,7 +7,9 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::traits::Extrinsic;
-use sp_runtime::transaction_validity::TransactionPriority;
+use sp_runtime::transaction_validity::{
+    TransactionLongevity, TransactionPriority, ValidTransaction, ValidTransactionBuilder,
+};
 
 use sp_std::vec::Vec;
 
@@ -134,6 +136,9 @@ pub enum UtxoError<ConstraintCheckerError> {
     VerifierError,
     /// One or more of the inputs required by this transaction is not present in the UTXO set
     MissingInput,
+    // TODO set a nicer description for this.
+    /// Something in the accumulator didn't work as expected.
+    AccumulatorError,
 }
 
 /// The Result of dispatching a UTXO transaction.
@@ -155,10 +160,39 @@ pub struct Output<V> {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PreliminarilyValidTransaction<A> {
-    provides: Vec<Vec<u8>>,
-    requires: Vec<Vec<u8>>,
-    priority: TransactionPriority,
-    intermediate_accumulator_value: Option<A>,
+    pub provides: Vec<Vec<u8>>,
+    pub requires: Vec<Vec<u8>>,
+    pub priority: TransactionPriority,
+    pub intermediate_accumulator_value: Option<A>,
+}
+
+impl<A> Into<ValidTransaction> for PreliminarilyValidTransaction<A> {
+    fn into(self) -> ValidTransaction {
+        ValidTransaction {
+            provides: self.provides.clone(),
+            requires: self.requires.clone(),
+            priority: self.priority,
+            longevity: TransactionLongevity::max_value(),
+            propagate: true,
+        }
+    }
+}
+
+impl<A> From<ValidTransaction> for PreliminarilyValidTransaction<A> {
+    fn from(transaction: ValidTransaction) -> Self {
+        Self {
+            provides: transaction.provides,
+            requires: transaction.requires,
+            priority: transaction.priority,
+            intermediate_accumulator_value: None,
+        }
+    }
+}
+
+impl<A> From<ValidTransactionBuilder> for PreliminarilyValidTransaction<A> {
+    fn from(builder: ValidTransactionBuilder) -> Self {
+        ValidTransaction::from(builder).into()
+    }
 }
 
 #[cfg(test)]

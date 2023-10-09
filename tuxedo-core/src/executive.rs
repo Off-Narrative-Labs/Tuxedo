@@ -7,13 +7,12 @@
 //! are no duplicate inputs, and that the verifiers are satisfied.
 
 use crate::{
-    ACCUMULATOR_PREFIX,
     constraint_checker::{Accumulator, ConstraintChecker, ConstraintCheckingSuccess},
     ensure,
-    types::{DispatchResult, OutputRef, Transaction, UtxoError, PreliminarilyValidTransaction},
+    types::{DispatchResult, OutputRef, PreliminarilyValidTransaction, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
-    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
+    ACCUMULATOR_PREFIX, EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
@@ -21,10 +20,7 @@ use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_runtime::{
     traits::BlakeTwo256,
-    transaction_validity::{
-        InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError,
-        ValidTransaction,
-    },
+    transaction_validity::{InvalidTransaction, TransactionSource, TransactionValidityError},
     ApplyExtrinsicResult, StateVersion,
 };
 use sp_std::marker::PhantomData;
@@ -46,7 +42,10 @@ impl<
     /// We later check that there are no missing inputs in `apply_tuxedo_transaction`
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<V, C>,
-    ) -> Result<PreliminarilyValidTransaction<<C::Accumulator as Accumulator>::ValueType>, UtxoError<C::Error>> {
+    ) -> Result<
+        PreliminarilyValidTransaction<<C::Accumulator as Accumulator>::ValueType>,
+        UtxoError<C::Error>,
+    > {
         // Make sure there are no duplicate inputs
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
@@ -134,16 +133,19 @@ impl<
                 requires: missing_inputs,
                 provides,
                 priority: 0,
-                intermediate_accumulator_value: None
+                intermediate_accumulator_value: None,
             });
         }
 
         // Call the constraint checker
-        let ConstraintCheckingSuccess{ priority, accumulator_value } = transaction
+        let ConstraintCheckingSuccess {
+            priority,
+            accumulator_value,
+        } = transaction
             .checker
             .check(&input_utxos, &peek_utxos, &transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)?;
-        
+
         // Return the preliminarily valid transaction
         Ok(PreliminarilyValidTransaction {
             requires: Vec::new(),
@@ -173,16 +175,25 @@ impl<
             UtxoError::MissingInput
         );
 
-
-
         // Process the accumulator
-        let acc_key = C::Accumulator::key_path(accumulator_value);
-        let prefixed_acc_key = ACCUMULATOR_PREFIX + acc_key;
-        // TODO expect and decode and stuff
-        let old_accumulator = sp_io::storage::get(prefixed_acc_key);
-        let new_accumulator = C::Accumulator::accumulate(old_accumulator, accumulator_value)
-            .map_err(UtxoError::AccumulatorError)?;
-        sp_io::storage::set(acc_key, new_accumulator);
+        let acc_key = C::Accumulator::key_path(
+            <C::Accumulator as Accumulator>::ValueType::decode::<&[u8]>(&mut &Vec::<u8>::new()[..])
+                .expect("TODO!"),
+        ); // TODO what should this key be?
+        let prefixed_acc_key: &[u8] = &[ACCUMULATOR_PREFIX, acc_key].concat();
+
+        // TODO remove panics
+        let old_accumulator = sp_io::storage::get(prefixed_acc_key)
+            .map(|data| Decode::decode(&mut &*data).expect("decode fails"))
+            .unwrap();
+        let new_accumulator = C::Accumulator::accumulate(
+            old_accumulator,
+            prelim_valid_transaction
+                .intermediate_accumulator_value
+                .unwrap(),
+        )
+        .map_err(|_| UtxoError::AccumulatorError)?;
+        sp_io::storage::set(acc_key, &new_accumulator.encode());
 
         // Update the utxo related storage
         // At this point, all validation is complete, so we can commit the storage changes.
@@ -264,7 +275,6 @@ impl<
     }
 
     pub fn close_block() -> <B as BlockT>::Header {
-
         // Clear the accumulators' storages.
         // Accumulators are reset every block and therefore always in the storage overlay.
         // Because this operation will only ever affect the overlay, it is safe to use no limit.
@@ -385,7 +395,8 @@ impl<
 
         debug!(target: LOG_TARGET, "Validation result: {:?}", r);
 
-        r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        r.map(|t| t.into())
+            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
     }
 }
 
@@ -848,7 +859,7 @@ mod tests {
                     .build(true);
 
                 // Commit the tx to storage
-                TestExecutive::update_storage(tx);
+                TestExecutive::update_utxo_storage(tx);
 
                 // Check whether the Input is still in storage
                 assert!(!sp_io::storage::exists(&output_ref.encode()));
@@ -871,7 +882,7 @@ mod tests {
             let output_ref = OutputRef { tx_hash, index: 0 };
 
             // Commit the tx to storage
-            TestExecutive::update_storage(tx);
+            TestExecutive::update_utxo_storage(tx);
 
             // Check whether the Output has been written to storage and the proper value is stored
             let stored_bytes = sp_io::storage::get(&output_ref.encode()).unwrap();

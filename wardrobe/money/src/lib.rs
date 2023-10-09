@@ -95,8 +95,8 @@ impl Accumulator for ImbalancedFundsAccumulator {
         0
     }
 
-    fn key_path(_: Self::ValueType) -> &'static str {
-        "imbalanc"
+    fn key_path(_: Self::ValueType) -> &'static [u8] {
+        b"imbalanc"
     }
 
     fn accumulate(a: u128, b: u128) -> Result<u128, ()> {
