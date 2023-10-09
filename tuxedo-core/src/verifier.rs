@@ -53,6 +53,26 @@ impl Verifier for UpForGrabs {
     }
 }
 
+
+/// A simple verifier that indicates an output is meant as a reward for the author of the block.
+///
+/// The implementation allows anyone to redeem the UTXO, so in that sense it is the same as
+/// UpForGrabs. However, the use of this struct indicates the semantics that this output is
+/// _intended_ only for the block author. And there is no risk of anyone else claiming these
+/// outputs before the author because the author can jsut drop such transactions.
+/// 
+/// In the future the implementation could change so that the output is never redeemable
+/// except by eviction, but evictions are not yet implemented.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct TipForAuthor;
+
+impl Verifier for TipForAuthor {
+    fn verify(&self, _simplified_tx: &[u8], _redeemer: &[u8]) -> bool {
+        true
+    }
+}
+
 /// A Threshold multisignature. Some number of member signatories collectively own inputs
 /// guarded by this verifier. A valid redeemer must supply valid signatures by at least
 /// `threshold` of the signatories. If the threshold is greater than the number of signatories
