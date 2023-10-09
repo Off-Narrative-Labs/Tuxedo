@@ -7,9 +7,10 @@
 //! are no duplicate inputs, and that the verifiers are satisfied.
 
 use crate::{
-    constraint_checker::ConstraintChecker,
+    ACCUMULATOR_PREFIX,
+    constraint_checker::{Accumulator, ConstraintChecker, ConstraintCheckingSuccess},
     ensure,
-    types::{DispatchResult, OutputRef, Transaction, UtxoError},
+    types::{DispatchResult, OutputRef, Transaction, UtxoError, PreliminarilyValidTransaction},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
     EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
@@ -45,7 +46,7 @@ impl<
     /// We later check that there are no missing inputs in `apply_tuxedo_transaction`
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<V, C>,
-    ) -> Result<PreliminarilyValidTransaction, UtxoError<C::Error>> {
+    ) -> Result<PreliminarilyValidTransaction<<C::Accumulator as Accumulator>::ValueType>, UtxoError<C::Error>> {
         // Make sure there are no duplicate inputs
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
@@ -129,7 +130,7 @@ impl<
         // If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the constraint checker
         if !missing_inputs.is_empty() {
-            return Ok(PreliminarilyValidTransaction<C::Accumulator::ValueType> {
+            return Ok(PreliminarilyValidTransaction {
                 requires: missing_inputs,
                 provides,
                 priority: 0,
@@ -175,8 +176,6 @@ impl<
 
 
         // Process the accumulator
-        //TODO move this
-        const ACCUMULATOR_PREFIX: &str = *b":accumulator:";
         let acc_key = C::Accumulator::key_path(accumulator_value);
         let prefixed_acc_key = ACCUMULATOR_PREFIX + acc_key;
         // TODO expect and decode and stuff
@@ -267,7 +266,9 @@ impl<
     pub fn close_block() -> <B as BlockT>::Header {
 
         // Clear the accumulators' storages.
-        sp_io::storage::clear_prefix(ACCUMULATOR_PREFIX);
+        // Accumulators are reset every block and therefore always in the storage overlay.
+        // Because this operation will only ever affect the overlay, it is safe to use no limit.
+        sp_io::storage::clear_prefix(ACCUMULATOR_PREFIX, None);
 
         let mut header = sp_io::storage::get(HEADER_KEY)
             .and_then(|d| <B as BlockT>::Header::decode(&mut &*d).ok())

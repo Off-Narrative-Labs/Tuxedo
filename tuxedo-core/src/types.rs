@@ -7,6 +7,8 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::traits::Extrinsic;
+use sp_runtime::transaction_validity::TransactionPriority;
+
 use sp_std::vec::Vec;
 
 /// A reference to a output that is expected to exist in the state.
