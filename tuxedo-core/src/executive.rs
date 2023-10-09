@@ -144,6 +144,9 @@ impl<
             .check(&input_utxos, &peek_utxos, &transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
+        // TODO create a new struct PreliminarilyValidTransaction
+        // It still has requires, provides, and priority.
+        // It also has the intermediate value from the accumulator.
         // Return the valid transaction
         Ok(ValidTransaction {
             requires: Vec::new(),
@@ -164,7 +167,7 @@ impl<
         );
 
         // Re-do the pre-checks. These should have been done in the pool, but we can't
-        // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
+        // guarantee that foreign nodes do these checks faithfully, so we need to check on-chain.
         let valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
 
         // If there are still missing inputs, we cannot execute this,
@@ -174,12 +177,21 @@ impl<
             UtxoError::MissingInput
         );
 
+        //TODO Read accumulator storage key
+        // Read the accumulator value out of storage
+        // Call the accumulator function
+
+        // Assuming it doesn't error, write the new value to storage
+
+        // Update the utxo related storage
         // At this point, all validation is complete, so we can commit the storage changes.
         Self::update_storage(transaction);
 
         Ok(())
     }
 
+    //TODO maybe rename this to update_utxo_storage to reflect that it is doing a fundamental utxo thing,
+    // as opposed to the accumulator stuff.
     /// Helper function to update the utxo set according to the given transaction.
     /// This function does absolutely no validation. It assumes that the transaction
     /// has already passed validation. Changes proposed by the transaction are written
@@ -253,12 +265,15 @@ impl<
     }
 
     pub fn close_block() -> <B as BlockT>::Header {
+
+        // TODO clear the accumulators' storages. We will either need a way to get all the keys, which sounds hard af
+        // Or we should go back and make sure they are prefixed so we can just delete a prefix.
+
         let mut header = sp_io::storage::get(HEADER_KEY)
             .and_then(|d| <B as BlockT>::Header::decode(&mut &*d).ok())
             .expect("We initialized with header, it never got mutated, qed");
 
-        // the header itself contains the state root, so it cannot be inside the state (circular
-        // dependency..). Make sure in execute block path we have the same rule.
+        // The header itself contains the state root, so it cannot be inside the state.
         sp_io::storage::clear(HEADER_KEY);
 
         let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
