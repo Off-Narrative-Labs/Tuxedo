@@ -46,6 +46,20 @@ pub struct Transaction<V: TypeInfo, C: TypeInfo> {
     pub checker: C,
 }
 
+impl<V: TypeInfo, C: TypeInfo> Transaction<V, C> {
+    /// A helper function for transforming a transaction generic over one
+    /// kind of constraint checker into a transaction generic over another type
+    /// of constraint checker. This is useful when moving up and down the aggregation tree.
+    pub fn transform<D: TypeInfo + From<C>>(self) -> Transaction<V, D> {
+        Transaction {
+            inputs: self.inputs,
+            peeks: self.peeks,
+            outputs: self.outputs,
+            checker: self.checker.into(),
+        }
+    }
+}
+
 // Manually implement Encode and Decode for the Transaction type
 // so that its encoding is the same as an opaque Vec<u8>.
 impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {

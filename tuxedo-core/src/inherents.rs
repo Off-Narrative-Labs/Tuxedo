@@ -155,9 +155,9 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check_inherents(
+    fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherents: Vec<Transaction<V, C>>,
+        inherent: Transaction<V, C>,
     ) -> Result<(), Self::Error>;
 }
 
@@ -182,22 +182,10 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
         )]
     }
 
-    fn check_inherents(
+    fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherents: Vec<Transaction<V, C>>,
+        inherent: Transaction<V, C>,
     ) -> Result<(), Self::Error> {
-        if inherents.len() > 1 {
-            panic!("Checking a leaf inherent constraint checker, but multiple inherents were supplied.")
-        }
-
-        <T as TuxedoInherent<V, C>>::check_inherent(
-            importing_inherent_data,
-            inherents
-                .get(0)
-                .expect(
-                    "Checking a leaf inherent constraint checker, but no inherent was supplied.",
-                )
-                .clone(),
-        )
+        <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent)
     }
 }

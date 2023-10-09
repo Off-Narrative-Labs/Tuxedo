@@ -390,7 +390,7 @@ impl_runtime_apis! {
                 );
 
             // Call into the timestamp helper, then map the checker
-            let transactions = <timestamp::SetTimestamp::<Runtime> as InherentInternal<OuterVerifier, OuterConstraintChecker>>::create_inherent(&data, prev_set_timestamp);
+            let transactions = <timestamp::SetTimestamp::<Runtime> as InherentInternal<OuterVerifier, OuterConstraintChecker>>::create_inherents(&data, vec![prev_set_timestamp]);
 
             // Return just the timestamp extrinsic for now.
             // Later we will either handle Aura properly or switch to nimbus.
