@@ -45,7 +45,7 @@ impl<
     /// We later check that there are no missing inputs in `apply_tuxedo_transaction`
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<V, C>,
-    ) -> Result<ValidTransaction, UtxoError<C::Error>> {
+    ) -> Result<PreliminarilyValidTransaction, UtxoError<C::Error>> {
         // Make sure there are no duplicate inputs
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
@@ -129,31 +129,26 @@ impl<
         // If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the constraint checker
         if !missing_inputs.is_empty() {
-            return Ok(ValidTransaction {
+            return Ok(PreliminarilyValidTransaction<C::Accumulator::ValueType> {
                 requires: missing_inputs,
                 provides,
                 priority: 0,
-                longevity: TransactionLongevity::max_value(),
-                propagate: true,
+                intermediate_accumulator_value: None
             });
         }
 
         // Call the constraint checker
-        transaction
+        let ConstraintCheckingSuccess{ priority, accumulator_value } = transaction
             .checker
             .check(&input_utxos, &peek_utxos, &transaction.outputs)
             .map_err(UtxoError::ConstraintCheckerError)?;
-
-        // TODO create a new struct PreliminarilyValidTransaction
-        // It still has requires, provides, and priority.
-        // It also has the intermediate value from the accumulator.
-        // Return the valid transaction
-        Ok(ValidTransaction {
+        
+        // Return the preliminarily valid transaction
+        Ok(PreliminarilyValidTransaction {
             requires: Vec::new(),
             provides,
-            priority: 0,
-            longevity: TransactionLongevity::max_value(),
-            propagate: true,
+            priority,
+            intermediate_accumulator_value: Some(accumulator_value),
         })
     }
 
@@ -168,35 +163,40 @@ impl<
 
         // Re-do the pre-checks. These should have been done in the pool, but we can't
         // guarantee that foreign nodes do these checks faithfully, so we need to check on-chain.
-        let valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
+        let prelim_valid_transaction = Self::validate_tuxedo_transaction(&transaction)?;
 
         // If there are still missing inputs, we cannot execute this,
         // although it would be valid in the pool
         ensure!(
-            valid_transaction.requires.is_empty(),
+            prelim_valid_transaction.requires.is_empty(),
             UtxoError::MissingInput
         );
 
-        //TODO Read accumulator storage key
-        // Read the accumulator value out of storage
-        // Call the accumulator function
 
-        // Assuming it doesn't error, write the new value to storage
+
+        // Process the accumulator
+        //TODO move this
+        const ACCUMULATOR_PREFIX: &str = *b":accumulator:";
+        let acc_key = C::Accumulator::key_path(accumulator_value);
+        let prefixed_acc_key = ACCUMULATOR_PREFIX + acc_key;
+        // TODO expect and decode and stuff
+        let old_accumulator = sp_io::storage::get(prefixed_acc_key);
+        let new_accumulator = C::Accumulator::accumulate(old_accumulator, accumulator_value)
+            .map_err(UtxoError::AccumulatorError)?;
+        sp_io::storage::set(acc_key, new_accumulator);
 
         // Update the utxo related storage
         // At this point, all validation is complete, so we can commit the storage changes.
-        Self::update_storage(transaction);
+        Self::update_utxo_storage(transaction);
 
         Ok(())
     }
 
-    //TODO maybe rename this to update_utxo_storage to reflect that it is doing a fundamental utxo thing,
-    // as opposed to the accumulator stuff.
     /// Helper function to update the utxo set according to the given transaction.
     /// This function does absolutely no validation. It assumes that the transaction
     /// has already passed validation. Changes proposed by the transaction are written
     /// blindly to storage.
-    fn update_storage(transaction: Transaction<V, C>) {
+    fn update_utxo_storage(transaction: Transaction<V, C>) {
         // Remove verified UTXOs
         for input in &transaction.inputs {
             TransparentUtxoSet::<V>::consume_utxo(&input.output_ref);
@@ -266,8 +266,8 @@ impl<
 
     pub fn close_block() -> <B as BlockT>::Header {
 
-        // TODO clear the accumulators' storages. We will either need a way to get all the keys, which sounds hard af
-        // Or we should go back and make sure they are prefixed so we can just delete a prefix.
+        // Clear the accumulators' storages.
+        sp_io::storage::clear_prefix(ACCUMULATOR_PREFIX);
 
         let mut header = sp_io::storage::get(HEADER_KEY)
             .and_then(|d| <B as BlockT>::Header::decode(&mut &*d).ok())

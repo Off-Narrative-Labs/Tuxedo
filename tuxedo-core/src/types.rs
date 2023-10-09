@@ -148,6 +148,17 @@ pub struct Output<V> {
     pub verifier: V,
 }
 
+/// Similar to Substrate's ValidTransaction. This type indicates that a transaction
+/// has passed the standard UTXO checks and is either valid now or may be in the future.
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct PreliminarilyValidTransaction<A> {
+    provides: Vec<Vec<u8>>,
+    requires: Vec<Vec<u8>>,
+    priority: TransactionPriority,
+    intermediate_accumulator_value: Option<A>,
+}
+
 #[cfg(test)]
 pub mod tests {
 
