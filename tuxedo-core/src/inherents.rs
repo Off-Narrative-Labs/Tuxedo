@@ -146,18 +146,18 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
 
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    fn create_inherent(
+    fn create_inherents(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Transaction<V, C>,
+        previous_inherents: Vec<Transaction<V, C>>,
     ) -> Vec<Transaction<V, C>>;
 
     /// Perform off-chain pre-execution checks on the inherents.
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check_inherent(
+    fn check_inherents(
         importing_inherent_data: &InherentData,
-        inherent: Transaction<V, C>,
+        inherents: Vec<Transaction<V, C>>,
     ) -> Result<(), Self::Error>;
 }
 
@@ -167,22 +167,37 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
     const INHERENT_IDENTIFIER: InherentIdentifier =
         <T as TuxedoInherent<V, C>>::INHERENT_IDENTIFIER;
 
-    fn create_inherent(
+    fn create_inherents(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Transaction<V, C>,
+        previous_inherents: Vec<Transaction<V, C>>,
     ) -> Vec<Transaction<V, C>> {
+        if previous_inherents.len() > 1 {
+            panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
+        }
         // This is the magic. We just take the single transaction from the individual piece
         // and put it into a vec so it can be aggregated.
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
-            previous_inherent,
+            previous_inherents.get(0).expect("Authoring a leaf inherent constraint checker, but no previous inherent was supplied.").clone(),
         )]
     }
 
-    fn check_inherent(
+    fn check_inherents(
         importing_inherent_data: &InherentData,
-        inherent: Transaction<V, C>,
+        inherents: Vec<Transaction<V, C>>,
     ) -> Result<(), Self::Error> {
-        <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent)
+        if inherents.len() > 1 {
+            panic!("Checking a leaf inherent constraint checker, but multiple inherents were supplied.")
+        }
+
+        <T as TuxedoInherent<V, C>>::check_inherent(
+            importing_inherent_data,
+            inherents
+                .get(0)
+                .expect(
+                    "Checking a leaf inherent constraint checker, but no inherent was supplied.",
+                )
+                .clone(),
+        )
     }
 }
