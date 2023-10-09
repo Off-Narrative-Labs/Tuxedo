@@ -8,7 +8,7 @@
 
 pub mod dynamic_typing;
 mod executive;
-
+pub mod block_builder;
 pub mod constraint_checker;
 pub mod support_macros;
 pub mod traits;

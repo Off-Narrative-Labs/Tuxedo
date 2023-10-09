@@ -19,6 +19,7 @@ derive-no-bound = { path = "no_bound" }
 sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
+sp-inherents = { default_features = false, workspace = true }
 sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
@@ -36,6 +37,7 @@ std = [
 	"sp-std/std",
 	"serde",
 	"sp-api/std",
+	"sp-inherents/std",
 	"sp-io/std",
 	"sp-runtime/std",
 	"parity-util-mem",

@@ -8300,6 +8300,7 @@ dependencies = [
  "sp-api",
  "sp-core",
  "sp-debug-derive",
+ "sp-inherents",
  "sp-io",
  "sp-runtime",
  "sp-std",
