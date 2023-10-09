@@ -136,7 +136,6 @@ pub enum UtxoError<ConstraintCheckerError> {
     VerifierError,
     /// One or more of the inputs required by this transaction is not present in the UTXO set
     MissingInput,
-    // TODO set a nicer description for this.
     /// Something in the accumulator didn't work as expected.
     AccumulatorError,
 }
