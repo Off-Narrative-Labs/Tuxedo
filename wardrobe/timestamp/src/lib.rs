@@ -403,7 +403,8 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
                 "🕰️🖴 Block timestamp is too far in future. About to push an error"
             );
 
-            result.put_error(sp_timestamp::INHERENT_IDENTIFIER, &TooFarInFuture)
+            result
+                .put_error(sp_timestamp::INHERENT_IDENTIFIER, &TooFarInFuture)
                 .expect("Should be able to push some error");
         }
     }

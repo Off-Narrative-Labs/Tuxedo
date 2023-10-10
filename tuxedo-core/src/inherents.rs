@@ -175,9 +175,9 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
         }
 
         //TODO actually, maybe this is where the first-block hack should go now.
-        let previous_inherent = previous_inherents
-            .get(0)
-            .expect("Authoring a leaf inherent constraint checker, but no previous inherent was supplied.");
+        let previous_inherent = previous_inherents.get(0).expect(
+            "Authoring a leaf inherent constraint checker, but no previous inherent was supplied.",
+        );
 
         // This is the magic. We just take the single transaction from the individual piece
         // and put it into a vec so it can be aggregated.
