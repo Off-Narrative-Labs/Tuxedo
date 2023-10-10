@@ -128,11 +128,13 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
     let inner_types2 = inner_types.clone();
     let inner_types3 = inner_types.clone();
     let inner_types4 = inner_types.clone();
+    let inner_types6 = inner_types.clone();
     // let inner_types5 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
     let variants4 = variants.clone();
     let variants5 = variants.clone();
+    let variants6 = variants.clone();
 
     let output = quote! {
         // Preserve the original enum, and write the From impls
@@ -265,6 +267,16 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                     )*
                 }
             }
+
+            fn is_inherent(&self) -> bool {
+                match self {
+                    #(
+                        Self::#variants6(inner) => <#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::is_inherent(inner),
+                    )*
+                }
+                
+            }
+
         }
     };
 

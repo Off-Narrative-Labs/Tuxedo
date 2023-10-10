@@ -267,6 +267,12 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
 
         Ok(0)
     }
+
+    fn is_inherent(&self) -> bool {
+        true
+    }
+
+    
 }
 
 impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static>
