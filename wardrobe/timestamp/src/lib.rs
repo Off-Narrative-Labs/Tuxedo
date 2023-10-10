@@ -143,7 +143,6 @@ pub enum TimestampError {
 #[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
-//TODO what about this static? Is that a problem?
 impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstraintChecker<V>
     for SetTimestamp<T>
 {
