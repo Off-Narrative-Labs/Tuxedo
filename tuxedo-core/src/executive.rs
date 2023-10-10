@@ -438,6 +438,15 @@ impl<
     }
 
     pub fn check_inherents(block: B, data: InherentData) -> sp_inherents::CheckInherentsResult {
+        //TODO We haven't actually made sure that all the inehrents that are expected to be in the block are indeed present.
+        // We could require each inherent to check this on its own. That's what FRAME does, but FRAME also allows multiple inherents per block
+        // Or we could do something like an accumulator. Actually, using an accumulator still requires the piece author to use the right accumulator and enforce it.
+        // For timestamp (and probably others) we can do this by storing not only the time, but also the block in which it is set.
+        // Then when we try to update it, we just make sure that the block in which it was last set is not the current block.
+        // Okay, but actually, maybe we can solve this a better way. The problem was taking the shortcut to a check_inherent (singular) method.
+        // We should stick with `check_inherents` and pass all the relevant inherents down the stack all the way to the bottom using the same wrapping and unwrapping trick.
+
+
         //TODO Sanity check. I thought this needs to be mutable. But maybe giving a mutable reference is good enough?
         let results = CheckInherentsResult::new();
 
