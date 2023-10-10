@@ -348,111 +348,14 @@ impl_runtime_apis! {
         }
 
         fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 In `inherent_extrinsics`."
-            );
-
-            // Extract the complete parent block from the inheret data
-            use tuxedo_core::inherents::PARENT_INHERENT_IDENTIFIER;
-            let parent: Block = data
-                .get_data(&PARENT_INHERENT_IDENTIFIER)
-                .expect("1")
-                .expect("2");
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 The previous block had {} extrinsics.", parent.extrinsics().len()
-            );
-
-            /////////////// Timestamp /////////////
-
-            // We need to initialize the timestamp somehow, and right now the way we do it
-            // is to allow a transaction that does not consume any previous best on block height 1 only.
-            // A much more elegant solution would be to allow transactions in the genesis block, then we
-            // could use the same scraping logic as always.
-            let prev_set_timestamp: Transaction = parent
-                .extrinsics()
-                .iter()
-                .find(|extrinsic| {
-                    matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
-                })
-                .cloned()
-                .unwrap_or(
-                    // A dummy transaction for the first block hack
-                    Transaction {
-                        inputs: vec![],
-                        outputs: vec![],
-                        peeks: vec![],
-                        checker: OuterConstraintChecker::SetTimestamp(SetTimestamp::<Runtime>(Default::default())),
-                    }
-                );
-
-            // Call into the timestamp helper, then map the checker
-            let transactions = <timestamp::SetTimestamp::<Runtime> as InherentInternal<OuterVerifier, OuterConstraintChecker>>::create_inherents(&data, vec![prev_set_timestamp]);
-
-            // Return just the timestamp extrinsic for now.
-            // Later we will either handle Aura properly or switch to nimbus.
-            // Soon we will add the parachain inherent in here.
-            transactions
+            Executive::inherent_extrinsics(data)
         }
 
         fn check_inherents(
             block: Block,
             data: InherentData
         ) -> sp_inherents::CheckInherentsResult {
-
-            use sp_inherents::{IsFatalError, CheckInherentsResult};
-            use tuxedo_core::ConstraintChecker;
-            let mut results = CheckInherentsResult::new();
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 In `check_inherents`"
-            );
-
-            // Extract the timestamp inherent from the block
-            // I guess this is done by scraping the transactions, right?
-            // TODO figure out Where this is done in FRAME world and make sure I'm not doing something stupid here.
-            let set_timestamp_ext = block
-                .extrinsics()
-                .iter()
-                .find(|extrinsic| {
-                    matches!(extrinsic.checker, OuterConstraintChecker::SetTimestamp(_))
-                })
-                .cloned()
-                .expect("SetTimestamp extrinsic should appear in every block.");
-
-            let result = <timestamp::SetTimestamp::<Runtime> as InherentInternal<OuterVerifier, OuterConstraintChecker>>::check_inherent(&data, set_timestamp_ext);
-
-            if let Err(e) = result {
-                log::info!(
-                    target: LOG_TARGET,
-                    "🕰️🖴 Got an error when checking an inherent: {:?}", e,
-                );
-
-                // const INHERENT_ID: InherentIdentifier = <<timestamp::SetTimestamp<Runtime> as ConstraintChecker<OuterVerifier>>::InherentHooks as InherentInternal<OuterVerifier, OuterConstraintChecker>>::INHERENT_IDENTIFIER;
-                // results
-                //     .put_error(INHERENT_ID, &e)
-                //     .expect("Should be able to put some errors");
-
-                if e.is_fatal_error() {
-                    log::info!(
-                        target: LOG_TARGET,
-                        "🕰️🖴 Error is fatal, exiting early."
-                    );
-
-                    return results;
-                }
-            };
-
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.ok(), results.fatal_error()
-            );
-
-            results
+            Executive::check_inherents(block, data)
         }
     }
 

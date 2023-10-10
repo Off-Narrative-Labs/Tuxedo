@@ -17,9 +17,10 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-use sp_inherents::InherentData;
+use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{traits::BlakeTwo256, transaction_validity::TransactionPriority};
 use sp_std::{vec, vec::Vec};
+use sp_timestamp::InherentError::TooFarInFuture;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
@@ -278,7 +279,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: tuxedo_core::types::Transaction<V, C>,
+        previous_inherent: &Transaction<V, C>,
     ) -> tuxedo_core::types::Transaction<V, C> {
         // Extract the current timestamp from the inherent data
         let timestamp_millis: u64 = authoring_inherent_data
@@ -339,7 +340,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
             inputs,
             peeks: Vec::new(),
             outputs: vec![best_output, noted_output],
-            checker: previous_inherent.checker,
+            checker: previous_inherent.checker.clone(),
         };
 
         // log::info!(
@@ -357,8 +358,9 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
 
     fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherent: tuxedo_core::types::Transaction<V, C>,
-    ) -> Result<(), Self::Error> {
+        inherent: &Transaction<V, C>,
+        result: &mut CheckInherentsResult,
+    ) {
         // Extract the local view of time from the inherent data
         let local_timestamp: u64 = importing_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
@@ -401,9 +403,8 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
                 "🕰️🖴 Block timestamp is too far in future. About to push an error"
             );
 
-            Err(sp_timestamp::InherentError::TooFarInFuture)
-        } else {
-            Ok(())
+            result.put_error(sp_timestamp::INHERENT_IDENTIFIER, &TooFarInFuture)
+                .expect("Should be able to push some error");
         }
     }
 }

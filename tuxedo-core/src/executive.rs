@@ -9,6 +9,7 @@
 use crate::{
     constraint_checker::ConstraintChecker,
     ensure,
+    inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
@@ -18,6 +19,7 @@ use log::debug;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
+use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{
     traits::BlakeTwo256,
     transaction_validity::{
@@ -400,6 +402,65 @@ impl<
         debug!(target: LOG_TARGET, "Validation result: {:?}", r);
 
         r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+    }
+
+    // The last two are for the standard beginning-of-block inherent extrinsics.
+    pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<B as BlockT>::Extrinsic> {
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 In `inherent_extrinsics`."
+        );
+
+        // Extract the complete parent block from the inheret data
+        let parent: B = data
+            .get_data(&PARENT_INHERENT_IDENTIFIER)
+            .expect("1")
+            .expect("2");
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 The previous block had {} extrinsics.", parent.extrinsics().len()
+        );
+
+        // Extract the beginning-of-block inherents from the previous block.
+        // The parent is already imported, so we know it is valid and we know its inherents came first
+        // TODO where should we actually enforce that the inherents come first.
+        // I guess each time we apply an extrinsic, we should make sure that we never see another inherent after the first bunch.
+        let previous_blocks_inherents: Vec<&<B as BlockT>::Extrinsic> = parent
+            .extrinsics()
+            .iter()
+            .take_while(|tx| tx.checker.is_inherent())
+            .collect();
+
+        // Call into constraint checker's own inherent hooks to create the actual transactions
+        C::InherentHooks::create_inherents(&data, previous_blocks_inherents)
+    }
+
+    pub fn check_inherents(block: B, data: InherentData) -> sp_inherents::CheckInherentsResult {
+        //TODO Sanity check. I thought this needs to be mutable. But maybe giving a mutable reference is good enough?
+        let results = CheckInherentsResult::new();
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 In `check_inherents`"
+        );
+
+        let mut full_result = CheckInherentsResult::new();
+
+        for tx in block.extrinsics() {
+            if !tx.checker.is_inherent() {
+                break;
+            }
+
+            C::InherentHooks::check_inherent(&data, tx, &mut full_result);
+        }
+
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.ok(), results.fatal_error()
+        );
+
+        results
     }
 }
 

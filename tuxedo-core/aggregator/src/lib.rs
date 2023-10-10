@@ -206,7 +206,8 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             fn check_inherent(
                 importing_inherent_data: &sp_inherents::InherentData,
                 inherent: tuxedo_core::types::Transaction<#verifier, #outer_type>,
-            ) -> Result<(), Self::Error> {
+                &mut result: sp_inherents::CheckInherentResult,
+            ) {
                 match inherent.checker {
                     #(
                         #outer_type::#variants4(ref inner_checker) => {
@@ -219,8 +220,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                                 checker: inner_checker.clone(),
                             };
 
-                            <#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::check_inherent(importing_inherent_data, unwrapped_inherent)
-                                .map_err(|_| sp_inherents::MakeFatalError::from(()))
+                            <#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::check_inherent(importing_inherent_data, unwrapped_inherent, result);
                         }
                     )*
                 }
