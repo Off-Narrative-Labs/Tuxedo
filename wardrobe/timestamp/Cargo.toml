@@ -16,6 +16,7 @@ sp-inherents = { default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 sp-timestamp = { default_features = false, workspace = true }
+sp-core = { default_features = false, workspace = true }
 tuxedo-core = { default-features = false, path = "../../tuxedo-core" }
 
 [features]
@@ -27,6 +28,7 @@ std = [
 	"sp-inherents/std",
 	"sp-runtime/std",
 	"sp-std/std",
+	"sp-core/std",
 	"sp-timestamp/std",
 	"serde",
 ]

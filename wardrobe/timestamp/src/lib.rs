@@ -17,6 +17,7 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
+use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{traits::BlakeTwo256, transaction_validity::TransactionPriority};
 use sp_std::{vec, vec::Vec};
@@ -27,7 +28,8 @@ use tuxedo_core::{
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Input, Output, Transaction},
-    verifier::UpForGrabs, SimpleConstraintChecker, Verifier,
+    verifier::UpForGrabs,
+    SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -271,19 +273,17 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
     fn is_inherent(&self) -> bool {
         true
     }
-
-    
 }
 
-impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static>
-    TuxedoInherent<V, Self> for SetTimestamp<T>
+impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V, Self>
+    for SetTimestamp<T>
 {
     type Error = sp_timestamp::InherentError;
     const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = sp_timestamp::INHERENT_IDENTIFIER;
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Option<Transaction<V, Self>>,
+        previous_inherent: Option<(Transaction<V, Self>, H256)>,
     ) -> tuxedo_core::types::Transaction<V, Self> {
         // Extract the current timestamp from the inherent data
         let timestamp_millis: u64 = authoring_inherent_data
@@ -308,7 +308,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static>
                 // We don't need any inputs, so just do nothing.
             }
             (None, _) => panic!("Attemping to construct timestamp inherent with no previous inherent (and not block 1)."),
-            (Some(previous_inherent), _) => {
+            (Some((previous_inherent, previous_id)), _) => {
                 // This is the the normal case. We create a full previous input to consume.
                 let prev_best_index = previous_inherent
                     .outputs
@@ -320,9 +320,8 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static>
                     .try_into()
                     .expect("There should not be more than u32::max_value outputs in a transaction.");
 
-                // TODO should we have some generic way to refer to the hashing algo?
                 let output_ref = OutputRef {
-                    tx_hash: BlakeTwo256::hash_of(&previous_inherent.encode()),
+                    tx_hash: previous_id,
                     index: prev_best_index,
                 };
 
@@ -333,7 +332,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static>
                     // Once this is fixed more properly (like by using evictions)
                     // I should be able to not mention UpForGrabs here at all.
                     redeemer: Vec::new(),
-                }; 
+                };
 
                 inputs.push(input);
             }

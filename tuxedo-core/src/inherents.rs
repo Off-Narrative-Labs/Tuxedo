@@ -44,6 +44,7 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
+use sp_core::H256;
 use sp_inherents::{
     CheckInherentsResult, InherentData, InherentIdentifier, IsFatalError, MakeFatalError,
 };
@@ -112,7 +113,7 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
         // The option represents the so-called "first block hack".
         // We need a way to initialize the chain with a first inherent on block one
         // where there is no previous inherent. Once we introduce genesis extrinsics, this can be removed.
-        previous_inherent: Option<Transaction<V, C>>,
+        previous_inherent: Option<(Transaction<V, C>, H256)>,
     ) -> Transaction<V, C>;
 
     /// Perform off-chain pre-execution checks on the inherents.
@@ -139,7 +140,7 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data is supplied by the authoring node.
     fn create_inherents(
         authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<Transaction<V, C>>,
+        previous_inherents: Vec<(Transaction<V, C>, H256)>,
     ) -> Vec<Transaction<V, C>>;
 
     /// Perform off-chain pre-execution checks on the inherents.
@@ -165,7 +166,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
 
     fn create_inherents(
         authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<Transaction<V, C>>,
+        previous_inherents: Vec<(Transaction<V, C>, H256)>,
     ) -> Vec<Transaction<V, C>> {
         if previous_inherents.len() > 1 {
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
@@ -220,7 +221,10 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
 impl<V: Verifier, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
     type Error = MakeFatalError<()>;
 
-    fn create_inherents(_: &InherentData, _: Vec<Transaction<V, C>>) -> Vec<Transaction<V, C>> {
+    fn create_inherents(
+        _: &InherentData,
+        _: Vec<(Transaction<V, C>, H256)>,
+    ) -> Vec<Transaction<V, C>> {
         Vec::new()
     }
 

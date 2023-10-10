@@ -7910,6 +7910,7 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-api",
+ "sp-core",
  "sp-inherents",
  "sp-runtime",
  "sp-std",

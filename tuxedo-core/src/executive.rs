@@ -19,6 +19,7 @@ use log::debug;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
+use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{
     traits::BlakeTwo256,
@@ -423,13 +424,20 @@ impl<
         );
 
         // Extract the beginning-of-block inherents from the previous block.
-        // The parent is already imported, so we know it is valid and we know its inherents came first
+        // The parent is already imported, so we know it is valid and we know its inherents came first.
+        // We also annotate each transaction with its original hash for purposes of constructing output refs later.
+        // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
+        // and we need an original universal transaction id.
         // TODO Enforce that inherents are first in the execution path by making sure there are no more inherents after the first non-inherent.
-        let previous_blocks_inherents: Vec<<B as BlockT>::Extrinsic> = parent
+        let previous_blocks_inherents: Vec<(<B as BlockT>::Extrinsic, H256)> = parent
             .extrinsics()
             .iter()
             .cloned()
             .take_while(|tx| tx.checker.is_inherent())
+            .map(|tx| {
+                let id = BlakeTwo256::hash_of(&tx.encode());
+                (tx, id)
+            })
             .collect();
 
         log::info!(

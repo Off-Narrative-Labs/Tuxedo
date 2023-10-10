@@ -171,7 +171,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
 
             fn create_inherents(
                 authoring_inherent_data: &InherentData,
-                previous_inherents: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>>,
+                previous_inherents: Vec<(tuxedo_core::types::Transaction<#verifier, #outer_type>, sp_core::H256)>,
             ) -> Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>>  {
 
                 let mut all_inherents = Vec::new();
@@ -179,20 +179,26 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 #(
                     {
                         // Filter the previous inherents down to just the ones that came from this piece
-                        let previous_inherents = previous_inherents.iter().filter_map(|tx| {
-                            match tx.checker {
-                                #outer_type::#variants3(ref inner_checker) => Some(
-                                    tuxedo_core::types::Transaction {
-                                        inputs: tx.inputs.clone(),
-                                        peeks: tx.peeks.clone(),
-                                        outputs: tx.outputs.clone(),
-                                        checker: inner_checker.clone(),
-                                    }
-                                ),
-                                _ => None,
-                            }
-                        })
-                        .collect();
+                        let previous_inherents = previous_inherents
+                            .iter()
+                            .filter_map(|(tx, hash)| {
+                                match tx.checker {
+                                    #outer_type::#variants3(ref inner_checker) => Some(
+                                        (
+                                            tuxedo_core::types::Transaction {
+                                                inputs: tx.inputs.clone(),
+                                                peeks: tx.peeks.clone(),
+                                                outputs: tx.outputs.clone(),
+                                                checker: inner_checker.clone(),
+                                            },
+                                        *hash,
+                                        )
+                                    ),
+                                    _ => None,
+                                }
+                            })
+                            .collect();
+
                         let inherents = <#inner_types3 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::create_inherents(authoring_inherent_data, previous_inherents)
                             .iter()
                             .map(|tx| tx.transform::<#outer_type>())
@@ -274,7 +280,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                         Self::#variants6(inner) => <#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::is_inherent(inner),
                     )*
                 }
-                
+
             }
 
         }
