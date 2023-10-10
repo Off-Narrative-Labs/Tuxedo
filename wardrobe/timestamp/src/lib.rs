@@ -24,11 +24,10 @@ use sp_timestamp::InherentError::TooFarInFuture;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
-    inherents::TuxedoInherent,
-    support_macros::{CloneNoBound, DebugNoBound},
+    inherents::{TuxedoInherent, TuxedoInherentAdapter},
+    support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Input, Output, Transaction},
-    verifier::UpForGrabs,
-    ConstraintChecker, SimpleConstraintChecker, Verifier,
+    verifier::UpForGrabs, SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -139,7 +138,7 @@ pub enum TimestampError {
 /// transactions that need to peek at them are not immediately invsalidated. Noted timestamps
 /// can be voluntarily cleand up later by another transaction.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, DebugNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
+#[derive(Encode, Decode, DebugNoBound, DefaultNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
@@ -147,7 +146,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
     for SetTimestamp<T>
 {
     type Error = TimestampError;
-    type InherentHooks = Self;
+    type InherentHooks = TuxedoInherentAdapter<Self>;
 
     fn check(
         &self,
@@ -270,16 +269,16 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
     }
 }
 
-impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig + 'static>
-    TuxedoInherent<V, C> for SetTimestamp<T>
+impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static>
+    TuxedoInherent<V, Self> for SetTimestamp<T>
 {
     type Error = sp_timestamp::InherentError;
     const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = sp_timestamp::INHERENT_IDENTIFIER;
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Transaction<V, C>,
-    ) -> tuxedo_core::types::Transaction<V, C> {
+        previous_inherent: Option<Transaction<V, Self>>,
+    ) -> tuxedo_core::types::Transaction<V, Self> {
         // Extract the current timestamp from the inherent data
         let timestamp_millis: u64 = authoring_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
@@ -297,33 +296,41 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
         use tuxedo_core::types::OutputRef;
 
         let mut inputs = Vec::new();
-        if T::block_height() != 1 {
-            let prev_best_index = previous_inherent
-                .outputs
-                .iter()
-                .position(|output| {
-                    output.payload.extract::<BestTimestamp>().is_ok()
-                })
-                .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
-                .try_into()
-                .expect("There should not be more than u32::max_value transactions in a block.");
+        match (previous_inherent, T::block_height()) {
+            (None, 1) => {
+                // This is the first block hack case.
+                // We don't need any inputs, so just do nothing.
+            }
+            (None, _) => panic!("Attemping to construct timestamp inherent with no previous inherent (and not block 1)."),
+            (Some(previous_inherent), _) => {
+                // This is the the normal case. We create a full previous input to consume.
+                let prev_best_index = previous_inherent
+                    .outputs
+                    .iter()
+                    .position(|output| {
+                        output.payload.extract::<BestTimestamp>().is_ok()
+                    })
+                    .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
+                    .try_into()
+                    .expect("There should not be more than u32::max_value outputs in a transaction.");
 
-            // TODO should we have some generic way to refer to the hashing algo?
-            let output_ref = OutputRef {
-                tx_hash: BlakeTwo256::hash_of(&previous_inherent.encode()),
-                index: prev_best_index,
-            };
+                // TODO should we have some generic way to refer to the hashing algo?
+                let output_ref = OutputRef {
+                    tx_hash: BlakeTwo256::hash_of(&previous_inherent.encode()),
+                    index: prev_best_index,
+                };
 
-            let input = Input {
-                output_ref,
-                // The best time needs to be easily taken. For now I'll assume it is up for grabs.
-                // We can make this an eviction once that is implemented.
-                // Once this is fixed more properly (like by using evictions)
-                // I should be able to not mention UpForGrabs here at all.
-                redeemer: Vec::new(),
-            };
+                let input = Input {
+                    output_ref,
+                    // The best time needs to be easily taken. For now I'll assume it is up for grabs.
+                    // We can make this an eviction once that is implemented.
+                    // Once this is fixed more properly (like by using evictions)
+                    // I should be able to not mention UpForGrabs here at all.
+                    redeemer: Vec::new(),
+                }; 
 
-            inputs.push(input);
+                inputs.push(input);
+            }
         }
 
         let best_output = Output {
@@ -339,7 +346,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
             inputs,
             peeks: Vec::new(),
             outputs: vec![best_output, noted_output],
-            checker: previous_inherent.checker.clone(),
+            checker: Self::default(),
         };
 
         // log::info!(
@@ -357,7 +364,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
 
     fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherent: Transaction<V, C>,
+        inherent: Transaction<V, Self>,
         result: &mut CheckInherentsResult,
     ) {
         // Extract the local view of time from the inherent data

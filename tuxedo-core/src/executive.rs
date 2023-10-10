@@ -433,6 +433,11 @@ impl<
             .take_while(|tx| tx.checker.is_inherent())
             .collect();
 
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 The previous block had {} inherents.", previous_blocks_inherents.len()
+        );
+
         // Call into constraint checker's own inherent hooks to create the actual transactions
         C::InherentHooks::create_inherents(&data, previous_blocks_inherents)
     }
@@ -446,30 +451,32 @@ impl<
         // Okay, but actually, maybe we can solve this a better way. The problem was taking the shortcut to a check_inherent (singular) method.
         // We should stick with `check_inherents` and pass all the relevant inherents down the stack all the way to the bottom using the same wrapping and unwrapping trick.
 
-        //TODO Sanity check. I thought this needs to be mutable. But maybe giving a mutable reference is good enough?
-        let results = CheckInherentsResult::new();
-
         log::info!(
             target: LOG_TARGET,
             "🕰️🖴 In `check_inherents`"
         );
 
-        let mut full_result = CheckInherentsResult::new();
+        let mut result = CheckInherentsResult::new();
 
-        for tx in block.extrinsics() {
-            if !tx.checker.is_inherent() {
-                break;
-            }
+        // Tuxedo requires that all inehrents come at the beginning of the block.
+        // (Soon we will also allow them at the end, but never throughout the body.)
+        // At this off-chain pre-check stage, we assume that requirement is upheld.
+        // It will be verified later once we are executing on-chain.
+        let inherents: Vec<Transaction<V, C>> = block
+            .extrinsics()
+            .iter()
+            .cloned()
+            .take_while(|tx| tx.checker.is_inherent())
+            .collect();
 
-            C::InherentHooks::check_inherent(&data, tx.clone(), &mut full_result);
-        }
+        C::InherentHooks::check_inherents(&data, inherents, &mut result);
 
         log::info!(
             target: LOG_TARGET,
-            "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", results.ok(), results.fatal_error()
+            "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", result.ok(), result.fatal_error()
         );
 
-        results
+        result
     }
 }
 

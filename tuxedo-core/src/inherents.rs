@@ -50,7 +50,7 @@ use sp_inherents::{
 use sp_runtime::traits::Block as BlockT;
 use sp_std::{vec, vec::Vec};
 
-use crate::{types::Transaction, ConstraintChecker, Verifier};
+use crate::{types::Transaction, ConstraintChecker, Verifier, LOG_TARGET};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
@@ -109,7 +109,10 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     /// The inherent data is supplied by the authoring node.
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Transaction<V, C>,
+        // The option represents the so-called "first block hack".
+        // We need a way to initialize the chain with a first inherent on block one
+        // where there is no previous inherent. Once we introduce genesis extrinsics, this can be removed.
+        previous_inherent: Option<Transaction<V, C>>,
     ) -> Transaction<V, C>;
 
     /// Perform off-chain pre-execution checks on the inherents.
@@ -121,19 +124,6 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
         inherent: Transaction<V, C>,
         results: &mut CheckInherentsResult,
     );
-}
-
-impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
-    type Error = MakeFatalError<()>;
-    const INHERENT_IDENTIFIER: InherentIdentifier = *b"no_inher";
-
-    fn create_inherent(_: &InherentData, _: Transaction<V, C>) -> Transaction<V, C> {
-        panic!("Attempting to create an inherent for a constraint checker that does not support inherents.")
-    }
-
-    fn check_inherent(_: &InherentData, _: Transaction<V, C>, _: &mut CheckInherentsResult) {
-        panic!("Attemping to perform inherent checks for a constraint checker that does not support inherents.")
-    }
 }
 
 //TODO I didn't intend for this trait to be public.
@@ -156,14 +146,21 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    fn check_inherent(
+    fn check_inherents(
         importing_inherent_data: &InherentData,
-        inherent: Transaction<V, C>,
+        inherents: Vec<Transaction<V, C>>,
         results: &mut CheckInherentsResult,
     );
 }
 
-impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInternal<V, C> for T {
+/// An adapter to transform structured Tuxedo inherents into the more general and powerful
+/// InherentInternal trait. I really thought a blanket impl would work, but Rusts't type system is killing me.
+#[derive(Debug, Default, TypeInfo, Clone, Copy)]
+pub struct TuxedoInherentAdapter<T>(T);
+
+impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> InherentInternal<V, C>
+    for TuxedoInherentAdapter<T>
+{
     type Error = <T as TuxedoInherent<V, C>>::Error;
 
     fn create_inherents(
@@ -174,29 +171,69 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
 
-        // This is how the first block hack manifests in the core
-        // TODO remove this if statement once genesis inherents are supported.
-        if previous_inherents.is_empty() {
-            return Vec::new();
-        }
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 In blanket impl. {} total inherents.", previous_inherents.len()
+        );
 
-        let previous_inherent = previous_inherents.get(0).expect(
-            "Authoring a leaf inherent constraint checker, but no previous inherent was supplied.",
-        ).clone();
+        let previous_inherent = previous_inherents.get(0).cloned();
+        log::info!(
+            target: LOG_TARGET,
+            "🕰️🖴 previous_inherent is some? {}", previous_inherent.is_some()
+        );
 
-        // This is the magic. We just take the single transaction from the individual piece
-        // and put it into a vec so it can be aggregated.
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
             previous_inherent,
         )]
     }
 
-    fn check_inherent(
+    fn check_inherents(
         importing_inherent_data: &InherentData,
-        inherent: Transaction<V, C>,
+        inherents: Vec<Transaction<V, C>>,
         results: &mut CheckInherentsResult,
     ) {
+        if inherents.is_empty() {
+            results
+                .put_error(
+                    *b"12345678",
+                    &MakeFatalError::from(
+                        "Tuxedo inherent expected exactly one inherent extrinsic but found zero",
+                    ),
+                )
+                .expect("Should be able to put an error.");
+            return;
+        } else if inherents.len() > 1 {
+            results
+                .put_error(*b"12345678", &MakeFatalError::from("Tuxedo inherent expected exactly one inherent extrinsic but found multiple"))
+                .expect("Should be able to put an error.");
+            return;
+        }
+        let inherent = inherents
+            .get(0)
+            .expect("We already checked the bounds.")
+            .clone();
         <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)
+    }
+}
+
+impl<V: Verifier, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
+    type Error = MakeFatalError<()>;
+
+    fn create_inherents(_: &InherentData, _: Vec<Transaction<V, C>>) -> Vec<Transaction<V, C>> {
+        Vec::new()
+    }
+
+    fn check_inherents(
+        _: &InherentData,
+        inherents: Vec<Transaction<V, C>>,
+        _: &mut CheckInherentsResult,
+    ) {
+        // Inherents should always be empty for this stub implementation. Not just in valid blocks, but as an invariant.
+        // The way we determined which inherents got here is by matching on the constraint checker.
+        assert!(
+            inherents.is_empty(),
+            "inherent extrinsic was passed to check inherents stub implementation."
+        )
     }
 }

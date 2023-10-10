@@ -203,27 +203,47 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 all_inherents
             }
 
-            fn check_inherent(
+            fn check_inherents(
                 importing_inherent_data: &sp_inherents::InherentData,
-                inherent: tuxedo_core::types::Transaction<#verifier, #outer_type>,
+                inherents: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>>,
                 result: &mut sp_inherents::CheckInherentsResult,
             ) {
-                match inherent.checker {
-                    #(
-                        #outer_type::#variants4(ref inner_checker) => {
+                log::info!(
+                    target: LOG_TARGET,
+                    "🕰️🖴 Generated check_inherents code. {} total inherents.", inherents.len()
+                );
 
-                            // Tried a transform method here, but was missing some into impl. That could probably be fixed.
-                            let unwrapped_inherent = tuxedo_core::types::Transaction::<#verifier, #inner_types4> {
-                                inputs: inherent.inputs.clone(),
-                                peeks: inherent.peeks.clone(),
-                                outputs: inherent.outputs.clone(),
-                                checker: inner_checker.clone(),
-                            };
+                #(
+                    let relevant_inherents: Vec<tuxedo_core::types::Transaction<#verifier, #inner_types4>> = inherents
+                        .iter()
+                        .filter_map(|tx| {
+                            match tx.checker {
+                                #outer_type::#variants4(ref inner_checker) => {
+                                    Some(tuxedo_core::types::Transaction {
+                                        inputs: tx.inputs.clone(),
+                                        peeks: tx.peeks.clone(),
+                                        outputs: tx.outputs.clone(),
+                                        checker: inner_checker.clone(),
+                                    })
+                                }
+                                _ => None,
+                            }
+                        })
+                        .collect();
 
-                            <#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::check_inherent(importing_inherent_data, unwrapped_inherent, result);
-                        }
-                    )*
-                }
+                    log::info!(
+                        target: LOG_TARGET,
+                        "🕰️🖴 {} relevant to ...", relevant_inherents.len()
+                    );
+
+                    <#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::check_inherents(importing_inherent_data, relevant_inherents, result);
+
+                    // According to https://paritytech.github.io/polkadot-sdk/master/sp_inherents/struct.CheckInherentsResult.html
+                    // "When a fatal error occurs, all other errors are removed and the implementation needs to abort checking inherents."
+                    if result.fatal_error() {
+                        return;
+                    }
+                )*
             }
 
         }
