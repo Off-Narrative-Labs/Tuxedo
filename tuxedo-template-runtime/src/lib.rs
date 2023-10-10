@@ -15,7 +15,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use sp_api::impl_runtime_apis;
-use sp_inherents::{InherentData, InherentIdentifier};
+use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
@@ -35,7 +35,6 @@ use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-use timestamp::SetTimestamp;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     inherents::InherentInternal,

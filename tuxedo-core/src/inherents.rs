@@ -109,7 +109,7 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     /// The inherent data is supplied by the authoring node.
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: &Transaction<V, C>,
+        previous_inherent: Transaction<V, C>,
     ) -> Transaction<V, C>;
 
     /// Perform off-chain pre-execution checks on the inherents.
@@ -118,7 +118,7 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     /// same as what is available at authoring time.
     fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherent: &Transaction<V, C>,
+        inherent: Transaction<V, C>,
         results: &mut CheckInherentsResult,
     );
 }
@@ -127,11 +127,11 @@ impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
     type Error = MakeFatalError<()>;
     const INHERENT_IDENTIFIER: InherentIdentifier = *b"no_inher";
 
-    fn create_inherent(_: &InherentData, _: &Transaction<V, C>) -> Transaction<V, C> {
+    fn create_inherent(_: &InherentData, _: Transaction<V, C>) -> Transaction<V, C> {
         panic!("Attempting to create an inherent for a constraint checker that does not support inherents.")
     }
 
-    fn check_inherent(_: &InherentData, _: &Transaction<V, C>, _: &mut CheckInherentsResult) {
+    fn check_inherent(_: &InherentData, _: Transaction<V, C>, _: &mut CheckInherentsResult) {
         panic!("Attemping to perform inherent checks for a constraint checker that does not support inherents.")
     }
 }
@@ -149,7 +149,7 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// The inherent data is supplied by the authoring node.
     fn create_inherents(
         authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<&Transaction<V, C>>,
+        previous_inherents: Vec<Transaction<V, C>>,
     ) -> Vec<Transaction<V, C>>;
 
     /// Perform off-chain pre-execution checks on the inherents.
@@ -158,7 +158,7 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
     /// same as what is available at authoring time.
     fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherent: &Transaction<V, C>,
+        inherent: Transaction<V, C>,
         results: &mut CheckInherentsResult,
     );
 }
@@ -168,7 +168,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
 
     fn create_inherents(
         authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<&Transaction<V, C>>,
+        previous_inherents: Vec<Transaction<V, C>>,
     ) -> Vec<Transaction<V, C>> {
         if previous_inherents.len() > 1 {
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
@@ -177,7 +177,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
         //TODO actually, maybe this is where the first-block hack should go now.
         let previous_inherent = previous_inherents.get(0).expect(
             "Authoring a leaf inherent constraint checker, but no previous inherent was supplied.",
-        );
+        ).clone();
 
         // This is the magic. We just take the single transaction from the individual piece
         // and put it into a vec so it can be aggregated.
@@ -189,7 +189,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
 
     fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherent: &Transaction<V, C>,
+        inherent: Transaction<V, C>,
         results: &mut CheckInherentsResult,
     ) {
         <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)

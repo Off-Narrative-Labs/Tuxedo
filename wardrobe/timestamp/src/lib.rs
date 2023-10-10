@@ -279,7 +279,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: &Transaction<V, C>,
+        previous_inherent: Transaction<V, C>,
     ) -> tuxedo_core::types::Transaction<V, C> {
         // Extract the current timestamp from the inherent data
         let timestamp_millis: u64 = authoring_inherent_data
@@ -358,7 +358,7 @@ impl<V: Verifier + From<UpForGrabs>, C: ConstraintChecker<V>, T: TimestampConfig
 
     fn check_inherent(
         importing_inherent_data: &InherentData,
-        inherent: &Transaction<V, C>,
+        inherent: Transaction<V, C>,
         result: &mut CheckInherentsResult,
     ) {
         // Extract the local view of time from the inherent data

@@ -206,7 +206,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             fn check_inherent(
                 importing_inherent_data: &sp_inherents::InherentData,
                 inherent: tuxedo_core::types::Transaction<#verifier, #outer_type>,
-                &mut result: sp_inherents::CheckInherentResult,
+                result: &mut sp_inherents::CheckInherentsResult,
             ) {
                 match inherent.checker {
                     #(

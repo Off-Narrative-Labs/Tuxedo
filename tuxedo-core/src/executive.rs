@@ -426,9 +426,10 @@ impl<
         // The parent is already imported, so we know it is valid and we know its inherents came first
         // TODO where should we actually enforce that the inherents come first.
         // I guess each time we apply an extrinsic, we should make sure that we never see another inherent after the first bunch.
-        let previous_blocks_inherents: Vec<&<B as BlockT>::Extrinsic> = parent
+        let previous_blocks_inherents: Vec<<B as BlockT>::Extrinsic> = parent
             .extrinsics()
             .iter()
+            .cloned()
             .take_while(|tx| tx.checker.is_inherent())
             .collect();
 
@@ -452,7 +453,7 @@ impl<
                 break;
             }
 
-            C::InherentHooks::check_inherent(&data, tx, &mut full_result);
+            C::InherentHooks::check_inherent(&data, tx.clone(), &mut full_result);
         }
 
         log::info!(
