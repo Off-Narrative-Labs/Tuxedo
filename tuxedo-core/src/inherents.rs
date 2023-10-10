@@ -174,7 +174,12 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
 
-        //TODO actually, maybe this is where the first-block hack should go now.
+        // This is how the first block hack manifests in the core
+        // TODO remove this if statement once genesis inherents are supported.
+        if previous_inherents.is_empty() {
+            return Vec::new();
+        }
+
         let previous_inherent = previous_inherents.get(0).expect(
             "Authoring a leaf inherent constraint checker, but no previous inherent was supplied.",
         ).clone();
