@@ -446,7 +446,6 @@ impl<
         // Okay, but actually, maybe we can solve this a better way. The problem was taking the shortcut to a check_inherent (singular) method.
         // We should stick with `check_inherents` and pass all the relevant inherents down the stack all the way to the bottom using the same wrapping and unwrapping trick.
 
-
         //TODO Sanity check. I thought this needs to be mutable. But maybe giving a mutable reference is good enough?
         let results = CheckInherentsResult::new();
 
