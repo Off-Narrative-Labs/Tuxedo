@@ -432,10 +432,10 @@ impl_runtime_apis! {
                     "🕰️🖴 Got an error when checking an inherent: {:?}", e,
                 );
 
-                const INHERENT_ID: InherentIdentifier = <<timestamp::SetTimestamp<Runtime> as ConstraintChecker<OuterVerifier>>::InherentHooks as InherentInternal<OuterVerifier, OuterConstraintChecker>>::INHERENT_IDENTIFIER;
-                results
-                    .put_error(INHERENT_ID, &e)
-                    .expect("Should be able to put some errors");
+                // const INHERENT_ID: InherentIdentifier = <<timestamp::SetTimestamp<Runtime> as ConstraintChecker<OuterVerifier>>::InherentHooks as InherentInternal<OuterVerifier, OuterConstraintChecker>>::INHERENT_IDENTIFIER;
+                // results
+                //     .put_error(INHERENT_ID, &e)
+                //     .expect("Should be able to put some errors");
 
                 if e.is_fatal_error() {
                     log::info!(

@@ -167,14 +167,40 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             // TODO I guess I'll want some aggregate error type here.
             type Error = sp_inherents::MakeFatalError<()>;
 
-            // I guess this will never be used
-            const INHERENT_IDENTIFIER: InherentIdentifier = *b"aggregat";
-
             fn create_inherents(
                 authoring_inherent_data: &InherentData,
                 previous_inherents: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>>,
             ) -> Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>>  {
-                todo!("This may be tricky")
+
+                let mut all_inherents = Vec::new();
+
+                #(
+                    {
+                        // Filter the previous inherents down to just the ones that came from this piece
+                        let previous_inherents = previous_inherents.iter().filter_map(|tx| {
+                            match tx.checker {
+                                #outer_type::#variants3(ref inner_checker) => Some(
+                                    tuxedo_core::types::Transaction {
+                                        inputs: tx.inputs.clone(),
+                                        peeks: tx.peeks.clone(),
+                                        outputs: tx.outputs.clone(),
+                                        checker: inner_checker.clone(),
+                                    }
+                                ),
+                                _ => None,
+                            }
+                        })
+                        .collect();
+                        let inherents = <#inner_types3 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::create_inherents(authoring_inherent_data, previous_inherents)
+                            .iter()
+                            .map(|tx| tx.transform::<#outer_type>())
+                            .collect::<Vec<_>>();
+                        all_inherents.extend(inherents);
+                    }
+                )*
+
+                // Return the aggregate of all inherent extrinsics from all constituent constraint checkers.
+                all_inherents
             }
 
             fn check_inherent(
@@ -183,14 +209,14 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             ) -> Result<(), Self::Error> {
                 match inherent.checker {
                     #(
-                        #outer_type::#variants4(inner_checker) => {
+                        #outer_type::#variants4(ref inner_checker) => {
 
                             // Tried a transform method here, but was missing some into impl. That could probably be fixed.
                             let unwrapped_inherent = tuxedo_core::types::Transaction::<#verifier, #inner_types4> {
-                                inputs: inherent.inputs,
-                                peeks: inherent.peeks,
-                                outputs: inherent.outputs,
-                                checker: inner_checker,
+                                inputs: inherent.inputs.clone(),
+                                peeks: inherent.peeks.clone(),
+                                outputs: inherent.outputs.clone(),
+                                checker: inner_checker.clone(),
                             };
 
                             <#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::check_inherent(importing_inherent_data, unwrapped_inherent)

@@ -142,8 +142,6 @@ impl<V: Verifier, C: ConstraintChecker<V>> TuxedoInherent<V, C> for () {
 pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
     type Error: Encode + IsFatalError;
 
-    const INHERENT_IDENTIFIER: InherentIdentifier;
-
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create_inherents(
@@ -164,9 +162,6 @@ pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeIn
 impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInternal<V, C> for T {
     type Error = <T as TuxedoInherent<V, C>>::Error;
 
-    const INHERENT_IDENTIFIER: InherentIdentifier =
-        <T as TuxedoInherent<V, C>>::INHERENT_IDENTIFIER;
-
     fn create_inherents(
         authoring_inherent_data: &InherentData,
         previous_inherents: Vec<Transaction<V, C>>,
@@ -174,11 +169,17 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C>> InherentInte
         if previous_inherents.len() > 1 {
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
+        
+        let previous_inherent = previous_inherents
+            .get(0)
+            .expect("Authoring a leaf inherent constraint checker, but no previous inherent was supplied.")
+            .clone();
+
         // This is the magic. We just take the single transaction from the individual piece
         // and put it into a vec so it can be aggregated.
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
-            previous_inherents.get(0).expect("Authoring a leaf inherent constraint checker, but no previous inherent was supplied.").clone(),
+            previous_inherent,
         )]
     }
 
