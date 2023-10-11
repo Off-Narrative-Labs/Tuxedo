@@ -216,11 +216,6 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 inherents: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>>,
                 result: &mut sp_inherents::CheckInherentsResult,
             ) {
-                log::info!(
-                    target: LOG_TARGET,
-                    "🕰️🖴 Generated check_inherents code. {} total inherents.", inherents.len()
-                );
-
                 #(
                     let relevant_inherents: Vec<tuxedo_core::types::Transaction<#verifier, #inner_types4>> = inherents
                         .iter()
@@ -238,11 +233,6 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                             }
                         })
                         .collect();
-
-                    log::info!(
-                        target: LOG_TARGET,
-                        "🕰️🖴 {} relevant to ...", relevant_inherents.len()
-                    );
 
                     <#inner_types4 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::check_inherents(importing_inherent_data, relevant_inherents, result);
 

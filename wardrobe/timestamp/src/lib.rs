@@ -19,7 +19,8 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
-use sp_runtime::{traits::BlakeTwo256, transaction_validity::TransactionPriority};
+#[cfg(feature = "std")]
+use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
 use sp_timestamp::InherentError::TooFarInFuture;
 use tuxedo_core::{
@@ -27,7 +28,7 @@ use tuxedo_core::{
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
-    types::{Input, Output, Transaction},
+    types::{Input, Output, OutputRef, Transaction},
     verifier::UpForGrabs,
     SimpleConstraintChecker, Verifier,
 };
@@ -179,11 +180,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 a"
-        );
-
         // Make sure the second output is a new noted timestamp
         ensure!(
             output_data.len() >= 2,
@@ -194,31 +190,16 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
 
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 ba"
-        );
-
         // Make sure there are no extra outputs
         ensure!(
             output_data.len() == 2,
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
 
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 c"
-        );
-
         // Make sure that the new best and new noted timestamps are actually for the same time.
         ensure!(
             new_best == new_noted,
             Self::Error::InconsistentBestAndNotedTimestamps
-        );
-
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 d"
         );
 
         // Next we need to check inputs, but there is a special case for block 1.
@@ -228,9 +209,9 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
         if T::block_height() == 1 {
             // If this special case remains for a while, we should do some checks here like
             // making sure there are no inputs at all. For now, We'll just leave it as is.
-            log::info!(
+            log::debug!(
                 target: LOG_TARGET,
-                "🕰️🖴 e"
+                "🕰️🖴 Executing timestamp inherent. Triggering first-block special case."
             );
             return Ok(0);
         }
@@ -240,17 +221,9 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
             !input_data.is_empty(),
             Self::Error::MissingPreviousBestTimestamp
         );
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 f"
-        );
         ensure!(
             input_data.len() == 1,
             Self::Error::TooManyInputsWhileSettingTimestamp
-        );
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 g"
         );
 
         // Compare the new timestamp to the previous timestamp
@@ -261,10 +234,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
         ensure!(
             new_best >= old_best + MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
-        );
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 h"
         );
 
         Ok(0)
@@ -293,13 +262,10 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         let new_best_timestamp = BestTimestamp(timestamp_millis);
         let new_noted_timestamp = NotedTimestamp(timestamp_millis);
 
-        log::info!(
+        log::debug!(
             target: LOG_TARGET,
-            "🕰️🖴 local timestamp while authoring:: {timestamp_millis}"
+            "🕰️🖴 Local timestamp while creating inherent i:: {timestamp_millis}"
         );
-
-        use sp_api::HashT;
-        use tuxedo_core::types::OutputRef;
 
         let mut inputs = Vec::new();
         match (previous_inherent, T::block_height()) {
@@ -354,16 +320,6 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             checker: Self::default(),
         };
 
-        // log::info!(
-        //     target: LOG_TARGET,
-        //     "🕰️🖴 Timestamp transaction is: \n{:#?}", timestamp_tx
-        // );
-
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 Timestamp transaction has is: \n{:#?}", BlakeTwo256::hash_of(&timestamp_tx.encode())
-        );
-
         timestamp_tx
     }
 
@@ -378,9 +334,9 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             .expect("Inherent data should decode properly")
             .expect("Timestamp inherent data should be present.");
 
-        log::info!(
+        log::debug!(
             target: LOG_TARGET,
-            "🕰️🖴 Local timestamp is:    {:#?}", local_timestamp
+            "🕰️🖴 Local timestamp while checking inherent is: {:#?}", local_timestamp
         );
 
         let on_chain_timestamp = inherent
@@ -396,7 +352,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             .expect("It should decode because we already checked that.")
             .0;
 
-        log::info!(
+        log::debug!(
             target: LOG_TARGET,
             "🕰️🖴 In-block timestamp is: {:#?}", on_chain_timestamp
         );
@@ -409,7 +365,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
         // Make the comparison for too far in future
         if on_chain_timestamp > local_timestamp + MAX_DRIFT {
-            log::info!(
+            log::debug!(
                 target: LOG_TARGET,
                 "🕰️🖴 Block timestamp is too far in future. About to push an error"
             );

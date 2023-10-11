@@ -51,7 +51,7 @@ use sp_inherents::{
 use sp_runtime::traits::Block as BlockT;
 use sp_std::{vec, vec::Vec};
 
-use crate::{types::Transaction, ConstraintChecker, Verifier, LOG_TARGET};
+use crate::{types::Transaction, ConstraintChecker, Verifier};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
@@ -172,17 +172,8 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
 
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 In blanket impl. {} total inherents.", previous_inherents.len()
-        );
-
         let previous_inherent = previous_inherents.get(0).cloned();
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 previous_inherent is some? {}", previous_inherent.is_some()
-        );
-
+        
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
             previous_inherent,

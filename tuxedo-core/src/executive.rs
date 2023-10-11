@@ -424,9 +424,9 @@ impl<
 
     // The last two are for the standard beginning-of-block inherent extrinsics.
     pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<B as BlockT>::Extrinsic> {
-        log::info!(
+        debug!(
             target: LOG_TARGET,
-            "🕰️🖴 In `inherent_extrinsics`."
+            "Entering `inherent_extrinsics`."
         );
 
         // Extract the complete parent block from the inheret data
@@ -435,17 +435,11 @@ impl<
             .expect("1")
             .expect("2");
 
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 The previous block had {} extrinsics.", parent.extrinsics().len()
-        );
-
         // Extract the beginning-of-block inherents from the previous block.
         // The parent is already imported, so we know it is valid and we know its inherents came first.
         // We also annotate each transaction with its original hash for purposes of constructing output refs later.
         // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
         // and we need an original universal transaction id.
-        // TODO Enforce that inherents are first in the execution path by making sure there are no more inherents after the first non-inherent.
         let previous_blocks_inherents: Vec<(<B as BlockT>::Extrinsic, H256)> = parent
             .extrinsics()
             .iter()
@@ -457,9 +451,9 @@ impl<
             })
             .collect();
 
-        log::info!(
+        debug!(
             target: LOG_TARGET,
-            "🕰️🖴 The previous block had {} inherents.", previous_blocks_inherents.len()
+            "The previous block had {} extrinsics ({} inherents).", parent.extrinsics().len(), previous_blocks_inherents.len()
         );
 
         // Call into constraint checker's own inherent hooks to create the actual transactions
@@ -467,9 +461,9 @@ impl<
     }
 
     pub fn check_inherents(block: B, data: InherentData) -> sp_inherents::CheckInherentsResult {
-        log::info!(
+        debug!(
             target: LOG_TARGET,
-            "🕰️🖴 In `check_inherents`"
+            "Entering `check_inherents`"
         );
 
         let mut result = CheckInherentsResult::new();
@@ -486,11 +480,6 @@ impl<
             .collect();
 
         C::InherentHooks::check_inherents(&data, inherents, &mut result);
-
-        log::info!(
-            target: LOG_TARGET,
-            "🕰️🖴 About to return from `check_inherents`. Results okay: {}, fatal_error: {}", result.ok(), result.fatal_error()
-        );
 
         result
     }

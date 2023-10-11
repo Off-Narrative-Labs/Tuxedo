@@ -335,10 +335,6 @@ impl_runtime_apis! {
     // https://substrate.dev/rustdocs/master/sc_block_builder/trait.BlockBuilderApi.html
     impl sp_block_builder::BlockBuilder<Block> for Runtime {
         fn apply_extrinsic(extrinsic: <Block as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
-            log::info!(
-                target: LOG_TARGET,
-                "🕰️🖴 In `apply_extrinsic`. extrinsic is {:#?}", extrinsic
-            );
             Executive::apply_extrinsic(extrinsic)
         }
 
