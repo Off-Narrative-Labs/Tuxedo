@@ -5,9 +5,7 @@
 
 use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{
-    dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output,
-};
+use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -105,8 +103,8 @@ impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(test)]
 pub mod testing {
-    use serde::{Deserialize, Serialize};
     use scale_info::TypeInfo;
+    use serde::{Deserialize, Serialize};
 
     use super::*;
 
@@ -137,23 +135,15 @@ pub mod testing {
 
     #[test]
     fn test_checker_passes() {
-        let result = SimpleConstraintChecker::check(
-            &TestConstraintChecker { checks: true },
-            &[],
-            &[],
-            &[],
-        );
+        let result =
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
-        let result = SimpleConstraintChecker::check(
-            &TestConstraintChecker { checks: false },
-            &[],
-            &[],
-            &[],
-        );
+        let result =
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

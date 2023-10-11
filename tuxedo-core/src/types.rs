@@ -112,7 +112,7 @@ impl<V, C> Extrinsic for Transaction<V, C>
 where
     C: TypeInfo + ConstraintChecker<V> + 'static,
     V: TypeInfo + Verifier + 'static,
- {
+{
     type Call = Self;
     type SignaturePayload = ();
 

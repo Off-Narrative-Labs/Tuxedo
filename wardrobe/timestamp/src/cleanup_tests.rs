@@ -1,7 +1,10 @@
 //! Unit tests for the Timestamp piece.
 //! This module tests the secondary flow of cleaning up old timestamps.
 
-use super::{NotedTimestamp, SimpleConstraintChecker, CleanUpTimestamp, TimestampError, BestTimestamp, CLEANUP_AGE};
+use super::{
+    BestTimestamp, CleanUpTimestamp, NotedTimestamp, SimpleConstraintChecker, TimestampError,
+    CLEANUP_AGE,
+};
 use tuxedo_core::dynamic_typing::testing::Bogus;
 use TimestampError::*;
 

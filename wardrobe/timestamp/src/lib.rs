@@ -29,7 +29,7 @@ use tuxedo_core::{
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Input, Output, OutputRef, Transaction},
     verifier::UpForGrabs,
-    ConstraintChecker, Verifier, SimpleConstraintChecker,
+    ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -381,7 +381,7 @@ pub struct CleanUpTimestamp;
 
 impl SimpleConstraintChecker for CleanUpTimestamp {
     type Error = TimestampError;
-    
+
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],

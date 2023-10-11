@@ -191,7 +191,8 @@ fn update_timestamp_too_many_outputs() {
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
     let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
-    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.clone().into(), new_noted.into()];
+    let output_data: Vec<Output<UpForGrabs>> =
+        vec![new_best.into(), new_noted.clone().into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
