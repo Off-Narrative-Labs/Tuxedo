@@ -69,11 +69,7 @@ pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + Type
     ) -> Result<TransactionPriority, Self::Error>;
 
     /// Tells whether this extrinsic is an inherent or not.
-    /// The default implementation returns false as most transaction types are not inherents.
-    /// If you override this to return true, you must supply meaningful Inherent Hooks.
-    fn is_inherent(&self) -> bool {
-        false
-    }
+    fn is_inherent(&self) -> bool;
 }
 
 // This blanket implementation makes it so that any type that chooses to
