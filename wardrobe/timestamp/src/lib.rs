@@ -1,13 +1,18 @@
-//! Allow block authors to include a timestamp via an inherent transaction
+//! Allow block authors to include a timestamp via an inherent transaction.
 //!
-//! This strives to be roughly analogous to FRAME's pallet timestamp and uses the same client-side inherent data provider logic.
+//! This is roughly analogous to FRAME's pallet timestamp. It relies on the same client-side inherent data provider,
+//! as well as Tuxedo's own previous block inehrent data provider.
 //!
-//! In this first iteration, block authors set timestamp once per block by adding a new utxo. The timestamps are never cleaned up. There are no incentives.
-//! In the future, it may make sense to have them consume the previous timestamp or a timestamp from n blocks ago, or just provide incentives for users to clean up old ones.
+//! In each block ,the block author must include a single `SetTimestamp` transaction.
+//! 1. Comsumes the existing best timestamp UTXO (which was created in the previous block).
+//! 2. Creates a new best timestamp UTXO (which will be cleaned up in the next block).
+//! 3. Creates a new noted timestamp UTXO which will stick around for a minimum amount of time
+//!    and, perhaps, eventually be cleaned up by a volunteer.
 //!
-//! Some things that are still a little unclear. How do we make sure that this function is only called via inherent? Maybe forbid it in the pool.
-//! If forbidding them in the pool is the answer, then we need to  consider a way to make it easy / nice for piece developers to declare that their transactions are inherents.
-//! One way to make it work for users would be to adapt the macro so that you can add an `#[inherent]` to some call variants, then the macro creates a function called is_inherent that checks if it is an inherent or not.
+//! This piece currently features two prominent hacks which will need to be cleaned up in due course.
+//! 1. It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
+//! 2. In block #1 it allows creating a new best timestamp without comsuming a previous one.
+//!    This should be removed once we are able to include a timestamp in the genesis block.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -46,8 +51,8 @@ const LOG_TARGET: &str = "timestamp-piece";
 /// be a configuration traint value, but for now I'm hard-coding it.
 const MINIMUM_TIME_INTERVAL: u64 = 200;
 
-// It might make sense to have a minimum number of blocks in addition or instead so
-// that if the chai nstalls, all the transactions in the pool can still be used when
+// It might make sense to have a minimum number of blocks before cleanup in addition
+// that if the chain stalls, all the transactions in the pool can still be used when
 // it comes back alive.
 
 /// The minimum amount of time that a timestamp utxo must have been stored before it
@@ -81,14 +86,19 @@ impl UtxoData for NotedTimestamp {
 
 /// Options to configure the timestamp piece in your runtime.
 /// Currently we only need access to a block number.
-/// In the future maybe the minimum interval will be configurable too.
 pub trait TimestampConfig {
     /// A means of getting the current block height.
     /// Probably this will be the Tuxedo Executive
     fn block_height() -> u32;
+
+    //TODO minimum interval
+
+    //TODO max drift
+
+    //TODO cleanup age
 }
 
-/// Reasons that setting or reading the timestamp may go wrong.
+/// Reasons that setting or cleaning up the timestamp may go wrong.
 #[derive(Debug, Eq, PartialEq)]
 pub enum TimestampError {
     /// UTXO data has an unexpected type
@@ -124,15 +134,13 @@ pub enum TimestampError {
 /// A constraint checker for the simple act of setting a new best timetamp.
 ///
 /// This is expected to be performed through an inherent, and to happen exactly once per block.
-/// The earlier it happens in the block the better, and concretely we expect authoring nodes to
-/// insert this information first via an inehrent extrinsic.
 ///
 /// This transaction comsumes a single input which is the previous best timestamp,
 /// And it creates two new outputs. A best timestamp, and a noted timestamp, both of which
-/// include the same timestamp. The puspose of the best timestamp is to be consumed immediately
-/// in the next block and guarantees that the timestamp is always increasing by enough.
-/// On the other hand the noted timestamps stick around in storage for a while so that other
-/// transactions that need to peek at them are not immediately invsalidated. Noted timestamps
+/// include the same timestamp. The purpose of the best timestamp is to be consumed immediately
+/// in the next block and guarantees that the timestamp is always increasing by at least the minimum.
+/// On the other hand, the noted timestamps stick around in storage for a while so that other
+/// transactions that need to peek at them are not immediately invalidated. Noted timestamps
 /// can be voluntarily cleand up later by another transaction.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, DebugNoBound, DefaultNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
@@ -156,13 +164,9 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             "🕰️🖴 Checking constraints for SetTimestamp."
         );
 
-        // In FRAME we use ensure_none! to make sure this is an inherent (no origin means inherent).
-        // The implementation is easy in FRAME where nearly every transaction is signed.
-        // However in the UTXO model, no transactions are signed in their entirety, so there is no simple way to
-        // tell that this is an inherent at this point. My plan to address this (at the moment) is to match on
-        // the call type in the pool, and not propagate ones that were marked as inherents.
-
-        // Although we expect there to typically be no peeks, there is no harm in allowing them.
+        // FRAME pallet authors are required to ensure_none! to make sure this is an inherent.
+        // In Tuxedo, inherent transaction types are identified explicitly, and the tuxedo
+        // core can make this check automatically.
 
         // Make sure the first output is a new best timestamp
         ensure!(
@@ -198,10 +202,11 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             Self::Error::InconsistentBestAndNotedTimestamps
         );
 
+        // Although we expect there to typically be no peeks, there is no harm in allowing them.
+
         // Next we need to check inputs, but there is a special case for block 1.
         // We need to initialize the timestamp in block 1, so there are no requirements on
         // the inputs at that height.
-        // Ideally this will go away soon. And if it makes it to production, we should add some checks for empty inputs here.
         if T::block_height() == 1 {
             // If this special case remains for a while, we should do some checks here like
             // making sure there are no inputs at all. For now, We'll just leave it as is.
@@ -352,7 +357,6 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         // Although FRAME makes the check for the minimum interval here, we don't.
         // We make that check in the on-chain constraint checker.
         // That is a deterministic check that all nodes should agree upon and thus it belongs onchain.
-        // Plus, That's where we have easy access to the timestamp of the previous block
         // FRAME's checks: github.com/paritytech/polkadot-sdk/blob/945ebbbc/substrate/frame/timestamp/src/lib.rs#L299-L306
 
         // Make the comparison for too far in future
@@ -374,7 +378,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 ///
 /// You can clean up multiple timestamps at once, but you only peek at a single
 /// new reference. Although it is useless to do so, it is valid for a transaction
-/// to clean up zero timestampe
+/// to clean up zero timestamps.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct CleanUpTimestamp;
@@ -389,7 +393,7 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         // Make sure there at least one peek that is the new reference time.
-        // We don;t expect any additional peeks typically, but as above, they are harmless.
+        // We don't expect any additional peeks typically, but as above, they are harmless.
         ensure!(
             !peek_data.is_empty(),
             Self::Error::CleanupRequiresOneReference
