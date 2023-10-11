@@ -377,7 +377,6 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
 
 impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     type Error = ConstraintCheckerError;
-
     /// Checks:
     ///     - `input_data` is of length 2
     ///     - `output_data` is of length 3
