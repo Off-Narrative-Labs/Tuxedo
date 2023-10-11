@@ -32,17 +32,32 @@ pub fn aggregate(_: TokenStream, body: TokenStream) -> TokenStream {
         )
     });
     let variants = variant_type_pairs.clone().map(|(v, _t)| v);
+    let variants2 = variants.clone();
     let inner_types = variant_type_pairs.map(|(_v, t)| t);
+    let inner_types2 = inner_types.clone();
 
     let output = quote! {
         // First keep the original code in tact
         #original_code
 
-        // Now write all the From impls
+        // Now write all the wrapping From impls
         #(
             impl From<#inner_types> for #outer_type {
                 fn from(b: #inner_types) -> Self {
                     Self::#variants(b)
+                }
+            }
+        )*
+
+        // Finally write all the un-wrapping From impls
+        #(
+            impl From<#outer_type> for #inner_types2 {
+                fn from(a: #outer_type) -> Self {
+                    if let #outer_type::#variants2(b) = a {
+                        b
+                    } else {
+                        panic!("wrong type or something...")
+                    }
                 }
             }
         )*
@@ -181,17 +196,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                             .iter()
                             .filter_map(|(tx, hash)| {
                                 match tx.checker {
-                                    #outer_type::#variants3(ref inner_checker) => Some(
-                                        (
-                                            tuxedo_core::types::Transaction {
-                                                inputs: tx.inputs.clone(),
-                                                peeks: tx.peeks.clone(),
-                                                outputs: tx.outputs.clone(),
-                                                checker: inner_checker.clone(),
-                                            },
-                                        *hash,
-                                        )
-                                    ),
+                                    #outer_type::#variants3(ref inner_checker) => Some((tx.transform::<#inner_types3>(), *hash )),
                                     _ => None,
                                 }
                             })
@@ -219,14 +224,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                         .iter()
                         .filter_map(|tx| {
                             match tx.checker {
-                                #outer_type::#variants4(ref inner_checker) => {
-                                    Some(tuxedo_core::types::Transaction {
-                                        inputs: tx.inputs.clone(),
-                                        peeks: tx.peeks.clone(),
-                                        outputs: tx.outputs.clone(),
-                                        checker: inner_checker.clone(),
-                                    })
-                                }
+                                #outer_type::#variants4(ref inner_checker) => Some(tx.transform::<#inner_types4>()),
                                 _ => None,
                             }
                         })
