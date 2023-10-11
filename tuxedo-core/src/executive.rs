@@ -410,14 +410,25 @@ impl<
             block_hash
         );
 
-        // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
-        // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-        // For now, I just make them all custom zero
-        let r = Self::validate_tuxedo_transaction(&tx);
+        // Inherents are not permitted in the pool. They only come from the block author.
+        // We perform this check here rather than in the `validate_tuxedo_transaction` helper,
+        // because that helper is called again during on-chain execution. Inherents are valid
+        // during execution, so we do not want this check repeated.
+        let r = if tx.checker.is_inherent() {
+            Err(TransactionValidityError::Invalid(
+                InvalidTransaction::Call
+            ))
+        } else {
+            // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
+            // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
+            // For now, I just make them all custom zero
+            Self::validate_tuxedo_transaction(&tx)
+                .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        };
 
         debug!(target: LOG_TARGET, "Validation result: {:?}", r);
 
-        r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        r
     }
 
     // The last two are for the standard beginning-of-block inherent extrinsics.
