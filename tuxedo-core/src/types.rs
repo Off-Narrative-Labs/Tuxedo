@@ -37,6 +37,7 @@ pub struct OutputRef {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Transaction<V: TypeInfo, C: TypeInfo> {
+    /// Existing pieces of state to be read and consumed from storage
     pub inputs: Vec<Input>,
     /// Existing state to be read, but not consumed, from storage
     pub peeks: Vec<OutputRef>,

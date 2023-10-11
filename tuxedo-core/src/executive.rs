@@ -237,8 +237,6 @@ impl<
         }
     }
 
-    // TODO This must be exposed to the pieces somehow. We need some kind of config system.
-    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/15
     /// A helper function that allows tuxedo runtimes to read the current block height
     pub fn block_height() -> <<B as BlockT>::Header as HeaderT>::Number
     where

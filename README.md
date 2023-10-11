@@ -53,16 +53,16 @@ From a developer perspective, this wallet can serve as a starting point for buil
 
 Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their [support of Tuxedo](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md) through their grants program.
 
-With the grant work nearly complete, we intend to continue developing Tuxedo.
-The future is less clear, but our current ideas include:
+Our current rough roadmap is:
 
+- 🏗️ Cumulus and Parachain support including cross-chain UTXOs
+- 🔜 Benchmarking
 - 🔮 Zero-knowledge runtimes a-la [zero-cash](https://www.ieee-security.org/TC/SP2014/papers/Zerocash_c_DecentralizedAnonymousPaymentsfromBitcoin.pdf) and [zexe](https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=9152634&ref=)
-- 🔮 Cumulus and Parachain support including cross-chain UTXOs
 - 🔮 UTXO-native Smart Contracts based on the pi-calculus
 
 ## Building and Running Locally
 
-If you want to learn how to use Tuxedo in your runtime, we recommend starting with the [Tuxedo Order Book Dex Tutorial](https://youtu.be/aeTmAvVJlx4).
+If you want to learn how to use Tuxedo in your runtime, we recommend starting with the [Tuxedo Order Book Dex Tutorial](https://github.com/Off-Narrative-Labs/Tuxedo-Order-Book-Dex-Tutorial/).
 
 If you want to develop closer to Tuxedo core, you can build this repository.
 First you'll need to have a working Rust and [Substrate development environment](https://docs.substrate.io/install/).
