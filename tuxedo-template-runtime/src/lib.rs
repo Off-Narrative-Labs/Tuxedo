@@ -52,10 +52,6 @@ pub use runtime_upgrade;
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;
 
-/// Target for logging from the template runtime.
-/// Individual pieces should not use this target, nor should Tuxedo client or core.
-const LOG_TARGET: &str = "tuxedo-template-runtime";
-
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
