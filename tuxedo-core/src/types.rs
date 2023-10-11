@@ -182,9 +182,9 @@ pub struct Output<V> {
 }
 
 impl<V: Default> From<DynamicallyTypedData> for Output<V> {
-    fn from(value: DynamicallyTypedData) -> Self {
+    fn from(payload: DynamicallyTypedData) -> Self {
         Self {
-            payload: value.into(),
+            payload,
             verifier: Default::default(),
         }
     }

@@ -315,14 +315,12 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             verifier: UpForGrabs.into(),
         };
 
-        let timestamp_tx = Transaction {
+        Transaction {
             inputs,
             peeks: Vec::new(),
             outputs: vec![best_output, noted_output],
             checker: Self::default(),
-        };
-
-        timestamp_tx
+        }
     }
 
     fn check_inherent(
