@@ -415,9 +415,7 @@ impl<
         // because that helper is called again during on-chain execution. Inherents are valid
         // during execution, so we do not want this check repeated.
         let r = if tx.checker.is_inherent() {
-            Err(TransactionValidityError::Invalid(
-                InvalidTransaction::Call
-            ))
+            Err(TransactionValidityError::Invalid(InvalidTransaction::Call))
         } else {
             // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
             // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
