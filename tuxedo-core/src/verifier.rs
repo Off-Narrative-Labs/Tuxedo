@@ -20,7 +20,7 @@ use sp_std::vec::Vec;
 /// per-output basis and neither knows nor cares anything about the validation logic that will
 /// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
 /// we take the entire stripped and serialized transaction as a parameter.
-pub trait Verifier: Debug + Encode + Decode + Clone + TypeInfo {
+pub trait Verifier: Debug + Encode + Decode + Clone {
     fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool;
 }
 
