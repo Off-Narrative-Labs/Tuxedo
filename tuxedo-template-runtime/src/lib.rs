@@ -37,7 +37,6 @@ use serde::{Deserialize, Serialize};
 
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    inherents::InherentInternal,
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},

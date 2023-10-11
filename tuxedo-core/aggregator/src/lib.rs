@@ -164,7 +164,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             )*
         }
 
-        impl InherentInternal<#verifier, #outer_type> for #inherent_hooks {
+        impl tuxedo_core::inherents::InherentInternal<#verifier, #outer_type> for #inherent_hooks {
 
             fn create_inherents(
                 authoring_inherent_data: &InherentData,
