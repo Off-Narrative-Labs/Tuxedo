@@ -26,13 +26,6 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
-
-    /// Tells whether this extrinsic is an inherent or not.
-    /// The default implementation returns false as most transaction types are not inherents.
-    /// If you override this to return true, you must supply meaningful Inherent Hooks.
-    fn is_inherent(&self) -> bool {
-        false
-    }
 }
 
 /// A single constraint checker that a transaction can choose to call. Checks whether the input
@@ -96,7 +89,7 @@ impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
     }
 
     fn is_inherent(&self) -> bool {
-        <Self as SimpleConstraintChecker>::is_inherent(self)
+        true
     }
 }
 
