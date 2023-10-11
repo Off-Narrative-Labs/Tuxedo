@@ -171,7 +171,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
         }
 
         let previous_inherent = previous_inherents.get(0).cloned();
-        
+
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
             previous_inherent,

@@ -337,9 +337,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         let on_chain_timestamp = inherent
             .outputs
             .iter()
-            .find_map(|output| {
-                output.payload.extract::<BestTimestamp>().ok().map(|o| o.0)
-            })
+            .find_map(|output| output.payload.extract::<BestTimestamp>().ok().map(|o| o.0))
             .expect(
                 "SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.",
             );
