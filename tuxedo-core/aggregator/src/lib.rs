@@ -115,7 +115,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
     let variants = variant_type_pairs.clone().map(|(v, _t)| v);
     let inner_types = variant_type_pairs.map(|(_v, t)| t);
 
-    //
+    // Set up the names of the new associated types.
     let mut error_type_name = outer_type.to_string();
     error_type_name.push_str("Error");
     let error_type = Ident::new(&error_type_name, outer_type.span());
@@ -125,11 +125,12 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
     let inherent_hooks = Ident::new(&inherent_hooks_name, outer_type.span());
 
     let vis = ast.vis;
+
+    // TODO there must be a better way to do this, right?
     let inner_types2 = inner_types.clone();
     let inner_types3 = inner_types.clone();
     let inner_types4 = inner_types.clone();
     let inner_types6 = inner_types.clone();
-    // let inner_types5 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
     let variants4 = variants.clone();
