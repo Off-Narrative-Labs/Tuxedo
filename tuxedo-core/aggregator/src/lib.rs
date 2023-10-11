@@ -166,9 +166,6 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
 
         impl InherentInternal<#verifier, #outer_type> for #inherent_hooks {
 
-            // TODO I guess I'll want some aggregate error type here.
-            type Error = sp_inherents::MakeFatalError<()>;
-
             fn create_inherents(
                 authoring_inherent_data: &InherentData,
                 previous_inherents: Vec<(tuxedo_core::types::Transaction<#verifier, #outer_type>, sp_core::H256)>,

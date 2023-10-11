@@ -101,7 +101,7 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
 /// at the end of each block.
 ///
 /// This interface is stricter and more structured, and therefore simpler than FRAME's.
-pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
+pub trait TuxedoInherent<V: TypeInfo, C: ConstraintChecker<V>>: Sized + TypeInfo {
     type Error: Encode + IsFatalError;
 
     const INHERENT_IDENTIFIER: InherentIdentifier;
@@ -131,9 +131,7 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
 /// exrinsics (as aggregate runtimes will need to) and removes the
 /// requirement that the generic outer constraint checker be buildable
 /// from `Self` so we can implement it for ().
-pub trait InherentInternal<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo {
-    type Error: Encode + IsFatalError;
-
+pub trait InherentInternal<V, C: ConstraintChecker<V>>: Sized {
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
     fn create_inherents(
@@ -160,8 +158,6 @@ pub struct TuxedoInherentAdapter<T>(T);
 impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> InherentInternal<V, C>
     for TuxedoInherentAdapter<T>
 {
-    type Error = <T as TuxedoInherent<V, C>>::Error;
-
     fn create_inherents(
         authoring_inherent_data: &InherentData,
         previous_inherents: Vec<(Transaction<V, C>, H256)>,
@@ -207,9 +203,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
     }
 }
 
-impl<V: Verifier, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
-    type Error = MakeFatalError<()>;
-
+impl<V: TypeInfo, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
     fn create_inherents(
         _: &InherentData,
         _: Vec<(Transaction<V, C>, H256)>,

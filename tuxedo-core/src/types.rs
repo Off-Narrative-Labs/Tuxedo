@@ -36,7 +36,7 @@ pub struct OutputRef {
 /// Existing state to be read and consumed from storage
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Default, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct Transaction<V: TypeInfo, C: TypeInfo> {
+pub struct Transaction<V, C> {
     /// Existing pieces of state to be read and consumed from storage
     pub inputs: Vec<Input>,
     /// Existing state to be read, but not consumed, from storage
@@ -108,7 +108,11 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
 // This trait's design has a preference for transactions that will have a single signature over the
 // entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
 // so we do a minimal implementation.
-impl<V: Verifier + 'static, C: ConstraintChecker<V> + 'static> Extrinsic for Transaction<V, C> {
+impl<V, C> Extrinsic for Transaction<V, C>
+where
+    C: TypeInfo + ConstraintChecker<V> + 'static,
+    V: TypeInfo + Verifier + 'static,
+ {
     type Call = Self;
     type SignaturePayload = ();
 

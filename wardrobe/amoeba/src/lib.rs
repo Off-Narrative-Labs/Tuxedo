@@ -185,7 +185,7 @@ impl<V: Verifier> SimpleConstraintChecker<V> for AmoebaDeath {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaCreation;
 
-impl<V: Verifier> SimpleConstraintChecker<V> for AmoebaCreation {
+impl<V: TypeInfo> SimpleConstraintChecker<V> for AmoebaCreation {
     type Error = ConstraintCheckerError;
     type InherentHooks = ();
 

@@ -6,10 +6,9 @@
 use sp_std::{fmt::Debug, vec::Vec};
 
 use crate::{
-    dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output, Verifier,
+    dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output,
 };
 use parity_scale_codec::{Decode, Encode};
-use scale_info::TypeInfo;
 use sp_runtime::transaction_validity::TransactionPriority;
 
 /// A simplified constraint checker that a transaction can choose to call. Checks whether the input
@@ -18,7 +17,7 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait SimpleConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + TypeInfo {
+pub trait SimpleConstraintChecker<V>: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
@@ -52,7 +51,7 @@ pub trait SimpleConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone 
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + TypeInfo {
+pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
@@ -75,7 +74,7 @@ pub trait ConstraintChecker<V: Verifier>: Debug + Encode + Decode + Clone + Type
 // This blanket implementation makes it so that any type that chooses to
 // implement the Simple trait also implements the more Powerful trait. This way
 // the executive can always just call the more Powerful trait.
-impl<T: SimpleConstraintChecker<V>, V: Verifier> ConstraintChecker<V> for T {
+impl<T: SimpleConstraintChecker<V>, V> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker<V>>::Error;
 
@@ -113,7 +112,8 @@ impl<T: SimpleConstraintChecker<V>, V: Verifier> ConstraintChecker<V> for T {
 pub mod testing {
     use crate::verifier::TestVerifier;
     use serde::{Deserialize, Serialize};
-
+    use scale_info::TypeInfo;
+    
     use super::*;
 
     /// A testing checker that passes (with zero priority) or not depending on
@@ -124,7 +124,7 @@ pub mod testing {
         pub checks: bool,
     }
 
-    impl<V: Verifier> SimpleConstraintChecker<V> for TestConstraintChecker {
+    impl<V: TypeInfo> SimpleConstraintChecker<V> for TestConstraintChecker {
         type Error = ();
         type InherentHooks = ();
 
