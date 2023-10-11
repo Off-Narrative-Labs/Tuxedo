@@ -92,8 +92,6 @@ pub trait TimestampConfig {
 /// Reasons that setting or reading the timestamp may go wrong.
 #[derive(Debug, Eq, PartialEq)]
 pub enum TimestampError {
-    // TODO I'm getting tired of checking the right number of inputs and outputs in every single piece, maybe we should ahve some helpers for this common task.
-    // Like it expects exactly N inputs (or outputs) and you give it an error for when there are too many and another for when there are too few.
     /// UTXO data has an unexpected type
     BadlyTyped,
 
@@ -124,9 +122,6 @@ pub enum TimestampError {
     DontBeSoHasty,
 }
 
-//TODO Should this be called update_timestamp?
-// Set feels more appropriate for FRAME where you're simply overwriting the old one.
-// The only thing that still feels "set"y here is the first block hack.
 /// A constraint checker for the simple act of setting a new best timetamp.
 ///
 /// This is expected to be performed through an inherent, and to happen exactly once per block.
@@ -342,15 +337,12 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         let on_chain_timestamp = inherent
             .outputs
             .iter()
-            .find(|output| output.payload.extract::<BestTimestamp>().is_ok())
+            .find_map(|output| {
+                output.payload.extract::<BestTimestamp>().ok().map(|o| o.0)
+            })
             .expect(
                 "SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.",
-            )
-            .payload
-            // TODO sucks that we have to extract it twice. Is there some way to use the extracted one from before?
-            .extract::<BestTimestamp>()
-            .expect("It should decode because we already checked that.")
-            .0;
+            );
 
         log::debug!(
             target: LOG_TARGET,

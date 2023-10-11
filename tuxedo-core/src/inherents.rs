@@ -127,8 +127,6 @@ pub trait TuxedoInherent<V: Verifier, C: ConstraintChecker<V>>: Sized + TypeInfo
     );
 }
 
-//TODO I didn't intend for this trait to be public.
-// But I can't use it in the public constraint checker trait if it isn't public.
 /// Almost identical to TuxedoInherent, but allows returning multiple
 /// exrinsics (as aggregate runtimes will need to) and removes the
 /// requirement that the generic outer constraint checker be buildable
