@@ -29,7 +29,7 @@ use tuxedo_core::{
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Input, Output, OutputRef, Transaction},
     verifier::UpForGrabs,
-    SimpleConstraintChecker, Verifier,
+    ConstraintChecker, Verifier, SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -139,7 +139,7 @@ pub enum TimestampError {
 #[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(pub PhantomData<T>);
 
-impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstraintChecker<V>
+impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChecker<V>
     for SetTimestamp<T>
 {
     type Error = TimestampError;
@@ -147,9 +147,9 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
 
     fn check(
         &self,
-        input_data: &[DynamicallyTypedData],
-        _peek_data: &[DynamicallyTypedData],
-        output_data: &[DynamicallyTypedData],
+        input_data: &[tuxedo_core::types::Output<V>],
+        _peek_data: &[tuxedo_core::types::Output<V>],
+        output_data: &[tuxedo_core::types::Output<V>],
     ) -> Result<TransactionPriority, Self::Error> {
         log::info!(
             target: LOG_TARGET,
@@ -170,6 +170,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
             Self::Error::MissingNewBestTimestamp
         );
         let new_best = output_data[0]
+            .payload
             .extract::<BestTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
@@ -180,6 +181,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
             Self::Error::MissingNewNotedTimestamp
         );
         let new_noted = output_data[1]
+            .payload
             .extract::<NotedTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
@@ -222,6 +224,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> SimpleConstra
 
         // Compare the new timestamp to the previous timestamp
         let old_best = input_data[0]
+            .payload
             .extract::<BestTimestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
@@ -376,10 +379,9 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct CleanUpTimestamp;
 
-impl<V: Verifier> SimpleConstraintChecker<V> for CleanUpTimestamp {
+impl SimpleConstraintChecker for CleanUpTimestamp {
     type Error = TimestampError;
-    type InherentHooks = ();
-
+    
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],

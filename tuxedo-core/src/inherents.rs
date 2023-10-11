@@ -101,7 +101,7 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
 /// at the end of each block.
 ///
 /// This interface is stricter and more structured, and therefore simpler than FRAME's.
-pub trait TuxedoInherent<V: TypeInfo, C: ConstraintChecker<V>>: Sized + TypeInfo {
+pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
     type Error: Encode + IsFatalError;
 
     const INHERENT_IDENTIFIER: InherentIdentifier;
@@ -203,7 +203,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
     }
 }
 
-impl<V: TypeInfo, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
+impl<V, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
     fn create_inherents(
         _: &InherentData,
         _: Vec<(Transaction<V, C>, H256)>,

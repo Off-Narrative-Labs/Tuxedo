@@ -19,11 +19,11 @@ impl TimestampConfig for AlwaysBlockTwo {
 fn update_timestamp_happy_path() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(checker.check(&input_data, &[], &output_data), Ok(0),);
 }
@@ -32,11 +32,11 @@ fn update_timestamp_happy_path() {
 fn update_timestamp_bogus_input() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = Bogus;
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = Bogus.into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -48,11 +48,11 @@ fn update_timestamp_bogus_input() {
 fn update_timestamp_input_noted_not_best() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = NotedTimestamp(100);
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = NotedTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -64,10 +64,10 @@ fn update_timestamp_input_noted_not_best() {
 fn update_timestamp_no_input() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -79,11 +79,11 @@ fn update_timestamp_no_input() {
 fn update_timestamp_output_earlier_than_input() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(500);
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(500).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -95,11 +95,11 @@ fn update_timestamp_output_earlier_than_input() {
 fn update_timestamp_output_newer_than_previous_best_nut_not_enough_to_meet_threshold() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_best = BestTimestamp(200);
-    let new_noted = NotedTimestamp(200);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(200).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(200).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -111,11 +111,11 @@ fn update_timestamp_output_newer_than_previous_best_nut_not_enough_to_meet_thres
 fn update_timestamp_too_many_inputs() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.clone().into(), old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.clone().into(), old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -127,11 +127,11 @@ fn update_timestamp_too_many_inputs() {
 fn update_timestamp_new_best_and_new_noted_inconsistent() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(401);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(401).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -143,9 +143,9 @@ fn update_timestamp_new_best_and_new_noted_inconsistent() {
 fn update_timestamp_no_outputs() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -157,10 +157,10 @@ fn update_timestamp_no_outputs() {
 fn update_timestamp_no_new_best() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -172,10 +172,10 @@ fn update_timestamp_no_new_best() {
 fn update_timestamp_no_new_noted() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_best = BestTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -187,11 +187,11 @@ fn update_timestamp_no_new_noted() {
 fn update_timestamp_too_many_outputs() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
-    let old_best = BestTimestamp(100);
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
-    let input_data = vec![old_best.into()];
-    let output_data = vec![new_best.into(), new_noted.clone().into(), new_noted.into()];
+    let old_best: DynamicallyTypedData = BestTimestamp(100).into();
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
+    let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.clone().into(), new_noted.into()];
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
@@ -206,7 +206,7 @@ fn update_timestamp_too_many_outputs() {
 //         four_bytes: *b"test",
 //     };
 //     let input_data = Vec::new();
-//     let output_data = vec![to_spawn.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![to_spawn.into()];
 
 //     assert_eq!(
 //         AmoebaCreation.check(&input_data, &[], &output_data),
@@ -220,8 +220,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 0,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![example.clone().into()];
-//     let output_data = vec![example.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![example.clone().into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![example.into()];
 
 //     assert_eq!(
 //         AmoebaCreation.check(&input_data, &[], &output_data),
@@ -232,7 +232,7 @@ fn update_timestamp_too_many_outputs() {
 // #[test]
 // fn creation_with_badly_typed_output_fails() {
 //     let input_data = Vec::new();
-//     let output_data = vec![Bogus.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![Bogus.into()];
 
 //     assert_eq!(
 //         AmoebaCreation.check(&input_data, &[], &output_data),
@@ -247,7 +247,7 @@ fn update_timestamp_too_many_outputs() {
 //         four_bytes: *b"test",
 //     };
 //     let input_data = Vec::new();
-//     let output_data = vec![to_spawn.clone().into(), to_spawn.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![to_spawn.clone().into(), to_spawn.into()];
 
 //     assert_eq!(
 //         AmoebaCreation.check(&input_data, &[], &output_data),
@@ -280,8 +280,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 2,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![mother.into()];
-//     let output_data = vec![d1.into(), d2.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![mother.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into(), d2.into()];
 
 //     assert_eq!(AmoebaMitosis.check(&input_data, &[], &output_data), Ok(0),);
 // }
@@ -300,8 +300,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 2,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![mother.into()];
-//     let output_data = vec![d1.into(), d2.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![mother.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into(), d2.into()];
 
 //     assert_eq!(
 //         AmoebaMitosis.check(&input_data, &[], &output_data),
@@ -320,8 +320,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 2,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![mother.into()];
-//     let output_data = vec![d1.into(), d2.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![mother.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into(), d2.into()];
 
 //     assert_eq!(
 //         AmoebaMitosis.check(&input_data, &[], &output_data),
@@ -340,7 +340,7 @@ fn update_timestamp_too_many_outputs() {
 //         four_bytes: *b"test",
 //     };
 //     let input_data = Vec::new();
-//     let output_data = vec![d1.into(), d2.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into(), d2.into()];
 
 //     assert_eq!(
 //         AmoebaMitosis.check(&input_data, &[], &output_data),
@@ -359,8 +359,8 @@ fn update_timestamp_too_many_outputs() {
 //         four_bytes: *b"test",
 //     };
 //     let d2 = Bogus;
-//     let input_data = vec![mother.into()];
-//     let output_data = vec![d1.into(), d2.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![mother.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into(), d2.into()];
 
 //     assert_eq!(
 //         AmoebaMitosis.check(&input_data, &[], &output_data),
@@ -378,9 +378,9 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 2,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![mother.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![mother.into()];
 //     // There is only one daughter when there should be two
-//     let output_data = vec![d1.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into()];
 
 //     assert_eq!(
 //         AmoebaMitosis.check(&input_data, &[], &output_data),
@@ -407,8 +407,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 2,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![mother.into()];
-//     let output_data = vec![d1.into(), d2.into(), d3.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![mother.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![d1.into(), d2.into(), d3.into()];
 
 //     assert_eq!(
 //         AmoebaMitosis.check(&input_data, &[], &output_data),
@@ -422,16 +422,16 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 1,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![example.into()];
-//     let output_data = vec![];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![example.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![];
 
 //     assert_eq!(AmoebaDeath.check(&input_data, &[], &output_data), Ok(0),);
 // }
 
 // #[test]
 // fn death_no_input() {
-//     let input_data = vec![];
-//     let output_data = vec![];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![];
 
 //     assert_eq!(
 //         AmoebaDeath.check(&input_data, &[], &output_data),
@@ -449,8 +449,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 4,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![a1.into(), a2.into()];
-//     let output_data = vec![];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![a1.into(), a2.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![];
 
 //     assert_eq!(
 //         AmoebaDeath.check(&input_data, &[], &output_data),
@@ -464,8 +464,8 @@ fn update_timestamp_too_many_outputs() {
 //         generation: 1,
 //         four_bytes: *b"test",
 //     };
-//     let input_data = vec![example.clone().into()];
-//     let output_data = vec![example.into()];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![example.clone().into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![example.into()];
 
 //     assert_eq!(
 //         AmoebaDeath.check(&input_data, &[], &output_data),
@@ -476,8 +476,8 @@ fn update_timestamp_too_many_outputs() {
 // #[test]
 // fn death_badly_typed_input() {
 //     let example = Bogus;
-//     let input_data = vec![example.into()];
-//     let output_data = vec![];
+//     let input_data: Vec<Output<UpForGrabs>> = vec![example.into()];
+//     let output_data: Vec<Output<UpForGrabs>> = vec![];
 
 //     assert_eq!(
 //         AmoebaDeath.check(&input_data, &[], &output_data),

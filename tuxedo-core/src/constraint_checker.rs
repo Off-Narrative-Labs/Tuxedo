@@ -17,14 +17,9 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait SimpleConstraintChecker<V>: Debug + Encode + Decode + Clone {
+pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
-
-    /// Optional Associated Inherent processing logic. If this transaction type is not
-    /// an inherent, use (). If it is an inherent, use Self, implement the TuxedoInherent
-    /// trait, and override the `is_inherent` function to return true.
-    type InherentHooks: InherentInternal<V, Self>;
 
     /// The actual check validation logic
     fn check(
@@ -74,11 +69,11 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
 // This blanket implementation makes it so that any type that chooses to
 // implement the Simple trait also implements the more Powerful trait. This way
 // the executive can always just call the more Powerful trait.
-impl<T: SimpleConstraintChecker<V>, V> ConstraintChecker<V> for T {
+impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
-    type Error = <T as SimpleConstraintChecker<V>>::Error;
+    type Error = <T as SimpleConstraintChecker>::Error;
 
-    type InherentHooks = <T as SimpleConstraintChecker<V>>::InherentHooks;
+    type InherentHooks = ();
 
     fn check(
         &self,
@@ -103,17 +98,16 @@ impl<T: SimpleConstraintChecker<V>, V> ConstraintChecker<V> for T {
     }
 
     fn is_inherent(&self) -> bool {
-        <Self as SimpleConstraintChecker<V>>::is_inherent(self)
+        <Self as SimpleConstraintChecker>::is_inherent(self)
     }
 }
 
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(test)]
 pub mod testing {
-    use crate::verifier::TestVerifier;
     use serde::{Deserialize, Serialize};
     use scale_info::TypeInfo;
-    
+
     use super::*;
 
     /// A testing checker that passes (with zero priority) or not depending on
@@ -124,9 +118,8 @@ pub mod testing {
         pub checks: bool,
     }
 
-    impl<V: TypeInfo> SimpleConstraintChecker<V> for TestConstraintChecker {
+    impl SimpleConstraintChecker for TestConstraintChecker {
         type Error = ();
-        type InherentHooks = ();
 
         fn check(
             &self,
@@ -144,7 +137,7 @@ pub mod testing {
 
     #[test]
     fn test_checker_passes() {
-        let result = SimpleConstraintChecker::<TestVerifier>::check(
+        let result = SimpleConstraintChecker::check(
             &TestConstraintChecker { checks: true },
             &[],
             &[],
@@ -155,7 +148,7 @@ pub mod testing {
 
     #[test]
     fn test_checker_fails() {
-        let result = SimpleConstraintChecker::<TestVerifier>::check(
+        let result = SimpleConstraintChecker::check(
             &TestConstraintChecker { checks: false },
             &[],
             &[],

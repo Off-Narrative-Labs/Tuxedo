@@ -12,7 +12,7 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     traits::Cash,
-    SimpleConstraintChecker, Verifier,
+    SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -84,9 +84,8 @@ pub enum ConstraintCheckerError {
     ZeroValueCoin,
 }
 
-impl<const ID: u8, V: Verifier> SimpleConstraintChecker<V> for MoneyConstraintChecker<ID> {
+impl<const ID: u8> SimpleConstraintChecker for MoneyConstraintChecker<ID> {
     type Error = ConstraintCheckerError;
-    type InherentHooks = ();
 
     fn check(
         &self,

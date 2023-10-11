@@ -29,7 +29,7 @@ use sp_runtime::{
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker, Verifier,
+    ensure, SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -375,9 +375,8 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
     }
 }
 
-impl<V: Verifier> SimpleConstraintChecker<V> for FreeKittyConstraintChecker {
+impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     type Error = ConstraintCheckerError;
-    type InherentHooks = ();
 
     /// Checks:
     ///     - `input_data` is of length 2

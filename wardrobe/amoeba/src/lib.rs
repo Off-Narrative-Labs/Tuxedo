@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker, Verifier,
+    ensure, SimpleConstraintChecker,
 };
 
 #[cfg(test)]
@@ -84,9 +84,8 @@ pub enum ConstraintCheckerError {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaMitosis;
 
-impl<V: Verifier> SimpleConstraintChecker<V> for AmoebaMitosis {
+impl SimpleConstraintChecker for AmoebaMitosis {
     type Error = ConstraintCheckerError;
-    type InherentHooks = ();
 
     fn check(
         &self,
@@ -144,9 +143,8 @@ impl<V: Verifier> SimpleConstraintChecker<V> for AmoebaMitosis {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaDeath;
 
-impl<V: Verifier> SimpleConstraintChecker<V> for AmoebaDeath {
+impl SimpleConstraintChecker for AmoebaDeath {
     type Error = ConstraintCheckerError;
-    type InherentHooks = ();
 
     fn check(
         &self,
@@ -185,9 +183,8 @@ impl<V: Verifier> SimpleConstraintChecker<V> for AmoebaDeath {
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaCreation;
 
-impl<V: TypeInfo> SimpleConstraintChecker<V> for AmoebaCreation {
+impl SimpleConstraintChecker for AmoebaCreation {
     type Error = ConstraintCheckerError;
-    type InherentHooks = ();
 
     fn check(
         &self,

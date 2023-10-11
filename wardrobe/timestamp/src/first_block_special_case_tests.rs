@@ -21,10 +21,10 @@ impl TimestampConfig for AlwaysBlockOne {
 fn set_timestamp_first_block_happy_path() {
     let checker = SetTimestamp::<AlwaysBlockOne>(Default::default());
 
-    let new_best = BestTimestamp(400);
-    let new_noted = NotedTimestamp(400);
+    let new_best: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
 
-    let input_data = vec![];
+    let input_data: Vec<Output<UpForGrabs>> = vec![];
     let output_data = vec![new_best.into(), new_noted.into()];
 
     assert_eq!(checker.check(&input_data, &[], &output_data), Ok(0),);

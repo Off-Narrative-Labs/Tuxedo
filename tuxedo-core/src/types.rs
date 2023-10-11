@@ -181,6 +181,15 @@ pub struct Output<V> {
     pub verifier: V,
 }
 
+impl<V: Default> From<DynamicallyTypedData> for Output<V> {
+    fn from(value: DynamicallyTypedData) -> Self {
+        Self {
+            payload: value.into(),
+            verifier: Default::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
 
