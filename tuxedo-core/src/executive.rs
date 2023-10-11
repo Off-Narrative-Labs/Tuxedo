@@ -63,10 +63,6 @@ impl<
                 UtxoError::DuplicateInput
             );
         }
-        debug!(
-            target: LOG_TARGET,
-            "1",
-        );
 
         // Build the stripped transaction (with the redeemers stripped) and encode it
         // This will be passed to the verifiers
@@ -75,10 +71,6 @@ impl<
             input.redeemer = Vec::new();
         }
         let stripped_encoded = stripped.encode();
-        debug!(
-            target: LOG_TARGET,
-            "2",
-        );
 
         // Check that the verifiers of all inputs are satisfied
         // Keep a Vec of the input utxos for passing to the constraint checker
@@ -98,10 +90,6 @@ impl<
                 missing_inputs.push(input.output_ref.clone().encode());
             }
         }
-        debug!(
-            target: LOG_TARGET,
-            "3",
-        );
 
         // Make a Vec of the peek utxos for passing to the constraint checker
         // Keep track of any missing peeks for use in the tagged transaction pool
@@ -133,10 +121,6 @@ impl<
                 UtxoError::PreExistingOutput
             );
         }
-        debug!(
-            target: LOG_TARGET,
-            "4",
-        );
 
         // Calculate the tx-pool tags provided by this transaction, which
         // are just the encoded OutputRefs
@@ -165,11 +149,6 @@ impl<
                 propagate: true,
             });
         }
-
-        debug!(
-            target: LOG_TARGET,
-            "5",
-        );
 
         // Call the constraint checker
         transaction

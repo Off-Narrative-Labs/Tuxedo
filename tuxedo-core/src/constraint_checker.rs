@@ -54,6 +54,7 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 
     /// Tells whether this extrinsic is an inherent or not.
+    /// If you return true here, you must provide the correct inherent hooks above.
     fn is_inherent(&self) -> bool;
 }
 
