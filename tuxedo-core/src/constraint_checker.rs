@@ -31,8 +31,9 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
 /// A single constraint checker that a transaction can choose to call. Checks whether the input
 /// and output data from a transaction meets the codified constraints.
 ///
-/// This full ConstraintChecker should only be used if there is more that a piece wants to do such
-/// as check the verifier information in some unique way.
+/// This full ConstraintChecker should only be implemented if the piece logic cannot be expressed with
+/// the SimpleConstraintChecker. For example, if you need to enforce something about the verifiers, or
+/// if you need to implement an inherent.
 ///
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
@@ -90,7 +91,7 @@ impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
     }
 
     fn is_inherent(&self) -> bool {
-        true
+        false
     }
 }
 
