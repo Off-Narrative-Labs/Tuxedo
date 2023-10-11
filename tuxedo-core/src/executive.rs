@@ -326,8 +326,25 @@ impl<
         // be cleared before the end of the block
         sp_io::storage::set(HEADER_KEY, &block.header().encode());
 
+        // Tuxedo requires that inherents are at the beginning (and soon end) of the
+        // block and not scattered throughout. We use this flag to enforce that.
+        let mut finished_with_opening_inherents = false;
+
         // Apply each extrinsic
         for extrinsic in block.extrinsics() {
+            // Enforce that inherents are in the right place
+            match (
+                extrinsic.checker.is_inherent(),
+                finished_with_opening_inherents,
+            ) {
+                (true, false) => (),                                       // Opening inherent
+                (false, false) => finished_with_opening_inherents = false, // First non-inherent
+                (false, true) => (),                                       // Other non-inherent
+                (true, true) => {
+                    panic!("Tried to execute opening inherent after switching to non-inherents.")
+                }
+            }
+
             match Self::apply_tuxedo_transaction(extrinsic.clone()) {
                 Ok(()) => debug!(
                     target: LOG_TARGET,
@@ -1175,4 +1192,17 @@ mod tests {
             TestExecutive::execute_block(b);
         });
     }
+
+    // TODO tests for inherent ordering
+
+    // Should work
+    // * Empty (already tested)
+    // * Inherent
+    // * Non-inherent (already tested)
+    // * Inherent, non-inherent
+    // * Inherent, Inherent, non-inherent
+
+    // Should fail
+    // * non-onherent, inherent
+    // * inherent, non-inherent, inherent
 }
