@@ -19,7 +19,6 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
-#[cfg(feature = "std")]
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
 use sp_timestamp::InherentError::TooFarInFuture;
