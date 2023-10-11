@@ -9,7 +9,7 @@
 //! Classic usecases for inherents are injecting and updating environmental information such as a block timestamp,
 //! information about the relay chain (if the current chain is a parachain),
 //! or information about who should receive the block reward.
-//! 
+//!
 //! In order to allow the runtime to construct such transactions while keeping the cleint opaque, there are
 //! special APIs for creating inherents and performing off-chain validation of inherents. That's right,
 //! inherents also offer a special API to have their environmental data checked off-chain before the block
@@ -125,7 +125,7 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
 /// exrinsics (as aggregate runtimes will need to) and removes the
 /// requirement that the generic outer constraint checker be buildable
 /// from `Self` so we can implement it for ().
-/// 
+///
 /// If you are trying to implement some complex inherent logic that requires the interaction
 /// of multiple inherents, or features a variable number of inherents in each block, you can
 /// probably express it by implementing this trait, but such designs are probably too
