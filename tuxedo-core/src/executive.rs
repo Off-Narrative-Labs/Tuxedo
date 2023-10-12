@@ -314,9 +314,9 @@ impl<
                 extrinsic.checker.is_inherent(),
                 finished_with_opening_inherents,
             ) {
-                (true, false) => (),                                       // Opening inherent
-                (false, false) => finished_with_opening_inherents = false, // First non-inherent
-                (false, true) => (),                                       // Other non-inherent
+                (true, false) => (),                                      // Opening inherent
+                (false, false) => finished_with_opening_inherents = true, // First non-inherent
+                (false, true) => (),                                      // Other non-inherent
                 (true, true) => {
                     panic!("Tried to execute opening inherent after switching to non-inherents.")
                 }
@@ -534,10 +534,7 @@ mod tests {
                 inputs: self.inputs,
                 peeks: self.peeks,
                 outputs: self.outputs,
-                checker: TestConstraintChecker {
-                    checks,
-                    inherent,
-                },
+                checker: TestConstraintChecker { checks, inherent },
             }
         }
     }
