@@ -6,7 +6,6 @@ use tuxedo_core::dynamic_typing::testing::Bogus;
 use TimestampError::*;
 
 /// The mock config always says the block number is two.
-/// We only need this to work around the first block hack.
 pub struct AlwaysBlockTwo;
 
 impl TimestampConfig for AlwaysBlockTwo {

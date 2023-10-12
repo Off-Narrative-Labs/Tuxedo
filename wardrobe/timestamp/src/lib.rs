@@ -47,24 +47,9 @@ mod update_timestamp_tests;
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";
 
-/// The minimum amount by which the timestamp may be updated. This should probably
-/// be a configuration traint value, but for now I'm hard-coding it.
-const MINIMUM_TIME_INTERVAL: u64 = 200;
-
 // It might make sense to have a minimum number of blocks before cleanup in addition
 // that if the chain stalls, all the transactions in the pool can still be used when
 // it comes back alive.
-
-/// The minimum amount of time that a timestamp utxo must have been stored before it
-/// can be cleaned up.
-///
-/// Currently set to 1 day
-const CLEANUP_AGE: u64 = 1000 * 60 * 60 * 24;
-
-/// The maximum amount by which a valid block's timestamp may be ahead of an importing
-/// node's current local time. 1 minute.
-/// TODO make it part of the config trait.
-const MAX_DRIFT: u64 = 60_000;
 
 /// A timestamp, since the unix epoch, that is the latest time ever seen in the history
 /// of this chain.
@@ -91,11 +76,29 @@ pub trait TimestampConfig {
     /// Probably this will be the Tuxedo Executive
     fn block_height() -> u32;
 
-    //TODO minimum interval
+    /// The minimum amount of time by which the timestamp may be updated.
+    ///
+    /// The default is 2 seconds which should be slightly lower than most chains' block times.
+    const MINIMUM_TIME_INTERVAL: u64 = 2_000;
 
-    //TODO max drift
+    /// The maximum amount by which a valid block's timestamp may be ahead of an importing
+    /// node's current local time.
+    ///
+    /// Default is 1 minute.
+    const MAX_DRIFT: u64 = 60_000;
 
-    //TODO cleanup age
+    /// The minimum amount of time that must have passed before an old timestamp
+    /// may be cleaned up.
+    ///
+    /// Default is 1 day.
+    const MIN_TIME_BEFORE_CLEANUP: u64 = 1000 * 60 * 60 * 24;
+
+    /// The minimum number of blocks that must have passed before an old timestamp
+    /// may be cleaned up.
+    ///
+    /// Default is 15 thousand which is roughly equivalent to 1 day with 6 second
+    /// block times which is a common default in Substrate chains because of Polkadot.
+    const MIN_BLOCKS_BEFORE_CLEANUP: u32 = 15_000;
 }
 
 /// Reasons that setting or cleaning up the timestamp may go wrong.
@@ -145,7 +148,7 @@ pub enum TimestampError {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, DebugNoBound, DefaultNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
-pub struct SetTimestamp<T>(pub PhantomData<T>);
+pub struct SetTimestamp<T>(PhantomData<T>);
 
 impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChecker<V>
     for SetTimestamp<T>
@@ -234,7 +237,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             .map_err(|_| Self::Error::BadlyTyped)?
             .0;
         ensure!(
-            new_best >= old_best + MINIMUM_TIME_INTERVAL,
+            new_best >= old_best + T::MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
         );
 
@@ -358,7 +361,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         // FRAME's checks: github.com/paritytech/polkadot-sdk/blob/945ebbbc/substrate/frame/timestamp/src/lib.rs#L299-L306
 
         // Make the comparison for too far in future
-        if on_chain_timestamp > local_timestamp + MAX_DRIFT {
+        if on_chain_timestamp > local_timestamp + T::MAX_DRIFT {
             log::debug!(
                 target: LOG_TARGET,
                 "🕰️🖴 Block timestamp is too far in future. About to push an error"
@@ -378,10 +381,10 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 /// new reference. Although it is useless to do so, it is valid for a transaction
 /// to clean up zero timestamps.
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct CleanUpTimestamp;
+#[derive(Encode, Decode, DebugNoBound, DefaultNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
+pub struct CleanUpTimestamp<T>(PhantomData<T>);
 
-impl SimpleConstraintChecker for CleanUpTimestamp {
+impl<T: TimestampConfig> SimpleConstraintChecker for CleanUpTimestamp<T> {
     type Error = TimestampError;
 
     fn check(
@@ -415,9 +418,16 @@ impl SimpleConstraintChecker for CleanUpTimestamp {
                 .0;
 
             ensure!(
-                old_time + CLEANUP_AGE < new_reference_time,
+                old_time + T::MIN_TIME_BEFORE_CLEANUP < new_reference_time,
                 Self::Error::DontBeSoHasty
             );
+            //TODO ensure height too
+            // And also need to check that the previous block height and current block height
+            // are right when setting the time
+            // ensure!(
+            //     old_height + T::MIN_BLOCKS_BEFORE_CLEANUP < T::block_height(),
+            //     Self::Error::DontBeSoHasty
+            // );
         }
 
         Ok(0)

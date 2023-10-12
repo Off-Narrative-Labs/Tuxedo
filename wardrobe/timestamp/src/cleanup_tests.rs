@@ -2,33 +2,45 @@
 //! This module tests the secondary flow of cleaning up old timestamps.
 
 use super::{
-    BestTimestamp, CleanUpTimestamp, NotedTimestamp, SimpleConstraintChecker, TimestampError,
-    CLEANUP_AGE,
+    BestTimestamp, CleanUpTimestamp, NotedTimestamp, SimpleConstraintChecker, TimestampConfig,
+    TimestampError,
 };
 use tuxedo_core::dynamic_typing::testing::Bogus;
 use TimestampError::*;
 
-#[test]
-fn cleanup_timestamp_happy_path() {
-    let old = NotedTimestamp(100);
-    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+/// The mock config always says the block number is two.
+pub struct AlwaysBlockTwo;
 
-    let input_data = vec![old.into()];
-    let peek_data = vec![newer.into()];
-
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Ok(0),);
+impl TimestampConfig for AlwaysBlockTwo {
+    fn block_height() -> u32 {
+        2
+    }
 }
 
 #[test]
-fn cleanup_timestamp_input_is_best_not_noted() {
-    let old = BestTimestamp(100);
-    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+fn cleanup_timestamp_happy_path() {
+    let old = NotedTimestamp(100);
+    let newer = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
 
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
+        Ok(0),
+    );
+}
+
+#[test]
+fn cleanup_timestamp_input_is_best_not_noted() {
+    let old = BestTimestamp(100);
+    let newer = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
+
+    let input_data = vec![old.into()];
+    let peek_data = vec![newer.into()];
+
+    assert_eq!(
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(BadlyTyped)
     );
 }
@@ -42,7 +54,7 @@ fn cleanup_timestamp_input_newer_than_reference() {
     let peek_data = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(DontBeSoHasty)
     );
 }
@@ -56,7 +68,7 @@ fn cleanup_timestamp_input_not_yet_ripe_for_cleaning() {
     let peek_data = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(DontBeSoHasty)
     );
 }
@@ -69,7 +81,7 @@ fn cleanup_timestamp_missing_reference() {
     let peek_data = vec![];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(CleanupRequiresOneReference)
     );
 }
@@ -78,12 +90,15 @@ fn cleanup_timestamp_missing_reference() {
 fn cleanup_timestamp_multiple_happy_path() {
     let old1 = NotedTimestamp(100);
     let old2 = NotedTimestamp(200);
-    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+    let newer = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
 
     let input_data = vec![old1.into(), old2.into()];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Ok(0),);
+    assert_eq!(
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
+        Ok(0),
+    );
 }
 
 #[test]
@@ -97,20 +112,23 @@ fn cleanup_timestamp_missing_input() {
     let input_data = vec![];
     let peek_data = vec![newer.into()];
 
-    assert_eq!(CleanUpTimestamp.check(&input_data, &peek_data, &[]), Ok(0));
+    assert_eq!(
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
+        Ok(0)
+    );
 }
 
 #[test]
 fn cleanup_timestamp_multiple_first_valid_second_invalid() {
     let old = NotedTimestamp(100);
-    let supposedly_old = NotedTimestamp(2 * CLEANUP_AGE);
-    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+    let supposedly_old = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
+    let newer = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
 
     let input_data = vec![old.into(), supposedly_old.into()];
     let peek_data = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(DontBeSoHasty)
     );
 }
@@ -118,13 +136,13 @@ fn cleanup_timestamp_multiple_first_valid_second_invalid() {
 #[test]
 fn cleanup_timestamp_input_is_wong_type() {
     let old = Bogus;
-    let newer = NotedTimestamp(2 * CLEANUP_AGE);
+    let newer = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
 
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(BadlyTyped)
     );
 }
@@ -138,7 +156,7 @@ fn cleanup_timestamp_reference_is_wong_type() {
     let peek_data = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &[]),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &[]),
         Err(BadlyTyped)
     );
 }
@@ -146,15 +164,15 @@ fn cleanup_timestamp_reference_is_wong_type() {
 #[test]
 fn cleanup_timestamp_rcannot_create_state() {
     let old = NotedTimestamp(100);
-    let newer = NotedTimestamp(2 * CLEANUP_AGE);
-    let new = NotedTimestamp(CLEANUP_AGE);
+    let newer = NotedTimestamp(2 * AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
+    let new = NotedTimestamp(AlwaysBlockTwo::MIN_TIME_BEFORE_CLEANUP);
 
     let input_data = vec![old.into()];
     let peek_data = vec![newer.into()];
     let output_data = vec![new.into()];
 
     assert_eq!(
-        CleanUpTimestamp.check(&input_data, &peek_data, &output_data),
+        CleanUpTimestamp::<AlwaysBlockTwo>::default().check(&input_data, &peek_data, &output_data),
         Err(CleanupCannotCreateState)
     );
 }
