@@ -29,7 +29,7 @@ RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
 
 USER node-dev
 
-EXPOSE 30333 9933 9944 9615
+EXPOSE 30333 9944 9615
 VOLUME ["/chain-data"]
 
 ENTRYPOINT ["/usr/local/bin/node-template"]
