@@ -21,7 +21,7 @@ fn update_timestamp_happy_path() {
 
     let old_best: DynamicallyTypedData = BestTimestamp(100).into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -34,7 +34,7 @@ fn update_timestamp_bogus_input() {
 
     let old_best: DynamicallyTypedData = Bogus.into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -50,7 +50,7 @@ fn update_timestamp_input_noted_not_best() {
 
     let old_best: DynamicallyTypedData = NotedTimestamp(100).into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -65,7 +65,7 @@ fn update_timestamp_no_input() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -81,7 +81,7 @@ fn update_timestamp_output_earlier_than_input() {
 
     let old_best: DynamicallyTypedData = BestTimestamp(500).into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -97,7 +97,7 @@ fn update_timestamp_output_newer_than_previous_best_nut_not_enough_to_meet_thres
 
     let old_best: DynamicallyTypedData = BestTimestamp(100).into();
     let new_best: DynamicallyTypedData = BestTimestamp(200).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(200).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(200).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -113,7 +113,7 @@ fn update_timestamp_too_many_inputs() {
 
     let old_best: DynamicallyTypedData = BestTimestamp(100).into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.clone().into(), old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -129,7 +129,7 @@ fn update_timestamp_new_best_and_new_noted_inconsistent() {
 
     let old_best: DynamicallyTypedData = BestTimestamp(100).into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(401).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(401).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_best.into(), new_noted.into()];
 
@@ -158,7 +158,7 @@ fn update_timestamp_no_new_best() {
     let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
 
     let old_best: DynamicallyTypedData = BestTimestamp(100).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> = vec![new_noted.into()];
 
@@ -189,7 +189,7 @@ fn update_timestamp_too_many_outputs() {
 
     let old_best: DynamicallyTypedData = BestTimestamp(100).into();
     let new_best: DynamicallyTypedData = BestTimestamp(400).into();
-    let new_noted: DynamicallyTypedData = BestTimestamp(400).into();
+    let new_noted: DynamicallyTypedData = NotedTimestamp(400).into();
     let input_data: Vec<Output<UpForGrabs>> = vec![old_best.into()];
     let output_data: Vec<Output<UpForGrabs>> =
         vec![new_best.into(), new_noted.clone().into(), new_noted.into()];
