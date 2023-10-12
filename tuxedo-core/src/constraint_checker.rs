@@ -109,6 +109,8 @@ pub mod testing {
     pub struct TestConstraintChecker {
         /// Whether the checker should pass.
         pub checks: bool,
+        /// Whether this constraint checker is an inherent.
+        pub inherent: bool,
     }
 
     impl SimpleConstraintChecker for TestConstraintChecker {
@@ -131,14 +133,14 @@ pub mod testing {
     #[test]
     fn test_checker_passes() {
         let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true }, &[], &[], &[]);
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true, inherent: false }, &[], &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
         let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false }, &[], &[], &[]);
+            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false, inherent: false }, &[], &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

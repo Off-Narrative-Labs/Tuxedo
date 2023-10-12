@@ -529,13 +529,14 @@ mod tests {
             self
         }
 
-        fn build(self, should_check: bool) -> TestTransaction {
+        fn build(self, checks: bool, inherent: bool) -> TestTransaction {
             TestTransaction {
                 inputs: self.inputs,
                 peeks: self.peeks,
                 outputs: self.outputs,
                 checker: TestConstraintChecker {
-                    checks: should_check,
+                    checks,
+                    inherent,
                 },
             }
         }
@@ -635,7 +636,7 @@ mod tests {
 
     #[test]
     fn validate_empty_works() {
-        let tx = TestTransactionBuilder::default().build(true);
+        let tx = TestTransactionBuilder::default().build(true, false);
 
         let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -659,7 +660,7 @@ mod tests {
 
                 let tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -679,7 +680,7 @@ mod tests {
             .execute_with(|| {
                 let tx = TestTransactionBuilder::default()
                     .with_peek(output_ref)
-                    .build(true);
+                    .build(true, false);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -698,7 +699,7 @@ mod tests {
             };
             let tx = TestTransactionBuilder::default()
                 .with_output(output)
-                .build(true);
+                .build(true, false);
 
             // This is a real transaction, so we need to calculate a real OutputRef
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
@@ -725,7 +726,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_input(input)
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -744,7 +745,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_peek(output_ref.clone())
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -772,7 +773,7 @@ mod tests {
                 let tx = TestTransactionBuilder::default()
                     .with_input(input.clone())
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 let result = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -794,7 +795,7 @@ mod tests {
                 let tx = TestTransactionBuilder::default()
                     .with_peek(output_ref.clone())
                     .with_peek(output_ref)
-                    .build(true);
+                    .build(true, false);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -819,7 +820,7 @@ mod tests {
 
                 let tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 let result = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -841,7 +842,7 @@ mod tests {
         };
         let tx = TestTransactionBuilder::default()
             .with_output(output)
-            .build(true);
+            .build(true, false);
 
         // Now calculate the output ref that the transaction creates so we can pre-populate the state.
         let tx_hash = BlakeTwo256::hash_of(&tx.encode());
@@ -859,7 +860,7 @@ mod tests {
     #[test]
     fn validate_with_constraint_error_fails() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(false);
+            let tx = TestTransactionBuilder::default().build(false, false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -870,7 +871,7 @@ mod tests {
     #[test]
     fn apply_empty_works() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(true);
+            let tx = TestTransactionBuilder::default().build(true, false);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -889,7 +890,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_input(input)
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -904,7 +905,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_peek(output_ref)
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -927,7 +928,7 @@ mod tests {
 
                 let tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 // Commit the tx to storage
                 TestExecutive::update_storage(tx);
@@ -947,7 +948,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_output(output.clone())
-                .build(true);
+                .build(true, false);
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef { tx_hash, index: 0 };
@@ -989,7 +990,7 @@ mod tests {
     #[test]
     fn apply_valid_extrinsic_work() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(true);
+            let tx = TestTransactionBuilder::default().build(true, false);
 
             let apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -1008,7 +1009,7 @@ mod tests {
     #[test]
     fn apply_invalid_extrinsic_rejects() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(false);
+            let tx = TestTransactionBuilder::default().build(false, false);
 
             let apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -1096,7 +1097,7 @@ mod tests {
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: vec![TestTransactionBuilder::default().build(true)],
+                extrinsics: vec![TestTransactionBuilder::default().build(true, false)],
             };
 
             TestExecutive::execute_block(b);
@@ -1119,7 +1120,7 @@ mod tests {
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: vec![TestTransactionBuilder::default().build(false)],
+                extrinsics: vec![TestTransactionBuilder::default().build(false, false)],
             };
 
             TestExecutive::execute_block(b);

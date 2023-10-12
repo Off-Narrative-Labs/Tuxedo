@@ -199,7 +199,7 @@ pub mod tests {
 
     #[test]
     fn extrinsic_no_signed_payload() {
-        let checker = TestConstraintChecker { checks: true };
+        let checker = TestConstraintChecker { checks: true, inherent: false };
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
@@ -214,7 +214,7 @@ pub mod tests {
 
     #[test]
     fn extrinsic_is_signed_works() {
-        let checker = TestConstraintChecker { checks: true };
+        let checker = TestConstraintChecker { checks: true, inherent: false };
         let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
@@ -225,5 +225,20 @@ pub mod tests {
 
         assert_eq!(e, tx);
         assert_eq!(e.is_signed(), None);
+    }
+
+    #[test]
+    fn extrinsic_is_signed_works_for_inherents() {
+        let checker = TestConstraintChecker { checks: true, inherent: true };
+        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: Vec::new(),
+            checker,
+        };
+        let e = Transaction::new(tx.clone(), Some(())).unwrap();
+
+        assert_eq!(e, tx);
+        assert_eq!(e.is_signed(), Some(false));
     }
 }
