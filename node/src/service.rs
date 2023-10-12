@@ -247,8 +247,8 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
                     let parent_block = client_for_cidp
                         .clone()
                         .block(parent_hash)
-                        .expect("a")
-                        .expect("b")
+                        .expect("Block backend should not error.")
+                        .expect("Parent block should be found in database for authoring to work.")
                         .block;
 
                     async move {
