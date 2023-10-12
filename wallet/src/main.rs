@@ -28,7 +28,7 @@ mod sync;
 use cli::{Cli, Command};
 
 /// The default RPC endpoint for the wallet to connect to
-const DEFAULT_ENDPOINT: &str = "http://localhost:9933";
+const DEFAULT_ENDPOINT: &str = "http://localhost:9944";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
