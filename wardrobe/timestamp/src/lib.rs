@@ -159,7 +159,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
         _peek_data: &[tuxedo_core::types::Output<V>],
         output_data: &[tuxedo_core::types::Output<V>],
     ) -> Result<TransactionPriority, Self::Error> {
-        log::info!(
+        log::debug!(
             target: LOG_TARGET,
             "🕰️🖴 Checking constraints for SetTimestamp."
         );
