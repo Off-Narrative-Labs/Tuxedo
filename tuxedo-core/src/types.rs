@@ -209,7 +209,7 @@ pub mod tests {
         let e = Transaction::new(tx.clone(), None).unwrap();
 
         assert_eq!(e, tx);
-        assert_eq!(e.is_signed(), Some(false));
+        assert_eq!(e.is_signed(), None);
     }
 
     #[test]
@@ -224,6 +224,6 @@ pub mod tests {
         let e = Transaction::new(tx.clone(), Some(())).unwrap();
 
         assert_eq!(e, tx);
-        assert_eq!(e.is_signed(), Some(false));
+        assert_eq!(e.is_signed(), None);
     }
 }
