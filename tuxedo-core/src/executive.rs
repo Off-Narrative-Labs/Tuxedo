@@ -418,8 +418,8 @@ impl<
         // Extract the complete parent block from the inheret data
         let parent: B = data
             .get_data(&PARENT_INHERENT_IDENTIFIER)
-            .expect("1")
-            .expect("2");
+            .expect("Parent block inherent data should be able to decode.")
+            .expect("Parent block should be present among authoring inherent data.");
 
         // Extract the beginning-of-block inherents from the previous block.
         // The parent is already imported, so we know it is valid and we know its inherents came first.
