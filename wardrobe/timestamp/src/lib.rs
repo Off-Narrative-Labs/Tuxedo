@@ -47,10 +47,6 @@ mod update_timestamp_tests;
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";
 
-// It might make sense to have a minimum number of blocks before cleanup in addition
-// that if the chain stalls, all the transactions in the pool can still be used when
-// it comes back alive.
-
 /// A timestamp, since the unix epoch, that is the latest time ever seen in the history
 /// of this chain.
 #[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
