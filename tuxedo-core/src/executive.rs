@@ -1090,7 +1090,7 @@ mod tests {
                         "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        "4680cf9e9383d16183adcc1bf1ab6ce66133af3b5e650405ebe94a943849f4d4",
+                        "d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca",
                     ),
                     digest: Default::default(),
                 },
