@@ -1169,16 +1169,107 @@ mod tests {
         });
     }
 
-    // TODO tests for inherent ordering
+    #[test]
+    fn execute_block_inherent_only_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![TestTransactionBuilder::default().build(true, true)],
+            };
 
-    // Should work
-    // * Empty (already tested)
-    // * Inherent
-    // * Non-inherent (already tested)
-    // * Inherent, non-inherent
-    // * Inherent, Inherent, non-inherent
+            TestExecutive::execute_block(b);
+        });
+    }
 
-    // Should fail
-    // * non-onherent, inherent
-    // * inherent, non-inherent, inherent
+    #[test]
+    fn execute_block_inherent_first_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![
+                    TestTransactionBuilder::default().build(true, true),
+                    TestTransactionBuilder::default().build(true, false),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Tried to execute opening inherent after switching to non-inherents."
+    )]
+    fn execute_block_inherents_must_be_first() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![
+                    TestTransactionBuilder::default().build(true, false),
+                    TestTransactionBuilder::default().build(true, true),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Tried to execute opening inherent after switching to non-inherents."
+    )]
+    fn execute_block_inherents_must_all_be_first() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![
+                    TestTransactionBuilder::default().build(true, true),
+                    TestTransactionBuilder::default().build(true, false),
+                    TestTransactionBuilder::default().build(true, true),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
 }

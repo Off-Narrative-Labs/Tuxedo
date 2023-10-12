@@ -102,6 +102,7 @@ pub mod testing {
     use serde::{Deserialize, Serialize};
 
     use super::*;
+    use crate::{types::Output, verifier::TestVerifier};
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
@@ -113,14 +114,15 @@ pub mod testing {
         pub inherent: bool,
     }
 
-    impl SimpleConstraintChecker for TestConstraintChecker {
+    impl ConstraintChecker<TestVerifier> for TestConstraintChecker {
         type Error = ();
+        type InherentHooks = ();
 
         fn check(
             &self,
-            _input_data: &[DynamicallyTypedData],
-            _peek_data: &[DynamicallyTypedData],
-            _output_data: &[DynamicallyTypedData],
+            _input_data: &[Output<TestVerifier>],
+            _peek_data: &[Output<TestVerifier>],
+            _output_data: &[Output<TestVerifier>],
         ) -> Result<TransactionPriority, ()> {
             if self.checks {
                 Ok(0)
@@ -128,19 +130,29 @@ pub mod testing {
                 Err(())
             }
         }
+
+        fn is_inherent(&self) -> bool {
+            self.inherent
+        }
     }
 
     #[test]
     fn test_checker_passes() {
-        let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: true, inherent: false }, &[], &[], &[]);
+        let result = TestConstraintChecker {
+            checks: true,
+            inherent: false,
+        }
+        .check(&[], &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
     #[test]
     fn test_checker_fails() {
-        let result =
-            SimpleConstraintChecker::check(&TestConstraintChecker { checks: false, inherent: false }, &[], &[], &[]);
+        let result = TestConstraintChecker {
+            checks: false,
+            inherent: false,
+        }
+        .check(&[], &[], &[]);
         assert_eq!(result, Err(()));
     }
 }

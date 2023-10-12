@@ -193,14 +193,17 @@ impl<V: Default> From<DynamicallyTypedData> for Output<V> {
 #[cfg(test)]
 pub mod tests {
 
-    use crate::{constraint_checker::testing::TestConstraintChecker, verifier::UpForGrabs};
+    use crate::{constraint_checker::testing::TestConstraintChecker, verifier::TestVerifier};
 
     use super::*;
 
     #[test]
     fn extrinsic_no_signed_payload() {
-        let checker = TestConstraintChecker { checks: true, inherent: false };
-        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
+        let checker = TestConstraintChecker {
+            checks: true,
+            inherent: false,
+        };
+        let tx: Transaction<TestVerifier, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: Vec::new(),
@@ -214,8 +217,11 @@ pub mod tests {
 
     #[test]
     fn extrinsic_is_signed_works() {
-        let checker = TestConstraintChecker { checks: true, inherent: false };
-        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
+        let checker = TestConstraintChecker {
+            checks: true,
+            inherent: false,
+        };
+        let tx: Transaction<TestVerifier, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: Vec::new(),
@@ -229,8 +235,11 @@ pub mod tests {
 
     #[test]
     fn extrinsic_is_signed_works_for_inherents() {
-        let checker = TestConstraintChecker { checks: true, inherent: true };
-        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
+        let checker = TestConstraintChecker {
+            checks: true,
+            inherent: true,
+        };
+        let tx: Transaction<TestVerifier, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: Vec::new(),
