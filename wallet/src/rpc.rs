@@ -3,7 +3,7 @@
 
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
-use runtime::{opaque::Block as OpaqueBlock, Block, Transaction};
+use runtime::{opaque::Block as OpaqueBlock, Block};
 use sp_core::H256;
 
 /// Typed helper to get the Node's block hash at a particular height
