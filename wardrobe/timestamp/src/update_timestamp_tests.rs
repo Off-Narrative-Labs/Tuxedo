@@ -118,7 +118,7 @@ fn update_timestamp_too_many_inputs() {
 
     assert_eq!(
         checker.check(&input_data, &[], &output_data),
-        Err(TooManyInputsWhileSettingTimestamp)
+        Err(InputsWhileSettingTimestamp)
     );
 }
 

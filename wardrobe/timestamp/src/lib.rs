@@ -3,11 +3,8 @@
 //! This is roughly analogous to FRAME's pallet timestamp. It relies on the same client-side inherent data provider,
 //! as well as Tuxedo's own previous block inehrent data provider.
 //!
-//! In each block ,the block author must include a single `SetTimestamp` transaction.
-//! 1. Comsumes the existing best timestamp UTXO (which was created in the previous block).
-//! 2. Creates a new best timestamp UTXO (which will be cleaned up in the next block).
-//! 3. Creates a new noted timestamp UTXO which will stick around for a minimum amount of time
-//!    and, perhaps, eventually be cleaned up by a volunteer.
+//! In each block ,the block author must include a single `SetTimestamp` transaction that peeks at the
+//! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
 //!
 //! This piece currently features two prominent hacks which will need to be cleaned up in due course.
 //! 1. It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
@@ -32,7 +29,7 @@ use tuxedo_core::{
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
-    types::{Input, Output, OutputRef, Transaction},
+    types::{Output, OutputRef, Transaction},
     verifier::UpForGrabs,
     ConstraintChecker, SimpleConstraintChecker, Verifier,
 };
@@ -47,22 +44,18 @@ mod update_timestamp_tests;
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";
 
-/// A timestamp, since the unix epoch, that is the latest time ever seen in the history
-/// of this chain.
+/// A timestamp, since the unix epocht, noted at some point in the history of the chain.
+/// It also records the block height in which it was included.
 #[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
-pub struct BestTimestamp(pub u64);
-
-impl UtxoData for BestTimestamp {
-    const TYPE_ID: [u8; 4] = *b"best";
+pub struct Timestamp {
+    /// The time, in milliseconds, since the unix epoch.
+    pub time: u64,
+    /// The block number in which this timestamp was noted.
+    pub block: u32,
 }
 
-/// A timestamp, since the unix epoch, that was noted at some point in the history of
-/// this chain.
-#[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
-pub struct NotedTimestamp(pub u64);
-
-impl UtxoData for NotedTimestamp {
-    const TYPE_ID: [u8; 4] = *b"note";
+impl UtxoData for Timestamp {
+    const TYPE_ID: [u8; 4] = *b"time";
 }
 
 /// Options to configure the timestamp piece in your runtime.
@@ -103,21 +96,20 @@ pub enum TimestampError {
     /// UTXO data has an unexpected type
     BadlyTyped,
 
-    /// When attempting to set a new best timestamp, you have not included a best timestamp utxo.
-    MissingNewBestTimestamp,
-    /// When attempting to set a new best timestamp, you have not included a noted timestamp utxo.
-    MissingNewNotedTimestamp,
+    /// When attempting to set a new best timestamp, you have not included a new timestamp output.
+    MissingNewTimestamp,
+    /// The block height reported in the new timestamp does not match the block into which it was inserted.
+    NewTimestampWrongHeight,
     /// Multiple outputs were specified while setting the timestamp, but exactly one is required.
     TooManyOutputsWhileSettingTimestamp,
-    /// No inputs were specified when setting the timestamp, but exactly one is required.
-    MissingPreviousBestTimestamp,
-    /// Multiple inputs were specified while setting the timestamp, but exactly one is required.
-    TooManyInputsWhileSettingTimestamp,
+    /// The previous timestamp that is peeked at must be from the immediate ancestor block, but this one is not.
+    PreviousTimestampWrongHeight,
+    /// No previous timestamp was peeked at in this transaction, but at least one peek is required.
+    MissingPreviousTimestamp,
+    /// Inputs were specified while setting the timestamp, but none are allowed.
+    InputsWhileSettingTimestamp,
     /// The new timestamp is not sufficiently far after the previous (or may even be before it).
     TimestampTooOld,
-    /// The best timestamp and noted timestamp outputs are not for the same time.
-    /// The two outputs must be for the exact same time in order for the timestamp to be successfully updated.
-    InconsistentBestAndNotedTimestamps,
 
     /// When cleaning up old timestamps, you must supply exactly one peek input which is the "new time reference"
     /// All the timestamps that will be cleaned up must be at least the CLEANUP_AGE older than this reference.
@@ -155,7 +147,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
     fn check(
         &self,
         input_data: &[tuxedo_core::types::Output<V>],
-        _peek_data: &[tuxedo_core::types::Output<V>],
+        peek_data: &[tuxedo_core::types::Output<V>],
         output_data: &[tuxedo_core::types::Output<V>],
     ) -> Result<TransactionPriority, Self::Error> {
         log::debug!(
@@ -167,45 +159,32 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
         // In Tuxedo, inherent transaction types are identified explicitly, and the tuxedo
         // core can make this check automatically.
 
-        // Make sure the first output is a new best timestamp
+        // Make sure there are no inputs. Setting a new timestamp does not consume anything.
         ensure!(
-            !output_data.is_empty(),
-            Self::Error::MissingNewBestTimestamp
+            input_data.is_empty(),
+            Self::Error::InputsWhileSettingTimestamp
         );
-        let new_best = output_data[0]
-            .payload
-            .extract::<BestTimestamp>()
-            .map_err(|_| Self::Error::BadlyTyped)?
-            .0;
 
-        // Make sure the second output is a new noted timestamp
+        // Make sure the only output is a new best timestamp
+        ensure!(!output_data.is_empty(), Self::Error::MissingNewTimestamp);
+        let new_timestamp = output_data[0]
+            .payload
+            .extract::<Timestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?;
         ensure!(
             output_data.len() >= 2,
-            Self::Error::MissingNewNotedTimestamp
-        );
-        let new_noted = output_data[1]
-            .payload
-            .extract::<NotedTimestamp>()
-            .map_err(|_| Self::Error::BadlyTyped)?
-            .0;
-
-        // Make sure there are no extra outputs
-        ensure!(
-            output_data.len() == 2,
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
 
-        // Make sure that the new best and new noted timestamps are actually for the same time.
+        // Make sure the block height from this timestamp matches the current block height.
         ensure!(
-            new_best == new_noted,
-            Self::Error::InconsistentBestAndNotedTimestamps
+            new_timestamp.block == T::block_height(),
+            Self::Error::NewTimestampWrongHeight,
         );
 
-        // Although we expect there to typically be no peeks, there is no harm in allowing them.
-
-        // Next we need to check inputs, but there is a special case for block 1.
+        // Next we need to check peeks, but there is a special case for block 1.
         // We need to initialize the timestamp in block 1, so there are no requirements on
-        // the inputs at that height.
+        // the peeks at that height.
         if T::block_height() == 1 {
             // If this special case remains for a while, we should do some checks here like
             // making sure there are no inputs at all. For now, We'll just leave it as is.
@@ -216,25 +195,24 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             return Ok(0);
         }
 
-        // Make sure there is exactly one input which is the previous best timestamp
-        ensure!(
-            !input_data.is_empty(),
-            Self::Error::MissingPreviousBestTimestamp
-        );
-        ensure!(
-            input_data.len() == 1,
-            Self::Error::TooManyInputsWhileSettingTimestamp
-        );
+        // Make sure there at least one peek that is the previous block's timestamp.
+        // We don't expect any additional peeks typically, but they are harmless.
+        ensure!(!peek_data.is_empty(), Self::Error::MissingPreviousTimestamp);
+        let old_timestamp = peek_data[0]
+            .payload
+            .extract::<Timestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?;
 
         // Compare the new timestamp to the previous timestamp
-        let old_best = input_data[0]
-            .payload
-            .extract::<BestTimestamp>()
-            .map_err(|_| Self::Error::BadlyTyped)?
-            .0;
         ensure!(
-            new_best >= old_best + T::MINIMUM_TIME_INTERVAL,
+            new_timestamp.time >= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
+        );
+
+        // Make sure the block height from the previous timestamp matches the previous block height.
+        ensure!(
+            new_timestamp.block == old_timestamp.block + 1,
+            Self::Error::PreviousTimestampWrongHeight,
         );
 
         Ok(0)
@@ -260,64 +238,45 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")
             .expect("Timestamp inherent data should be present.");
-        let new_best_timestamp = BestTimestamp(timestamp_millis);
-        let new_noted_timestamp = NotedTimestamp(timestamp_millis);
+        let new_timestamp = Timestamp {
+            time: timestamp_millis,
+            block: T::block_height(),
+        };
 
         log::debug!(
             target: LOG_TARGET,
             "🕰️🖴 Local timestamp while creating inherent i:: {timestamp_millis}"
         );
 
-        let mut inputs = Vec::new();
+        let mut peeks = Vec::new();
         match (previous_inherent, T::block_height()) {
             (None, 1) => {
                 // This is the first block hack case.
                 // We don't need any inputs, so just do nothing.
             }
             (None, _) => panic!("Attemping to construct timestamp inherent with no previous inherent (and not block 1)."),
-            (Some((previous_inherent, previous_id)), _) => {
-                // This is the the normal case. We create a full previous input to consume.
-                let prev_best_index = previous_inherent
-                    .outputs
-                    .iter()
-                    .position(|output| {
-                        output.payload.extract::<BestTimestamp>().is_ok()
-                    })
-                    .expect("SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.")
-                    .try_into()
-                    .expect("There should not be more than u32::max_value outputs in a transaction.");
+            (Some((_previous_inherent, previous_id)), _) => {
+                // This is the the normal case. We create a full previous to peek at.
 
-                let output_ref = OutputRef {
+                // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
+                // But out transactions are simple enough that we know we just need the one and only output.
+                peeks.push(OutputRef {
                     tx_hash: previous_id,
-                    index: prev_best_index,
-                };
-
-                let input = Input {
-                    output_ref,
-                    // The best time needs to be easily taken. For now I'll assume it is up for grabs.
-                    // We can make this an eviction once that is implemented.
-                    // Once this is fixed more properly (like by using evictions)
-                    // I should be able to not mention UpForGrabs here at all.
-                    redeemer: Vec::new(),
-                };
-
-                inputs.push(input);
+                    // There is always 1 output, so we know right where to find it.
+                    index: 0,
+                });
             }
         }
 
-        let best_output = Output {
-            payload: new_best_timestamp.into(),
-            verifier: UpForGrabs.into(),
-        };
-        let noted_output = Output {
-            payload: new_noted_timestamp.into(),
+        let new_output = Output {
+            payload: new_timestamp.into(),
             verifier: UpForGrabs.into(),
         };
 
         Transaction {
-            inputs,
-            peeks: Vec::new(),
-            outputs: vec![best_output, noted_output],
+            inputs: Vec::new(),
+            peeks,
+            outputs: vec![new_output],
             checker: Self::default(),
         }
     }
@@ -328,23 +287,19 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         result: &mut CheckInherentsResult,
     ) {
         // Extract the local view of time from the inherent data
-        let local_timestamp: u64 = importing_inherent_data
+        let local_time: u64 = importing_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")
             .expect("Timestamp inherent data should be present.");
 
         log::debug!(
             target: LOG_TARGET,
-            "🕰️🖴 Local timestamp while checking inherent is: {:#?}", local_timestamp
+            "🕰️🖴 Local timestamp while checking inherent is: {:#?}", local_time
         );
 
-        let on_chain_timestamp = inherent
-            .outputs
-            .iter()
-            .find_map(|output| output.payload.extract::<BestTimestamp>().ok().map(|o| o.0))
-            .expect(
-                "SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.",
-            );
+        let on_chain_timestamp = inherent.outputs[0].payload.extract::<Timestamp>().expect(
+            "SetTimestamp extrinsic should have an output that decodes as a StorableTimestamp.",
+        );
 
         log::debug!(
             target: LOG_TARGET,
@@ -357,7 +312,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         // FRAME's checks: github.com/paritytech/polkadot-sdk/blob/945ebbbc/substrate/frame/timestamp/src/lib.rs#L299-L306
 
         // Make the comparison for too far in future
-        if on_chain_timestamp > local_timestamp + T::MAX_DRIFT {
+        if on_chain_timestamp.time > local_time + T::MAX_DRIFT {
             log::debug!(
                 target: LOG_TARGET,
                 "🕰️🖴 Block timestamp is too far in future. About to push an error"
@@ -395,10 +350,9 @@ impl<T: TimestampConfig> SimpleConstraintChecker for CleanUpTimestamp<T> {
             !peek_data.is_empty(),
             Self::Error::CleanupRequiresOneReference
         );
-        let new_reference_time = peek_data[0]
-            .extract::<NotedTimestamp>()
-            .map_err(|_| Self::Error::BadlyTyped)?
-            .0;
+        let new_reference_timestamp = peek_data[0]
+            .extract::<Timestamp>()
+            .map_err(|_| Self::Error::BadlyTyped)?;
 
         // Make sure there are no outputs
         ensure!(
@@ -407,23 +361,20 @@ impl<T: TimestampConfig> SimpleConstraintChecker for CleanUpTimestamp<T> {
         );
 
         // Make sure each input is old enough to be cleaned up
+        // in terms of both time and block height.
         for input_datum in input_data {
-            let old_time = input_datum
-                .extract::<NotedTimestamp>()
-                .map_err(|_| Self::Error::BadlyTyped)?
-                .0;
+            let old_timestamp = input_datum
+                .extract::<Timestamp>()
+                .map_err(|_| Self::Error::BadlyTyped)?;
 
             ensure!(
-                old_time + T::MIN_TIME_BEFORE_CLEANUP < new_reference_time,
+                old_timestamp.time + T::MIN_TIME_BEFORE_CLEANUP < new_reference_timestamp.time,
                 Self::Error::DontBeSoHasty
             );
-            //TODO ensure height too
-            // And also need to check that the previous block height and current block height
-            // are right when setting the time
-            // ensure!(
-            //     old_height + T::MIN_BLOCKS_BEFORE_CLEANUP < T::block_height(),
-            //     Self::Error::DontBeSoHasty
-            // );
+            ensure!(
+                old_timestamp.block + T::MIN_BLOCKS_BEFORE_CLEANUP < T::block_height(),
+                Self::Error::DontBeSoHasty
+            );
         }
 
         Ok(0)
