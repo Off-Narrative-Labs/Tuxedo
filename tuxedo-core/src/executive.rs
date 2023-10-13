@@ -456,6 +456,7 @@ impl<
 
         // Tuxedo requires that all inherents come at the beginning of the block.
         // (Soon we will also allow them at the end, but never throughout the body.)
+        // (TODO revise this logic once that is implemented.)
         // At this off-chain pre-check stage, we assume that requirement is upheld.
         // It will be verified later once we are executing on-chain.
         let inherents: Vec<Transaction<V, C>> = block
