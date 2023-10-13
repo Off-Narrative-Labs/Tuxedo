@@ -27,7 +27,7 @@
 //!
 //! The solution is to provide the entirety of the previous block to the runtime when asking it to construct inherents.
 //! This module provides an inherent data provider that does just this. Any Tuxedo runtime that uses inherents (At least ones
-//! that update environmental data), needs to include this foundational previous block inherent data provider that provvides
+//! that update environmental data), needs to include this foundational previous block inherent data provider
 //! so that the Tuxedo executive can scrape it to find the output references of the previous inherent transactions.
 
 use parity_scale_codec::{Decode, Encode};
