@@ -7,7 +7,7 @@ use sc_executor::RuntimeVersionOf;
 use sp_core::{storage::Storage, traits::CodeExecutor};
 use sp_runtime::{
     traits::{Block as BlockT, Hash as HashT, Header as HeaderT, Zero},
-    BuildStorage, StateVersion,
+    BuildStorage,
 };
 use std::sync::Arc;
 
