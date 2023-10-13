@@ -4224,7 +4224,9 @@ version = "4.0.0-dev"
 dependencies = [
  "clap",
  "jsonrpsee",
+ "parity-scale-codec",
  "sc-basic-authorship",
+ "sc-chain-spec",
  "sc-cli",
  "sc-client-api",
  "sc-consensus",
