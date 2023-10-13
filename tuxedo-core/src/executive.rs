@@ -310,16 +310,13 @@ impl<
         // Apply each extrinsic
         for extrinsic in block.extrinsics() {
             // Enforce that inherents are in the right place
-            match (
-                extrinsic.checker.is_inherent(),
-                finished_with_opening_inherents,
-            ) {
-                (true, false) => (),                                      // Opening inherent
-                (false, false) => finished_with_opening_inherents = true, // First non-inherent
-                (false, true) => (),                                      // Other non-inherent
-                (true, true) => {
-                    panic!("Tried to execute opening inherent after switching to non-inherents.")
-                }
+            let current_tx_is_inherent = extrinsic.checker.is_inherent();
+            if current_tx_is_inherent && finished_with_opening_inherents {
+                panic!("Tried to execute opening inherent after switching to non-inherents.");
+            }
+            if !current_tx_is_inherent && !finished_with_opening_inherents {
+                // This is the first non-inherent, so we update our flag and continue.
+                finished_with_opening_inherents = true;
             }
 
             match Self::apply_tuxedo_transaction(extrinsic.clone()) {
