@@ -1,7 +1,9 @@
 //! Unit tests for the Timestamp piece.
 //! This module tests the secondary flow of cleaning up old timestamps.
 
-use super::*;
+use super::{
+    CleanUpTimestamp, SimpleConstraintChecker, Timestamp, TimestampConfig, TimestampError,
+};
 use tuxedo_core::dynamic_typing::testing::Bogus;
 use TimestampError::*;
 
@@ -26,12 +28,7 @@ fn cleanup_timestamp_happy_path() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[],),
         Ok(0),
     );
 }
@@ -42,12 +39,7 @@ fn cleanup_timestamp_no_peek() {
     let inp = vec![old.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &[],
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &[], &[]),
         Err(CleanupRequiresOneReference)
     );
 }
@@ -64,12 +56,7 @@ fn cleanup_timestamp_input_newer_than_reference() {
     let peek = vec![old.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Err(DontBeSoHasty)
     );
 }
@@ -86,12 +73,7 @@ fn cleanup_timestamp_input_not_yet_ripe_for_cleaning() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Err(DontBeSoHasty)
     );
 }
@@ -109,12 +91,7 @@ fn cleanup_timestamp_multiple_happy_path() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Ok(0),
     );
 }
@@ -133,12 +110,7 @@ fn cleanup_timestamp_missing_input() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &[],
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&[], &peek, &[]),
         Ok(0),
     );
 }
@@ -159,12 +131,7 @@ fn cleanup_timestamp_multiple_first_valid_second_invalid() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Err(DontBeSoHasty)
     );
 }
@@ -181,12 +148,7 @@ fn cleanup_timestamp_input_is_wrong_type() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Err(BadlyTyped)
     );
 }
@@ -199,12 +161,7 @@ fn cleanup_timestamp_reference_is_wrong_type() {
     let peek = vec![Bogus.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &[]
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Err(BadlyTyped)
     );
 }
@@ -222,12 +179,7 @@ fn cleanup_timestamp_cannot_create_state() {
     let out = vec![Bogus.into()];
 
     assert_eq!(
-        SimpleConstraintChecker::check(
-            &CleanUpTimestamp::<AlwaysBlockMillion>::default(),
-            &inp,
-            &peek,
-            &out,
-        ),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &out,),
         Err(CleanupCannotCreateState)
     );
 }
