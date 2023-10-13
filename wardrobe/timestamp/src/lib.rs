@@ -3,7 +3,7 @@
 //! This is roughly analogous to FRAME's pallet timestamp. It relies on the same client-side inherent data provider,
 //! as well as Tuxedo's own previous block inehrent data provider.
 //!
-//! In each block ,the block author must include a single `SetTimestamp` transaction that peeks at the
+//! In each block, the block author must include a single `SetTimestamp` transaction that peeks at the
 //! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
 //!
 //! This piece currently features two prominent hacks which will need to be cleaned up in due course.
@@ -44,7 +44,7 @@ mod update_timestamp_tests;
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "timestamp-piece";
 
-/// A timestamp, since the unix epocht, noted at some point in the history of the chain.
+/// A timestamp, since the unix epoch, noted at some point in the history of the chain.
 /// It also records the block height in which it was included.
 #[derive(Debug, Encode, Decode, PartialEq, Eq, Clone, Copy, Default, PartialOrd, Ord)]
 pub struct Timestamp {
@@ -101,7 +101,6 @@ pub trait TimestampConfig {
 pub enum TimestampError {
     /// UTXO data has an unexpected type
     BadlyTyped,
-
     /// When attempting to set a new best timestamp, you have not included a new timestamp output.
     MissingNewTimestamp,
     /// The block height reported in the new timestamp does not match the block into which it was inserted.
@@ -239,19 +238,18 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         authoring_inherent_data: &InherentData,
         previous_inherent: Option<(Transaction<V, Self>, H256)>,
     ) -> tuxedo_core::types::Transaction<V, Self> {
-        // Extract the current timestamp from the inherent data
-        let timestamp_millis: u64 = authoring_inherent_data
+        let current_timestamp: u64 = authoring_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")
             .expect("Timestamp inherent data should be present.");
         let new_timestamp = Timestamp {
-            time: timestamp_millis,
+            time: current_timestamp,
             block: T::block_height(),
         };
 
         log::debug!(
             target: LOG_TARGET,
-            "🕰️🖴 Local timestamp while creating inherent i:: {timestamp_millis}"
+            "🕰️🖴 Local timestamp while creating inherent i:: {current_timestamp}"
         );
 
         let mut peeks = Vec::new();
@@ -292,7 +290,6 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         inherent: Transaction<V, Self>,
         result: &mut CheckInherentsResult,
     ) {
-        // Extract the local view of time from the inherent data
         let local_time: u64 = importing_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")

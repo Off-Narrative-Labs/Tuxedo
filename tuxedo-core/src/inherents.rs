@@ -7,13 +7,11 @@
 //! insert info into the block header. However inherents go in the block body and therefore must be transactions.
 //!
 //! Classic usecases for inherents are injecting and updating environmental information such as a block timestamp,
-//! information about the relay chain (if the current chain is a parachain),
-//! or information about who should receive the block reward.
+//! information about the relay chain (if the current chain is a parachain), or information about who should receive the block reward.
 //!
-//! In order to allow the runtime to construct such transactions while keeping the cleint opaque, there are
-//! special APIs for creating inherents and performing off-chain validation of inherents. That's right,
-//! inherents also offer a special API to have their environmental data checked off-chain before the block
-//! is executed.
+//! In order to allow the runtime to construct such transactions while keeping the cleint opaque, there are special APIs
+//! for creating inherents and performing off-chain validation of inherents. That's right, inherents also offer
+//! a special API to have their environmental data checked off-chain before the block is executed.
 //!
 //! # Complexities in UTXO chains
 //!
@@ -91,7 +89,7 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
 /// This will be verified off-chain by nodes before block execution begins.
 ///
 /// This interface is stricter and more structured, and therefore simpler than FRAME's.
-/// If you need to do something more powerful (which you probably don't)  and you
+/// If you need to do something more powerful (which you probably don't) and you
 /// understand exactly how Substrate's block authoring and Tuxedo's piece aggregation works
 /// (which you probably don't) you can directly implement the `InherentInternal` trait
 /// which is more powerful (and dangerous).
@@ -121,15 +119,14 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
     );
 }
 
-/// Almost identical to TuxedoInherent, but allows returning multiple
-/// exrinsics (as aggregate runtimes will need to) and removes the
-/// requirement that the generic outer constraint checker be buildable
-/// from `Self` so we can implement it for ().
+/// Almost identical to TuxedoInherent, but allows returning multiple extrinsics
+/// (as aggregate runtimes  will need to) and removes the requirement that the generic
+/// outer constraint checker be buildable from `Self` so we can implement it for ().
 ///
-/// If you are trying to implement some complex inherent logic that requires the interaction
-/// of multiple inherents, or features a variable number of inherents in each block, you can
-/// probably express it by implementing this trait, but such designs are probably too
-/// complicated. Think long and hard before implementing this trait directly.
+/// If you are trying to implement some complex inherent logic that requires the interaction of
+/// multiple inherents, or features a variable number of inherents in each block, you might be
+/// able to express it by implementing this trait, but such designs are probably too complicated.
+/// Think long and hard before implementing this trait directly.
 pub trait InherentInternal<V, C: ConstraintChecker<V>>: Sized {
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.

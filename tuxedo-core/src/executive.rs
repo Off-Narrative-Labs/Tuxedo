@@ -421,7 +421,7 @@ impl<
             .expect("Parent block inherent data should be able to decode.")
             .expect("Parent block should be present among authoring inherent data.");
 
-        // Extract the beginning-of-block inherents from the previous block.
+        // Extract the inherents from the previous block, which can be found at the beginning of the extrinsics list.
         // The parent is already imported, so we know it is valid and we know its inherents came first.
         // We also annotate each transaction with its original hash for purposes of constructing output refs later.
         // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
@@ -454,7 +454,7 @@ impl<
 
         let mut result = CheckInherentsResult::new();
 
-        // Tuxedo requires that all inehrents come at the beginning of the block.
+        // Tuxedo requires that all inherents come at the beginning of the block.
         // (Soon we will also allow them at the end, but never throughout the body.)
         // At this off-chain pre-check stage, we assume that requirement is upheld.
         // It will be verified later once we are executing on-chain.

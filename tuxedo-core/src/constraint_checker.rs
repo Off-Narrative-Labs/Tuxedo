@@ -9,8 +9,8 @@ use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, t
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
-/// A simplified constraint checker that a transaction can choose to call. Checks whether the input
-/// and output data from a transaction meets the codified constraints.
+/// A simplified constraint checker that a transaction can choose to call.
+/// Checks whether the input and output data from a transaction meets the codified constraints.
 ///
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
@@ -42,8 +42,8 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
-    /// Optional Associated Inherent processing logic. If this transaction type is not
-    /// an inherent, use (). If it is an inherent, use Self, and implement the TuxedoInherent trait
+    /// Optional Associated Inherent processing logic. If this transaction type is not an inherent, use ().
+    /// If it is an inherent, use Self, and implement the TuxedoInherent trait.
     type InherentHooks: InherentInternal<V, Self>;
 
     /// The actual check validation logic
@@ -60,8 +60,8 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
 }
 
 // This blanket implementation makes it so that any type that chooses to
-// implement the Simple trait also implements the more Powerful trait. This way
-// the executive can always just call the more Powerful trait.
+// implement the Simple trait also implements the more Powerful trait.
+// This way the executive can always just call the more Powerful trait.
 impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker>::Error;
