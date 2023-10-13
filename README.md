@@ -159,7 +159,7 @@ Tuxedo strives for excellent code quality which is enforced through unit tests, 
 # Run unit tests on all aspects of the project
 cargo test
 
-# Run clippy (which requires nightly)
+# Run clippy with nightly
 cargo +nightly clippy
 ```
 
