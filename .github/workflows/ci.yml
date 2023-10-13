@@ -61,7 +61,7 @@ jobs:
         - if: github.event_name == 'pull_request' &&
               github.event.pull_request.head.repo.full_name == github.repository
           name: Report code coverage
-          uses: Nef10/lcov-reporter-action@v0.4.0
+          uses: romeovs/lcov-reporter-action@master
           with:
             lcov-file: lcov.info
             pr-number: ${{ github.event.pull_request.number }}
