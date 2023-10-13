@@ -160,10 +160,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             "🕰️🖴 Checking constraints for SetTimestamp."
         );
 
-        // FRAME pallet authors are required to ensure_none! to make sure this is an inherent.
-        // In Tuxedo, inherent transaction types are identified explicitly, and the tuxedo
-        // core can make this check automatically.
-
         // Make sure there are no inputs. Setting a new timestamp does not consume anything.
         ensure!(
             input_data.is_empty(),
