@@ -115,7 +115,6 @@ pub enum TimestampError {
     InputsWhileSettingTimestamp,
     /// The new timestamp is not sufficiently far after the previous (or may even be before it).
     TimestampTooOld,
-
     /// When cleaning up old timestamps, you must supply exactly one peek input which is the "new time reference"
     /// All the timestamps that will be cleaned up must be at least the CLEANUP_AGE older than this reference.
     CleanupRequiresOneReference,
