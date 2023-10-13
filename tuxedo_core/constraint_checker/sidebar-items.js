@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["testing"],"trait":["ConstraintChecker","SimpleConstraintChecker"]};
+window.SIDEBAR_ITEMS = {"trait":["ConstraintChecker","SimpleConstraintChecker"]};

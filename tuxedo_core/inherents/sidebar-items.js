@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PARENT_INHERENT_IDENTIFIER"],"struct":["ParentBlockInherentDataProvider","TuxedoInherentAdapter"],"trait":["InherentInternal","TuxedoInherent"]};

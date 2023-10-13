@@ -7,7 +7,8 @@ var srcIndex = JSON.parse('{\
 "node_template":["",[],["chain_spec.rs","lib.rs","rpc.rs","service.rs"]],\
 "poe":["",[],["lib.rs"]],\
 "runtime_upgrade":["",[],["lib.rs"]],\
-"tuxedo_core":["",[],["constraint_checker.rs","dynamic_typing.rs","executive.rs","lib.rs","support_macros.rs","traits.rs","types.rs","utxo_set.rs","verifier.rs"]],\
+"timestamp":["",[],["lib.rs"]],\
+"tuxedo_core":["",[],["constraint_checker.rs","dynamic_typing.rs","executive.rs","inherents.rs","lib.rs","support_macros.rs","traits.rs","types.rs","utxo_set.rs","verifier.rs"]],\
 "tuxedo_template_runtime":["",[],["lib.rs"]],\
 "tuxedo_template_wallet":["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","rpc.rs","sync.rs"]]\
 }');

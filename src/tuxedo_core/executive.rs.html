@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (475c71da0 2023-10-11)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (e20cb7702 2023-10-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1068,6 +1068,206 @@
 <a href="#1068" id="1068">1068</a>
 <a href="#1069" id="1069">1069</a>
 <a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1079,6 +1279,7 @@
 </span><span class="kw">use crate</span>::{
     constraint_checker::ConstraintChecker,
     ensure,
+    inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
@@ -1088,6 +1289,8 @@
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>scale_info::TypeInfo;
 <span class="kw">use </span>sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
+<span class="kw">use </span>sp_core::H256;
+<span class="kw">use </span>sp_inherents::{CheckInherentsResult, InherentData};
 <span class="kw">use </span>sp_runtime::{
     traits::BlakeTwo256,
     transaction_validity::{
@@ -1116,6 +1319,11 @@
     </span><span class="kw">pub fn </span>validate_tuxedo_transaction(
         transaction: <span class="kw-2">&amp;</span>Transaction&lt;V, C&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ValidTransaction, UtxoError&lt;C::Error&gt;&gt; {
+        <span class="macro">debug!</span>(
+            target: LOG_TARGET,
+            <span class="string">&quot;validating tuxedo transaction&quot;</span>,
+        );
+
         <span class="comment">// Make sure there are no duplicate inputs
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         </span>{
@@ -1199,6 +1407,10 @@
         <span class="comment">// If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the constraint checker
         </span><span class="kw">if </span>!missing_inputs.is_empty() {
+            <span class="macro">debug!</span>(
+                target: LOG_TARGET,
+                <span class="string">&quot;Transaction is valid but still has missing inputs. Returning early.&quot;</span>,
+            );
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ValidTransaction {
                 requires: missing_inputs,
                 provides,
@@ -1361,8 +1573,22 @@
         // be cleared before the end of the block
         </span>sp_io::storage::set(HEADER_KEY, <span class="kw-2">&amp;</span>block.header().encode());
 
+        <span class="comment">// Tuxedo requires that inherents are at the beginning (and soon end) of the
+        // block and not scattered throughout. We use this flag to enforce that.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>finished_with_opening_inherents = <span class="bool-val">false</span>;
+
         <span class="comment">// Apply each extrinsic
         </span><span class="kw">for </span>extrinsic <span class="kw">in </span>block.extrinsics() {
+            <span class="comment">// Enforce that inherents are in the right place
+            </span><span class="kw">let </span>current_tx_is_inherent = extrinsic.checker.is_inherent();
+            <span class="kw">if </span>current_tx_is_inherent &amp;&amp; finished_with_opening_inherents {
+                <span class="macro">panic!</span>(<span class="string">&quot;Tried to execute opening inherent after switching to non-inherents.&quot;</span>);
+            }
+            <span class="kw">if </span>!current_tx_is_inherent &amp;&amp; !finished_with_opening_inherents {
+                <span class="comment">// This is the first non-inherent, so we update our flag and continue.
+                </span>finished_with_opening_inherents = <span class="bool-val">true</span>;
+            }
+
             <span class="kw">match </span><span class="self">Self</span>::apply_tuxedo_transaction(extrinsic.clone()) {
                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">debug!</span>(
                     target: LOG_TARGET,
@@ -1430,14 +1656,86 @@
             block_hash
         );
 
-        <span class="comment">// TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
-        // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-        // For now, I just make them all custom zero
-        </span><span class="kw">let </span>r = <span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
+        <span class="comment">// Inherents are not permitted in the pool. They only come from the block author.
+        // We perform this check here rather than in the `validate_tuxedo_transaction` helper,
+        // because that helper is called again during on-chain execution. Inherents are valid
+        // during execution, so we do not want this check repeated.
+        </span><span class="kw">let </span>r = <span class="kw">if </span>tx.checker.is_inherent() {
+            <span class="prelude-val">Err</span>(TransactionValidityError::Invalid(InvalidTransaction::Call))
+        } <span class="kw">else </span>{
+            <span class="comment">// TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
+            // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
+            // For now, I just make them all custom zero
+            </span><span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx)
+                .map_err(|<span class="kw">_</span>| TransactionValidityError::Invalid(InvalidTransaction::Custom(<span class="number">0</span>)))
+        };
 
         <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">&quot;Validation result: {:?}&quot;</span>, r);
 
-        r.map_err(|<span class="kw">_</span>| TransactionValidityError::Invalid(InvalidTransaction::Custom(<span class="number">0</span>)))
+        r
+    }
+
+    <span class="comment">// The last two are for the standard beginning-of-block inherent extrinsics.
+    </span><span class="kw">pub fn </span>inherent_extrinsics(data: sp_inherents::InherentData) -&gt; Vec&lt;&lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic&gt; {
+        <span class="macro">debug!</span>(
+            target: LOG_TARGET,
+            <span class="string">&quot;Entering `inherent_extrinsics`.&quot;
+        </span>);
+
+        <span class="comment">// Extract the complete parent block from the inheret data
+        </span><span class="kw">let </span>parent: B = data
+            .get_data(<span class="kw-2">&amp;</span>PARENT_INHERENT_IDENTIFIER)
+            .expect(<span class="string">&quot;Parent block inherent data should be able to decode.&quot;</span>)
+            .expect(<span class="string">&quot;Parent block should be present among authoring inherent data.&quot;</span>);
+
+        <span class="comment">// Extract the inherents from the previous block, which can be found at the beginning of the extrinsics list.
+        // The parent is already imported, so we know it is valid and we know its inherents came first.
+        // We also annotate each transaction with its original hash for purposes of constructing output refs later.
+        // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
+        // and we need an original universal transaction id.
+        </span><span class="kw">let </span>previous_blocks_inherents: Vec&lt;(&lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic, H256)&gt; = parent
+            .extrinsics()
+            .iter()
+            .cloned()
+            .take_while(|tx| tx.checker.is_inherent())
+            .map(|tx| {
+                <span class="kw">let </span>id = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
+                (tx, id)
+            })
+            .collect();
+
+        <span class="macro">debug!</span>(
+            target: LOG_TARGET,
+            <span class="string">&quot;The previous block had {} extrinsics ({} inherents).&quot;</span>, parent.extrinsics().len(), previous_blocks_inherents.len()
+        );
+
+        <span class="comment">// Call into constraint checker&#39;s own inherent hooks to create the actual transactions
+        </span>C::InherentHooks::create_inherents(<span class="kw-2">&amp;</span>data, previous_blocks_inherents)
+    }
+
+    <span class="kw">pub fn </span>check_inherents(block: B, data: InherentData) -&gt; sp_inherents::CheckInherentsResult {
+        <span class="macro">debug!</span>(
+            target: LOG_TARGET,
+            <span class="string">&quot;Entering `check_inherents`&quot;
+        </span>);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>result = CheckInherentsResult::new();
+
+        <span class="comment">// Tuxedo requires that all inherents come at the beginning of the block.
+        // (Soon we will also allow them at the end, but never throughout the body.)
+        // (TODO revise this logic once that is implemented.)
+        // At this off-chain pre-check stage, we assume that requirement is upheld.
+        // It will be verified later once we are executing on-chain.
+        </span><span class="kw">let </span>inherents: Vec&lt;Transaction&lt;V, C&gt;&gt; = block
+            .extrinsics()
+            .iter()
+            .cloned()
+            .take_while(|tx| tx.checker.is_inherent())
+            .collect();
+
+        C::InherentHooks::check_inherents(<span class="kw-2">&amp;</span>data, inherents, <span class="kw-2">&amp;mut </span>result);
+
+        result
     }
 }
 
@@ -1499,14 +1797,12 @@
             <span class="self">self
         </span>}
 
-        <span class="kw">fn </span>build(<span class="self">self</span>, should_check: bool) -&gt; TestTransaction {
+        <span class="kw">fn </span>build(<span class="self">self</span>, checks: bool, inherent: bool) -&gt; TestTransaction {
             TestTransaction {
                 inputs: <span class="self">self</span>.inputs,
                 peeks: <span class="self">self</span>.peeks,
                 outputs: <span class="self">self</span>.outputs,
-                checker: TestConstraintChecker {
-                    checks: should_check,
-                },
+                checker: TestConstraintChecker { checks, inherent },
             }
         }
     }
@@ -1605,7 +1901,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_empty_works() {
-        <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>);
+        <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
         <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1629,7 +1925,7 @@
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(<span class="bool-val">true</span>);
+                    .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
                 <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1649,7 +1945,7 @@
             .execute_with(|| {
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
                     .with_peek(output_ref)
-                    .build(<span class="bool-val">true</span>);
+                    .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
                 <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1668,7 +1964,7 @@
             };
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
                 .with_output(output)
-                .build(<span class="bool-val">true</span>);
+                .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="comment">// This is a real transaction, so we need to calculate a real OutputRef
             </span><span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
@@ -1695,7 +1991,7 @@
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
                 .with_input(input)
-                .build(<span class="bool-val">true</span>);
+                .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1714,7 +2010,7 @@
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
                 .with_peek(output_ref.clone())
-                .build(<span class="bool-val">true</span>);
+                .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1742,7 +2038,7 @@
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
                     .with_input(input.clone())
                     .with_input(input)
-                    .build(<span class="bool-val">true</span>);
+                    .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
                 <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
@@ -1764,7 +2060,7 @@
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
                     .with_peek(output_ref.clone())
                     .with_peek(output_ref)
-                    .build(<span class="bool-val">true</span>);
+                    .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
                 <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).unwrap();
 
@@ -1789,7 +2085,7 @@
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(<span class="bool-val">true</span>);
+                    .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
                 <span class="kw">let </span>result = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
@@ -1811,7 +2107,7 @@
         };
         <span class="kw">let </span>tx = TestTransactionBuilder::default()
             .with_output(output)
-            .build(<span class="bool-val">true</span>);
+            .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
         <span class="comment">// Now calculate the output ref that the transaction creates so we can pre-populate the state.
         </span><span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
@@ -1829,7 +2125,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>validate_with_constraint_error_fails() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">false</span>);
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">false</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx);
 
@@ -1840,7 +2136,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_empty_works() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>);
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -1859,7 +2155,7 @@
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
                 .with_input(input)
-                .build(<span class="bool-val">true</span>);
+                .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -1874,7 +2170,7 @@
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
                 .with_peek(output_ref)
-                .build(<span class="bool-val">true</span>);
+                .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -1897,7 +2193,7 @@
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(<span class="bool-val">true</span>);
+                    .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
                 <span class="comment">// Commit the tx to storage
                 </span>TestExecutive::update_storage(tx);
@@ -1917,7 +2213,7 @@
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
                 .with_output(output.clone())
-                .build(<span class="bool-val">true</span>);
+                .build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
             <span class="kw">let </span>output_ref = OutputRef { tx_hash, index: <span class="number">0 </span>};
@@ -1959,7 +2255,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_valid_extrinsic_work() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>);
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -1978,7 +2274,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>apply_invalid_extrinsic_rejects() {
         ExternalityBuilder::default().build().execute_with(|| {
-            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">false</span>);
+            <span class="kw">let </span>tx = TestTransactionBuilder::default().build(<span class="bool-val">false</span>, <span class="bool-val">false</span>);
 
             <span class="kw">let </span>apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -2062,11 +2358,11 @@
                         <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;4680cf9e9383d16183adcc1bf1ab6ce66133af3b5e650405ebe94a943849f4d4&quot;</span>,
+                        <span class="string">&quot;d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca&quot;</span>,
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">true</span>)],
+                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>)],
             };
 
             TestExecutive::execute_block(b);
@@ -2089,7 +2385,7 @@
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">false</span>)],
+                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">false</span>, <span class="bool-val">false</span>)],
             };
 
             TestExecutive::execute_block(b);
@@ -2132,6 +2428,110 @@
                     digest: Default::default(),
                 },
                 extrinsics: Vec::new(),
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>execute_block_inherent_only_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            <span class="kw">let </span>b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: <span class="number">6</span>,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c&quot;</span>,
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: <span class="macro">vec!</span>[TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">true</span>)],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>execute_block_inherent_first_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            <span class="kw">let </span>b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: <span class="number">6</span>,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9&quot;</span>,
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: <span class="macro">vec!</span>[
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">true</span>),
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    <span class="attr">#[test]
+    #[should_panic(
+        expected = <span class="string">&quot;Tried to execute opening inherent after switching to non-inherents.&quot;
+    </span>)]
+    </span><span class="kw">fn </span>execute_block_inherents_must_be_first() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            <span class="kw">let </span>b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: <span class="number">6</span>,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984&quot;</span>,
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: <span class="macro">vec!</span>[
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>),
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">true</span>),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    <span class="attr">#[test]
+    #[should_panic(
+        expected = <span class="string">&quot;Tried to execute opening inherent after switching to non-inherents.&quot;
+    </span>)]
+    </span><span class="kw">fn </span>execute_block_inherents_must_all_be_first() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            <span class="kw">let </span>b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: <span class="number">6</span>,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        <span class="string">&quot;0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f&quot;</span>,
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: <span class="macro">vec!</span>[
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">true</span>),
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">false</span>),
+                    TestTransactionBuilder::default().build(<span class="bool-val">true</span>, <span class="bool-val">true</span>),
+                ],
             };
 
             TestExecutive::execute_block(b);
