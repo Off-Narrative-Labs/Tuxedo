@@ -44,7 +44,7 @@ impl Verifier for SigCheck {
 
 /// A simple verifier that allows anyone to consume an output at any time
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo, Default)]
 pub struct UpForGrabs;
 
 impl Verifier for UpForGrabs {

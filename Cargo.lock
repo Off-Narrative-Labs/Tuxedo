@@ -4251,6 +4251,7 @@ dependencies = [
  "sp-runtime",
  "sp-timestamp",
  "substrate-build-script-utils",
+ "tuxedo-core",
  "tuxedo-template-runtime",
 ]
 
@@ -7901,6 +7902,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "timestamp"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-core",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
+ "sp-timestamp",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "tiny-bip39"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8291,6 +8309,7 @@ version = "1.0.0-dev"
 dependencies = [
  "aggregator",
  "array-bytes",
+ "async-trait",
  "derive-no-bound",
  "log",
  "parity-scale-codec",
@@ -8300,6 +8319,7 @@ dependencies = [
  "sp-api",
  "sp-core",
  "sp-debug-derive",
+ "sp-inherents",
  "sp-io",
  "sp-runtime",
  "sp-std",
@@ -8339,6 +8359,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "timestamp",
  "tuxedo-core",
 ]
 

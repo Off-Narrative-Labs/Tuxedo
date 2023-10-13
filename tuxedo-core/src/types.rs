@@ -1,6 +1,6 @@
 //! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
-use crate::dynamic_typing::DynamicallyTypedData;
+use crate::{dynamic_typing::DynamicallyTypedData, ConstraintChecker, Verifier};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 #[cfg(feature = "std")]
@@ -35,8 +35,8 @@ pub struct OutputRef {
 /// and evictions (inputs that are forcefully consumed.)
 /// Existing state to be read and consumed from storage
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct Transaction<V: TypeInfo, C: TypeInfo> {
+#[derive(Default, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct Transaction<V, C> {
     /// Existing pieces of state to be read and consumed from storage
     pub inputs: Vec<Input>,
     /// Existing state to be read, but not consumed, from storage
@@ -45,6 +45,20 @@ pub struct Transaction<V: TypeInfo, C: TypeInfo> {
     pub outputs: Vec<Output<V>>,
     /// Which piece of constraint checking logic is used to determine whether this transaction is valid
     pub checker: C,
+}
+
+impl<V: Clone, C: Clone> Transaction<V, C> {
+    /// A helper function for transforming a transaction generic over one
+    /// kind of constraint checker into a transaction generic over another type
+    /// of constraint checker. This is useful when moving up and down the aggregation tree.
+    pub fn transform<D: From<C>>(&self) -> Transaction<V, D> {
+        Transaction {
+            inputs: self.inputs.clone(),
+            peeks: self.peeks.clone(),
+            outputs: self.outputs.clone(),
+            checker: self.checker.clone().into(),
+        }
+    }
 }
 
 // Manually implement Encode and Decode for the Transaction type
@@ -94,7 +108,11 @@ impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
 // This trait's design has a preference for transactions that will have a single signature over the
 // entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
 // so we do a minimal implementation.
-impl<V: TypeInfo + 'static, C: TypeInfo + 'static> Extrinsic for Transaction<V, C> {
+impl<V, C> Extrinsic for Transaction<V, C>
+where
+    C: TypeInfo + ConstraintChecker<V> + 'static,
+    V: TypeInfo + Verifier + 'static,
+{
     type Call = Self;
     type SignaturePayload = ();
 
@@ -102,10 +120,24 @@ impl<V: TypeInfo + 'static, C: TypeInfo + 'static> Extrinsic for Transaction<V, 
         Some(data)
     }
 
-    // This function has a default implementation that returns None.
-    // TODO what are the consequences of returning Some(false) vs None?
+    // The signature on this function is not the best. Ultimately it is
+    // trying to distinguish between three potential types of transactions:
+    // 1. Signed user transactions: `Some(true)`
+    // 2. Unsigned user transactions: `None`
+    // 3. Unsigned inherents: `Some(false)`
+    //
+    // In Substrate generally, and also in FRAME, all three of these could exist.
+    // But in Tuxedo we will never have signed user transactions, and therefore
+    // will never return `Some(true)`.
+    //
+    // Perhaps a dedicated enum makes more sense as the return type?
+    // That would be a Substrate PR after this is more tried and true.
     fn is_signed(&self) -> Option<bool> {
-        Some(false)
+        if self.checker.is_inherent() {
+            Some(false)
+        } else {
+            None
+        }
     }
 }
 
@@ -149,17 +181,29 @@ pub struct Output<V> {
     pub verifier: V,
 }
 
+impl<V: Default> From<DynamicallyTypedData> for Output<V> {
+    fn from(payload: DynamicallyTypedData) -> Self {
+        Self {
+            payload,
+            verifier: Default::default(),
+        }
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
 
-    use crate::{constraint_checker::testing::TestConstraintChecker, verifier::UpForGrabs};
+    use crate::{constraint_checker::testing::TestConstraintChecker, verifier::TestVerifier};
 
     use super::*;
 
     #[test]
     fn extrinsic_no_signed_payload() {
-        let checker = TestConstraintChecker { checks: true };
-        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
+        let checker = TestConstraintChecker {
+            checks: true,
+            inherent: false,
+        };
+        let tx: Transaction<TestVerifier, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: Vec::new(),
@@ -168,13 +212,34 @@ pub mod tests {
         let e = Transaction::new(tx.clone(), None).unwrap();
 
         assert_eq!(e, tx);
-        assert_eq!(e.is_signed(), Some(false));
+        assert_eq!(e.is_signed(), None);
     }
 
     #[test]
     fn extrinsic_is_signed_works() {
-        let checker = TestConstraintChecker { checks: true };
-        let tx: Transaction<UpForGrabs, TestConstraintChecker> = Transaction {
+        let checker = TestConstraintChecker {
+            checks: true,
+            inherent: false,
+        };
+        let tx: Transaction<TestVerifier, TestConstraintChecker> = Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: Vec::new(),
+            checker,
+        };
+        let e = Transaction::new(tx.clone(), Some(())).unwrap();
+
+        assert_eq!(e, tx);
+        assert_eq!(e.is_signed(), None);
+    }
+
+    #[test]
+    fn extrinsic_is_signed_works_for_inherents() {
+        let checker = TestConstraintChecker {
+            checks: true,
+            inherent: true,
+        };
+        let tx: Transaction<TestVerifier, TestConstraintChecker> = Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: Vec::new(),

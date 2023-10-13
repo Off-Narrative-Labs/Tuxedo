@@ -15,6 +15,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use sp_api::impl_runtime_apis;
+use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
     traits::{BlakeTwo256, Block as BlockT},
@@ -206,6 +207,12 @@ impl poe::PoeConfig for Runtime {
     }
 }
 
+impl timestamp::TimestampConfig for Runtime {
+    fn block_height() -> u32 {
+        Executive::block_height()
+    }
+}
+
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
@@ -234,6 +241,8 @@ pub enum OuterConstraintChecker {
     /// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
+    /// Set the block's timestamp via an inherent extrinsic.
+    SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
@@ -328,17 +337,15 @@ impl_runtime_apis! {
             Executive::close_block()
         }
 
-        fn inherent_extrinsics(_data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
-            // Tuxedo does not yet support inherents
-            Default::default()
+        fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<Block as BlockT>::Extrinsic> {
+            Executive::inherent_extrinsics(data)
         }
 
         fn check_inherents(
-            _block: Block,
-            _data: sp_inherents::InherentData
+            block: Block,
+            data: InherentData
         ) -> sp_inherents::CheckInherentsResult {
-            // Tuxedo does not yet support inherents
-            Default::default()
+            Executive::check_inherents(block, data)
         }
     }
 

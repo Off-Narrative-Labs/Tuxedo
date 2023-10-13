@@ -10,6 +10,7 @@ pub mod dynamic_typing;
 mod executive;
 
 pub mod constraint_checker;
+pub mod inherents;
 pub mod support_macros;
 pub mod traits;
 pub mod types;

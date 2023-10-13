@@ -9,6 +9,7 @@
 use crate::{
     constraint_checker::ConstraintChecker,
     ensure,
+    inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
@@ -18,6 +19,8 @@ use log::debug;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
+use sp_core::H256;
+use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{
     traits::BlakeTwo256,
     transaction_validity::{
@@ -46,6 +49,11 @@ impl<
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<V, C>,
     ) -> Result<ValidTransaction, UtxoError<C::Error>> {
+        debug!(
+            target: LOG_TARGET,
+            "validating tuxedo transaction",
+        );
+
         // Make sure there are no duplicate inputs
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
@@ -129,6 +137,10 @@ impl<
         // If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the constraint checker
         if !missing_inputs.is_empty() {
+            debug!(
+                target: LOG_TARGET,
+                "Transaction is valid but still has missing inputs. Returning early.",
+            );
             return Ok(ValidTransaction {
                 requires: missing_inputs,
                 provides,
@@ -291,8 +303,22 @@ impl<
         // be cleared before the end of the block
         sp_io::storage::set(HEADER_KEY, &block.header().encode());
 
+        // Tuxedo requires that inherents are at the beginning (and soon end) of the
+        // block and not scattered throughout. We use this flag to enforce that.
+        let mut finished_with_opening_inherents = false;
+
         // Apply each extrinsic
         for extrinsic in block.extrinsics() {
+            // Enforce that inherents are in the right place
+            let current_tx_is_inherent = extrinsic.checker.is_inherent();
+            if current_tx_is_inherent && finished_with_opening_inherents {
+                panic!("Tried to execute opening inherent after switching to non-inherents.");
+            }
+            if !current_tx_is_inherent && !finished_with_opening_inherents {
+                // This is the first non-inherent, so we update our flag and continue.
+                finished_with_opening_inherents = true;
+            }
+
             match Self::apply_tuxedo_transaction(extrinsic.clone()) {
                 Ok(()) => debug!(
                     target: LOG_TARGET,
@@ -360,14 +386,86 @@ impl<
             block_hash
         );
 
-        // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
-        // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-        // For now, I just make them all custom zero
-        let r = Self::validate_tuxedo_transaction(&tx);
+        // Inherents are not permitted in the pool. They only come from the block author.
+        // We perform this check here rather than in the `validate_tuxedo_transaction` helper,
+        // because that helper is called again during on-chain execution. Inherents are valid
+        // during execution, so we do not want this check repeated.
+        let r = if tx.checker.is_inherent() {
+            Err(TransactionValidityError::Invalid(InvalidTransaction::Call))
+        } else {
+            // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
+            // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
+            // For now, I just make them all custom zero
+            Self::validate_tuxedo_transaction(&tx)
+                .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        };
 
         debug!(target: LOG_TARGET, "Validation result: {:?}", r);
 
-        r.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+        r
+    }
+
+    // The last two are for the standard beginning-of-block inherent extrinsics.
+    pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<B as BlockT>::Extrinsic> {
+        debug!(
+            target: LOG_TARGET,
+            "Entering `inherent_extrinsics`."
+        );
+
+        // Extract the complete parent block from the inheret data
+        let parent: B = data
+            .get_data(&PARENT_INHERENT_IDENTIFIER)
+            .expect("Parent block inherent data should be able to decode.")
+            .expect("Parent block should be present among authoring inherent data.");
+
+        // Extract the inherents from the previous block, which can be found at the beginning of the extrinsics list.
+        // The parent is already imported, so we know it is valid and we know its inherents came first.
+        // We also annotate each transaction with its original hash for purposes of constructing output refs later.
+        // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
+        // and we need an original universal transaction id.
+        let previous_blocks_inherents: Vec<(<B as BlockT>::Extrinsic, H256)> = parent
+            .extrinsics()
+            .iter()
+            .cloned()
+            .take_while(|tx| tx.checker.is_inherent())
+            .map(|tx| {
+                let id = BlakeTwo256::hash_of(&tx.encode());
+                (tx, id)
+            })
+            .collect();
+
+        debug!(
+            target: LOG_TARGET,
+            "The previous block had {} extrinsics ({} inherents).", parent.extrinsics().len(), previous_blocks_inherents.len()
+        );
+
+        // Call into constraint checker's own inherent hooks to create the actual transactions
+        C::InherentHooks::create_inherents(&data, previous_blocks_inherents)
+    }
+
+    pub fn check_inherents(block: B, data: InherentData) -> sp_inherents::CheckInherentsResult {
+        debug!(
+            target: LOG_TARGET,
+            "Entering `check_inherents`"
+        );
+
+        let mut result = CheckInherentsResult::new();
+
+        // Tuxedo requires that all inherents come at the beginning of the block.
+        // (Soon we will also allow them at the end, but never throughout the body.)
+        // (TODO revise this logic once that is implemented.)
+        // At this off-chain pre-check stage, we assume that requirement is upheld.
+        // It will be verified later once we are executing on-chain.
+        let inherents: Vec<Transaction<V, C>> = block
+            .extrinsics()
+            .iter()
+            .cloned()
+            .take_while(|tx| tx.checker.is_inherent())
+            .collect();
+
+        C::InherentHooks::check_inherents(&data, inherents, &mut result);
+
+        result
     }
 }
 
@@ -429,14 +527,12 @@ mod tests {
             self
         }
 
-        fn build(self, should_check: bool) -> TestTransaction {
+        fn build(self, checks: bool, inherent: bool) -> TestTransaction {
             TestTransaction {
                 inputs: self.inputs,
                 peeks: self.peeks,
                 outputs: self.outputs,
-                checker: TestConstraintChecker {
-                    checks: should_check,
-                },
+                checker: TestConstraintChecker { checks, inherent },
             }
         }
     }
@@ -535,7 +631,7 @@ mod tests {
 
     #[test]
     fn validate_empty_works() {
-        let tx = TestTransactionBuilder::default().build(true);
+        let tx = TestTransactionBuilder::default().build(true, false);
 
         let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -559,7 +655,7 @@ mod tests {
 
                 let tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -579,7 +675,7 @@ mod tests {
             .execute_with(|| {
                 let tx = TestTransactionBuilder::default()
                     .with_peek(output_ref)
-                    .build(true);
+                    .build(true, false);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -598,7 +694,7 @@ mod tests {
             };
             let tx = TestTransactionBuilder::default()
                 .with_output(output)
-                .build(true);
+                .build(true, false);
 
             // This is a real transaction, so we need to calculate a real OutputRef
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
@@ -625,7 +721,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_input(input)
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -644,7 +740,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_peek(output_ref.clone())
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -672,7 +768,7 @@ mod tests {
                 let tx = TestTransactionBuilder::default()
                     .with_input(input.clone())
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 let result = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -694,7 +790,7 @@ mod tests {
                 let tx = TestTransactionBuilder::default()
                     .with_peek(output_ref.clone())
                     .with_peek(output_ref)
-                    .build(true);
+                    .build(true, false);
 
                 let vt = TestExecutive::validate_tuxedo_transaction(&tx).unwrap();
 
@@ -719,7 +815,7 @@ mod tests {
 
                 let tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 let result = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -741,7 +837,7 @@ mod tests {
         };
         let tx = TestTransactionBuilder::default()
             .with_output(output)
-            .build(true);
+            .build(true, false);
 
         // Now calculate the output ref that the transaction creates so we can pre-populate the state.
         let tx_hash = BlakeTwo256::hash_of(&tx.encode());
@@ -759,7 +855,7 @@ mod tests {
     #[test]
     fn validate_with_constraint_error_fails() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(false);
+            let tx = TestTransactionBuilder::default().build(false, false);
 
             let vt = TestExecutive::validate_tuxedo_transaction(&tx);
 
@@ -770,7 +866,7 @@ mod tests {
     #[test]
     fn apply_empty_works() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(true);
+            let tx = TestTransactionBuilder::default().build(true, false);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -789,7 +885,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_input(input)
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -804,7 +900,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_peek(output_ref)
-                .build(true);
+                .build(true, false);
 
             let vt = TestExecutive::apply_tuxedo_transaction(tx);
 
@@ -827,7 +923,7 @@ mod tests {
 
                 let tx = TestTransactionBuilder::default()
                     .with_input(input)
-                    .build(true);
+                    .build(true, false);
 
                 // Commit the tx to storage
                 TestExecutive::update_storage(tx);
@@ -847,7 +943,7 @@ mod tests {
 
             let tx = TestTransactionBuilder::default()
                 .with_output(output.clone())
-                .build(true);
+                .build(true, false);
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef { tx_hash, index: 0 };
@@ -889,7 +985,7 @@ mod tests {
     #[test]
     fn apply_valid_extrinsic_work() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(true);
+            let tx = TestTransactionBuilder::default().build(true, false);
 
             let apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -908,7 +1004,7 @@ mod tests {
     #[test]
     fn apply_invalid_extrinsic_rejects() {
         ExternalityBuilder::default().build().execute_with(|| {
-            let tx = TestTransactionBuilder::default().build(false);
+            let tx = TestTransactionBuilder::default().build(false, false);
 
             let apply_result = TestExecutive::apply_extrinsic(tx.clone());
 
@@ -992,11 +1088,11 @@ mod tests {
                         "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        "4680cf9e9383d16183adcc1bf1ab6ce66133af3b5e650405ebe94a943849f4d4",
+                        "d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca",
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: vec![TestTransactionBuilder::default().build(true)],
+                extrinsics: vec![TestTransactionBuilder::default().build(true, false)],
             };
 
             TestExecutive::execute_block(b);
@@ -1019,7 +1115,7 @@ mod tests {
                     ),
                     digest: Default::default(),
                 },
-                extrinsics: vec![TestTransactionBuilder::default().build(false)],
+                extrinsics: vec![TestTransactionBuilder::default().build(false, false)],
             };
 
             TestExecutive::execute_block(b);
@@ -1062,6 +1158,110 @@ mod tests {
                     digest: Default::default(),
                 },
                 extrinsics: Vec::new(),
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    #[test]
+    fn execute_block_inherent_only_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![TestTransactionBuilder::default().build(true, true)],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    #[test]
+    fn execute_block_inherent_first_works() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![
+                    TestTransactionBuilder::default().build(true, true),
+                    TestTransactionBuilder::default().build(true, false),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Tried to execute opening inherent after switching to non-inherents."
+    )]
+    fn execute_block_inherents_must_be_first() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![
+                    TestTransactionBuilder::default().build(true, false),
+                    TestTransactionBuilder::default().build(true, true),
+                ],
+            };
+
+            TestExecutive::execute_block(b);
+        });
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "Tried to execute opening inherent after switching to non-inherents."
+    )]
+    fn execute_block_inherents_must_all_be_first() {
+        ExternalityBuilder::default().build().execute_with(|| {
+            let b = TestBlock {
+                header: TestHeader {
+                    parent_hash: H256::zero(),
+                    number: 6,
+                    state_root: array_bytes::hex_n_into_unchecked(
+                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                    ),
+                    extrinsics_root: array_bytes::hex_n_into_unchecked(
+                        "0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f",
+                    ),
+                    digest: Default::default(),
+                },
+                extrinsics: vec![
+                    TestTransactionBuilder::default().build(true, true),
+                    TestTransactionBuilder::default().build(true, false),
+                    TestTransactionBuilder::default().build(true, true),
+                ],
             };
 
             TestExecutive::execute_block(b);

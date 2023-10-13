@@ -39,6 +39,7 @@ kitties = { default-features = false, path = "../wardrobe/kitties" }
 money = { default-features = false, path = "../wardrobe/money" }
 poe = { default-features = false, path = "../wardrobe/poe" }
 runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
+timestamp = { default-features = false, path = "../wardrobe/timestamp" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 [build-dependencies]
@@ -73,5 +74,6 @@ std = [
 	"money/std",
 	"poe/std",
 	"kitties/std",
+	"timestamp/std",
 	"runtime-upgrade/std",
 ]

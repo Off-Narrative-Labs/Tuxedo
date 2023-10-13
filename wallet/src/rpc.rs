@@ -26,7 +26,7 @@ pub async fn node_get_block(hash: H256, client: &HttpClient) -> anyhow::Result<O
     let json_opaque_block = rpc_response.get("block").cloned().unwrap();
     let opaque_block: OpaqueBlock = serde_json::from_value(json_opaque_block).unwrap();
 
-    // I need a structured blcok ,not an opaque one. To achieve that, I'll
+    // I need a structured block, not an opaque one. To achieve that, I'll
     // scale encode it, then once again decode it.
     // Feels kind of like a hack, but I honestly don't know what else to do.
     // I don't see any way to get the bytes out of an OpaqueExtrinsic.
