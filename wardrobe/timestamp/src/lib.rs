@@ -58,6 +58,12 @@ impl UtxoData for Timestamp {
     const TYPE_ID: [u8; 4] = *b"time";
 }
 
+impl Timestamp {
+    pub fn new(time: u64, block: u32) -> Self {
+        Self { time, block }
+    }
+}
+
 /// Options to configure the timestamp piece in your runtime.
 /// Currently we only need access to a block number.
 pub trait TimestampConfig {
@@ -172,7 +178,7 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             .extract::<Timestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?;
         ensure!(
-            output_data.len() >= 2,
+            output_data.len() == 1,
             Self::Error::TooManyOutputsWhileSettingTimestamp
         );
 
