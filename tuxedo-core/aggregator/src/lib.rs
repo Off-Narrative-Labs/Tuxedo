@@ -146,6 +146,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
     let inner_types3 = inner_types.clone();
     let inner_types4 = inner_types.clone();
     let inner_types6 = inner_types.clone();
+    let inner_types7 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
     let variants4 = variants.clone();
@@ -240,6 +241,18 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 )*
             }
 
+            #[cfg(feature = "std")]
+            fn genesis_utxos() -> Vec<tuxedo_core::types::Output<#verifier>> {
+                let mut all_utxos: Vec<tuxedo_core::types::Output<#verifier>> = Vec::new();
+
+                #(
+                    let utxos = <#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::genesis_utxos();
+                    all_utxos.extend(utxos);
+                )*
+
+                all_utxos
+            }
+
         }
 
         impl tuxedo_core::ConstraintChecker<#verifier> for #outer_type {
@@ -263,7 +276,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             fn is_inherent(&self) -> bool {
                 match self {
                     #(
-                        Self::#variants6(inner) => <#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::is_inherent(inner),
+                        Self::#variants6(inner) => <#inner_types7 as tuxedo_core::ConstraintChecker<#verifier>>::is_inherent(inner),
                     )*
                 }
 

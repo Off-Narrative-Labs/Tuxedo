@@ -159,7 +159,11 @@ impl BuildStorage for GenesisConfig {
             WASM_BINARY.unwrap().to_vec(),
         );
 
-        for (index, utxo) in self.genesis_utxos.iter().enumerate() {
+        use tuxedo_core::inherents::InherentInternal;
+        let mut genesis_utxos: Vec<Output> = OuterConstraintCheckerInherentHooks::genesis_utxos();
+        genesis_utxos.extend(self.genesis_utxos);
+
+        for (index, utxo) in genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just use the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),

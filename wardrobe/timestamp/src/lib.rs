@@ -247,25 +247,16 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             "🕰️🖴 Local timestamp while creating inherent i:: {current_timestamp}"
         );
 
-        let mut peeks = Vec::new();
-        match (previous_inherent, T::block_height()) {
-            (None, 1) => {
-                // This is the first block hack case.
-                // We don't need any inputs, so just do nothing.
-            }
-            (None, _) => panic!("Attemping to construct timestamp inherent with no previous inherent (and not block 1)."),
-            (Some((_previous_inherent, previous_id)), _) => {
-                // This is the the normal case. We create a full previous to peek at.
-
-                // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
-                // But out transactions are simple enough that we know we just need the one and only output.
-                peeks.push(OutputRef {
-                    tx_hash: previous_id,
-                    // There is always 1 output, so we know right where to find it.
-                    index: 0,
-                });
-            }
-        }
+        let Some((_previous_inherent, previous_id)) = previous_inherent else {
+            panic!("Attemping to construct timestamp inherent with no previous inherent.");
+        };
+        // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
+        // But out transactions are simple enough that we know we just need the one and only output.
+        let old_output = OutputRef {
+            tx_hash: previous_id,
+            // There is always 1 output, so we know right where to find it.
+            index: 0,
+        };
 
         let new_output = Output {
             payload: new_timestamp.into(),
@@ -274,7 +265,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
         Transaction {
             inputs: Vec::new(),
-            peeks,
+            peeks: vec![old_output],
             outputs: vec![new_output],
             checker: Self::default(),
         }
@@ -320,6 +311,19 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
                 .put_error(sp_timestamp::INHERENT_IDENTIFIER, &TooFarInFuture)
                 .expect("Should be able to push some error");
         }
+    }
+
+    #[cfg(feature = "std")]
+    fn genesis_utxos() -> Vec<Output<V>> {
+        let time = std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+            .expect("Time is always after UNIX_EPOCH; qed")
+            .as_millis() as u64;
+
+        vec![Output {
+            payload: Timestamp::new(time, 0).into(),
+            verifier: UpForGrabs.into(),
+        }]
     }
 }
 
