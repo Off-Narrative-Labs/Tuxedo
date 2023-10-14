@@ -20,6 +20,7 @@ pub struct TuxedoGenesisBlockBuilder<
     commit_genesis_state: bool,
     backend: Arc<B>,
     executor: E,
+    // TODO remove field after finding a way to retrieve extrinsics from the runtime (maybe GenesisConfig?)
     pub extrinsics: Vec<<Block as BlockT>::Extrinsic>,
 }
 

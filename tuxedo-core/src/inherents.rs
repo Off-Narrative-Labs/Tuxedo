@@ -102,9 +102,8 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
     /// The inherent data is supplied by the authoring node.
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        // The option represents the so-called "first block hack".
-        // We need a way to initialize the chain with a first inherent on block one
-        // where there is no previous inherent. Once we introduce genesis extrinsics, this can be removed.
+        // The option represents the so-called "block zero hack".
+        // If the block is block zero, the previous inherent is not available.
         previous_inherent: Option<(Transaction<V, C>, H256)>,
     ) -> Transaction<V, C>;
 

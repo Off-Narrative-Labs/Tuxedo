@@ -2,6 +2,7 @@
 
 use crate::{rpc, tuxedo_genesis_builder::TuxedoGenesisBlockBuilder};
 use node_template_runtime::{self, opaque::Block, RuntimeApi};
+use parity_scale_codec::Encode;
 use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
@@ -10,8 +11,10 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager, WarpS
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sp_runtime::traits::Block as BlockT;
+use sp_inherents::InherentData;
+use sp_runtime::{traits::Block as BlockT, OpaqueExtrinsic};
 use std::{sync::Arc, time::Duration};
+use tuxedo_core::inherents::InherentInternal;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;
@@ -72,8 +75,28 @@ pub fn new_partial(
         .transpose()?;
 
     let executor = sc_service::new_native_or_wasm_executor(config);
+    let mut inherent_data = InherentData::new();
 
-    let extrinsics: Vec<<Block as BlockT>::Extrinsic> = vec![];
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::SystemTime::UNIX_EPOCH)
+        .expect("Time is always after UNIX_EPOCH; qed")
+        .as_millis() as u64;
+
+    inherent_data
+        .put_data(sp_timestamp::INHERENT_IDENTIFIER, &timestamp)
+        .expect("Put timestamp inherent data");
+
+    let extrinsics: Vec<<Block as BlockT>::Extrinsic> =
+        node_template_runtime::OuterConstraintCheckerInherentHooks::create_inherents(
+            &inherent_data,
+            Vec::new(),
+        )
+        .into_iter()
+        .map(|tx| {
+            OpaqueExtrinsic::from_bytes(&tx.encode())
+                .expect("Failed to encode inherent and decode it as OpaqueExtrinsic")
+        })
+        .collect();
     let backend = sc_service::new_db_backend(config.db_config())?;
     let genesis_block_builder = TuxedoGenesisBlockBuilder::new(
         config.chain_spec.as_storage_builder(),

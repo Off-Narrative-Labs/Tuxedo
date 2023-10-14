@@ -237,9 +237,20 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")
             .expect("Timestamp inherent data should be present.");
+
+        // If we don't have a previous inherent, we assume that we're at block 0.
+        // For that reason, we can't read from storage. Instead, we just set the block height to 0.
+        let block = match previous_inherent {
+            Some(_) => T::block_height(),
+            None => {
+                log::warn!("Block 0 special case.");
+                0
+            }
+        };
+
         let new_timestamp = Timestamp {
             time: current_timestamp,
-            block: T::block_height(),
+            block,
         };
 
         log::debug!(
@@ -248,23 +259,17 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         );
 
         let mut peeks = Vec::new();
-        match (previous_inherent, T::block_height()) {
-            (None, 1) => {
-                // This is the first block hack case.
-                // We don't need any inputs, so just do nothing.
-            }
-            (None, _) => panic!("Attemping to construct timestamp inherent with no previous inherent (and not block 1)."),
-            (Some((_previous_inherent, previous_id)), _) => {
-                // This is the the normal case. We create a full previous to peek at.
 
-                // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
-                // But out transactions are simple enough that we know we just need the one and only output.
-                peeks.push(OutputRef {
-                    tx_hash: previous_id,
-                    // There is always 1 output, so we know right where to find it.
-                    index: 0,
-                });
-            }
+        // This is the the normal case. We create a full previous to peek at.
+        // Otherwise, we're at block 0, and we don't need to peek at anything.
+        if let Some((_, previous_id)) = previous_inherent {
+            // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
+            // But out transactions are simple enough that we know we just need the one and only output.
+            peeks.push(OutputRef {
+                tx_hash: previous_id,
+                // There is always 1 output, so we know right where to find it.
+                index: 0,
+            });
         }
 
         let new_output = Output {

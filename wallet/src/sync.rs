@@ -146,6 +146,11 @@ pub(crate) fn open_db(
         expected_genesis_block.encode(),
     )?;
 
+    log::info!(
+        "Block transactions for genesis block:\n{:?}",
+        expected_genesis_block.extrinsics
+    );
+
     Ok(db)
 }
 
