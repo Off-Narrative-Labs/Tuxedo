@@ -60,6 +60,8 @@ pub mod opaque {
 
     /// Opaque block type.
     pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
+	/// Opaque block hash type.
+	pub type Hash = <BlakeTwo256 as sp_api::HashT>::Output;
 
     // This part is necessary for generating session keys in the runtime
     impl_opaque_keys! {
