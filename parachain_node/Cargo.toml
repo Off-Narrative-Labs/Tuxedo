@@ -1,0 +1,75 @@
+[package]
+name = "parachain-template-node"
+version = "0.1.0"
+authors = ["Anonymous"]
+description = "A new parachain template powered by Tuxedo and Cumulus."
+# repository.workspace = true
+# edition.workspace = true
+build = "build.rs"
+publish = false
+
+[dependencies]
+clap = { workspace = true, features = ["derive"] }
+log = { workspace = true }
+parity-scale-codec = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+jsonrpsee = { workspace = true, features = ["server"] }
+futures = { workspace = true }
+
+# Local
+parachain-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+
+# Substrate
+sc-basic-authorship = { workspace = true }
+sc-chain-spec = { workspace = true }
+sc-cli = { workspace = true }
+sc-client-api = { workspace = true }
+# sc-offchain = { workspace = true }
+sc-consensus = { workspace = true }
+sc-executor = { workspace = true }
+sc-network = { workspace = true }
+sc-network-sync = { workspace = true }
+sc-rpc = { workspace = true }
+sc-service = { workspace = true }
+sc-sysinfo = { workspace = true }
+sc-telemetry = { workspace = true }
+sc-tracing = { workspace = true }
+sc-transaction-pool = { workspace = true }
+sc-transaction-pool-api = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-blockchain = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-core = { workspace = true }
+sp-keystore = { workspace = true }
+sp-io = { workspace = true }
+sp-runtime = { workspace = true }
+sp-timestamp = { workspace = true }
+substrate-prometheus-endpoint = { workspace = true }
+
+# Polkadot
+polkadot-cli = { workspace = true, features = ["rococo-native"] }
+polkadot-primitives = { workspace = true }
+# xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
+
+# Cumulus
+cumulus-client-cli = { workspace = true }
+cumulus-client-collator = { workspace = true }
+cumulus-client-consensus-aura = { workspace = true }
+cumulus-client-consensus-common = { workspace = true }
+cumulus-client-consensus-proposer = { workspace = true }
+cumulus-client-service = { workspace = true }
+cumulus-primitives-core = { workspace = true }
+cumulus-primitives-parachain-inherent = { workspace = true }
+cumulus-relay-chain-interface = { workspace = true }
+color-print = { workspace = true }
+
+[build-dependencies]
+substrate-build-script-utils = { workspace = true }
+
+[features]
+default = []
+network-protocol-staging = [
+	"cumulus-client-service/network-protocol-staging",
+	"polkadot-cli/network-protocol-staging",
+]
