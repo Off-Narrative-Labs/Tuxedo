@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Anonymous"]
 description = "A new parachain template powered by Tuxedo and Cumulus."
 # repository.workspace = true
-# edition.workspace = true
+edition = "2021"
 build = "build.rs"
 publish = false
 
