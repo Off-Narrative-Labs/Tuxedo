@@ -161,7 +161,7 @@ impl BuildStorage for GenesisConfig {
 
         use tuxedo_core::inherents::InherentInternal;
         let mut genesis_utxos: Vec<Output> = OuterConstraintCheckerInherentHooks::genesis_utxos();
-        genesis_utxos.extend(self.genesis_utxos);
+        genesis_utxos.extend(self.genesis_utxos.clone());
 
         for (index, utxo) in genesis_utxos.iter().enumerate() {
             let output_ref = OutputRef {

@@ -246,7 +246,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 let mut all_utxos: Vec<tuxedo_core::types::Output<#verifier>> = Vec::new();
 
                 #(
-                    let utxos = <#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks::genesis_utxos();
+                    let utxos = <<#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks as tuxedo_core::inherents::InherentInternal<#verifier, #inner_types6>>::genesis_utxos();
                     all_utxos.extend(utxos);
                 )*
 
