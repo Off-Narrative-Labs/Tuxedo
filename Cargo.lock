@@ -12897,6 +12897,7 @@ name = "tuxedo-template-runtime"
 version = "1.0.0-dev"
 dependencies = [
  "amoeba",
+ "cumulus-primitives-core",
  "hex-literal",
  "kitties",
  "log",
