@@ -7,8 +7,8 @@
 
 use std::sync::Arc;
 
-use parachain_template_runtime::{opaque::Block, AccountId, Balance, Nonce};
-
+use jsonrpsee::RpcModule;
+use parachain_template_runtime::opaque::Block;
 use sc_client_api::AuxStore;
 pub use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
 use sc_transaction_pool_api::TransactionPool;
@@ -41,18 +41,13 @@ where
 		+ Send
 		+ Sync
 		+ 'static,
-	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
-	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Nonce>,
 	C::Api: BlockBuilder<Block>,
 	P: TransactionPool + Sync + Send + 'static,
 {
-	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
-	use substrate_frame_rpc_system::{System, SystemApiServer};
-
-	let mut module = RpcExtension::new(());
-	let FullDeps { client, pool, deny_unsafe } = deps;
-
-	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
-	module.merge(TransactionPayment::new(client).into_rpc())?;
-	Ok(module)
+	let module = RpcModule::new(());
+    // Extend this RPC with a custom API by using the following syntax.
+    // `YourRpcStruct` should have a reference to a client, which is needed
+    // to call into the runtime.
+    // `module.merge(YourRpcTrait::into_rpc(YourRpcStruct::new(ReferenceToClient, ...)))?;`
+    Ok(module)
 }
