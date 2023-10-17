@@ -53,5 +53,5 @@ std = [
 	"sc-client-api",
 	"sc-chain-spec",
 	"sc-executor",
-	"sp-blockchain"
+	"sp-blockchain",
 ]
