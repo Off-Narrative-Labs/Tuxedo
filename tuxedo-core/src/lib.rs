@@ -18,9 +18,7 @@ pub mod utxo_set;
 pub mod verifier;
 
 #[cfg(feature = "std")]
-mod genesis_builder;
-#[cfg(feature = "std")]
-pub use genesis_builder::TuxedoGenesisBlockBuilder;
+pub mod genesis;
 
 pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
@@ -36,4 +34,4 @@ const HEADER_KEY: &[u8] = b"header"; // 686561646572
 
 /// A transient storage key that will hold the list of extrinsics that have been applied so far.
 /// This key is cleared before the end of the block.
-pub const EXTRINSIC_KEY: &[u8] = b"extrinsics";
+const EXTRINSIC_KEY: &[u8] = b"extrinsics";

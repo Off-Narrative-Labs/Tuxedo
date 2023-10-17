@@ -48,9 +48,6 @@ pub use money;
 pub use poe;
 pub use runtime_upgrade;
 
-#[cfg(feature = "std")]
-use tuxedo_core::types::OutputRef;
-
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -172,37 +169,20 @@ impl Default for TuxedoGenesisConfig {
 #[cfg(feature = "std")]
 impl BuildStorage for TuxedoGenesisConfig {
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
+        use tuxedo_core::inherents::InherentInternal;
+
+        // The wasm binary is stored under a special key.
         storage.top.insert(
             sp_storage::well_known_keys::CODE.into(),
             WASM_BINARY.unwrap().to_vec(),
         );
 
-        use sp_api::HashT;
-        use tuxedo_core::inherents::InherentInternal;
-
         // The inherents transactions are computed using the appropriate method,
         // and placed in the block before the normal transactions.
-        let mut genesis_transactions: Vec<Transaction> =
-            OuterConstraintCheckerInherentHooks::genesis_transactions();
+        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
         genesis_transactions.extend(self.0.clone());
 
-        storage.top.insert(
-            tuxedo_core::EXTRINSIC_KEY.to_vec(),
-            genesis_transactions.encode(),
-        );
-
-        for tx in genesis_transactions {
-            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
-            for (index, utxo) in tx.outputs.iter().enumerate() {
-                let output_ref = OutputRef {
-                    tx_hash,
-                    index: index as u32,
-                };
-                storage.top.insert(output_ref.encode(), utxo.encode());
-            }
-        }
-
-        Ok(())
+        tuxedo_core::genesis::assimilate_storage(storage, genesis_transactions)
     }
 }
 
@@ -464,10 +444,12 @@ mod tests {
     use parity_scale_codec::Encode;
     use sp_api::HashT;
     use sp_core::testing::SR25519;
-    use sp_keystore::testing::MemoryKeystore;
-    use sp_keystore::{Keystore, KeystoreExt};
+    use sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
     use std::sync::Arc;
-    use tuxedo_core::dynamic_typing::{DynamicallyTypedData, UtxoData};
+    use tuxedo_core::{
+        dynamic_typing::{DynamicallyTypedData, UtxoData},
+        types::OutputRef,
+    };
 
     // other random account generated with subkey
     const SHAWN_PHRASE: &str =
