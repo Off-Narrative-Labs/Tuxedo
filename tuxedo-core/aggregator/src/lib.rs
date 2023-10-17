@@ -242,15 +242,20 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             }
 
             #[cfg(feature = "std")]
-            fn genesis_utxos() -> Vec<tuxedo_core::types::Output<#verifier>> {
-                let mut all_utxos: Vec<tuxedo_core::types::Output<#verifier>> = Vec::new();
+            fn genesis_transactions() -> Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> {
+                let mut all_transactions: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> = Vec::new();
 
                 #(
-                    let utxos = <<#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks as tuxedo_core::inherents::InherentInternal<#verifier, #inner_types6>>::genesis_utxos();
-                    all_utxos.extend(utxos);
+                    let transactions = <<#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks as tuxedo_core::inherents::InherentInternal<#verifier, #inner_types6>>::genesis_transactions();
+                    all_transactions.extend(
+                        transactions
+                            .into_iter()
+                            .map(|tx| tx.transform::<#outer_type>())
+                            .collect::<Vec<_>>()
+                    );
                 )*
 
-                all_utxos
+                all_transactions
             }
 
         }

@@ -39,10 +39,7 @@ use sp_inherents::{
 use sp_runtime::traits::Block as BlockT;
 use sp_std::{vec, vec::Vec};
 
-use crate::{
-    types::{Output, Transaction},
-    ConstraintChecker, Verifier,
-};
+use crate::{types::Transaction, ConstraintChecker, Verifier};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
@@ -123,7 +120,7 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
 
     /// Return the genesis utxos that are required for this inherent.
     #[cfg(feature = "std")]
-    fn genesis_utxos() -> Vec<Output<V>> {
+    fn genesis_transactions() -> Vec<Transaction<V, C>> {
         Vec::new()
     }
 }
@@ -154,9 +151,9 @@ pub trait InherentInternal<V, C: ConstraintChecker<V>>: Sized {
         results: &mut CheckInherentsResult,
     );
 
-    /// Return the genesis utxos that are required for the inherents.
+    /// Return the genesis transactions that are required for the inherents.
     #[cfg(feature = "std")]
-    fn genesis_utxos() -> Vec<Output<V>>;
+    fn genesis_transactions() -> Vec<Transaction<V, C>>;
 }
 
 /// An adapter to transform structured Tuxedo inherents into the more general and powerful
@@ -212,8 +209,8 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
     }
 
     #[cfg(feature = "std")]
-    fn genesis_utxos() -> Vec<Output<V>> {
-        <T as TuxedoInherent<V, C>>::genesis_utxos()
+    fn genesis_transactions() -> Vec<Transaction<V, C>> {
+        <T as TuxedoInherent<V, C>>::genesis_transactions()
     }
 }
 
@@ -239,7 +236,7 @@ impl<V, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
     }
 
     #[cfg(feature = "std")]
-    fn genesis_utxos() -> Vec<Output<V>> {
+    fn genesis_transactions() -> Vec<Transaction<V, C>> {
         Vec::new()
     }
 }

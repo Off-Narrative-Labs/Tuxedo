@@ -31,4 +31,4 @@ const HEADER_KEY: &[u8] = b"header"; // 686561646572
 
 /// A transient storage key that will hold the list of extrinsics that have been applied so far.
 /// This key is cleared before the end of the block.
-const EXTRINSIC_KEY: &[u8] = b"extrinsics";
+pub const EXTRINSIC_KEY: &[u8] = b"extrinsics";

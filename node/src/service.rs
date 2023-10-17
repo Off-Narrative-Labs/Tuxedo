@@ -1,5 +1,6 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
+use crate::genesis_builder::TuxedoGenesisBlockBuilder;
 use crate::rpc;
 use node_template_runtime::{self, opaque::Block, RuntimeApi};
 use sc_client_api::BlockBackend;
@@ -72,11 +73,21 @@ pub fn new_partial(
 
     let executor = sc_service::new_native_or_wasm_executor(config);
 
+    let backend = sc_service::new_db_backend(config.db_config())?;
+    let genesis_block_builder = TuxedoGenesisBlockBuilder::new(
+        config.chain_spec.as_storage_builder(),
+        !config.no_genesis(),
+        backend.clone(),
+        executor.clone(),
+    )?;
+
     let (client, backend, keystore_container, task_manager) =
-        sc_service::new_full_parts::<Block, RuntimeApi, _>(
+        sc_service::new_full_parts_with_genesis_builder::<Block, RuntimeApi, _, _>(
             config,
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
             executor,
+            backend,
+            genesis_block_builder,
         )?;
     let client = Arc::new(client);
 

@@ -36,10 +36,10 @@ use sp_version::RuntimeVersion;
 use serde::{Deserialize, Serialize};
 
 use tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
+    EXTRINSIC_KEY,
 };
 
 pub use amoeba;
@@ -107,7 +107,7 @@ pub fn native_version() -> NativeVersion {
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct GenesisConfig {
-    pub genesis_utxos: Vec<Output>,
+    pub genesis_transactions: Vec<Transaction>,
 }
 
 impl Default for GenesisConfig {
@@ -119,34 +119,34 @@ impl Default for GenesisConfig {
         const ANDREW_PUB_KEY_BYTES: [u8; 32] =
             hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
 
-        // Initial Config just for a Money UTXO
-        GenesisConfig {
-            genesis_utxos: vec![
+        let genesis_transactions = vec![Transaction {
+            inputs: vec![],
+            peeks: vec![],
+            outputs: vec![
                 Output {
                     verifier: OuterVerifier::SigCheck(SigCheck {
                         owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
                     }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
+                    payload: money::Coin::<0>(100).into(),
                 },
                 Output {
                     verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
                         threshold: 1,
                         signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
                     }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
+                    payload: money::Coin::<0>(100).into(),
                 },
             ],
+            checker: money::MoneyConstraintChecker::Mint.into(),
+        }];
+
+        GenesisConfig {
+            genesis_transactions,
         }
 
-        // TODO: Initial UTXO for Kitties
+        // TODO: Initial Transactions for Kitties
 
-        // TODO: Initial UTXO for Existence
+        // TODO: Initial Transactions for Existence
     }
 }
 
@@ -159,17 +159,26 @@ impl BuildStorage for GenesisConfig {
             WASM_BINARY.unwrap().to_vec(),
         );
 
+        use sp_api::HashT;
         use tuxedo_core::inherents::InherentInternal;
-        let mut genesis_utxos: Vec<Output> = OuterConstraintCheckerInherentHooks::genesis_utxos();
-        genesis_utxos.extend(self.genesis_utxos.clone());
 
-        for (index, utxo) in genesis_utxos.iter().enumerate() {
-            let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just use the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: index as u32,
-            };
-            storage.top.insert(output_ref.encode(), utxo.encode());
+        let mut genesis_transactions: Vec<Transaction> =
+            OuterConstraintCheckerInherentHooks::genesis_transactions();
+        genesis_transactions.extend(self.genesis_transactions.clone());
+
+        storage
+            .top
+            .insert(EXTRINSIC_KEY.to_vec(), genesis_transactions.encode());
+
+        for tx in genesis_transactions {
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+            for (index, utxo) in tx.outputs.iter().enumerate() {
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: index as u32,
+                };
+                storage.top.insert(output_ref.encode(), utxo.encode());
+            }
         }
 
         Ok(())

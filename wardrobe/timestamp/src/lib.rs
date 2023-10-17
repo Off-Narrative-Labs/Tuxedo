@@ -314,15 +314,20 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
     }
 
     #[cfg(feature = "std")]
-    fn genesis_utxos() -> Vec<Output<V>> {
+    fn genesis_transactions() -> Vec<Transaction<V, Self>> {
         let time = std::time::SystemTime::now()
             .duration_since(std::time::SystemTime::UNIX_EPOCH)
             .expect("Time is always after UNIX_EPOCH; qed")
             .as_millis() as u64;
 
-        vec![Output {
-            payload: Timestamp::new(time, 0).into(),
-            verifier: UpForGrabs.into(),
+        vec![Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: vec![Output {
+                payload: Timestamp::new(time, 0).into(),
+                verifier: UpForGrabs.into(),
+            }],
+            checker: Self::default(),
         }]
     }
 }
