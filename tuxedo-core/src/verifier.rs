@@ -356,12 +356,12 @@ mod test {
     #[test]
     fn test_verifier_passes() {
         let result = TestVerifier { verifies: true }.verify(&[], &[]);
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
     fn test_verifier_fails() {
         let result = TestVerifier { verifies: false }.verify(&[], &[]);
-        assert_eq!(result, false);
+        assert!(!result);
     }
 }

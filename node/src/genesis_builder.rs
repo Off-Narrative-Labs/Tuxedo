@@ -59,9 +59,7 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor> Build
             sc_service::resolve_state_version_from_wasm(&self.genesis_storage, &self.executor)?;
 
         let extrinsics = match self.genesis_storage.top.get(tuxedo_core::EXTRINSIC_KEY) {
-            Some(ref v) => {
-                <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default()
-            }
+            Some(v) => <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default(),
             None => Vec::new(),
         };
 

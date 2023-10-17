@@ -444,6 +444,7 @@ mod tests {
     use sp_core::testing::SR25519;
     use sp_keystore::testing::MemoryKeystore;
     use sp_keystore::{Keystore, KeystoreExt};
+    use tuxedo_core::dynamic_typing::{DynamicallyTypedData, UtxoData};
 
     use std::sync::Arc;
 
@@ -487,7 +488,7 @@ mod tests {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: 0 as u32,
+                index: 0_u32,
             };
 
             let encoded_utxo =
@@ -522,7 +523,7 @@ mod tests {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: 1 as u32,
+                index: 1_u32,
             };
 
             let encoded_utxo =
