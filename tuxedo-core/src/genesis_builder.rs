@@ -3,7 +3,7 @@
 use parity_scale_codec::{Decode, Encode};
 use sc_client_api::backend::{Backend, BlockImportOperation};
 use sc_executor::RuntimeVersionOf;
-use sc_service::BuildGenesisBlock;
+use sc_chain_spec::BuildGenesisBlock;
 use sp_core::{storage::Storage, traits::CodeExecutor};
 use sp_runtime::{
     traits::{Block as BlockT, Hash as HashT, Header as HeaderT, Zero},
@@ -53,7 +53,7 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor> Build
 
     fn build_genesis_block(self) -> sp_blockchain::Result<(Block, Self::BlockImportOperation)> {
         let state_version =
-            sc_service::resolve_state_version_from_wasm(&self.genesis_storage, &self.executor)?;
+            sc_chain_spec::resolve_state_version_from_wasm(&self.genesis_storage, &self.executor)?;
 
         let extrinsics = match self.genesis_storage.top.get(crate::EXTRINSIC_KEY) {
             Some(v) => <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default(),
