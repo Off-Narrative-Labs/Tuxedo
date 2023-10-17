@@ -20,7 +20,6 @@ pub struct TuxedoGenesisBlockBuilder<
     commit_genesis_state: bool,
     backend: Arc<B>,
     executor: E,
-    // pub extrinsics: Vec<<Block as BlockT>::Extrinsic>,
     _phantom: std::marker::PhantomData<Block>,
 }
 
@@ -32,7 +31,6 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
         commit_genesis_state: bool,
         backend: Arc<B>,
         executor: E,
-        // extrinsics: Vec<<Block as BlockT>::Extrinsic>,
     ) -> sp_blockchain::Result<Self> {
         let genesis_storage = build_genesis_storage
             .build_storage()
@@ -43,7 +41,6 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
             commit_genesis_state,
             backend,
             executor,
-            // extrinsics,
             _phantom: Default::default(),
         })
     }
@@ -58,7 +55,7 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor> Build
         let state_version =
             sc_service::resolve_state_version_from_wasm(&self.genesis_storage, &self.executor)?;
 
-        let extrinsics = match self.genesis_storage.top.get(tuxedo_core::EXTRINSIC_KEY) {
+        let extrinsics = match self.genesis_storage.top.get(crate::EXTRINSIC_KEY) {
             Some(v) => <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default(),
             None => Vec::new(),
         };

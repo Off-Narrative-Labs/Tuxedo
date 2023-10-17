@@ -6,7 +6,6 @@ mod chain_spec;
 mod service;
 mod cli;
 mod command;
-mod genesis_builder;
 mod rpc;
 
 fn main() -> sc_cli::Result<()> {

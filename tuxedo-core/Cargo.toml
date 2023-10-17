@@ -26,6 +26,12 @@ sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
 
+# Genesis Builder dependencies
+sc-client-api = { workspace = true }
+sc-executor = { workspace = true }
+sc-service = { workspace = true }
+sp-blockchain = { workspace = true }
+
 [dev-dependencies]
 array-bytes = { workspace = true }
 
@@ -44,4 +50,5 @@ std = [
 	"sp-runtime/std",
 	"parity-util-mem",
 	"sp-storage/std",
+	"sc-executor/std",
 ]
