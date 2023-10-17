@@ -190,6 +190,15 @@ impl<V: Default> From<DynamicallyTypedData> for Output<V> {
     }
 }
 
+impl<V, V1: Into<V>, P: Into<DynamicallyTypedData>> From<(P, V1)> for Output<V> {
+    fn from(values: (P, V1)) -> Self {
+        Self {
+            payload: values.0.into(),
+            verifier: values.1.into(),
+        }
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
 

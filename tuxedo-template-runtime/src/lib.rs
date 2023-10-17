@@ -9,6 +9,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use kitties::FreeKittyConstraintChecker;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -39,7 +40,6 @@ use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
-    EXTRINSIC_KEY,
 };
 
 pub use amoeba;
@@ -106,54 +106,72 @@ pub fn native_version() -> NativeVersion {
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct GenesisConfig {
-    pub genesis_transactions: Vec<Transaction>,
-}
+/// The TuxedoGenesisConfig struct is used to configure the genesis state of the runtime,
+/// the only parameter being a list of transactions to be included in the genesis block.
+/// which should not contain any inputs or peeks, and only produce outputs, which will be put in storage.
+/// Such transactions are not checked in any way, so it is up to the user to ensure their validity.
+pub struct TuxedoGenesisConfig(Vec<Transaction>);
 
-impl Default for GenesisConfig {
+impl Default for TuxedoGenesisConfig {
     fn default() -> Self {
         use hex_literal::hex;
+        use kitties::{KittyDNA, KittyData, Parent};
+        use money::{Coin, MoneyConstraintChecker};
+        use sp_api::HashT;
 
         const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
         const ANDREW_PUB_KEY_BYTES: [u8; 32] =
             hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
+        let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
-        let genesis_transactions = vec![Transaction {
-            inputs: vec![],
-            peeks: vec![],
-            outputs: vec![
-                Output {
-                    verifier: OuterVerifier::SigCheck(SigCheck {
-                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                    }),
-                    payload: money::Coin::<0>(100).into(),
-                },
-                Output {
-                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                        threshold: 1,
-                        signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
-                    }),
-                    payload: money::Coin::<0>(100).into(),
-                },
-            ],
-            checker: money::MoneyConstraintChecker::Mint.into(),
-        }];
+        let genesis_transactions = vec![
+            // Money Transaction
+            Transaction {
+                inputs: vec![],
+                peeks: vec![],
+                outputs: vec![
+                    (Coin::<0>(100), SigCheck::new(SHAWN_PUB_KEY_BYTES)).into(),
+                    (Coin::<0>(100), ThresholdMultiSignature::new(1, signatories)).into(),
+                ],
+                checker: MoneyConstraintChecker::Mint.into(),
+            },
+            // Kitty Transaction
+            Transaction {
+                inputs: vec![],
+                peeks: vec![],
+                outputs: vec![
+                    (
+                        KittyData {
+                            parent: Parent::Mom(Default::default()),
+                            dna: KittyDNA(BlakeTwo256::hash_of(b"mother")),
+                            ..Default::default()
+                        },
+                        UpForGrabs,
+                    )
+                        .into(),
+                    (
+                        KittyData {
+                            parent: Parent::Dad(Default::default()),
+                            dna: KittyDNA(BlakeTwo256::hash_of(b"father")),
+                            ..Default::default()
+                        },
+                        UpForGrabs,
+                    )
+                        .into(),
+                ],
+                checker: FreeKittyConstraintChecker.into(),
+            },
+            // TODO: Initial Transactions for Existence
+        ];
 
-        GenesisConfig {
-            genesis_transactions,
-        }
-
-        // TODO: Initial Transactions for Kitties
-
-        // TODO: Initial Transactions for Existence
+        TuxedoGenesisConfig(genesis_transactions)
     }
 }
 
 #[cfg(feature = "std")]
-impl BuildStorage for GenesisConfig {
+impl BuildStorage for TuxedoGenesisConfig {
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        // we have nothing to put into storage in genesis, except this:
         storage.top.insert(
             sp_storage::well_known_keys::CODE.into(),
             WASM_BINARY.unwrap().to_vec(),
@@ -162,13 +180,16 @@ impl BuildStorage for GenesisConfig {
         use sp_api::HashT;
         use tuxedo_core::inherents::InherentInternal;
 
+        // The inherents transactions are computed using the appropriate method,
+        // and placed in the block before the normal transactions.
         let mut genesis_transactions: Vec<Transaction> =
             OuterConstraintCheckerInherentHooks::genesis_transactions();
-        genesis_transactions.extend(self.genesis_transactions.clone());
+        genesis_transactions.extend(self.0.clone());
 
-        storage
-            .top
-            .insert(EXTRINSIC_KEY.to_vec(), genesis_transactions.encode());
+        storage.top.insert(
+            tuxedo_core::EXTRINSIC_KEY.to_vec(),
+            genesis_transactions.encode(),
+        );
 
         for tx in genesis_transactions {
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
@@ -457,7 +478,7 @@ mod tests {
     fn new_test_ext() -> sp_io::TestExternalities {
         let keystore = MemoryKeystore::new();
 
-        let t = GenesisConfig::default()
+        let t = TuxedoGenesisConfig::default()
             .build_storage()
             .expect("System builds valid default genesis config");
 
@@ -485,11 +506,7 @@ mod tests {
                 },
             };
 
-            let tx = GenesisConfig::default()
-                .genesis_transactions
-                .get(0)
-                .unwrap()
-                .clone();
+            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
 
             assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
 
@@ -528,11 +545,7 @@ mod tests {
                 },
             };
 
-            let tx = GenesisConfig::default()
-                .genesis_transactions
-                .get(0)
-                .unwrap()
-                .clone();
+            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
 
             assert_eq!(tx.outputs.get(1), Some(&genesis_multi_sig_utxo));
 
