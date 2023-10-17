@@ -424,6 +424,13 @@ impl_runtime_apis! {
             None
         }
     }
+
+	impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
+		fn collect_collation_info(header: &<Block as BlockT>::Header) -> cumulus_primitives_core::CollationInfo {
+            todo!()
+			// ParachainSystem::collect_collation_info(header)
+		}
+	}
 }
 
 #[cfg(test)]
