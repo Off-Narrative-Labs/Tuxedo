@@ -441,12 +441,12 @@ impl_runtime_apis! {
 mod tests {
     use super::*;
     use parity_scale_codec::Encode;
+    use sp_api::HashT;
     use sp_core::testing::SR25519;
     use sp_keystore::testing::MemoryKeystore;
     use sp_keystore::{Keystore, KeystoreExt};
-    use tuxedo_core::dynamic_typing::{DynamicallyTypedData, UtxoData};
-
     use std::sync::Arc;
+    use tuxedo_core::dynamic_typing::{DynamicallyTypedData, UtxoData};
 
     // other random account generated with subkey
     const SHAWN_PHRASE: &str =
@@ -485,9 +485,17 @@ mod tests {
                 },
             };
 
+            let tx = GenesisConfig::default()
+                .genesis_transactions
+                .get(0)
+                .unwrap()
+                .clone();
+
+            assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
+
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                tx_hash,
                 index: 0_u32,
             };
 
@@ -520,9 +528,17 @@ mod tests {
                 },
             };
 
+            let tx = GenesisConfig::default()
+                .genesis_transactions
+                .get(0)
+                .unwrap()
+                .clone();
+
+            assert_eq!(tx.outputs.get(1), Some(&genesis_multi_sig_utxo));
+
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                tx_hash,
                 index: 1_u32,
             };
 
