@@ -12,7 +12,6 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use tuxedo_core::{
@@ -24,7 +23,7 @@ use tuxedo_core::{
 mod tests;
 
 /// An amoeba tracked by our simple Amoeba APP
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaDetails {
     /// How many generations after the original Eve Amoeba this one is.
@@ -80,7 +79,7 @@ pub enum ConstraintCheckerError {
 /// 1. There is exactly one mother amoeba.
 /// 2. There are exactly two daughter amoebas
 /// 3. Each Daughter amoeba has a generation one higher than its mother.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaMitosis;
 
@@ -139,7 +138,7 @@ impl SimpleConstraintChecker for AmoebaMitosis {
 ///
 /// Any amoeba can be killed by providing it as the sole input to this constraint checker. No
 /// new outputs are ever created.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaDeath;
 
@@ -179,7 +178,7 @@ impl SimpleConstraintChecker for AmoebaDeath {
 ///
 /// A new amoeba can be created by providing it as the sole output to this constraint checker. No
 /// inputs are ever consumed.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaCreation;
 

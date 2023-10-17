@@ -3,14 +3,13 @@
 use crate::{dynamic_typing::DynamicallyTypedData, ConstraintChecker, Verifier};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::traits::Extrinsic;
 use sp_std::vec::Vec;
 
 /// A reference to a output that is expected to exist in the state.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct OutputRef {
     /// A hash of the transaction that created this output
@@ -34,7 +33,7 @@ pub struct OutputRef {
 /// In the future, there may be additional notions of peeks (inputs that are not consumed)
 /// and evictions (inputs that are forcefully consumed.)
 /// Existing state to be read and consumed from storage
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Default, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Transaction<V, C> {
     /// Existing pieces of state to be read and consumed from storage
@@ -142,7 +141,7 @@ where
 }
 
 /// A reference the a utxo that will be consumed along with proof that it may be consumed
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Input {
     /// a reference to the output being consumed
@@ -174,7 +173,7 @@ pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
 /// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.
 /// In a cryptocurrency, the data represents a single coin. In Tuxedo, the type of
 /// the contained data is generic.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Output<V> {
     pub payload: DynamicallyTypedData,

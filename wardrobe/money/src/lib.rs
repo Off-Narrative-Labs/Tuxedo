@@ -4,7 +4,6 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::prelude::*;
@@ -29,7 +28,7 @@ impl<const ID: u8> Cash for Coin<ID> {
 // use log::info;
 
 /// The main constraint checker for the money piece. Allows spending and minting tokens.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum MoneyConstraintChecker<const ID: u8> {
     /// A typical spend transaction where some coins are consumed and others are created.
@@ -44,7 +43,7 @@ pub enum MoneyConstraintChecker<const ID: u8> {
 
 /// A single coin in the fungible money system.
 /// A new-type wrapper around a `u128` value.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub struct Coin<const ID: u8>(pub u128);
 
@@ -59,7 +58,7 @@ impl<const ID: u8> UtxoData for Coin<ID> {
 }
 
 /// Errors that can occur when checking money transactions.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
 pub enum ConstraintCheckerError {
     /// Dynamic typing issue.

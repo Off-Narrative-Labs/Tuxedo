@@ -17,7 +17,6 @@ use core::marker::PhantomData;
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
@@ -137,7 +136,7 @@ pub enum TimestampError {
 /// On the other hand, the noted timestamps stick around in storage for a while so that other
 /// transactions that need to peek at them are not immediately invalidated. Noted timestamps
 /// can be voluntarily cleand up later by another transaction.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, DebugNoBound, DefaultNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
 #[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(PhantomData<T>);
@@ -329,7 +328,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 /// You can clean up multiple timestamps at once, but you only peek at a single
 /// new reference. Although it is useless to do so, it is valid for a transaction
 /// to clean up zero timestamps.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 #[derive(Encode, Decode, DebugNoBound, DefaultNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
 pub struct CleanUpTimestamp<T>(PhantomData<T>);
 
