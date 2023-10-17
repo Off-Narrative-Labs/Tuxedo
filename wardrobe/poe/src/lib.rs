@@ -36,8 +36,7 @@ use tuxedo_core::{
 mod tests;
 
 // Notice this type doesn't have to be public. Cool.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
 struct ClaimData {
     /// The hash of the data whose existence is being proven.
     claim: H256,
@@ -50,8 +49,7 @@ impl UtxoData for ClaimData {
 }
 
 /// Errors that can occur when checking PoE Transactions
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum ConstraintCheckerError {
     // Ughhh again with these common errors.
     /// Wrong number of inputs were provided to the constraint checker.
@@ -82,8 +80,9 @@ pub trait PoeConfig {
 /// This constraint checker allows the creation of many claims in a single operation
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, DebugNoBound, CloneNoBound, PartialEq, Eq, TypeInfo)]
+#[derive(
+    Serialize, Deserialize, Encode, Decode, DebugNoBound, CloneNoBound, PartialEq, Eq, TypeInfo,
+)]
 pub struct PoeClaim<T>(PhantomData<T>);
 
 impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
@@ -126,8 +125,7 @@ impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
 /// A constraint checker to revoke claims.
 ///
 /// Like the creation constraint checker, this allows batch revocation.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeRevoke;
 
 impl SimpleConstraintChecker for PoeRevoke {
@@ -166,8 +164,7 @@ impl SimpleConstraintChecker for PoeRevoke {
 /// the verifier logic? This is a concrete case where the constraint checker verifier separation is not ideal.
 /// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
 /// but we want to authorized signer to come from the a different part of state.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeDispute;
 
 impl SimpleConstraintChecker for PoeDispute {

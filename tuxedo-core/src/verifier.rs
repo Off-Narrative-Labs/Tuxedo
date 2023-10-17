@@ -24,8 +24,7 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 }
 
 /// A typical verifier that checks an sr25519 signature
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct SigCheck {
     pub owner_pubkey: H256,
 }
@@ -42,8 +41,9 @@ impl Verifier for SigCheck {
 }
 
 /// A simple verifier that allows anyone to consume an output at any time
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo, Default)]
+#[derive(
+    Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo, Default,
+)]
 pub struct UpForGrabs;
 
 impl Verifier for UpForGrabs {
@@ -56,8 +56,7 @@ impl Verifier for UpForGrabs {
 /// guarded by this verifier. A valid redeemer must supply valid signatures by at least
 /// `threshold` of the signatories. If the threshold is greater than the number of signatories
 /// the input can never be consumed.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct ThresholdMultiSignature {
     /// The minimum number of valid signatures needed to consume this input
     pub threshold: u8,
@@ -74,8 +73,7 @@ impl ThresholdMultiSignature {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
 /// Combination of a signature plus and index so that the signer can specify which
 /// index this signature pertains too of the available signatories for a `ThresholdMultiSignature`
 pub struct SignatureAndIndex {

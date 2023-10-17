@@ -23,8 +23,7 @@ use tuxedo_core::{
 mod tests;
 
 /// An amoeba tracked by our simple Amoeba APP
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct AmoebaDetails {
     /// How many generations after the original Eve Amoeba this one is.
     /// When going through mitosis, this number must increase by 1 each time.
@@ -79,8 +78,7 @@ pub enum ConstraintCheckerError {
 /// 1. There is exactly one mother amoeba.
 /// 2. There are exactly two daughter amoebas
 /// 3. Each Daughter amoeba has a generation one higher than its mother.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaMitosis;
 
 impl SimpleConstraintChecker for AmoebaMitosis {
@@ -138,8 +136,7 @@ impl SimpleConstraintChecker for AmoebaMitosis {
 ///
 /// Any amoeba can be killed by providing it as the sole input to this constraint checker. No
 /// new outputs are ever created.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaDeath;
 
 impl SimpleConstraintChecker for AmoebaDeath {
@@ -178,8 +175,7 @@ impl SimpleConstraintChecker for AmoebaDeath {
 ///
 /// A new amoeba can be created by providing it as the sole output to this constraint checker. No
 /// inputs are ever consumed.
-#[derive(Serialize, Deserialize)]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct AmoebaCreation;
 
 impl SimpleConstraintChecker for AmoebaCreation {

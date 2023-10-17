@@ -28,8 +28,20 @@ impl<const ID: u8> Cash for Coin<ID> {
 // use log::info;
 
 /// The main constraint checker for the money piece. Allows spending and minting tokens.
-#[derive(Serialize, Deserialize)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub enum MoneyConstraintChecker<const ID: u8> {
     /// A typical spend transaction where some coins are consumed and others are created.
     /// Input value must exceed output value. The difference is burned and reflected in the
@@ -43,8 +55,20 @@ pub enum MoneyConstraintChecker<const ID: u8> {
 
 /// A single coin in the fungible money system.
 /// A new-type wrapper around a `u128` value.
-#[derive(Serialize, Deserialize)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub struct Coin<const ID: u8>(pub u128);
 
 impl<const ID: u8> Coin<ID> {
@@ -58,8 +82,20 @@ impl<const ID: u8> UtxoData for Coin<ID> {
 }
 
 /// Errors that can occur when checking money transactions.
-#[derive(Serialize, Deserialize)]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
