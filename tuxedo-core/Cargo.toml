@@ -27,8 +27,8 @@ sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
 
 # Genesis Builder dependencies
-sc-client-api = {  optional = true, workspace = true }
 sc-chain-spec = { optional = true, workspace = true }
+sc-client-api = { optional = true, workspace = true }
 sc-executor = { optional = true, workspace = true }
 sp-blockchain = { optional = true, workspace = true }
 
