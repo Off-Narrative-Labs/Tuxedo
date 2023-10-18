@@ -123,6 +123,7 @@ polkadot-parachain-primitives = { default_features = false, git = "https://githu
 # Added while adding Polkadot / Cumulus support
 sp-state-machine = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 sp-trie = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
-trie-db = { version = "0.28.0", default-features = false }
+# TODO update this once dependency update allows it.
+trie-db = { version = "0.27.1", default-features = false }
 sp-externalities = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 sp-tracing = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
