@@ -8,10 +8,6 @@
 //! 
 //! Better docs coming after this takes shape. For now it is hack'n'slash.
 
-// TODO re-export the macro
-// Where does parachain system do this?
-
-
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
 pub mod implementation;
