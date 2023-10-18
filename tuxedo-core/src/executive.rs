@@ -405,7 +405,7 @@ impl<
         r
     }
 
-    // The last two are for the standard beginning-of-block inherent extrinsics.
+    // The next two are for the standard beginning-of-block inherent extrinsics.
     pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<B as BlockT>::Extrinsic> {
         debug!(
             target: LOG_TARGET,
@@ -466,6 +466,29 @@ impl<
         C::InherentHooks::check_inherents(&data, inherents, &mut result);
 
         result
+    }
+
+    // This next one is for the cumulus collect collation info api
+    //TODO this should be feature gated
+    pub fn collect_collation_info(header: &B::Header) -> cumulus_primitives_core::CollationInfo {
+        use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
+
+        // The implementation here is simple. Most of the fields are related to xcm and parachain runtime upgrades,
+        // neither or which are supported in the PoC, so they are left blank.
+
+        // The final field allows us to specify head data. We will do the boring / standard / default / original
+        // thing which is to just directly encode the block header.
+        // The cumulus collator and FRAME pallets allow for custom head data, which seems to be motivated only
+        // by the solo to para migration path, so I will put that all off as well. For more details see
+        // https://github.com/paritytech/cumulus/pull/825 and https://github.com/paritytech/cumulus/pull/882
+        CollationInfo {
+            upward_messages: Vec::new(),
+            horizontal_messages: Vec::new(),
+            new_validation_code: None,
+            processed_downward_messages: 0,
+            hrmp_watermark: 0,
+            head_data: HeadData(header.encode()),
+        }
     }
 }
 
