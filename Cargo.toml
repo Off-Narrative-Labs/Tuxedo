@@ -117,3 +117,4 @@ cumulus-relay-chain-interface = { default_features = false, git = "https://githu
 cumulus-test-client = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 polkadot-cli = { features = [ "rococo-native" ], git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 polkadot-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
+cumulus-test-relay-sproof-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
