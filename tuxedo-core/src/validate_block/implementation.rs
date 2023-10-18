@@ -205,9 +205,9 @@ where
 		ValidationResult {
 			head_data,
 			new_validation_code: None,//new_validation_code.map(Into::into),
-			upward_messages: Vec::new(),
+			upward_messages: Default::default(),
 			processed_downward_messages: 0,
-			horizontal_messages: Vec::new(),
+			horizontal_messages: Default::default(),
 			hrmp_watermark: 0,
 		}
 	})
