@@ -24,6 +24,7 @@ use sp_io::KillStorageResult;
 use sp_runtime::traits::{Block as BlockT, Extrinsic, HashingFor, Header as HeaderT};
 use sp_std::prelude::*;
 use sp_trie::MemoryDB;
+use cumulus_primitives_core::ParaId;
 
 type TrieBackend<B> = sp_state_machine::TrieBackend<
 	MemoryDB<HashingFor<B>>,
@@ -67,8 +68,8 @@ fn with_externalities<F: FnOnce(&mut dyn Externalities) -> R, R>(f: F) -> R {
 pub fn validate_block<
 	B: BlockT,
 	E: ExecuteBlock<B>,
-	PSC: crate::Config,
-	CI: crate::CheckInherents<B>,
+	PID: Get<ParaId>,
+	CI: super::CheckInherents<B>,
 >(
 	MemoryOptimizedValidationParams {
 		block_data,
@@ -79,13 +80,13 @@ pub fn validate_block<
 ) -> ValidationResult
 where
 	B::Extrinsic: ExtrinsicCall,
-	<B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
+	// <B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
 {
-	let block_data = codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
+	let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
 		.expect("Invalid parachain block data");
 
 	let parent_header =
-		codec::decode_from_bytes::<B::Header>(parent_head.clone()).expect("Invalid parent head");
+	parity_scale_codec::decode_from_bytes::<B::Header>(parent_head.clone()).expect("Invalid parent head");
 
 	let (header, extrinsics, storage_proof) = block_data.deconstruct();
 
@@ -159,8 +160,8 @@ where
 	);
 
 	run_with_externalities::<B, _, _>(&backend, || {
-		let relay_chain_proof = crate::RelayChainStateProof::new(
-			PSC::SelfParaId::get(),
+		let relay_chain_proof = super::RelayChainStateProof::new(
+			PID::get(),
 			inherent_data.validation_data.relay_parent_storage_root,
 			inherent_data.relay_chain_state.clone(),
 		)
@@ -184,41 +185,41 @@ where
 
 		E::execute_block(block);
 
-		let new_validation_code = crate::NewValidationCode::<PSC>::get();
-		let upward_messages = crate::UpwardMessages::<PSC>::get().try_into().expect(
-			"Number of upward messages should not be greater than `MAX_UPWARD_MESSAGE_NUM`",
-		);
-		let processed_downward_messages = crate::ProcessedDownwardMessages::<PSC>::get();
-		let horizontal_messages = crate::HrmpOutboundMessages::<PSC>::get().try_into().expect(
-			"Number of horizontal messages should not be greater than `MAX_HORIZONTAL_MESSAGE_NUM`",
-		);
-		let hrmp_watermark = crate::HrmpWatermark::<PSC>::get();
+		// let new_validation_code = crate::NewValidationCode::<PSC>::get();
+		// let upward_messages = crate::UpwardMessages::<PSC>::get().try_into().expect(
+		// 	"Number of upward messages should not be greater than `MAX_UPWARD_MESSAGE_NUM`",
+		// );
+		// let processed_downward_messages = crate::ProcessedDownwardMessages::<PSC>::get();
+		// let horizontal_messages = crate::HrmpOutboundMessages::<PSC>::get().try_into().expect(
+		// 	"Number of horizontal messages should not be greater than `MAX_HORIZONTAL_MESSAGE_NUM`",
+		// );
+		// let hrmp_watermark = crate::HrmpWatermark::<PSC>::get();
 
-		let head_data =
-			if let Some(custom_head_data) = crate::CustomValidationHeadData::<PSC>::get() {
-				HeadData(custom_head_data)
-			} else {
-				head_data
-			};
+		// let head_data =
+		// 	if let Some(custom_head_data) = crate::CustomValidationHeadData::<PSC>::get() {
+		// 		HeadData(custom_head_data)
+		// 	} else {
+		// 		head_data
+		// 	};
 
 		ValidationResult {
 			head_data,
-			new_validation_code: new_validation_code.map(Into::into),
-			upward_messages,
-			processed_downward_messages,
-			horizontal_messages,
-			hrmp_watermark,
+			new_validation_code: None,//new_validation_code.map(Into::into),
+			upward_messages: Vec::new(),
+			processed_downward_messages: 0,
+			horizontal_messages: Vec::new(),
+			hrmp_watermark: 0,
 		}
 	})
 }
 
 /// Extract the [`ParachainInherentData`].
-fn extract_parachain_inherent_data<B: BlockT, PSC: crate::Config>(
+fn extract_parachain_inherent_data<B: BlockT>(
 	block: &B,
 ) -> &ParachainInherentData
 where
 	B::Extrinsic: ExtrinsicCall,
-	<B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
+	// <B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
 {
 	block
 		.extrinsics()
@@ -228,11 +229,14 @@ where
 		// If `is_signed` is returning `None`, we keep it safe and assume that it is "signed".
 		// We are searching for unsigned transactions anyway.
 		.take_while(|e| !e.is_signed().unwrap_or(true))
-		.filter_map(|e| e.call().is_sub_type())
-		.find_map(|c| match c {
-			crate::Call::set_validation_data { data: validation_data } => Some(validation_data),
-			_ => None,
-		})
+		// .filter_map(|e| e.call().is_sub_type())
+		// .find_map(|c| match c {
+		// 	crate::Call::set_validation_data { data: validation_data } => Some(validation_data),
+		// 	_ => None,
+		// })
+		//TODO I need to scrape the block for the parachain inherent.
+		// I might be able to use subtype for that, but for now I'll assume it is the first one in the block
+		.next()
 		.expect("Could not find `set_validation_data` inherent")
 }
 

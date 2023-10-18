@@ -49,6 +49,7 @@ array-bytes = { workspace = true }
 cumulus-test-client = { workspace = true }
 cumulus-test-relay-sproof-builder = { workspace = true }
 sp-keyring = {workspace = true }
+sp-tracing = {workspace = true }
 
 
 [features]

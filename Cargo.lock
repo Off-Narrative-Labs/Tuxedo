@@ -13598,6 +13598,7 @@ dependencies = [
  "sp-state-machine",
  "sp-std",
  "sp-storage",
+ "sp-tracing",
  "sp-trie",
  "trie-db 0.28.0",
  "tuxedo-register-validate-block",

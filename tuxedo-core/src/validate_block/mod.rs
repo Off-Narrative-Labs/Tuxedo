@@ -14,6 +14,9 @@ pub mod implementation;
 #[cfg(test)]
 mod tests;
 
+mod relay_state_snapshot;
+pub(crate) use relay_state_snapshot::RelayChainStateProof;
+
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
 mod trie_cache;
@@ -77,3 +80,31 @@ pub struct MemoryOptimizedValidationParams {
 /// # fn main() {}
 /// ```
 pub use tuxedo_register_validate_block::register_validate_block;
+
+use sp_api::BlockT;
+
+/// Something that can check the inherents of a block.
+pub trait CheckInherents<Block: BlockT> {
+	/// Check all inherents of the block.
+	///
+	/// This function gets passed all the extrinsics of the block, so it is up to the callee to
+	/// identify the inherents. The `validation_data` can be used to access the
+	fn check_inherents(
+		block: &Block,
+		validation_data: &RelayChainStateProof,
+	) -> frame_support::inherent::CheckInherentsResult;
+}
+
+/// Struct that always returns `Ok` on inherents check, needed for backwards-compatibility.
+#[doc(hidden)]
+pub struct DummyCheckInherents<Block>(sp_std::marker::PhantomData<Block>);
+
+#[allow(deprecated)]
+impl<Block: BlockT> CheckInherents<Block> for DummyCheckInherents<Block> {
+	fn check_inherents(
+		_: &Block,
+		_: &RelayChainStateProof,
+	) -> frame_support::inherent::CheckInherentsResult {
+		sp_inherents::CheckInherentsResult::new()
+	}
+}
