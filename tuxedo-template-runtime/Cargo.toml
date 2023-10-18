@@ -10,16 +10,16 @@ version = "1.0.0-dev"
 log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 parity-util-mem = { optional = true, workspace = true }
-scale-info = { features = [ "derive" ], workspace = true }
-serde = { features = [ "derive" ], workspace = true }
+scale-info = { features = [ "derive", "serde" ], workspace = true }
+serde = { features = [ "derive", "alloc" ], workspace = true }
 
 sp-api = { default_features = false, workspace = true }
 sp-block-builder = { default_features = false, workspace = true }
-sp-core = { default_features = false, workspace = true }
+sp-core = { default_features = false, workspace = true, features = ["serde"] }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }
 sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
-sp-runtime = { default_features = false, workspace = true }
+sp-runtime = { default_features = false, workspace = true, features = ["serde"] }
 sp-session = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
@@ -41,9 +41,6 @@ poe = { default-features = false, path = "../wardrobe/poe" }
 runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
 timestamp = { default-features = false, path = "../wardrobe/timestamp" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
-
-# Adding this crate (and not using it at all) will magically fix the build
-polkadot-parachain-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -79,6 +76,4 @@ std = [
 	"kitties/std",
 	"timestamp/std",
 	"runtime-upgrade/std",
-	# Added for magic. See comment above.
-	"polkadot-parachain-primitives/std",
 ]
