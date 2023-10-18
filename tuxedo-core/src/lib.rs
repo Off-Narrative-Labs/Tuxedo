@@ -17,6 +17,9 @@ pub mod types;
 pub mod utxo_set;
 pub mod verifier;
 
+// TODO feature gate this
+pub mod validate_block;
+
 pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;

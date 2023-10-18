@@ -470,6 +470,8 @@ impl<
 
     // This next one is for the cumulus collect collation info api
     //TODO this should be feature gated
+    // Or actually, maybe it should be moved to a dedicated parachain module or crate.
+    // It doesn't need to be a method on the executive.
     pub fn collect_collation_info(header: &B::Header) -> cumulus_primitives_core::CollationInfo {
         use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
 

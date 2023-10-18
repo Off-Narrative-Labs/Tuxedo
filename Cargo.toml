@@ -9,6 +9,7 @@ members = [
 	"tuxedo-core",
 	"tuxedo-core/aggregator",
 	"tuxedo-core/no_bound",
+	"tuxedo-core/register_validate_block",
 	"wallet",
 	"wardrobe/amoeba",
 	"wardrobe/money",
@@ -115,3 +116,4 @@ cumulus-primitives-core = { default_features = false, git = "https://github.com/
 cumulus-primitives-parachain-inherent = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 cumulus-relay-chain-interface = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 color-print = "0.3.4"
+cumulus-test-client = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }

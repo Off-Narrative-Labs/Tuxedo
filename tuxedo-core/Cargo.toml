@@ -17,6 +17,7 @@ serde = { features = [ "derive" ], workspace = true }
 # Macros in Tuxedo Core
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
+tuxedo-register-validate-block = { path = "register_validate_block" }
 
 # Substrate
 sp-api = { default_features = false, workspace = true }
@@ -30,10 +31,15 @@ sp-storage = { default_features = false, workspace = true }
 
 # Polkadot / Cumulus
 # TODO these should all be feature gated
+bytes = { version = "1.4.0", default-features = false }
 cumulus-primitives-core = { default_features = false, workspace = true }
 
 [dev-dependencies]
 array-bytes = { workspace = true }
+
+# Polkadot / Cumulus
+# TODO maybe feature gated?
+cumulus-test-client = { workspace = true }
 
 [features]
 default = [ "std" ]
@@ -51,4 +57,5 @@ std = [
 	"parity-util-mem",
 	"sp-storage/std",
 	"cumulus-primitives-core/std",
+	"tuxedo-register-validate-block/std",
 ]
