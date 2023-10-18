@@ -29,10 +29,13 @@ sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
 
-# Polkadot / Cumulus
+# Added during Polkadot / Cumulus support
 # TODO these should all be feature gated
-bytes = { version = "1.4.0", default-features = false }
+bytes = { version = "1.4.0", default_features = false }
 cumulus-primitives-core = { default_features = false, workspace = true }
+sp-trie = { workspace = true, default_features = false }
+sp-state-machine = { workspace = true, default_features = false }
+trie-db = { workspace = true, default_features = false }
 
 [dev-dependencies]
 array-bytes = { workspace = true }
@@ -60,4 +63,7 @@ std = [
 	"sp-storage/std",
 	"cumulus-primitives-core/std",
 	"tuxedo-register-validate-block/std",
+	"sp-trie/std",
+	"sp-state-machine/std",
+	"trie-db/std",
 ]

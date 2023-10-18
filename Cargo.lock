@@ -2184,7 +2184,7 @@ dependencies = [
  "sp-trie",
  "sp-version",
  "staging-xcm",
- "trie-db",
+ "trie-db 0.27.1",
 ]
 
 [[package]]
@@ -12319,7 +12319,7 @@ dependencies = [
  "sp-trie",
  "thiserror",
  "tracing",
- "trie-db",
+ "trie-db 0.27.1",
 ]
 
 [[package]]
@@ -12432,7 +12432,7 @@ dependencies = [
  "sp-std",
  "thiserror",
  "tracing",
- "trie-db",
+ "trie-db 0.27.1",
  "trie-root",
 ]
 
@@ -12772,7 +12772,7 @@ dependencies = [
  "sp-runtime",
  "sp-state-machine",
  "sp-trie",
- "trie-db",
+ "trie-db 0.27.1",
 ]
 
 [[package]]
@@ -13434,6 +13434,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "trie-db"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff28e0f815c2fea41ebddf148e008b077d2faddb026c9555b29696114d602642"
+dependencies = [
+ "hash-db",
+ "hashbrown 0.13.2",
+ "log",
+ "rustc-hex",
+ "smallvec",
+]
+
+[[package]]
 name = "trie-root"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13578,8 +13591,11 @@ dependencies = [
  "sp-io",
  "sp-keyring",
  "sp-runtime",
+ "sp-state-machine",
  "sp-std",
  "sp-storage",
+ "sp-trie",
+ "trie-db 0.28.0",
  "tuxedo-register-validate-block",
 ]
 
