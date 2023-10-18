@@ -14,9 +14,11 @@ parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
 serde = { features = [ "derive" ], workspace = true }
 
+# Macros in Tuxedo Core
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
 
+# Substrate
 sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
@@ -25,6 +27,10 @@ sp-io = { features = [ "with-tracing" ], default_features = false, workspace = t
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
+
+# Polkadot / Cumulus
+# TODO these should all be feature gated
+cumulus-primitives-core = { default_features = false, workspace = true }
 
 [dev-dependencies]
 array-bytes = { workspace = true }
@@ -44,4 +50,5 @@ std = [
 	"sp-runtime/std",
 	"parity-util-mem",
 	"sp-storage/std",
+	"cumulus-primitives-core/std",
 ]

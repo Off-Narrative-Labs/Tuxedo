@@ -12876,6 +12876,7 @@ dependencies = [
  "aggregator",
  "array-bytes",
  "async-trait",
+ "cumulus-primitives-core",
  "derive-no-bound",
  "log",
  "parity-scale-codec",

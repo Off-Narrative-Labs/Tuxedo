@@ -21,30 +21,30 @@ pub type RpcExtension = jsonrpsee::RpcModule<()>;
 
 /// Full client dependencies
 pub struct FullDeps<C, P> {
-	/// The client instance to use.
-	pub client: Arc<C>,
-	/// Transaction pool instance.
-	pub pool: Arc<P>,
-	/// Whether to deny unsafe calls
-	pub deny_unsafe: DenyUnsafe,
+    /// The client instance to use.
+    pub client: Arc<C>,
+    /// Transaction pool instance.
+    pub pool: Arc<P>,
+    /// Whether to deny unsafe calls
+    pub deny_unsafe: DenyUnsafe,
 }
 
 /// Instantiate all RPC extensions.
 pub fn create_full<C, P>(
-	deps: FullDeps<C, P>,
+    deps: FullDeps<C, P>,
 ) -> Result<RpcExtension, Box<dyn std::error::Error + Send + Sync>>
 where
-	C: ProvideRuntimeApi<Block>
-		+ HeaderBackend<Block>
-		+ AuxStore
-		+ HeaderMetadata<Block, Error = BlockChainError>
-		+ Send
-		+ Sync
-		+ 'static,
-	C::Api: BlockBuilder<Block>,
-	P: TransactionPool + Sync + Send + 'static,
+    C: ProvideRuntimeApi<Block>
+        + HeaderBackend<Block>
+        + AuxStore
+        + HeaderMetadata<Block, Error = BlockChainError>
+        + Send
+        + Sync
+        + 'static,
+    C::Api: BlockBuilder<Block>,
+    P: TransactionPool + Sync + Send + 'static,
 {
-	let module = RpcModule::new(());
+    let module = RpcModule::new(());
     // Extend this RPC with a custom API by using the following syntax.
     // `YourRpcStruct` should have a reference to a client, which is needed
     // to call into the runtime.
