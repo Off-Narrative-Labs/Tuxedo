@@ -1,20 +1,20 @@
 [package]
-name = "parachain-template-node"
-version = "0.1.0"
-authors = ["Anonymous"]
+authors = [ "Anonymous" ]
+build = "build.rs"
 description = "A new parachain template powered by Tuxedo and Cumulus."
 # repository.workspace = true
 edition = "2021"
-build = "build.rs"
+name = "parachain-template-node"
 publish = false
+version = "0.1.0"
 
 [dependencies]
-clap = { workspace = true, features = ["derive"] }
+clap = { features = [ "derive" ], workspace = true }
+futures = { workspace = true }
+jsonrpsee = { features = [ "server" ], workspace = true }
 log = { workspace = true }
 parity-scale-codec = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-jsonrpsee = { workspace = true, features = ["server"] }
-futures = { workspace = true }
+serde = { features = [ "derive" ], workspace = true }
 
 # Local
 parachain-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
@@ -41,15 +41,14 @@ sp-block-builder = { workspace = true }
 sp-blockchain = { workspace = true }
 sp-consensus-aura = { workspace = true }
 sp-core = { workspace = true }
-sp-keystore = { workspace = true }
 sp-io = { workspace = true }
+sp-keystore = { workspace = true }
 sp-runtime = { workspace = true }
 sp-timestamp = { workspace = true }
 substrate-prometheus-endpoint = { workspace = true }
 
 # Polkadot
-polkadot-cli = { workspace = true, features = ["rococo-native"] }
-polkadot-primitives = { workspace = true }
+color-print = { workspace = true }
 # xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
 
 # Cumulus
@@ -62,7 +61,8 @@ cumulus-client-service = { workspace = true }
 cumulus-primitives-core = { workspace = true }
 cumulus-primitives-parachain-inherent = { workspace = true }
 cumulus-relay-chain-interface = { workspace = true }
-color-print = { workspace = true }
+polkadot-cli = { features = [ "rococo-native" ], workspace = true }
+polkadot-primitives = { workspace = true }
 
 [build-dependencies]
 substrate-build-script-utils = { workspace = true }
