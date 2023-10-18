@@ -32,7 +32,6 @@ use sp_runtime::{BuildStorage, Storage};
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
 use tuxedo_core::{
@@ -105,7 +104,7 @@ pub fn native_version() -> NativeVersion {
     }
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Serialize, Deserialize)]
 pub struct GenesisConfig {
     pub genesis_utxos: Vec<Output>,
 }
@@ -192,8 +191,7 @@ const BLOCK_TIME: u64 = 3000;
 
 /// A verifier checks that an individual input can be consumed. For example that it is signed properly
 /// To begin playing, we will have two kinds. A simple signature check, and an anyone-can-consume check.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_verifier]
 pub enum OuterVerifier {
     SigCheck(SigCheck),
@@ -220,8 +218,7 @@ impl timestamp::TimestampConfig for Runtime {
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency

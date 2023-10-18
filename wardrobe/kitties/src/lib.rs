@@ -19,7 +19,6 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::{
@@ -35,28 +34,78 @@ use tuxedo_core::{
 #[cfg(test)]
 mod tests;
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub struct FreeKittyConstraintChecker;
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Default,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub enum DadKittyStatus {
     #[default]
     RearinToGo,
     Tired,
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Default,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub enum MomKittyStatus {
     #[default]
     RearinToGo,
     HadBirthRecently,
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub enum Parent {
     Mom(MomKittyStatus),
     Dad(DadKittyStatus),
@@ -68,12 +117,37 @@ impl Default for Parent {
     }
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Default, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Default,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub struct KittyDNA(H256);
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub struct KittyData {
     pub parent: Parent,
     pub free_breedings: u64, // Ignore in breed for money case
@@ -96,8 +170,20 @@ impl UtxoData for KittyData {
     const TYPE_ID: [u8; 4] = *b"Kitt";
 }
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Encode, Decode, Hash, Debug, TypeInfo)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Clone,
+    Encode,
+    Decode,
+    Hash,
+    Debug,
+    TypeInfo,
+)]
 pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
