@@ -12,7 +12,7 @@ log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
-serde = { features = [ "derive" ], optional = true, workspace = true }
+serde = { features = [ "derive" ], workspace = true }
 
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
@@ -37,7 +37,7 @@ std = [
 	"parity-scale-codec/std",
 	"sp-core/std",
 	"sp-std/std",
-	"serde",
+	"serde/std",
 	"sp-api/std",
 	"sp-inherents/std",
 	"sp-io/std",

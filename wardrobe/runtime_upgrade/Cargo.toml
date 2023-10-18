@@ -9,7 +9,7 @@ version = "0.1.0"
 [dependencies]
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
-serde = { features = [ "derive" ], optional = true, workspace = true }
+serde = { features = [ "derive" ], workspace = true }
 sp-io = { default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
@@ -22,7 +22,7 @@ std = [
 	"tuxedo-core/std",
 	"parity-scale-codec/std",
 	"sp-runtime/std",
-	"serde",
+	"serde/std",
 	"sp-std/std",
 	"sp-io/std",
 	"sp-storage/std",
