@@ -43,7 +43,7 @@ timestamp = { default-features = false, path = "../wardrobe/timestamp" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 # Adding this crate (and not using it at all) will magically fix the build
-cumulus-primitives-core = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
+polkadot-parachain-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -80,5 +80,5 @@ std = [
 	"timestamp/std",
 	"runtime-upgrade/std",
 	# Added for magic. See comment above.
-	"cumulus-primitives-core/std",
+	"polkadot-parachain-primitives/std",
 ]
