@@ -11,7 +11,7 @@ log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive", "serde" ], workspace = true }
-serde = { features = [ "derive", "alloc" ], workspace = true }
+serde = { features = [ "derive" ], workspace = true }
 
 sp-api = { default_features = false, workspace = true }
 sp-block-builder = { default_features = false, workspace = true }
