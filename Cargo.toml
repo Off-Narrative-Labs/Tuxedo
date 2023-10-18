@@ -118,8 +118,10 @@ cumulus-test-client = { git = "https://github.com/paritytech/polkadot-sdk", tag 
 polkadot-cli = { features = [ "rococo-native" ], git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 polkadot-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 cumulus-test-relay-sproof-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
+polkadot-parachain-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 
 # Added while adding Polkadot / Cumulus support
 sp-state-machine = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 sp-trie = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 trie-db = { version = "0.28.0", default-features = false }
+sp-externalities = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }

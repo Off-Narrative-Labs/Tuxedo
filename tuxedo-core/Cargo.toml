@@ -36,6 +36,10 @@ cumulus-primitives-core = { default_features = false, workspace = true }
 sp-trie = { workspace = true, default_features = false }
 sp-state-machine = { workspace = true, default_features = false }
 trie-db = { workspace = true, default_features = false }
+frame-support = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" } #TODO THIS ONE MUST GO BEFORE MERGING
+polkadot-parachain-primitives = {default_features = false, workspace = true }
+cumulus-primitives-parachain-inherent = { workspace = true }
+sp-externalities = { workspace = true, default_features = false }
 
 [dev-dependencies]
 array-bytes = { workspace = true }
@@ -45,6 +49,7 @@ array-bytes = { workspace = true }
 cumulus-test-client = { workspace = true }
 cumulus-test-relay-sproof-builder = { workspace = true }
 sp-keyring = {workspace = true }
+
 
 [features]
 default = [ "std" ]
@@ -66,4 +71,8 @@ std = [
 	"sp-trie/std",
 	"sp-state-machine/std",
 	"trie-db/std",
+	"frame-support/std",
+	"polkadot-parachain-primitives/std",
+	"cumulus-primitives-parachain-inherent/std",
+	"sp-externalities/std",
 ]
