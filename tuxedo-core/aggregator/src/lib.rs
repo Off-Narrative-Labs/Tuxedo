@@ -246,7 +246,8 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 let mut all_transactions: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> = Vec::new();
 
                 #(
-                    let transactions = <<#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks as tuxedo_core::inherents::InherentInternal<#verifier, #inner_types6>>::genesis_transactions();
+                    let transactions =
+                        <<#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks as tuxedo_core::inherents::InherentInternal<#verifier, #inner_types6>>::genesis_transactions();
                     all_transactions.extend(
                         transactions
                             .into_iter()

@@ -6,10 +6,8 @@
 //! In each block, the block author must include a single `SetTimestamp` transaction that peeks at the
 //! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
 //!
-//! This piece currently features two prominent hacks which will need to be cleaned up in due course.
-//! 1. It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
-//! 2. In block #1 it allows creating a new best timestamp without comsuming a previous one.
-//!    This should be removed once we are able to include a timestamp in the genesis block.
+//! This piece currently features a prominent hack which will need to be cleaned up in due course.
+//! It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -240,7 +238,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Option<(Transaction<V, Self>, H256)>,
+        previous_inherent: (Transaction<V, Self>, H256),
     ) -> tuxedo_core::types::Transaction<V, Self> {
         let current_timestamp: u64 = authoring_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
@@ -256,13 +254,10 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             "🕰️🖴 Local timestamp while creating inherent i:: {current_timestamp}"
         );
 
-        let Some((_previous_inherent, previous_id)) = previous_inherent else {
-            panic!("Attemping to construct timestamp inherent with no previous inherent.");
-        };
         // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
         // But out transactions are simple enough that we know we just need the one and only output.
         let old_output = OutputRef {
-            tx_hash: previous_id,
+            tx_hash: previous_inherent.1,
             // There is always 1 output, so we know right where to find it.
             index: 0,
         };
