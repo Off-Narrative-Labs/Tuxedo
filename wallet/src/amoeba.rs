@@ -1,6 +1,6 @@
 //! Toy off-chain process to create an amoeba and perform mitosis on it
 
-use crate::fetch_storage;
+use crate::rpc::fetch_storage;
 
 use std::{thread::sleep, time::Duration};
 

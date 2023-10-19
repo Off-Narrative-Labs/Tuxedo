@@ -1,19 +1,11 @@
 //! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-use anyhow::anyhow;
 use clap::Parser;
-use jsonrpsee::{
-    core::client::ClientT,
-    http_client::{HttpClient, HttpClientBuilder},
-    rpc_params,
-};
+use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
 use runtime::OuterVerifier;
 use std::path::PathBuf;
-use tuxedo_core::{
-    types::{Output, OutputRef},
-    verifier::*,
-};
+use tuxedo_core::{types::OutputRef, verifier::*};
 
 use sp_core::H256;
 
@@ -62,15 +54,14 @@ async fn main() -> anyhow::Result<()> {
     log::debug!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
-    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
+    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block.clone())?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
     log::info!("Number of blocks in the db: {num_blocks}");
 
-    // The filter function that will determine whether the local database should
-    // track a given utxo is based on whether that utxo is privately owned by a
-    // key that is in our keystore.
+    // The filter function that will determine whether the local database should track a given utxo
+    // is based on whether that utxo is privately owned by a key that is in our keystore.
     let keystore_filter = |v: &OuterVerifier| -> bool {
         matches![
             v,
@@ -79,8 +70,8 @@ async fn main() -> anyhow::Result<()> {
     };
 
     if !sled::Db::was_recovered(&db) {
-        // Before synchronizing init the database with the current Genesis utxos
-        sync::init_from_genesis(&db, &client, &keystore_filter).await?;
+        // This is a new instance, so we need to apply the genesis block to the database.
+        sync::apply_block(&db, node_genesis_block, node_genesis_hash, &keystore_filter).await?;
     }
 
     // Synchronize the wallet with attached node unless instructed otherwise.
@@ -172,24 +163,6 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
     }
-}
-
-//TODO move to rpc.rs
-/// Fetch an output from chain storage given an OutputRef
-pub async fn fetch_storage<V: Verifier>(
-    output_ref: &OutputRef,
-    client: &HttpClient,
-) -> anyhow::Result<Output<V>> {
-    let ref_hex = hex::encode(output_ref.encode());
-    let params = rpc_params![ref_hex];
-    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
-
-    let response_hex = rpc_response?.ok_or(anyhow!("Data cannot be retrieved from storage"))?;
-    let response_hex = strip_0x_prefix(&response_hex);
-    let response_bytes = hex::decode(response_hex)?;
-    let utxo = Output::decode(&mut &response_bytes[..])?;
-
-    Ok(utxo)
 }
 
 /// Parse a string into an H256 that represents a public key

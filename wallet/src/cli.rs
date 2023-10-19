@@ -19,10 +19,9 @@ pub struct Cli {
     pub endpoint: String,
 
     #[arg(long, short)]
-    /// Path where the wallet data is stored. Wallet data is just keystore at the moment,
-    /// but will contain a local database of UTXOs in the future.
+    /// Path where the wallet data is stored.
     ///
-    /// Default value is platform specific
+    /// Default value is platform specific.
     pub data_path: Option<PathBuf>,
 
     #[arg(long)]
