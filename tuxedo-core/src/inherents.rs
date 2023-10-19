@@ -118,7 +118,7 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
         results: &mut CheckInherentsResult,
     );
 
-    /// Return the genesis utxos that are required for this inherent.
+    /// Return the genesis transactions that are required for this inherent.
     #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, C>> {
         Vec::new()

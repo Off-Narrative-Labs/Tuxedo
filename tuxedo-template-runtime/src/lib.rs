@@ -102,11 +102,10 @@ pub fn native_version() -> NativeVersion {
 }
 
 #[derive(Serialize, Deserialize)]
-/// The TuxedoGenesisConfig struct is used to configure the genesis state of the runtime,
-/// the only parameter being a list of transactions to be included in the genesis block.
-/// which should not contain any inputs or peeks, and only produce outputs, which will be put in storage.
-/// Such transactions are not checked in any way, so it is up to the user to ensure their validity.
-pub struct TuxedoGenesisConfig(Vec<Transaction>);
+/// The `TuxedoGenesisConfig` struct is used to configure the genesis state of the runtime.
+/// The only parameter is a list of transactions to be included in the genesis block, and stored along with their outputs.
+/// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
+pub struct TuxedoGenesisConfig(pub Vec<Transaction>);
 
 impl Default for TuxedoGenesisConfig {
     fn default() -> Self {

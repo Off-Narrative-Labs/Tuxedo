@@ -1,6 +1,7 @@
 //! Custom GenesisBlockBuilder for Tuxedo, to allow extrinsics to be added to the genesis block.
 
 use crate::{
+    ensure,
     types::{OutputRef, Transaction},
     EXTRINSIC_KEY,
 };
@@ -53,6 +54,9 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
 {
     type BlockImportOperation = <B as Backend<Block>>::BlockImportOperation;
 
+    /// Build the genesis block, including the extrinsics found in storage at EXTRINSIC_KEY.
+    /// The extrinsics are not checked for validity, nor executed, so the values in storage must be placed manually.
+    /// This can be done by using the `assimilate_storage` function.
     fn build_genesis_block(self) -> sp_blockchain::Result<(Block, Self::BlockImportOperation)> {
         // We build it here to gain mutable access to the storage.
         let mut genesis_storage = self
@@ -105,6 +109,10 @@ pub fn assimilate_storage<V: Encode + TypeInfo, C: Encode + TypeInfo>(
         .insert(EXTRINSIC_KEY.to_vec(), genesis_transactions.encode());
 
     for tx in genesis_transactions {
+        ensure!(
+            tx.inputs.len() == 0 && tx.peeks.len() == 0,
+            "Genesis transactions must not have any inputs or peeks."
+        );
         let tx_hash = BlakeTwo256::hash_of(&tx.encode());
         for (index, utxo) in tx.outputs.iter().enumerate() {
             let output_ref = OutputRef {
