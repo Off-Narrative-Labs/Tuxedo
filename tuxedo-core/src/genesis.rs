@@ -17,32 +17,29 @@ use sp_runtime::{
 use std::sync::Arc;
 
 pub struct TuxedoGenesisBlockBuilder<
+    'a,
     Block: BlockT,
     B: Backend<Block>,
     E: RuntimeVersionOf + CodeExecutor,
 > {
-    genesis_storage: Storage,
+    build_genesis_storage: Box<&'a dyn BuildStorage>,
     commit_genesis_state: bool,
     backend: Arc<B>,
     executor: E,
     _phantom: std::marker::PhantomData<Block>,
 }
 
-impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
-    TuxedoGenesisBlockBuilder<Block, B, E>
+impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
+    TuxedoGenesisBlockBuilder<'a, Block, B, E>
 {
     pub fn new(
-        build_genesis_storage: &dyn BuildStorage,
+        build_genesis_storage: Box<&'a dyn BuildStorage>,
         commit_genesis_state: bool,
         backend: Arc<B>,
         executor: E,
     ) -> sp_blockchain::Result<Self> {
-        let genesis_storage = build_genesis_storage
-            .build_storage()
-            .map_err(sp_blockchain::Error::Storage)?;
-
         Ok(Self {
-            genesis_storage,
+            build_genesis_storage,
             commit_genesis_state,
             backend,
             executor,
@@ -51,21 +48,25 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     }
 }
 
-impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor> BuildGenesisBlock<Block>
-    for TuxedoGenesisBlockBuilder<Block, B, E>
+impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
+    BuildGenesisBlock<Block> for TuxedoGenesisBlockBuilder<'a, Block, B, E>
 {
     type BlockImportOperation = <B as Backend<Block>>::BlockImportOperation;
 
     fn build_genesis_block(self) -> sp_blockchain::Result<(Block, Self::BlockImportOperation)> {
-        let state_version =
-            sc_chain_spec::resolve_state_version_from_wasm(&self.genesis_storage, &self.executor)?;
+        // We build it here to gain mutable access to the storage.
+        let mut genesis_storage = self
+            .build_genesis_storage
+            .build_storage()
+            .map_err(sp_blockchain::Error::Storage)?;
 
-        let extrinsics = match self.genesis_storage.top.get(crate::EXTRINSIC_KEY) {
+        let state_version =
+            sc_chain_spec::resolve_state_version_from_wasm(&genesis_storage, &self.executor)?;
+
+        let extrinsics = match genesis_storage.top.remove(crate::EXTRINSIC_KEY) {
             Some(v) => <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default(),
             None => Vec::new(),
         };
-
-        // TODO: clear extrinsic key
 
         let extrinsics_root =
             <<<Block as BlockT>::Header as HeaderT>::Hashing as HashT>::ordered_trie_root(
@@ -74,11 +75,8 @@ impl<Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor> Build
             );
 
         let mut op = self.backend.begin_operation()?;
-        let state_root = op.set_genesis_state(
-            self.genesis_storage,
-            self.commit_genesis_state,
-            state_version,
-        )?;
+        let state_root =
+            op.set_genesis_state(genesis_storage, self.commit_genesis_state, state_version)?;
 
         let block = Block::new(
             HeaderT::new(

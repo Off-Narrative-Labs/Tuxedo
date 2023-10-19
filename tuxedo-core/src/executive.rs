@@ -239,10 +239,6 @@ impl<
         // Store the transient partial header for updating at the end of the block.
         // This will be removed from storage before the end of the block.
         sp_io::storage::set(HEADER_KEY, &header.encode());
-
-        // Clear the extrinsics list from the previous block.
-        // TODO Remove: currently this is needed because we still need to find a way to clear it in block 0.
-        sp_io::storage::clear(EXTRINSIC_KEY);
     }
 
     pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
