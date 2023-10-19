@@ -10,7 +10,7 @@ version = "0.1.0"
 log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
-serde = { features = [ "derive" ], optional = true, workspace = true }
+serde = { features = [ "derive" ], workspace = true }
 sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }
@@ -30,5 +30,5 @@ std = [
 	"sp-std/std",
 	"sp-core/std",
 	"sp-timestamp/std",
-	"serde",
+	"serde/std",
 ]
