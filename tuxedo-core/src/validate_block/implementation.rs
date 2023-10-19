@@ -185,6 +185,8 @@ where
 
 		E::execute_block(block);
 
+		// Seems like we could call the existing collect_collation_info api to get this information here
+		// instead of tightly coupling to pallet parachain system
 		// let new_validation_code = crate::NewValidationCode::<PSC>::get();
 		// let upward_messages = crate::UpwardMessages::<PSC>::get().try_into().expect(
 		// 	"Number of upward messages should not be greater than `MAX_UPWARD_MESSAGE_NUM`",
