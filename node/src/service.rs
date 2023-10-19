@@ -75,7 +75,7 @@ pub fn new_partial(
 
     let backend = sc_service::new_db_backend(config.db_config())?;
     let genesis_block_builder = TuxedoGenesisBlockBuilder::new(
-        Box::new(config.chain_spec.as_storage_builder()),
+        config.chain_spec.as_storage_builder(),
         !config.no_genesis(),
         backend.clone(),
         executor.clone(),

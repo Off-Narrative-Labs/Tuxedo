@@ -23,7 +23,7 @@ pub struct TuxedoGenesisBlockBuilder<
     B: Backend<Block>,
     E: RuntimeVersionOf + CodeExecutor,
 > {
-    build_genesis_storage: Box<&'a dyn BuildStorage>,
+    build_genesis_storage: &'a dyn BuildStorage,
     commit_genesis_state: bool,
     backend: Arc<B>,
     executor: E,
@@ -34,7 +34,7 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     TuxedoGenesisBlockBuilder<'a, Block, B, E>
 {
     pub fn new(
-        build_genesis_storage: Box<&'a dyn BuildStorage>,
+        build_genesis_storage: &'a dyn BuildStorage,
         commit_genesis_state: bool,
         backend: Arc<B>,
         executor: E,
@@ -110,7 +110,7 @@ pub fn assimilate_storage<V: Encode + TypeInfo, C: Encode + TypeInfo>(
 
     for tx in genesis_transactions {
         ensure!(
-            tx.inputs.len() == 0 && tx.peeks.len() == 0,
+            tx.inputs.is_empty() && tx.peeks.is_empty(),
             "Genesis transactions must not have any inputs or peeks."
         );
         let tx_hash = BlakeTwo256::hash_of(&tx.encode());
