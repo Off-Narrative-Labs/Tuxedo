@@ -83,7 +83,7 @@ where
     //TODO re-evaluate TypeInfo bound both here and on `impl Executive`
     B: BlockT<Extrinsic = Transaction<V, C>>,
     V: Verifier + TypeInfo,
-    C: ConstraintChecker<V> + TypeInfo,
+    C: ConstraintChecker<V> + TypeInfo + Into<SetParachainInfo<V>>,
 {
     // Step 1: Decode block data
     let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
@@ -226,6 +226,11 @@ where
     })
 }
 
+// General approach plan:
+// Utxo workflow just like timestamp
+// We iterate through transaction looking for one where the output decodes to the right type
+// Or looking for the right constraint checker. This is what Basti did. But we need a general way to do it.
+//
 /// Extract the [`ParachainInherentData`].
 fn extract_parachain_inherent_data<B: BlockT>(block: &B) -> &ParachainInherentData
 where

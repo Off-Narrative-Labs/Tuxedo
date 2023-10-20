@@ -13,6 +13,7 @@ members = [
 	"wallet",
 	"wardrobe/amoeba",
 	"wardrobe/money",
+	"wardrobe/parachain_info",
 	"wardrobe/poe",
 	"wardrobe/timestamp",
 	"wardrobe/kitties",
