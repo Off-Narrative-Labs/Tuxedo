@@ -430,10 +430,7 @@ impl_runtime_apis! {
     }
 }
 
-tuxedo_core::register_validate_block! {
-    Runtime = Runtime,
-    BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
-}
+tuxedo_core::register_validate_block!((Block, OuterVerifier, OuterConstraintChecker));
 
 #[cfg(test)]
 mod tests {

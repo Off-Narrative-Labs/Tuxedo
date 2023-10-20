@@ -6,67 +6,67 @@ use proc_macro_crate::{crate_name, FoundCrate};
 use syn::{
     parse::{Parse, ParseStream},
     spanned::Spanned,
-    token, Error, Ident, Path,
+    token, Error, Ident, Path, ExprTuple,
 };
 
-mod keywords {
-    syn::custom_keyword!(Runtime);
-    syn::custom_keyword!(BlockExecutor);
-    syn::custom_keyword!(CheckInherents);
-}
+// mod keywords {
+//     syn::custom_keyword!(Runtime);
+//     syn::custom_keyword!(BlockExecutor);
+//     syn::custom_keyword!(CheckInherents);
+// }
 
-struct Input {
-    runtime: Path,
-    block_executor: Path,
-    check_inherents: Option<Path>,
-}
+// struct Input {
+//     block: Ident,
+//     verifier: Ident,
+//     constraint_checker: Ident,
+// }
 
-impl Parse for Input {
-    fn parse(input: ParseStream) -> Result<Self, Error> {
-        let mut runtime = None;
-        let mut block_executor = None;
-        let mut check_inherents = None;
+// impl Parse for Input {
+//     fn parse(input: ParseStream) -> Result<Self, Error> {
+//         let mut runtime = None;
+//         let mut block_executor = None;
+//         let mut check_inherents = None;
 
-        fn parse_inner<KW: Parse + Spanned>(
-            input: ParseStream,
-            result: &mut Option<Path>,
-        ) -> Result<(), Error> {
-            let kw = input.parse::<KW>()?;
+//         fn parse_inner<KW: Parse + Spanned>(
+//             input: ParseStream,
+//             result: &mut Option<Ident>,
+//         ) -> Result<(), Error> {
+//             let kw = input.parse::<KW>()?;
 
-            if result.is_none() {
-                input.parse::<token::Eq>()?;
-                *result = Some(input.parse::<Path>()?);
-                if input.peek(token::Comma) {
-                    input.parse::<token::Comma>()?;
-                }
+//             if result.is_none() {
+//                 input.parse::<token::Eq>()?;
+//                 *result = Some(input.parse::<Ident>()?);
+//                 if input.peek(token::Comma) {
+//                     input.parse::<token::Comma>()?;
+//                 }
 
-                Ok(())
-            } else {
-                Err(Error::new(kw.span(), "Is only allowed to be passed once"))
-            }
-        }
+//                 Ok(())
+//             } else {
+//                 Err(Error::new(kw.span(), "Is only allowed to be passed once"))
+//             }
+//         }
 
-        while !input.is_empty() || runtime.is_none() || block_executor.is_none() {
-            let lookahead = input.lookahead1();
+//         while !input.is_empty() || runtime.is_none() || block_executor.is_none() {
+//             let lookahead = input.lookahead1();
 
-            if lookahead.peek(keywords::Runtime) {
-                parse_inner::<keywords::Runtime>(input, &mut runtime)?;
-            } else if lookahead.peek(keywords::BlockExecutor) {
-                parse_inner::<keywords::BlockExecutor>(input, &mut block_executor)?;
-            } else if lookahead.peek(keywords::CheckInherents) {
-                parse_inner::<keywords::CheckInherents>(input, &mut check_inherents)?;
-            } else {
-                return Err(lookahead.error());
-            }
-        }
+//             if lookahead.peek(keywords::Runtime) {
+//                 parse_inner::<keywords::Runtime>(input, &mut runtime)?;
+//             } else if lookahead.peek(keywords::BlockExecutor) {
+//                 parse_inner::<keywords::BlockExecutor>(input, &mut block_executor)?;
+//             } else if lookahead.peek(keywords::CheckInherents) {
+//                 parse_inner::<keywords::CheckInherents>(input, &mut check_inherents)?;
+//             } else {
+//                 return Err(lookahead.error());
+//             }
+//         }
 
-        Ok(Self {
-            runtime: runtime.expect("Everything is parsed before; qed"),
-            block_executor: block_executor.expect("Everything is parsed before; qed"),
-            check_inherents,
-        })
-    }
-}
+//         Ok(Self {
+//             runtime: runtime.expect("Everything is parsed before; qed"),
+//             block_executor: block_executor.expect("Everything is parsed before; qed"),
+//             check_inherents,
+//         })
+//     }
+// }
 
 /// Provides an identifier that is a safe way to refer to the crate tuxedo_core within the macro
 fn crate_() -> Result<Ident, Error> {
@@ -82,14 +82,19 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
     // Extract the paths to the parts from the runtime developer's input
     // I will likely need to revise or simplify the fields that are passed in.
     // I hope to only use the exposed runtime APIs here, not some custom trait impls. (if possible)
-    let Input {
-        runtime,
-        block_executor,
-        check_inherents,
-    } = match syn::parse(input) {
+    let input: ExprTuple = match syn::parse(input) {
         Ok(t) => t,
         Err(e) => return e.into_compile_error().into(),
     };
+
+    let elements = input.elems.into_iter().collect::<Vec<_>>();
+
+    assert!(elements.len() == 3, "Expected exactly three parameters, (Block, Verifier, ConstraintChecker), but found {}", elements.len());
+
+    let block = elements[0].clone();
+    let verifier = elements[1].clone();
+    let constraint_checker = elements[2].clone();
+    //TODO some way to specify the para_id from the runtime.
 
     // A way to refer to the tuxedo_core crate from within the macro.
     let crate_ = match crate_() {
@@ -141,10 +146,10 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
 
                     // Step 2: Call the actual validate_block implementation
                     let res = #crate_::validate_block::implementation::validate_block::<
-                        <#runtime as #crate_::validate_block::GetRuntimeBlockType>::RuntimeBlock,
-                        #block_executor,
-                        #runtime,
-                        #check_inherents,
+                        #block,
+                        #verifier,
+                        #constraint_checker,
+                        //#para_id,
                     >(params);
 
                     // Step 3: Write the return value back into the shared memory

@@ -35,7 +35,7 @@ bytes = { version = "1.4.0", default_features = false }
 cumulus-primitives-core = { default_features = false, workspace = true }
 cumulus-primitives-parachain-inherent = { workspace = true }
 frame-support = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
-polkadot-parachain-primitives = { default_features = false, workspace = true }
+polkadot-parachain-primitives = { default_features = false, workspace = true, features = ["wasm-api"] }
 sp-externalities = { default_features = false, workspace = true }
 sp-state-machine = { default_features = false, workspace = true }
 sp-trie = { default_features = false, workspace = true }

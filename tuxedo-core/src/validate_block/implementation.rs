@@ -69,7 +69,7 @@ fn with_externalities<F: FnOnce(&mut dyn Externalities) -> R, R>(f: F) -> R {
 /// ensuring that the final storage root matches the storage root in the header of the block. In the
 /// end we return back the [`ValidationResult`] with all the required information for the validator.
 #[doc(hidden)]
-pub fn validate_block<B, V, C, PID>(
+pub fn validate_block<B, V, C>(
     MemoryOptimizedValidationParams {
         block_data,
         parent_head,
