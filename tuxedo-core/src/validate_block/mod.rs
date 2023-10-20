@@ -2,10 +2,10 @@
 //! It's primary jobs are to recieve the parachain inehrent,
 //! provide collation information to the client side collator service,
 //! and implement the `validate_block` funtion required by relay chain validators
-//! 
+//!
 //! This is mostly copied and stripped down from cumulus pallet parachain system
 //! https://paritytech.github.io/polkadot-sdk/master/cumulus_pallet_parachain_system/index.html
-//! 
+//!
 //! Better docs coming after this takes shape. For now it is hack'n'slash.
 
 #[cfg(not(feature = "std"))]
@@ -51,10 +51,10 @@ pub use sp_std;
 #[cfg_attr(feature = "std", derive(parity_scale_codec::Encode))]
 #[doc(hidden)]
 pub struct MemoryOptimizedValidationParams {
-	pub parent_head: bytes::Bytes,
-	pub block_data: bytes::Bytes,
-	pub relay_parent_number: cumulus_primitives_core::relay_chain::BlockNumber,
-	pub relay_parent_storage_root: cumulus_primitives_core::relay_chain::Hash,
+    pub parent_head: bytes::Bytes,
+    pub block_data: bytes::Bytes,
+    pub relay_parent_number: cumulus_primitives_core::relay_chain::BlockNumber,
+    pub relay_parent_storage_root: cumulus_primitives_core::relay_chain::Hash,
 }
 
 /// Register the `validate_block` function that is used by parachains to validate blocks on a
@@ -85,14 +85,14 @@ use sp_api::BlockT;
 
 /// Something that can check the inherents of a block.
 pub trait CheckInherents<Block: BlockT> {
-	/// Check all inherents of the block.
-	///
-	/// This function gets passed all the extrinsics of the block, so it is up to the callee to
-	/// identify the inherents. The `validation_data` can be used to access the
-	fn check_inherents(
-		block: &Block,
-		validation_data: &RelayChainStateProof,
-	) -> frame_support::inherent::CheckInherentsResult;
+    /// Check all inherents of the block.
+    ///
+    /// This function gets passed all the extrinsics of the block, so it is up to the callee to
+    /// identify the inherents. The `validation_data` can be used to access the
+    fn check_inherents(
+        block: &Block,
+        validation_data: &RelayChainStateProof,
+    ) -> frame_support::inherent::CheckInherentsResult;
 }
 
 /// Struct that always returns `Ok` on inherents check, needed for backwards-compatibility.
@@ -101,10 +101,10 @@ pub struct DummyCheckInherents<Block>(sp_std::marker::PhantomData<Block>);
 
 #[allow(deprecated)]
 impl<Block: BlockT> CheckInherents<Block> for DummyCheckInherents<Block> {
-	fn check_inherents(
-		_: &Block,
-		_: &RelayChainStateProof,
-	) -> frame_support::inherent::CheckInherentsResult {
-		sp_inherents::CheckInherentsResult::new()
-	}
+    fn check_inherents(
+        _: &Block,
+        _: &RelayChainStateProof,
+    ) -> frame_support::inherent::CheckInherentsResult {
+        sp_inherents::CheckInherentsResult::new()
+    }
 }

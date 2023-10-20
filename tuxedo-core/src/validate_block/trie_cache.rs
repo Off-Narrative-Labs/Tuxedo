@@ -1,8 +1,8 @@
 use sp_state_machine::TrieCacheProvider;
 use sp_std::{
-	boxed::Box,
-	cell::{RefCell, RefMut},
-	collections::btree_map::{BTreeMap, Entry},
+    boxed::Box,
+    cell::{RefCell, RefMut},
+    collections::btree_map::{BTreeMap, Entry},
 };
 use sp_trie::NodeCodec;
 use trie_db::{node::NodeOwned, Hasher};
@@ -11,75 +11,84 @@ use trie_db::{node::NodeOwned, Hasher};
 /// of values. To be used in `validate_block` to serve values and nodes that
 /// have already been loaded and decoded from the storage proof.
 pub(crate) struct TrieCache<'a, H: Hasher> {
-	node_cache: RefMut<'a, BTreeMap<H::Out, NodeOwned<H::Out>>>,
-	value_cache: Option<RefMut<'a, BTreeMap<Box<[u8]>, trie_db::CachedValue<H::Out>>>>,
+    node_cache: RefMut<'a, BTreeMap<H::Out, NodeOwned<H::Out>>>,
+    value_cache: Option<RefMut<'a, BTreeMap<Box<[u8]>, trie_db::CachedValue<H::Out>>>>,
 }
 
 impl<'a, H: Hasher> trie_db::TrieCache<NodeCodec<H>> for TrieCache<'a, H> {
-	fn lookup_value_for_key(&mut self, key: &[u8]) -> Option<&trie_db::CachedValue<H::Out>> {
-		self.value_cache.as_ref().and_then(|cache| cache.get(key))
-	}
+    fn lookup_value_for_key(&mut self, key: &[u8]) -> Option<&trie_db::CachedValue<H::Out>> {
+        self.value_cache.as_ref().and_then(|cache| cache.get(key))
+    }
 
-	fn cache_value_for_key(&mut self, key: &[u8], value: trie_db::CachedValue<H::Out>) {
-		self.value_cache.as_mut().and_then(|cache| cache.insert(key.into(), value));
-	}
+    fn cache_value_for_key(&mut self, key: &[u8], value: trie_db::CachedValue<H::Out>) {
+        self.value_cache
+            .as_mut()
+            .and_then(|cache| cache.insert(key.into(), value));
+    }
 
-	fn get_or_insert_node(
-		&mut self,
-		hash: <NodeCodec<H> as trie_db::NodeCodec>::HashOut,
-		fetch_node: &mut dyn FnMut() -> trie_db::Result<
-			NodeOwned<H::Out>,
-			H::Out,
-			<NodeCodec<H> as trie_db::NodeCodec>::Error,
-		>,
-	) -> trie_db::Result<&NodeOwned<H::Out>, H::Out, <NodeCodec<H> as trie_db::NodeCodec>::Error> {
-		match self.node_cache.entry(hash) {
-			Entry::Occupied(entry) => Ok(entry.into_mut()),
-			Entry::Vacant(entry) => Ok(entry.insert(fetch_node()?)),
-		}
-	}
+    fn get_or_insert_node(
+        &mut self,
+        hash: <NodeCodec<H> as trie_db::NodeCodec>::HashOut,
+        fetch_node: &mut dyn FnMut() -> trie_db::Result<
+            NodeOwned<H::Out>,
+            H::Out,
+            <NodeCodec<H> as trie_db::NodeCodec>::Error,
+        >,
+    ) -> trie_db::Result<&NodeOwned<H::Out>, H::Out, <NodeCodec<H> as trie_db::NodeCodec>::Error>
+    {
+        match self.node_cache.entry(hash) {
+            Entry::Occupied(entry) => Ok(entry.into_mut()),
+            Entry::Vacant(entry) => Ok(entry.insert(fetch_node()?)),
+        }
+    }
 
-	fn get_node(
-		&mut self,
-		hash: &H::Out,
-	) -> Option<&NodeOwned<<NodeCodec<H> as trie_db::NodeCodec>::HashOut>> {
-		self.node_cache.get(hash)
-	}
+    fn get_node(
+        &mut self,
+        hash: &H::Out,
+    ) -> Option<&NodeOwned<<NodeCodec<H> as trie_db::NodeCodec>::HashOut>> {
+        self.node_cache.get(hash)
+    }
 }
 
 /// Provider of [`TrieCache`] instances.
 pub(crate) struct CacheProvider<H: Hasher> {
-	node_cache: RefCell<BTreeMap<H::Out, NodeOwned<H::Out>>>,
-	value_cache: RefCell<BTreeMap<Box<[u8]>, trie_db::CachedValue<H::Out>>>,
+    node_cache: RefCell<BTreeMap<H::Out, NodeOwned<H::Out>>>,
+    value_cache: RefCell<BTreeMap<Box<[u8]>, trie_db::CachedValue<H::Out>>>,
 }
 
 impl<H: Hasher> CacheProvider<H> {
-	/// Constructs a new instance of [`CacheProvider`] with an uninitialized state
-	/// and empty node and value caches.
-	pub fn new() -> Self {
-		CacheProvider { node_cache: Default::default(), value_cache: Default::default() }
-	}
+    /// Constructs a new instance of [`CacheProvider`] with an uninitialized state
+    /// and empty node and value caches.
+    pub fn new() -> Self {
+        CacheProvider {
+            node_cache: Default::default(),
+            value_cache: Default::default(),
+        }
+    }
 }
 
 impl<H: Hasher> TrieCacheProvider<H> for CacheProvider<H> {
-	type Cache<'a> = TrieCache<'a, H> where H: 'a;
+    type Cache<'a> = TrieCache<'a, H> where H: 'a;
 
-	fn as_trie_db_cache(&self, _storage_root: <H as Hasher>::Out) -> Self::Cache<'_> {
-		TrieCache {
-			value_cache: Some(self.value_cache.borrow_mut()),
-			node_cache: self.node_cache.borrow_mut(),
-		}
-	}
+    fn as_trie_db_cache(&self, _storage_root: <H as Hasher>::Out) -> Self::Cache<'_> {
+        TrieCache {
+            value_cache: Some(self.value_cache.borrow_mut()),
+            node_cache: self.node_cache.borrow_mut(),
+        }
+    }
 
-	fn as_trie_db_mut_cache(&self) -> Self::Cache<'_> {
-		// This method is called when we calculate the storage root.
-		// Since we are using a simplified cache architecture,
-		// we do not have separate key spaces for different storage roots.
-		// The value cache is therefore disabled here.
-		TrieCache { value_cache: None, node_cache: self.node_cache.borrow_mut() }
-	}
+    fn as_trie_db_mut_cache(&self) -> Self::Cache<'_> {
+        // This method is called when we calculate the storage root.
+        // Since we are using a simplified cache architecture,
+        // we do not have separate key spaces for different storage roots.
+        // The value cache is therefore disabled here.
+        TrieCache {
+            value_cache: None,
+            node_cache: self.node_cache.borrow_mut(),
+        }
+    }
 
-	fn merge<'a>(&'a self, _other: Self::Cache<'a>, _new_root: <H as Hasher>::Out) {}
+    fn merge<'a>(&'a self, _other: Self::Cache<'a>, _new_root: <H as Hasher>::Out) {}
 }
 
 // This is safe here since we are single-threaded in WASM
