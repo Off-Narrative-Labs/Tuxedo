@@ -9,6 +9,10 @@ use cumulus_primitives_parachain_inherent::ParachainInherentData;
 use polkadot_parachain_primitives::primitives::{
 	HeadData, RelayChainBlockNumber, ValidationResult,
 };
+use crate::{Verifier, ConstraintChecker, Executive, types::Transaction};
+
+//TODO reevaluate whether this is necessary
+use scale_info::TypeInfo;
 
 use parity_scale_codec::Encode;
 
@@ -65,12 +69,7 @@ fn with_externalities<F: FnOnce(&mut dyn Externalities) -> R, R>(f: F) -> R {
 /// ensuring that the final storage root matches the storage root in the header of the block. In the
 /// end we return back the [`ValidationResult`] with all the required information for the validator.
 #[doc(hidden)]
-pub fn validate_block<
-	B: BlockT,
-	E: ExecuteBlock<B>,
-	PID: Get<ParaId>,
-	CI: super::CheckInherents<B>,
->(
+pub fn validate_block<B, V, C, PID>(
 	MemoryOptimizedValidationParams {
 		block_data,
 		parent_head,
@@ -79,12 +78,18 @@ pub fn validate_block<
 	}: MemoryOptimizedValidationParams,
 ) -> ValidationResult
 where
-	B::Extrinsic: ExtrinsicCall,
+	// B::Extrinsic: ExtrinsicCall,
 	// <B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
+	//TODO re-evaluate TypeInfo bound both here and on `impl Executive`
+	B: BlockT<Extrinsic = Transaction<V, C>>,
+	V: Verifier + TypeInfo,
+	C: ConstraintChecker<V> + TypeInfo,
 {
+	// Step 1: Decode block data
 	let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
 		.expect("Invalid parachain block data");
 
+	// Step 2: Security Checks
 	let parent_header =
 	parity_scale_codec::decode_from_bytes::<B::Header>(parent_head.clone()).expect("Invalid parent head");
 
@@ -102,7 +107,7 @@ where
 		parent_head,
 	);
 
-	// Create the db
+	// Step 3: Create the sparse in-memory db
 	let db = match storage_proof.to_memory_db(Some(parent_header.state_root())) {
 		Ok((db, _)) => db,
 		Err(_) => panic!("Compact proof decoding failure."),
@@ -120,6 +125,7 @@ where
 	)
 	.build();
 
+	// Step 4: Replace host functions
 	let _guard = (
 		// Replace storage calls with our own implementations
 		sp_io::storage::host_read.replace_implementation(host_storage_read),
@@ -159,31 +165,33 @@ where
 		sp_io::offchain_index::host_clear.replace_implementation(host_offchain_index_clear),
 	);
 
-	run_with_externalities::<B, _, _>(&backend, || {
-		let relay_chain_proof = super::RelayChainStateProof::new(
-			PID::get(),
-			inherent_data.validation_data.relay_parent_storage_root,
-			inherent_data.relay_chain_state.clone(),
-		)
-		.expect("Invalid relay chain state proof");
+	// Step 5: Check inherents.
+	// TODO For now I'm skipping this entirely to try to make something "work"
+	// run_with_externalities::<B, _, _>(&backend, || {
+	// 	let relay_chain_proof = super::RelayChainStateProof::new(
+	// 		PID::get(),
+	// 		inherent_data.validation_data.relay_parent_storage_root,
+	// 		inherent_data.relay_chain_state.clone(),
+	// 	)
+	// 	.expect("Invalid relay chain state proof");
 
-		let res = CI::check_inherents(&block, &relay_chain_proof);
+	// 	let res = CI::check_inherents(&block, &relay_chain_proof);
 
-		if !res.ok() {
-			if log::log_enabled!(log::Level::Error) {
-				res.into_errors().for_each(|e| {
-					log::error!("Checking inherent with identifier `{:?}` failed", e.0)
-				});
-			}
+	// 	if !res.ok() {
+	// 		if log::log_enabled!(log::Level::Error) {
+	// 			res.into_errors().for_each(|e| {
+	// 				log::error!("Checking inherent with identifier `{:?}` failed", e.0)
+	// 			});
+	// 		}
 
-			panic!("Checking inherents failed");
-		}
-	});
+	// 		panic!("Checking inherents failed");
+	// 	}
+	// });
 
 	run_with_externalities::<B, _, _>(&backend, || {
 		let head_data = HeadData(block.header().encode());
 
-		E::execute_block(block);
+		Executive::<B, V, C>::execute_block(block);
 
 		// Seems like we could call the existing collect_collation_info api to get this information here
 		// instead of tightly coupling to pallet parachain system
@@ -220,7 +228,7 @@ fn extract_parachain_inherent_data<B: BlockT>(
 	block: &B,
 ) -> &ParachainInherentData
 where
-	B::Extrinsic: ExtrinsicCall,
+	// B::Extrinsic: ExtrinsicCall,
 	// <B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
 {
 	todo!()

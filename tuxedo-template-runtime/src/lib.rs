@@ -430,6 +430,11 @@ impl_runtime_apis! {
     }
 }
 
+tuxedo_core::register_validate_block! {
+	Runtime = Runtime,
+	BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -524,9 +529,4 @@ mod tests {
             assert_eq!(utxo, genesis_multi_sig_utxo);
         })
     }
-}
-
-tuxedo_core::register_validate_block! {
-	Runtime = Runtime,
-	BlockExecutor = cumulus_pallet_aura_ext::BlockExecutor::<Runtime, Executive>,
 }
