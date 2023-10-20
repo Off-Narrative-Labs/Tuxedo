@@ -115,15 +115,15 @@ cumulus-primitives-core = { default_features = false, git = "https://github.com/
 cumulus-primitives-parachain-inherent = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 cumulus-relay-chain-interface = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 cumulus-test-client = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
-polkadot-cli = { features = [ "rococo-native" ], git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
-polkadot-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 cumulus-test-relay-sproof-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
+polkadot-cli = { features = [ "rococo-native" ], git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 polkadot-parachain-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
+polkadot-primitives = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 
 # Added while adding Polkadot / Cumulus support
+sp-externalities = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 sp-state-machine = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
+sp-tracing = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 sp-trie = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
 # TODO update this once dependency update allows it.
 trie-db = { version = "0.27.1", default-features = false }
-sp-externalities = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
-sp-tracing = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
