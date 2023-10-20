@@ -223,6 +223,7 @@ pub fn run() -> Result<()> {
                         "no"
                     }
                 );
+                info!("Client-side ParaId from chain spec: {para_id}");
 
                 crate::service::start_parachain_node(
                     config,
