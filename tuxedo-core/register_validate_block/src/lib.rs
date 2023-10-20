@@ -6,7 +6,7 @@ use proc_macro_crate::{crate_name, FoundCrate};
 use syn::{
     parse::{Parse, ParseStream},
     spanned::Spanned,
-    token, Error, Ident, Path, ExprTuple,
+    token, Error, ExprTuple, Ident, Path,
 };
 
 // mod keywords {
@@ -89,7 +89,11 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
 
     let elements = input.elems.into_iter().collect::<Vec<_>>();
 
-    assert!(elements.len() == 3, "Expected exactly three parameters, (Block, Verifier, ConstraintChecker), but found {}", elements.len());
+    assert!(
+        elements.len() == 3,
+        "Expected exactly three parameters, (Block, Verifier, ConstraintChecker), but found {}",
+        elements.len()
+    );
 
     let block = elements[0].clone();
     let verifier = elements[1].clone();
