@@ -430,6 +430,8 @@ impl_runtime_apis! {
     }
 }
 
+// Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
+// Caution, this requires double parentheses because I'm a macro n00b and that's the way I figured out to parse it.
 tuxedo_core::register_validate_block!((Block, OuterVerifier, OuterConstraintChecker));
 
 #[cfg(test)]
