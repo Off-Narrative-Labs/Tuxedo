@@ -17,7 +17,7 @@ serde = { features = [ "derive" ], workspace = true }
 # Macros in Tuxedo Core
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
-tuxedo-register-validate-block = { path = "register_validate_block" }
+tuxedo-register-validate-block = { path = "register_validate_block", default_features = false }
 
 # Substrate
 sp-api = { default_features = false, workspace = true }
