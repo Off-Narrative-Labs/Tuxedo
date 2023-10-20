@@ -31,7 +31,7 @@ pub struct FullDeps<C, P> {
 
 /// Instantiate all RPC extensions.
 pub fn create_full<C, P>(
-    deps: FullDeps<C, P>,
+    _deps: FullDeps<C, P>,
 ) -> Result<RpcExtension, Box<dyn std::error::Error + Send + Sync>>
 where
     C: ProvideRuntimeApi<Block>
