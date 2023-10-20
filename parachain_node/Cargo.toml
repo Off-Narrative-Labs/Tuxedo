@@ -18,6 +18,7 @@ serde = { features = [ "derive" ], workspace = true }
 
 # Local
 parachain-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+tuxedo-core = { path = "../tuxedo-core" }
 
 # Substrate
 sc-basic-authorship = { workspace = true }

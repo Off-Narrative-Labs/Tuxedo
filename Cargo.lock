@@ -7320,6 +7320,7 @@ dependencies = [
  "sp-timestamp",
  "substrate-build-script-utils",
  "substrate-prometheus-endpoint",
+ "tuxedo-core",
  "tuxedo-template-runtime",
 ]
 

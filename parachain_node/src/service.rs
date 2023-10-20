@@ -22,7 +22,7 @@ use cumulus_primitives_core::{relay_chain::CollatorPair, ParaId};
 use cumulus_relay_chain_interface::{OverseerHandle, RelayChainInterface};
 
 // Substrate Imports
-use sc_client_api::Backend;
+use sc_client_api::BlockBackend;
 use sc_consensus::ImportQueue;
 use sc_executor::{
     HeapAllocStrategy, NativeElseWasmExecutor, WasmExecutor, DEFAULT_HEAP_ALLOC_STRATEGY,
@@ -31,7 +31,6 @@ use sc_network::NetworkBlock;
 use sc_network_sync::SyncingService;
 use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
-use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_keystore::KeystorePtr;
 use substrate_prometheus_endpoint::Registry;
 
@@ -359,9 +358,23 @@ fn start_consensus(
         announce_block,
         client.clone(),
     );
+    let client_for_cidp = client.clone();
 
     let params = BasicAuraParams {
-        create_inherent_data_providers: move |_, ()| async move { Ok(()) },
+        create_inherent_data_providers: move |parent_hash, ()| {
+            let maybe_parent_block = client_for_cidp.clone().block(parent_hash);
+
+            async move {
+                let parent_block = maybe_parent_block?
+                    .ok_or(sp_blockchain::Error::UnknownBlock(parent_hash.to_string()))?
+                    .block;
+                let parent_idp =
+                    tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
+                let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
+
+                Ok((parent_idp, timestamp))
+            }
+        },
         block_import,
         para_client: client,
         relay_client: relay_chain_interface,
