@@ -17,7 +17,7 @@ serde = { features = [ "derive" ], workspace = true }
 # Macros in Tuxedo Core
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
-tuxedo-register-validate-block = { path = "register_validate_block", default_features = false }
+tuxedo-register-validate-block = { default_features = false, path = "register_validate_block" }
 
 # Substrate
 sp-api = { default_features = false, workspace = true }
@@ -35,7 +35,7 @@ bytes = { version = "1.4.0", default_features = false }
 cumulus-primitives-core = { default_features = false, workspace = true }
 cumulus-primitives-parachain-inherent = { workspace = true }
 frame-support = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.1.0" }
-polkadot-parachain-primitives = { default_features = false, workspace = true, features = ["wasm-api"] }
+polkadot-parachain-primitives = { features = [ "wasm-api" ], default_features = false, workspace = true }
 sp-externalities = { default_features = false, workspace = true }
 sp-state-machine = { default_features = false, workspace = true }
 sp-trie = { default_features = false, workspace = true }

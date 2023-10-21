@@ -7,6 +7,7 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+cumulus-primitives-parachain-inherent = { default_features = false, workspace = true }
 log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
@@ -17,7 +18,6 @@ sp-inherents = { default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 tuxedo-core = { default-features = false, path = "../../tuxedo-core" }
-cumulus-primitives-parachain-inherent = { default_features = false, workspace = true }
 
 [features]
 default = [ "std" ]
