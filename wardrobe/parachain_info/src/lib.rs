@@ -31,11 +31,11 @@ use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
 use tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
+    dynamic_typing::UtxoData,
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
-    types::{Output, OutputRef, Transaction},
+    types::{Output, OutputRef, Transaction, Input},
     verifier::UpForGrabs,
     ConstraintChecker, Verifier,
 };
@@ -46,9 +46,37 @@ mod tests;
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "parachain-info";
 
-// We are not creating our own data struct here. This one is imported from cumulus.
-impl UtxoData for ParachainInherentData {
+/// A wrapper type around Cumulus's ParachainInherentData ype that can be stored.
+/// Having to do this wrapping is one more reason to abandon this UtxoData trait,
+/// and go for a more strongly typed aggregate type approach.
+#[derive(
+    // Serialize,
+    // Deserialize,
+    Encode,
+    Decode,
+    DebugNoBound,
+    // DefaultNoBound,
+    // PartialEq,
+    // Eq,
+    CloneNoBound,
+    TypeInfo,
+)]
+pub struct ParachainInherentDataUtxo(ParachainInherentData);
+
+impl UtxoData for ParachainInherentDataUtxo {
     const TYPE_ID: [u8; 4] = *b"para";
+}
+
+impl Into<ParachainInherentData> for ParachainInherentDataUtxo {
+    fn into(self) -> ParachainInherentData {
+        self.0
+    }
+}
+
+impl From<ParachainInherentData> for ParachainInherentDataUtxo {
+    fn from(value: ParachainInherentData) -> Self {
+        Self(value)
+    }
 }
 
 /// Options to configure the timestamp piece in your runtime.
@@ -65,7 +93,7 @@ pub trait ParachainPieceConfig {
     // Also, there is currently a value in the chainspec as well, and it is duplicated.
     // This duplication of info on the client side and runtime side was a problem in the original Cumulus design as well.
     /// The Parachain Id associated with this parachain
-    const ParaId: u32 = 2_000;
+    const PARA_ID: u32 = 2_000;
 }
 
 /// Reasons that setting or cleaning up the parachain info may go wrong.
@@ -115,7 +143,7 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
     fn check(
         &self,
         input_data: &[tuxedo_core::types::Output<V>],
-        peek_data: &[tuxedo_core::types::Output<V>],
+        _peek_data: &[tuxedo_core::types::Output<V>],
         output_data: &[tuxedo_core::types::Output<V>],
     ) -> Result<TransactionPriority, Self::Error> {
         log::debug!(
@@ -126,18 +154,21 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         // Make sure there is exactly one input which is the previous parachain info
         ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo,);
         ensure!(input_data.len() == 1, Self::Error::ExtraInputs,);
-        let previous = output_data[0]
+        let previous: ParachainInherentData = output_data[0]
             .payload
-            .extract::<ParachainInherentData>()
-            .map_err(|_| Self::Error::BadlyTyped)?;
+            .extract::<ParachainInherentDataUtxo>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            
+            .into();
 
         // Make sure there is exactly one output which is the current parachain info
         ensure!(!output_data.is_empty(), Self::Error::MissingNewInfo);
         ensure!(output_data.len() == 1, Self::Error::MissingNewInfo,);
-        let current = output_data[0]
+        let current: ParachainInherentData = output_data[0]
             .payload
-            .extract::<ParachainInherentData>()
-            .map_err(|_| Self::Error::BadlyTyped)?;
+            .extract::<ParachainInherentDataUtxo>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .into();
 
         // Make sure the relay chain block height is strictly increasing.
         // In frame this logic is generic and it doesn't have to be so strict.
@@ -169,17 +200,17 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
         authoring_inherent_data: &InherentData,
         previous_inherent: Option<(Transaction<V, Self>, H256)>,
     ) -> tuxedo_core::types::Transaction<V, Self> {
-        let current_info = authoring_inherent_data
+        let current_info: ParachainInherentData = authoring_inherent_data
             .get_data(&INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")
             .expect("Parachain inherent data should be present.");
 
         log::debug!(
             target: LOG_TARGET,
-            "parachain inherent data while creating inherent: {current_info}"
+            "parachain inherent data while creating inherent: {:?}", current_info
         );
 
-        let mut inputs = Vec::new();
+        let mut inputs: Vec<Input> = Vec::new();
         match (previous_inherent, T::block_height()) {
             (None, 1) => {
                 // This is the first block hack case.
@@ -191,16 +222,23 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
 
                 // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
                 // But out transactions are simple enough that we know we just need the one and only output.
-                inputs.push(OutputRef {
+                let output_ref = OutputRef {
                     tx_hash: previous_id,
                     // There is always 1 output, so we know right where to find it.
                     index: 0,
-                });
+                };
+
+                let input = Input {
+                    output_ref,
+                    redeemer: Vec::new(),
+                };
+
+                inputs.push(input);
             }
         }
 
         let new_output = Output {
-            payload: current_info.into(),
+            payload: ParachainInherentDataUtxo::from(current_info).into(),
             verifier: UpForGrabs.into(),
         };
 
@@ -213,13 +251,16 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
     }
 
     fn check_inherent(
-        importing_inherent_data: &InherentData,
-        inherent: Transaction<V, Self>,
-        result: &mut CheckInherentsResult,
+        _importing_inherent_data: &InherentData,
+        _inherent: Transaction<V, Self>,
+        _result: &mut CheckInherentsResult,
     ) {
         log::debug!(
             target: LOG_TARGET,
             "In check_inherents for parachain inherent. No actual off-chain checks are required."
         );
+
+        //TODO The debug message above reflects the current design which is a copy of basti's design.
+        // I think the process of checking this inherent should be accessible through some abstract interface in the end.
     }
 }
