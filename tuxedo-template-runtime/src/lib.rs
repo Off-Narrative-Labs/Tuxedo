@@ -213,6 +213,16 @@ impl timestamp::TimestampConfig for Runtime {
     }
 }
 
+impl parachain_info::ParachainPieceConfig for Runtime {
+    fn block_height() -> u32 {
+        Executive::block_height()
+    }
+
+    //TODO decide what to do about this para id
+    // This is in the trait, but I don't think it is currently used.
+    // const PARA_ID: u32 = 2_000;
+}
+
 // Observation: For some applications, it will be invalid to simply delete
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
@@ -223,6 +233,10 @@ impl timestamp::TimestampConfig for Runtime {
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
 pub enum OuterConstraintChecker {
+    /// Set some parachain related information via an inherent extrinsic.
+    /// TODO This one is first for now so that I can write a hacky algorithm to scrape the
+    /// inherent data and assume it is first.
+    ParachainInfo(parachain_info::SetParachainInfo<Runtime>),
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions

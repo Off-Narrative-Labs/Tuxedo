@@ -13629,6 +13629,7 @@ dependencies = [
  "kitties",
  "log",
  "money",
+ "parachain-info",
  "parity-scale-codec",
  "parity-util-mem",
  "poe",

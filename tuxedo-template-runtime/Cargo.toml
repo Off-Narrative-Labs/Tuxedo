@@ -44,6 +44,7 @@ tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 # Parachain related ones
 cumulus-primitives-core = { default-features = false, workspace = true }
+parachain-info = { default-features = false, path = "../wardrobe/parachain_info" }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -55,6 +56,7 @@ sp-keystore = { default_features = false, workspace = true }
 default = [ "std" ]
 std = [
 	"cumulus-primitives-core/std",
+	"parachain-info/std",
 	"sp-debug-derive/std",
 	"sp-block-builder/std",
 	"sp-inherents/std",

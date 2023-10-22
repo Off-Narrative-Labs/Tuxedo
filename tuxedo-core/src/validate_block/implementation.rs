@@ -83,7 +83,7 @@ where
     //TODO re-evaluate TypeInfo bound both here and on `impl Executive`
     B: BlockT<Extrinsic = Transaction<V, C>>,
     V: Verifier + TypeInfo,
-    C: ConstraintChecker<V> + TypeInfo + Into<SetParachainInfo<V>>,
+    C: ConstraintChecker<V> + TypeInfo,// + Into<SetParachainInfo<V>>,
 {
     // Step 1: Decode block data
     let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
