@@ -83,6 +83,7 @@ where
     V: Verifier + TypeInfo,
     C: ConstraintChecker<V> + TypeInfo, // + Into<SetParachainInfo<V>>,
 {
+    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE");
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
     // Step 1: Decode block data
@@ -103,6 +104,8 @@ where
     );
 
     let inherent_data = extract_parachain_inherent_data(&block);
+
+    panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE past inherent data scraping");
 
     validate_validation_data(
         &inherent_data.validation_data,
