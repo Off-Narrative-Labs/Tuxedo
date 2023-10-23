@@ -118,7 +118,6 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             "Checking onchain constraints for SetParachainInfo."
         );
 
-
         // Make sure there is exactly one output which is the current parachain info
         ensure!(!output_data.is_empty(), Self::Error::MissingNewInfo);
         ensure!(output_data.len() == 1, Self::Error::MissingNewInfo,);
