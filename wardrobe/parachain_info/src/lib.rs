@@ -31,13 +31,13 @@ use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
 use tuxedo_core::{
-    dynamic_typing::UtxoData,
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Output, OutputRef, Transaction, Input},
     verifier::UpForGrabs,
     ConstraintChecker, Verifier,
+    validate_block::ParachainInherentDataUtxo,
 };
 
 #[cfg(test)]
@@ -45,39 +45,6 @@ mod tests;
 
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "parachain-info";
-
-/// A wrapper type around Cumulus's ParachainInherentData ype that can be stored.
-/// Having to do this wrapping is one more reason to abandon this UtxoData trait,
-/// and go for a more strongly typed aggregate type approach.
-#[derive(
-    // Serialize,
-    // Deserialize,
-    Encode,
-    Decode,
-    DebugNoBound,
-    // DefaultNoBound,
-    // PartialEq,
-    // Eq,
-    CloneNoBound,
-    TypeInfo,
-)]
-pub struct ParachainInherentDataUtxo(ParachainInherentData);
-
-impl UtxoData for ParachainInherentDataUtxo {
-    const TYPE_ID: [u8; 4] = *b"para";
-}
-
-impl Into<ParachainInherentData> for ParachainInherentDataUtxo {
-    fn into(self) -> ParachainInherentData {
-        self.0
-    }
-}
-
-impl From<ParachainInherentData> for ParachainInherentDataUtxo {
-    fn from(value: ParachainInherentData) -> Self {
-        Self(value)
-    }
-}
 
 /// Options to configure the timestamp piece in your runtime.
 /// Currently we only need access to a block number.

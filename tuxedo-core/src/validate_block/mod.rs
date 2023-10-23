@@ -15,6 +15,7 @@ pub mod implementation;
 mod tests;
 
 mod relay_state_snapshot;
+use parity_scale_codec::{Decode, Encode};
 pub(crate) use relay_state_snapshot::RelayChainStateProof;
 
 #[cfg(not(feature = "std"))]
@@ -36,6 +37,8 @@ pub use sp_runtime::traits::GetRuntimeBlockType;
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
 pub use sp_std;
+
+use cumulus_primitives_parachain_inherent::ParachainInherentData;
 
 /// Basically the same as
 /// [`ValidationParams`](polkadot_parachain_primitives::primitives::ValidationParams), but a little
@@ -81,30 +84,37 @@ pub struct MemoryOptimizedValidationParams {
 /// ```
 pub use tuxedo_register_validate_block::register_validate_block;
 
-use sp_api::BlockT;
+use crate::dynamic_typing::UtxoData;
 
-/// Something that can check the inherents of a block.
-pub trait CheckInherents<Block: BlockT> {
-    /// Check all inherents of the block.
-    ///
-    /// This function gets passed all the extrinsics of the block, so it is up to the callee to
-    /// identify the inherents. The `validation_data` can be used to access the
-    fn check_inherents(
-        block: &Block,
-        validation_data: &RelayChainStateProof,
-    ) -> frame_support::inherent::CheckInherentsResult;
+/// A wrapper type around Cumulus's ParachainInherentData ype that can be stored.
+/// Having to do this wrapping is one more reason to abandon this UtxoData trait,
+/// and go for a more strongly typed aggregate type approach.
+#[derive(
+    // Serialize,
+    // Deserialize,
+    Encode,
+    Decode,
+    derive_no_bound::DebugNoBound,
+    // DefaultNoBound,
+    // PartialEq,
+    // Eq,
+    derive_no_bound::CloneNoBound,
+    scale_info::TypeInfo,
+)]
+pub struct ParachainInherentDataUtxo(ParachainInherentData);
+
+impl UtxoData for ParachainInherentDataUtxo {
+    const TYPE_ID: [u8; 4] = *b"para";
 }
 
-/// Struct that always returns `Ok` on inherents check, needed for backwards-compatibility.
-#[doc(hidden)]
-pub struct DummyCheckInherents<Block>(sp_std::marker::PhantomData<Block>);
+impl Into<ParachainInherentData> for ParachainInherentDataUtxo {
+    fn into(self) -> ParachainInherentData {
+        self.0
+    }
+}
 
-#[allow(deprecated)]
-impl<Block: BlockT> CheckInherents<Block> for DummyCheckInherents<Block> {
-    fn check_inherents(
-        _: &Block,
-        _: &RelayChainStateProof,
-    ) -> frame_support::inherent::CheckInherentsResult {
-        sp_inherents::CheckInherentsResult::new()
+impl From<ParachainInherentData> for ParachainInherentDataUtxo {
+    fn from(value: ParachainInherentData) -> Self {
+        Self(value)
     }
 }
