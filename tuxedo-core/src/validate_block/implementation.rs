@@ -83,6 +83,7 @@ where
     V: Verifier + TypeInfo,
     C: ConstraintChecker<V> + TypeInfo, // + Into<SetParachainInfo<V>>,
 {
+    sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
     // Step 1: Decode block data
     let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
