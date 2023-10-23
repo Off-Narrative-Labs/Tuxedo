@@ -78,8 +78,6 @@ pub fn validate_block<B, V, C>(
     }: MemoryOptimizedValidationParams,
 ) -> ValidationResult
 where
-    // B::Extrinsic: ExtrinsicCall,
-    // <B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
     //TODO re-evaluate TypeInfo bound both here and on `impl Executive`
     B: BlockT<Extrinsic = Transaction<V, C>>,
     V: Verifier + TypeInfo,
@@ -226,18 +224,22 @@ where
     })
 }
 
-// General approach plan:
-// Utxo workflow just like timestamp
-// We iterate through transaction looking for one where the output decodes to the right type
-// Or looking for the right constraint checker. This is what Basti did. But we need a general way to do it.
-//
-/// Extract the [`ParachainInherentData`].
-fn extract_parachain_inherent_data<B: BlockT>(block: &B) -> &ParachainInherentData
+/// Extract the [`ParachainInherentData`] from a parachain block.
+/// The data has to be extracted from the extrinsics themselves.
+/// I want the runtime to expose a method to do this, and I also want it to
+/// be nice and flexible by searching for the right transactions.
+/// For now I have a hacky implementation that assumes the parachain inherent is first
+fn extract_parachain_inherent_data<B, V, C>(block: &B) -> ParachainInherentData
 where
-	// B::Extrinsic: ExtrinsicCall,
-	// <B::Extrinsic as Extrinsic>::Call: IsSubType<crate::Call<PSC>>,
+    B: BlockT<Extrinsic = Transaction<V, C>>,
+    V: Verifier,
+    C: ConstraintChecker<V>,
 {
-    todo!()
+    // The commented stuff is Basti's algo.
+    // It is nicer than my hack because it searches the transactions,
+    // But it is still not good enough because it lived right here in this file as
+    // opposed to with the runtime.
+
     // block
     // 	.extrinsics()
     // 	.iter()
@@ -252,6 +254,18 @@ where
     // 		_ => None,
     // 	})
     // 	.expect("Could not find `set_validation_data` inherent")
+
+    block
+        .extrinsics()
+        .get(0)
+        .expect("There should be  at least one extrinsic.")
+        .outputs
+        .get(0)
+        .expect("Parachain inherent should be first and should have exactly one output.")
+        .payload
+        .extract::<crate::validate_block::ParachainInherentDataUtxo>()
+        .expect("Should decode to proper type based on the position in the block.")
+        .into()
 }
 
 /// Validate the given [`PersistedValidationData`] against the [`MemoryOptimizedValidationParams`].
