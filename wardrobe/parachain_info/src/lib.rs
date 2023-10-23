@@ -115,22 +115,35 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
     ) -> Result<TransactionPriority, Self::Error> {
         log::debug!(
             target: LOG_TARGET,
-            "Checking constraints for SetParachainInfo."
+            "Checking onchain constraints for SetParachainInfo."
         );
 
-        // Make sure there is exactly one input which is the previous parachain info
-        ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo,);
-        ensure!(input_data.len() == 1, Self::Error::ExtraInputs,);
-        let previous: ParachainInherentData = output_data[0]
-            .payload
-            .extract::<ParachainInherentDataUtxo>()
-            .map_err(|_| Self::Error::BadlyTyped)?
-            .into();
 
         // Make sure there is exactly one output which is the current parachain info
         ensure!(!output_data.is_empty(), Self::Error::MissingNewInfo);
         ensure!(output_data.len() == 1, Self::Error::MissingNewInfo,);
         let current: ParachainInherentData = output_data[0]
+            .payload
+            .extract::<ParachainInherentDataUtxo>()
+            .map_err(|_| Self::Error::BadlyTyped)?
+            .into();
+
+        //TODO this is the first block hack. This one may be slightly harder to remove
+        // than it was in the timestamp case, because I'm not sure what data to put in the genesis one.
+        // Maybe there is some obvous mock value that will work. Otherwise, we could have the UTXO contain an option.
+        if T::block_height() == 1 {
+            log::debug!(
+                target: LOG_TARGET,
+                "Executing parachain inherent during first block hack. Returning early."
+            );
+
+            return Ok(0);
+        }
+
+        // Make sure there is exactly one input which is the previous parachain info
+        ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo,);
+        ensure!(input_data.len() == 1, Self::Error::ExtraInputs,);
+        let previous: ParachainInherentData = output_data[0]
             .payload
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
@@ -208,12 +221,19 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
             verifier: UpForGrabs.into(),
         };
 
-        Transaction {
+        let t = Transaction {
             inputs,
             peeks: Vec::new(),
             outputs: vec![new_output],
             checker: Self::default(),
-        }
+        };
+
+        log::debug!(
+            target: LOG_TARGET,
+            "created inherent transaction {:?}.", t
+        );
+
+        t
     }
 
     fn check_inherent(
