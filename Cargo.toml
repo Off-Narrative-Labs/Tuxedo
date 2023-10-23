@@ -126,5 +126,4 @@ sp-externalities = { default_features = false, git = "https://github.com/parityt
 sp-state-machine = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 sp-tracing = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 sp-trie = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
-# TODO update this once dependency update allows it.
-trie-db = { version = "0.27.1", default-features = false }
+trie-db = { version = "0.28.0", default-features = false }
