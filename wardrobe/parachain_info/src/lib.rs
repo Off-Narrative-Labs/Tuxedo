@@ -34,10 +34,10 @@ use tuxedo_core::{
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
-    types::{Output, OutputRef, Transaction, Input},
+    types::{Input, Output, OutputRef, Transaction},
+    validate_block::ParachainInherentDataUtxo,
     verifier::UpForGrabs,
     ConstraintChecker, Verifier,
-    validate_block::ParachainInherentDataUtxo,
 };
 
 #[cfg(test)]
@@ -125,7 +125,6 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             .payload
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
-            
             .into();
 
         // Make sure there is exactly one output which is the current parachain info
