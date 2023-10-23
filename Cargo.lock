@@ -434,20 +434,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-scale"
-version = "0.0.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51bd73bb6ddb72630987d37fa963e99196896c0d0ea81b7c894567e74a2f83af"
-dependencies = [
- "ark-ec",
- "ark-ff",
- "ark-serialize",
- "ark-std",
- "parity-scale-codec",
- "scale-info",
-]
-
-[[package]]
 name = "ark-secret-scalar"
 version = "0.0.2"
 source = "git+https://github.com/w3f/ring-vrf?rev=3119f51#3119f51b54b69308abfb0671f6176cb125ae1bf1"
@@ -814,7 +800,7 @@ dependencies = [
  "ark-ec",
  "ark-ed-on-bls12-381-bandersnatch",
  "ark-ff",
- "ark-scale 0.0.11",
+ "ark-scale",
  "ark-serialize",
  "ark-std",
  "dleq_vrf",
@@ -2117,7 +2103,7 @@ dependencies = [
  "sc-client-api",
  "sc-consensus",
  "sp-consensus",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "sp-runtime",
  "tracing",
 ]
@@ -2469,7 +2455,7 @@ dependencies = [
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
 ]
 
 [[package]]
@@ -2960,7 +2946,7 @@ source = "git+https://github.com/w3f/ring-vrf?rev=3119f51#3119f51b54b69308abfb06
 dependencies = [
  "ark-ec",
  "ark-ff",
- "ark-scale 0.0.10",
+ "ark-scale",
  "ark-secret-scalar",
  "ark-serialize",
  "ark-std",
@@ -6164,7 +6150,7 @@ dependencies = [
  "sp-keyring",
  "sp-runtime",
  "sp-timestamp",
- "substrate-build-script-utils",
+ "substrate-build-script-utils 3.0.0 (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "tuxedo-core",
  "tuxedo-template-runtime",
 ]
@@ -7335,7 +7321,7 @@ dependencies = [
  "sp-keystore",
  "sp-runtime",
  "sp-timestamp",
- "substrate-build-script-utils",
+ "substrate-build-script-utils 3.0.0 (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "substrate-prometheus-endpoint",
  "tuxedo-core",
  "tuxedo-template-runtime",
@@ -7373,7 +7359,7 @@ dependencies = [
  "staging-xcm",
  "staging-xcm-builder",
  "staging-xcm-executor",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "westend-runtime-constants",
 ]
 
@@ -7863,8 +7849,8 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keyring",
- "sp-maybe-compressed-blob",
- "substrate-build-script-utils",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
+ "substrate-build-script-utils 3.0.0 (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "thiserror",
  "try-runtime-cli",
 ]
@@ -7999,7 +7985,7 @@ dependencies = [
  "polkadot-node-subsystem-util",
  "polkadot-primitives",
  "sp-core",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "thiserror",
  "tracing-gum",
 ]
@@ -8106,7 +8092,7 @@ dependencies = [
  "polkadot-overseer",
  "polkadot-parachain-primitives",
  "polkadot-primitives",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "tracing-gum",
 ]
 
@@ -8234,10 +8220,10 @@ dependencies = [
  "rand 0.8.5",
  "slotmap",
  "sp-core",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "sp-tracing",
  "sp-wasm-interface",
- "substrate-build-script-utils",
+ "substrate-build-script-utils 3.0.0 (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "tempfile",
  "tokio",
  "tracing-gum",
@@ -8295,7 +8281,7 @@ dependencies = [
  "polkadot-primitives",
  "rayon",
  "sp-core",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "sp-tracing",
  "tokio",
  "tracing-gum",
@@ -8317,7 +8303,7 @@ dependencies = [
  "sc-executor-common",
  "sc-executor-wasmtime",
  "sp-io",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "sp-tracing",
  "tikv-jemalloc-ctl",
  "tokio",
@@ -8416,7 +8402,7 @@ dependencies = [
  "sp-consensus-babe",
  "sp-core",
  "sp-keystore",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "sp-runtime",
  "thiserror",
  "zstd 0.12.4",
@@ -8912,7 +8898,7 @@ dependencies = [
  "staging-xcm",
  "staging-xcm-builder",
  "staging-xcm-executor",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "test-runtime-constants",
 ]
 
@@ -9768,7 +9754,7 @@ dependencies = [
  "staging-xcm-builder",
  "staging-xcm-executor",
  "static_assertions",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
 ]
 
 [[package]]
@@ -10555,7 +10541,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0#f60318f68687e601c47de5ad5ca88e2c3f8139a7"
 dependencies = [
  "sc-allocator",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
  "sp-wasm-interface",
  "thiserror",
  "wasm-instrument",
@@ -12166,6 +12152,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp-maybe-compressed-blob"
+version = "4.1.0-dev"
+source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
+dependencies = [
+ "thiserror",
+ "zstd 0.12.4",
+]
+
+[[package]]
 name = "sp-metadata-ir"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0#f60318f68687e601c47de5ad5ca88e2c3f8139a7"
@@ -12733,6 +12728,11 @@ version = "3.0.0"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0#f60318f68687e601c47de5ad5ca88e2c3f8139a7"
 
 [[package]]
+name = "substrate-build-script-utils"
+version = "3.0.0"
+source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
+
+[[package]]
 name = "substrate-frame-rpc-system"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0#f60318f68687e601c47de5ad5ca88e2c3f8139a7"
@@ -12829,7 +12829,25 @@ dependencies = [
  "cargo_metadata",
  "filetime",
  "parity-wasm",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.1.0)",
+ "strum",
+ "tempfile",
+ "toml 0.7.8",
+ "walkdir",
+ "wasm-opt",
+]
+
+[[package]]
+name = "substrate-wasm-builder"
+version = "5.0.0-dev"
+source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
+dependencies = [
+ "ansi_term",
+ "build-helper",
+ "cargo_metadata",
+ "filetime",
+ "parity-wasm",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "strum",
  "tempfile",
  "toml 0.7.8",
@@ -13653,7 +13671,7 @@ dependencies = [
  "sp-timestamp",
  "sp-transaction-pool",
  "sp-version",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "timestamp",
  "tuxedo-core",
 ]
