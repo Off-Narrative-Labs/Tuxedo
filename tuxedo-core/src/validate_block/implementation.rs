@@ -83,13 +83,13 @@ where
     V: Verifier + TypeInfo,
     C: ConstraintChecker<V> + TypeInfo, // + Into<SetParachainInfo<V>>,
 {
-    log::info!("🕵️🕵️🕵️🕵️Entering validate_block implementation");
+    log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
     // Step 1: Decode block data
     let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
         .expect("Invalid parachain block data");
 
     // Step 2: Security Checks
-    log::info!("🕵️🕵️🕵️🕵️ Step 2");
+    log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 2");
     let parent_header = parity_scale_codec::decode_from_bytes::<B::Header>(parent_head.clone())
         .expect("Invalid parent head");
 
@@ -111,7 +111,7 @@ where
     );
 
     // Step 3: Create the sparse in-memory db
-    log::info!("🕵️🕵️🕵️🕵️ Step 3");
+    log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 3");
     let db = match storage_proof.to_memory_db(Some(parent_header.state_root())) {
         Ok((db, _)) => db,
         Err(_) => panic!("Compact proof decoding failure."),
@@ -130,7 +130,7 @@ where
     .build();
 
     // Step 4: Replace host functions
-    log::info!("🕵️🕵️🕵️🕵️ Step 4");
+    log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 4");
     let _guard = (
         // Replace storage calls with our own implementations
         sp_io::storage::host_read.replace_implementation(host_storage_read),
@@ -194,12 +194,12 @@ where
     // });
 
     run_with_externalities::<B, _, _>(&backend, || {
-        log::info!("🕵️🕵️🕵️🕵️ In the run_with_externalities closure");
+        log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ In the run_with_externalities closure");
         let head_data = HeadData(block.header().encode());
 
         Executive::<B, V, C>::execute_block(block);
 
-        log::info!("🕵️🕵️🕵️🕵️ returned from execute block");
+        log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ returned from execute block");
 
         // Seems like we could call the existing collect_collation_info api to get this information here
         // instead of tightly coupling to pallet parachain system
