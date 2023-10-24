@@ -142,7 +142,7 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         // Make sure there is exactly one input which is the previous parachain info
         ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo,);
         ensure!(input_data.len() == 1, Self::Error::ExtraInputs,);
-        let previous: ParachainInherentData = output_data[0]
+        let previous: ParachainInherentData = input_data[0]
             .payload
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
