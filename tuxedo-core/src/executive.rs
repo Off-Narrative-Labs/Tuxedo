@@ -401,7 +401,7 @@ impl<
             // For now, I just make them all custom zero, and log the error variant
             Self::validate_tuxedo_transaction(&tx)
                 .map_err(|e| {
-                    warn!(
+                    log::warn!(
                         target: LOG_TARGET,
                         "Tuxedo Transaction did not validate (in the pool): {:?}",
                         e,
