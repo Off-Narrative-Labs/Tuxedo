@@ -67,6 +67,11 @@ pub struct Cli {
     #[arg(long)]
     pub no_hardware_benchmarks: bool,
 
+    /// Works the same as the --alice flag but has a different name.
+    /// This is a hack to work around a zombienet "feature" that filters out the cli flags the user specifies.
+    #[arg(long)]
+    pub seriously_fucking_alice: bool,
+
     /// Relay chain arguments
     #[arg(raw = true)]
     pub relay_chain_args: Vec<String>,
