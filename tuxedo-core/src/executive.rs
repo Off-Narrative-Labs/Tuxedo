@@ -398,9 +398,16 @@ impl<
         } else {
             // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
             // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-            // For now, I just make them all custom zero
+            // For now, I just make them all custom zero, and log the error variant
             Self::validate_tuxedo_transaction(&tx)
-                .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+                .map_err(|e| {
+                    warn!(
+                        target: LOG_TARGET,
+                        "Tuxedo Transaction did not validate (in the pool): {:?}",
+                        e,
+                    );
+                    TransactionValidityError::Invalid(InvalidTransaction::Custom(0))
+                })
         };
 
         debug!(target: LOG_TARGET, "Validation result: {:?}", r);
