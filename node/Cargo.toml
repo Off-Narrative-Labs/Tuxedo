@@ -47,6 +47,9 @@ sp-blockchain = { workspace = true }
 node-template-runtime = { default_features = false, features = ["std"], package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 tuxedo-core = { path = "../tuxedo-core" }
 
+# Cumulus (for testing parachain runtimes without relay chain)
+cumulus-primitives-parachain-inherent = { workspace = true, optional = true }
+
 [[bin]]
 name = "node-template"
 
@@ -56,5 +59,6 @@ substrate-build-script-utils = { workspace = true }
 [features]
 default = []
 mock-parachain = [
+    "cumulus-primitives-parachain-inherent",
     "node-template-runtime/parachain",
 ]

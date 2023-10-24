@@ -6081,6 +6081,7 @@ name = "node-template"
 version = "4.0.0-dev"
 dependencies = [
  "clap",
+ "cumulus-primitives-parachain-inherent",
  "jsonrpsee",
  "sc-basic-authorship",
  "sc-cli",
