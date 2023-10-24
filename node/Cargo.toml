@@ -44,7 +44,7 @@ sp-block-builder = { workspace = true }
 sp-blockchain = { workspace = true }
 
 # Local Dependencies
-node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+node-template-runtime = { default_features = false, features = ["std"], package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 tuxedo-core = { path = "../tuxedo-core" }
 
 [[bin]]
@@ -55,3 +55,6 @@ substrate-build-script-utils = { workspace = true }
 
 [features]
 default = []
+mock-parachain = [
+    "node-template-runtime/parachain",
+]

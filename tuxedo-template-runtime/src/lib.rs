@@ -213,6 +213,7 @@ impl timestamp::TimestampConfig for Runtime {
     }
 }
 
+#[cfg(feature = "parachain")]
 impl parachain_info::ParachainPieceConfig for Runtime {
     fn block_height() -> u32 {
         Executive::block_height()
@@ -227,16 +228,52 @@ impl parachain_info::ParachainPieceConfig for Runtime {
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
+
+// The macro doesn't understand conditional compilation flags inside, so we have to
+// feature gate the entire thing, and repeat it twice. I remember this was a problem
+// with frame's construct_runtime! as well.
+
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
+#[cfg(feature = "parachain")]
 pub enum OuterConstraintChecker {
     /// Set some parachain related information via an inherent extrinsic.
     /// TODO This one is first for now so that I can write a hacky algorithm to scrape the
     /// inherent data and assume it is first.
     ParachainInfo(parachain_info::SetParachainInfo<Runtime>),
+    /// Checks monetary transactions in a basic fungible cryptocurrency
+    Money(money::MoneyConstraintChecker<0>),
+    /// Checks Free Kitty transactions
+    FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
+    /// Checks that an amoeba can split into two new amoebas
+    AmoebaMitosis(amoeba::AmoebaMitosis),
+    /// Checks that a single amoeba is simply removed from the state
+    AmoebaDeath(amoeba::AmoebaDeath),
+    /// Checks that a single amoeba is simply created from the void... and it is good
+    AmoebaCreation(amoeba::AmoebaCreation),
+    /// Checks that new valid proofs of existence are claimed
+    PoeClaim(poe::PoeClaim<Runtime>),
+    /// Checks that proofs of existence are revoked.
+    PoeRevoke(poe::PoeRevoke),
+    /// Checks that one winning claim came earlier than all the other claims, and thus
+    /// the losing claims can be removed from storage.
+    PoeDispute(poe::PoeDispute),
+    /// Set the block's timestamp via an inherent extrinsic.
+    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    /// Upgrade the Wasm Runtime
+    RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+}
+
+/// A constraint checker is a piece of logic that can be used to check a transaction.
+/// For any given Tuxedo runtime there is a finite set of such constraint checkers.
+/// For example, this may check that input token values exceed output token values.
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+#[tuxedo_constraint_checker(OuterVerifier)]
+#[cfg(not(feature = "parachain"))]
+pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
@@ -436,7 +473,7 @@ impl_runtime_apis! {
         }
     }
 
-    //TODO feature gate this
+    #[cfg(feature = "parachain")]
     impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
         fn collect_collation_info(header: &<Block as BlockT>::Header) -> cumulus_primitives_core::CollationInfo {
             Executive::collect_collation_info(header)
@@ -446,6 +483,7 @@ impl_runtime_apis! {
 
 // Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
 // Caution, this requires double parentheses because I'm a macro n00b and that's the way I figured out to parse it.
+#[cfg(feature = "parachain")]
 tuxedo_core::register_validate_block!((Block, OuterVerifier, OuterConstraintChecker));
 
 #[cfg(test)]

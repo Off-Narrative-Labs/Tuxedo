@@ -43,8 +43,8 @@ timestamp = { default-features = false, path = "../wardrobe/timestamp" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 # Parachain related ones
-cumulus-primitives-core = { default-features = false, workspace = true }
-parachain-info = { default-features = false, path = "../wardrobe/parachain_info" }
+cumulus-primitives-core = { optional = true, default-features = false, workspace = true }
+parachain-info = { optional = true, default-features = false, path = "../wardrobe/parachain_info" }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -54,6 +54,11 @@ sp-keystore = { default_features = false, workspace = true }
 
 [features]
 default = [ "std" ]
+parachain = [
+	"cumulus-primitives-core",
+	"parachain-info",
+	#"tuxedo-core/parachain", or some dedicated crate for the core parachain stuff.
+]
 std = [
 	"cumulus-primitives-core/std",
 	"parachain-info/std",
