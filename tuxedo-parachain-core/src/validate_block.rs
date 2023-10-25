@@ -1,6 +1,6 @@
 //! The actual implementation of the validate block functionality.
 
-use super::{trie_cache, MemoryOptimizedValidationParams, ParachainBlockData};
+use super::{trie_cache, MemoryOptimizedValidationParams, ParachainInherentDataUtxo};
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
 };
