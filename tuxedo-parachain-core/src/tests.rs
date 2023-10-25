@@ -13,7 +13,7 @@ use sp_keyring::AccountKeyring::*;
 use sp_runtime::traits::Header as HeaderT;
 use std::{env, process::Command};
 
-use crate::validate_block::MemoryOptimizedValidationParams;
+use crate::MemoryOptimizedValidationParams;
 
 fn call_validate_block_encoded_header(
     parent_head: Header,

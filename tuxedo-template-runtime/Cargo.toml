@@ -45,6 +45,7 @@ tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 # Parachain related ones
 cumulus-primitives-core = { default-features = false, optional = true, workspace = true }
 parachain-info = { default-features = false, optional = true, path = "../wardrobe/parachain_info" }
+tuxedo-parachain-core = { default-features = false, optional = true, path = "../tuxedo-parachain-core" }
 
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
@@ -57,11 +58,16 @@ default = [ "std" ]
 parachain = [
 	"cumulus-primitives-core",
 	"parachain-info",
-	#"tuxedo-core/parachain", or some dedicated crate for the core parachain stuff.
+	"tuxedo-parachain-core",
 ]
-std = [
+parachain-std = [
+	"parachain",
+	"std",
 	"cumulus-primitives-core/std",
 	"parachain-info/std",
+	"tuxedo-parachain-core/std",
+]
+std = [
 	"sp-debug-derive/std",
 	"sp-block-builder/std",
 	"sp-inherents/std",

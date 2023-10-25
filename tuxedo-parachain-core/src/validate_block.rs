@@ -1,12 +1,12 @@
 //! The actual implementation of the validate block functionality.
 
-use super::{trie_cache, MemoryOptimizedValidationParams};
+use super::{trie_cache, MemoryOptimizedValidationParams, ParachainBlockData};
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
 };
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
 
-use crate::{types::Transaction, ConstraintChecker, Executive, Verifier};
+use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 use polkadot_parachain_primitives::primitives::{
     HeadData, RelayChainBlockNumber, ValidationResult,
 };
@@ -286,7 +286,7 @@ where
         .get(0)
         .expect("Parachain inherent should be first and should have exactly one output.")
         .payload
-        .extract::<crate::validate_block::ParachainInherentDataUtxo>()
+        .extract::<ParachainInherentDataUtxo>()
         .expect("Should decode to proper type based on the position in the block.")
         .into()
 }

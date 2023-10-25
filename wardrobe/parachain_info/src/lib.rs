@@ -30,15 +30,16 @@ use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
+//TODO maybe get this from the re-export from parachain-core.
 use tuxedo_core::{
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Input, Output, OutputRef, Transaction},
-    validate_block::ParachainInherentDataUtxo,
     verifier::UpForGrabs,
     ConstraintChecker, Verifier,
 };
+use tuxedo_parachain_core::ParachainInherentDataUtxo;
 
 #[cfg(test)]
 mod tests;

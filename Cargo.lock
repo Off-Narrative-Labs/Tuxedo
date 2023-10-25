@@ -2103,7 +2103,7 @@ dependencies = [
  "sc-client-api",
  "sc-consensus",
  "sp-consensus",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "sp-runtime",
  "tracing",
 ]
@@ -2446,7 +2446,7 @@ dependencies = [
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
 ]
 
 [[package]]
@@ -7235,6 +7235,7 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "tuxedo-core",
+ "tuxedo-parachain-core",
 ]
 
 [[package]]
@@ -7321,7 +7322,7 @@ dependencies = [
  "staging-xcm",
  "staging-xcm-builder",
  "staging-xcm-executor",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "westend-runtime-constants",
 ]
 
@@ -7812,7 +7813,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keyring",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "substrate-build-script-utils",
  "thiserror",
  "try-runtime-cli",
@@ -7948,7 +7949,7 @@ dependencies = [
  "polkadot-node-subsystem-util",
  "polkadot-primitives",
  "sp-core",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "thiserror",
  "tracing-gum",
 ]
@@ -8055,7 +8056,7 @@ dependencies = [
  "polkadot-overseer",
  "polkadot-parachain-primitives",
  "polkadot-primitives",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "tracing-gum",
 ]
 
@@ -8181,7 +8182,7 @@ dependencies = [
  "rand 0.8.5",
  "slotmap",
  "sp-core",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "sp-wasm-interface",
  "substrate-build-script-utils",
  "tempfile",
@@ -8320,7 +8321,7 @@ dependencies = [
  "sp-consensus-babe",
  "sp-core",
  "sp-keystore",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "sp-runtime",
  "thiserror",
  "zstd 0.12.4",
@@ -8820,7 +8821,7 @@ dependencies = [
  "staging-xcm",
  "staging-xcm-builder",
  "staging-xcm-executor",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "test-runtime-constants",
 ]
 
@@ -9679,7 +9680,7 @@ dependencies = [
  "staging-xcm-builder",
  "staging-xcm-executor",
  "static_assertions",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
 ]
 
 [[package]]
@@ -10466,7 +10467,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
 dependencies = [
  "sc-allocator",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
  "sp-wasm-interface",
  "thiserror",
  "wasm-instrument",
@@ -12076,6 +12077,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp-maybe-compressed-blob"
+version = "4.1.0-dev"
+source = "git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0#4d6ef74cfd68dc748e9118013e4b54455f737145"
+dependencies = [
+ "thiserror",
+ "zstd 0.12.4",
+]
+
+[[package]]
 name = "sp-metadata-ir"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
@@ -12739,7 +12749,25 @@ dependencies = [
  "cargo_metadata",
  "filetime",
  "parity-wasm",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "strum",
+ "tempfile",
+ "toml 0.7.8",
+ "walkdir",
+ "wasm-opt",
+]
+
+[[package]]
+name = "substrate-wasm-builder"
+version = "5.0.0-dev"
+source = "git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0#4d6ef74cfd68dc748e9118013e4b54455f737145"
+dependencies = [
+ "ansi_term",
+ "build-helper",
+ "cargo_metadata",
+ "filetime",
+ "parity-wasm",
+ "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0)",
  "strum",
  "tempfile",
  "toml 0.7.8",
@@ -13516,6 +13544,40 @@ dependencies = [
  "sp-tracing",
  "sp-trie",
  "trie-db",
+]
+
+[[package]]
+name = "tuxedo-parachain-core"
+version = "1.0.0-dev"
+dependencies = [
+ "array-bytes",
+ "async-trait",
+ "bytes",
+ "cumulus-primitives-core",
+ "cumulus-primitives-parachain-inherent",
+ "cumulus-test-client",
+ "cumulus-test-relay-sproof-builder",
+ "frame-support",
+ "log",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "polkadot-parachain-primitives",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-core",
+ "sp-debug-derive",
+ "sp-externalities",
+ "sp-inherents",
+ "sp-io",
+ "sp-keyring",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-std",
+ "sp-tracing",
+ "sp-trie",
+ "trie-db",
+ "tuxedo-core",
  "tuxedo-register-validate-block",
 ]
 
@@ -13563,9 +13625,10 @@ dependencies = [
  "sp-timestamp",
  "sp-transaction-pool",
  "sp-version",
- "substrate-wasm-builder",
+ "substrate-wasm-builder 5.0.0-dev (git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0)",
  "timestamp",
  "tuxedo-core",
+ "tuxedo-parachain-core",
 ]
 
 [[package]]
@@ -13873,9 +13936,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt"
-version = "0.114.1"
+version = "0.114.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d005a95f934878a1fb446a816d51c3601a0120ff929005ba3bab3c749cfd1c7"
+checksum = "effbef3bd1dde18acb401f73e740a6f3d4a1bc651e9773bddc512fe4d8d68f67"
 dependencies = [
  "anyhow",
  "libc",
@@ -13889,9 +13952,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt-cxx-sys"
-version = "0.114.1"
+version = "0.114.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d04e240598162810fad3b2e96fa0dec6dba1eb65a03f3bd99a9248ab8b56caa"
+checksum = "c09e24eb283919ace2ed5733bda4842a59ce4c8de110ef5c6d98859513d17047"
 dependencies = [
  "anyhow",
  "cxx",
@@ -13901,9 +13964,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-opt-sys"
-version = "0.114.1"
+version = "0.114.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2efd2aaca519d64098c4faefc8b7433a97ed511caf4c9e516384eb6aef1ff4f9"
+checksum = "36f2f817bed2e8d65eb779fa37317e74de15585751f903c9118342d1970703a4"
 dependencies = [
  "anyhow",
  "cc",

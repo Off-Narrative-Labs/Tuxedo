@@ -9,7 +9,8 @@ members = [
 	"tuxedo-core",
 	"tuxedo-core/aggregator",
 	"tuxedo-core/no_bound",
-	"tuxedo-core/register_validate_block",
+	"tuxedo-parachain-core/register_validate_block",
+	"tuxedo-parachain-core",
 	"wallet",
 	"wardrobe/amoeba",
 	"wardrobe/money",
@@ -55,7 +56,9 @@ tokio = "1.25.0"
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 
 # Runtime-only dependencies
-substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
+# TODO I'm using a forked version here.
+# Return to the official one once https://github.com/paritytech/polkadot-sdk/pull/2034 lands
+substrate-wasm-builder = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-wasm-builder-disable-feature-rebase-1.2.0" }
 
 # Substrate primitives and client
 sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }

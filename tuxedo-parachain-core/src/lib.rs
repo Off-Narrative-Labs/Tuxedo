@@ -10,7 +10,7 @@
 
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
-pub mod implementation;
+pub mod validate_block;
 #[cfg(test)]
 mod tests;
 
@@ -38,6 +38,7 @@ pub use sp_runtime::traits::GetRuntimeBlockType;
 pub use sp_std;
 
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
+use tuxedo_core::{dynamic_typing::UtxoData, support_macros::{DebugNoBound, CloneNoBound}};
 
 /// Basically the same as
 /// [`ValidationParams`](polkadot_parachain_primitives::primitives::ValidationParams), but a little
@@ -67,8 +68,6 @@ pub struct MemoryOptimizedValidationParams {
 /// Expects as parameters the Block type, the OuterVerifier, and the OuterConstraintChecker.
 pub use tuxedo_register_validate_block::register_validate_block;
 
-use crate::dynamic_typing::UtxoData;
-
 /// A wrapper type around Cumulus's ParachainInherentData ype that can be stored.
 /// Having to do this wrapping is one more reason to abandon this UtxoData trait,
 /// and go for a more strongly typed aggregate type approach.
@@ -77,11 +76,11 @@ use crate::dynamic_typing::UtxoData;
     // Deserialize,
     Encode,
     Decode,
-    derive_no_bound::DebugNoBound,
+    DebugNoBound,
     // DefaultNoBound,
     // PartialEq,
     // Eq,
-    derive_no_bound::CloneNoBound,
+    CloneNoBound,
     scale_info::TypeInfo,
 )]
 pub struct ParachainInherentDataUtxo(ParachainInherentData);

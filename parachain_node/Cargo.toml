@@ -17,7 +17,7 @@ parity-scale-codec = { workspace = true }
 serde = { features = [ "derive" ], workspace = true }
 
 # Local
-parachain-template-runtime = { features = [ "parachain" ], package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+parachain-template-runtime = { features = [ "parachain-std" ], package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 tuxedo-core = { path = "../tuxedo-core" }
 
 # Substrate

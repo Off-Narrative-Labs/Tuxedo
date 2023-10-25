@@ -1,8 +1,8 @@
 [package]
-description = "UTXO framework for Substrate and Polkadot."
+description = "Tuxedo extensions to provide Polkadot parachain support."
 edition = "2021"
 license = "Apache-2.0"
-name = "tuxedo-core"
+name = "tuxedo-parachain-core"
 repository = "https://github.com/Off-Narrative-Labs/Tuxedo"
 version = "1.0.0-dev"
 
@@ -14,9 +14,9 @@ parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
 serde = { features = [ "derive" ], workspace = true }
 
-# Macros in Tuxedo Core
-aggregator = { path = "aggregator" }
-derive-no-bound = { path = "no_bound" }
+# Local
+tuxedo-register-validate-block = { default_features = false, path = "register_validate_block" }
+tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 # Substrate
 sp-api = { default_features = false, workspace = true }
@@ -26,10 +26,9 @@ sp-inherents = { default_features = false, workspace = true }
 sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
-sp-storage = { default_features = false, workspace = true }
+# sp-storage = { default_features = false, workspace = true }
 
-# Added during Polkadot / Cumulus support
-# TODO these should all be feature gated
+# Polkadot / Cumulus
 bytes = { version = "1.4.0", default_features = false }
 cumulus-primitives-core = { default_features = false, workspace = true }
 cumulus-primitives-parachain-inherent = { workspace = true }
@@ -42,9 +41,6 @@ trie-db = { default_features = false, workspace = true }
 
 [dev-dependencies]
 array-bytes = { workspace = true }
-
-# Polkadot / Cumulus
-# TODO maybe feature gated?
 cumulus-test-client = { workspace = true }
 cumulus-test-relay-sproof-builder = { workspace = true }
 sp-keyring = { workspace = true }
@@ -65,8 +61,9 @@ std = [
 	"sp-io/std",
 	"sp-runtime/std",
 	"parity-util-mem",
-	"sp-storage/std",
+	# "sp-storage/std",
 	"cumulus-primitives-core/std",
+	"tuxedo-register-validate-block/std",
 	"sp-trie/std",
 	"sp-state-machine/std",
 	"trie-db/std",
