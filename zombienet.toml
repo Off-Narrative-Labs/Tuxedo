@@ -23,7 +23,13 @@ chain = "rococo-local"
 [[parachains]]
 id = 2000
 
-  [parachains.collator]
+  [[parachains.collators]]
   name = "tuxedo-collator-01"
   command = "./target/release/parachain-template-node"
   args = ["--seriously-fucking-alice"]
+
+  [[parachains.collators]]
+  name = "tuxedo-full-node"
+  command = "./target/release/parachain-template-node"
+  # This makes this node a full node instead of a collator (despite the schema name)
+  validator = false
