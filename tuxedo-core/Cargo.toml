@@ -28,28 +28,8 @@ sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
 
-# Added during Polkadot / Cumulus support
-# TODO these should all be feature gated
-bytes = { version = "1.4.0", default_features = false }
-cumulus-primitives-core = { default_features = false, workspace = true }
-cumulus-primitives-parachain-inherent = { workspace = true }
-frame-support = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
-polkadot-parachain-primitives = { features = [ "wasm-api" ], default_features = false, workspace = true }
-sp-externalities = { default_features = false, workspace = true }
-sp-state-machine = { default_features = false, workspace = true }
-sp-trie = { default_features = false, workspace = true }
-trie-db = { default_features = false, workspace = true }
-
 [dev-dependencies]
 array-bytes = { workspace = true }
-
-# Polkadot / Cumulus
-# TODO maybe feature gated?
-cumulus-test-client = { workspace = true }
-cumulus-test-relay-sproof-builder = { workspace = true }
-sp-keyring = { workspace = true }
-sp-tracing = { workspace = true }
-
 
 [features]
 default = [ "std" ]
@@ -66,12 +46,4 @@ std = [
 	"sp-runtime/std",
 	"parity-util-mem",
 	"sp-storage/std",
-	"cumulus-primitives-core/std",
-	"sp-trie/std",
-	"sp-state-machine/std",
-	"trie-db/std",
-	"frame-support/std",
-	"polkadot-parachain-primitives/std",
-	"cumulus-primitives-parachain-inherent/std",
-	"sp-externalities/std",
 ]
