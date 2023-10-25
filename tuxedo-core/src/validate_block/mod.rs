@@ -8,12 +8,10 @@
 //!
 //! Better docs coming after this takes shape. For now it is hack'n'slash.
 
-// This needs to stay feature gated because overwriting the host functions only works in wasm.
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
 pub mod implementation;
 #[cfg(test)]
-#[cfg(not(feature = "std"))]
 mod tests;
 
 mod relay_state_snapshot;
@@ -24,7 +22,7 @@ use parity_scale_codec::{Decode, Encode};
 mod trie_cache;
 
 #[cfg(not(feature = "std"))]
-#[doc(hidden)] 
+#[doc(hidden)]
 pub use bytes;
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
