@@ -18,6 +18,8 @@ pub mod validate_block;
 mod tests;
 
 mod relay_state_snapshot;
+mod collation_api;
+pub use collation_api::ParachainExecutiveExtension;
 use parity_scale_codec::{Decode, Encode};
 
 #[cfg(not(feature = "std"))]

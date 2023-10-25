@@ -475,6 +475,7 @@ impl_runtime_apis! {
     #[cfg(feature = "parachain")]
     impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
         fn collect_collation_info(header: &<Block as BlockT>::Header) -> cumulus_primitives_core::CollationInfo {
+            use tuxedo_parachain_core::ParachainExecutiveExtension;
             Executive::collect_collation_info(header)
         }
     }
