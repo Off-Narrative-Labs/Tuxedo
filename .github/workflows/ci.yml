@@ -25,6 +25,7 @@ jobs:
       - uses: Off-Narrative-Labs/toml_sort@v1
         with:
           all: true
+          match: "Cargo.toml"
 
   test:
       name: Test and code coverage
