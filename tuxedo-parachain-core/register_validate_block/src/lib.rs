@@ -69,8 +69,8 @@ use syn::{
 
 /// Provides an identifier that is a safe way to refer to the crate tuxedo_core within the macro
 fn crate_() -> Result<Ident, Error> {
-    match crate_name("tuxedo-core") {
-        Ok(FoundCrate::Itself) => Ok(syn::Ident::new("tuxedo_core", Span::call_site())),
+    match crate_name("tuxedo-parachain-core") {
+        Ok(FoundCrate::Itself) => Ok(syn::Ident::new("tuxedo_parachain_core", Span::call_site())),
         Ok(FoundCrate::Name(name)) => Ok(Ident::new(&name, Span::call_site())),
         Err(e) => Err(Error::new(Span::call_site(), e)),
     }
@@ -156,21 +156,21 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                     // Setp 1. Extract the arguments from shared memory
 
                     // We convert the `arguments` into a boxed slice and then into `Bytes`.
-                    let args = #crate_::validate_block::sp_std::boxed::Box::from_raw(
-                        #crate_::validate_block::sp_std::slice::from_raw_parts_mut(
+                    let args = #crate_::sp_std::boxed::Box::from_raw(
+                        #crate_::sp_std::slice::from_raw_parts_mut(
                             arguments,
                             arguments_len,
                         )
                     );
-                    let args = #crate_::validate_block::bytes::Bytes::from(args);
+                    let args = #crate_::bytes::Bytes::from(args);
 
                     // Then we decode from these bytes the `MemoryOptimizedValidationParams`.
-                    let params = #crate_::validate_block::decode_from_bytes::<
-                        #crate_::validate_block::MemoryOptimizedValidationParams
+                    let params = #crate_::decode_from_bytes::<
+                        #crate_::MemoryOptimizedValidationParams
                     >(args).expect("Invalid arguments to `validate_block`.");
 
                     // Step 2: Call the actual validate_block implementation
-                    let res = #crate_::validate_block::implementation::validate_block::<
+                    let res = #crate_::validate_block::validate_block::<
                         #block,
                         #verifier,
                         #constraint_checker,
@@ -184,7 +184,7 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                     // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE Back in macro. head_data: {:?}, new_code: {:?}, upward_messages: {:?}, hrmp_watermark: {:?}", res.head_data, res.new_validation_code, res.upward_messages, res.hrmp_watermark);
 
                     // Step 3: Write the return value back into the shared memory
-                    let return_pointer = #crate_::validate_block::polkadot_parachain_primitives::write_result(&res);
+                    let return_pointer = #crate_::polkadot_parachain_primitives::write_result(&res);
 
                     // And even this panic was reachable as expected. So IDK why my blocks don't get in.
                     // panic!("Finished writing results. This is the last possible place to intercept the execution.");
