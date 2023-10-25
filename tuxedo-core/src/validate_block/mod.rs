@@ -107,9 +107,9 @@ impl UtxoData for ParachainInherentDataUtxo {
     const TYPE_ID: [u8; 4] = *b"para";
 }
 
-impl Into<ParachainInherentData> for ParachainInherentDataUtxo {
-    fn into(self) -> ParachainInherentData {
-        self.0
+impl From<ParachainInherentDataUtxo> for ParachainInherentData {
+    fn from(val: ParachainInherentDataUtxo) -> Self {
+        val.0
     }
 }
 
