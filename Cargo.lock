@@ -13544,7 +13544,6 @@ dependencies = [
  "cumulus-primitives-parachain-inherent",
  "cumulus-test-client",
  "cumulus-test-relay-sproof-builder",
- "frame-support",
  "log",
  "parity-scale-codec",
  "parity-util-mem",

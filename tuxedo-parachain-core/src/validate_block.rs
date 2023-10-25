@@ -11,18 +11,10 @@ use polkadot_parachain_primitives::primitives::{
     HeadData, RelayChainBlockNumber, ValidationResult,
 };
 
-//TODO reevaluate whether this is necessary
+//TODO reevaluate whether TypeInfo is necessary
 use scale_info::TypeInfo;
-
 use parity_scale_codec::Encode;
-
-//TODO remove frame-support from dependency graph.
-// For new we keep it for (at least) the ExecuteBlock trait.
-// Ideally this will be moved to a better home in Substrate.
-// I've asked about that in https://github.com/paritytech/polkadot-sdk/issues/211#issuecomment-1768981529
-// Worst case, we will copy the trait here. But for now, we just leave it.
 use cumulus_primitives_core::ParaId;
-use frame_support::traits::{ExecuteBlock, ExtrinsicCall, Get, IsSubType};
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
 use sp_io::KillStorageResult;

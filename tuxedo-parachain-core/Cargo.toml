@@ -15,8 +15,8 @@ scale-info = { features = [ "derive" ], workspace = true }
 serde = { features = [ "derive" ], workspace = true }
 
 # Local
-tuxedo-register-validate-block = { default_features = false, path = "register_validate_block" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
+tuxedo-register-validate-block = { default_features = false, path = "register_validate_block" }
 
 # Substrate
 sp-api = { default_features = false, workspace = true }
@@ -26,13 +26,11 @@ sp-inherents = { default_features = false, workspace = true }
 sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
-# sp-storage = { default_features = false, workspace = true }
 
 # Polkadot / Cumulus
 bytes = { version = "1.4.0", default_features = false }
 cumulus-primitives-core = { default_features = false, workspace = true }
-cumulus-primitives-parachain-inherent = { workspace = true }
-frame-support = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
+cumulus-primitives-parachain-inherent = { default_features = false, workspace = true }
 polkadot-parachain-primitives = { features = [ "wasm-api" ], default_features = false, workspace = true }
 sp-externalities = { default_features = false, workspace = true }
 sp-state-machine = { default_features = false, workspace = true }
@@ -61,13 +59,11 @@ std = [
 	"sp-io/std",
 	"sp-runtime/std",
 	"parity-util-mem",
-	# "sp-storage/std",
 	"cumulus-primitives-core/std",
 	"tuxedo-register-validate-block/std",
 	"sp-trie/std",
 	"sp-state-machine/std",
 	"trie-db/std",
-	"frame-support/std",
 	"polkadot-parachain-primitives/std",
 	"cumulus-primitives-parachain-inherent/std",
 	"sp-externalities/std",
