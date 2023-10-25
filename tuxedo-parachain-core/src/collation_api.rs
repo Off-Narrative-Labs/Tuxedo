@@ -3,10 +3,10 @@
 //! It will get more complex and interesting when we start to support XCM or parachain runtime upgrades.
 
 use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
-use tuxedo_core::Executive;
-use sp_std::vec::Vec;
-use sp_api::BlockT;
 use parity_scale_codec::Encode;
+use sp_api::BlockT;
+use sp_std::vec::Vec;
+use tuxedo_core::Executive;
 
 /// An extension trait that allows us to implement more methods on tuxedo-core's executive.
 pub trait ParachainExecutiveExtension<Header> {

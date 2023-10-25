@@ -9,9 +9,9 @@ version = "0.1.0"
 [dependencies]
 cumulus-primitives-parachain-inherent = { default_features = false, workspace = true }
 log = { default_features = false, workspace = true }
-parity-scale-codec = { default_features = false, features = [ "derive" ], workspace = true }
-scale-info = { default_features = false, features = [ "derive" ], workspace = true }
-serde = { default_features = false, features = [ "derive" ], workspace = true }
+parity-scale-codec = { features = [ "derive" ], default_features = false, workspace = true }
+scale-info = { features = [ "derive" ], default_features = false, workspace = true }
+serde = { features = [ "derive" ], default_features = false, workspace = true }
 sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }

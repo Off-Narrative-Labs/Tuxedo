@@ -11,14 +11,14 @@
 // TODO Maybe this doesn't even need to be conditional. Just always build to no_std.
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod tests;
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
 pub mod validate_block;
-#[cfg(test)]
-mod tests;
 
-mod relay_state_snapshot;
 mod collation_api;
+mod relay_state_snapshot;
 pub use collation_api::ParachainExecutiveExtension;
 use parity_scale_codec::{Decode, Encode};
 
@@ -43,7 +43,10 @@ pub use sp_runtime::traits::GetRuntimeBlockType;
 pub use sp_std;
 
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
-use tuxedo_core::{dynamic_typing::UtxoData, support_macros::{DebugNoBound, CloneNoBound}};
+use tuxedo_core::{
+    dynamic_typing::UtxoData,
+    support_macros::{CloneNoBound, DebugNoBound},
+};
 
 /// Basically the same as
 /// [`ValidationParams`](polkadot_parachain_primitives::primitives::ValidationParams), but a little

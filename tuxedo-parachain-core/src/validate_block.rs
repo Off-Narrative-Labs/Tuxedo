@@ -6,15 +6,15 @@ use cumulus_primitives_core::{
 };
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
 
-use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 use polkadot_parachain_primitives::primitives::{
     HeadData, RelayChainBlockNumber, ValidationResult,
 };
+use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 
 //TODO reevaluate whether TypeInfo is necessary
-use scale_info::TypeInfo;
-use parity_scale_codec::Encode;
 use cumulus_primitives_core::ParaId;
+use parity_scale_codec::Encode;
+use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
 use sp_io::KillStorageResult;
