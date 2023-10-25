@@ -5,8 +5,7 @@ use proc_macro2::Span;
 use proc_macro_crate::{crate_name, FoundCrate};
 use syn::{
     parse::{Parse, ParseStream},
-    spanned::Spanned,
-    token, Error, ExprTuple, Ident, Path,
+    Error, Ident, Token,
 };
 
 // mod keywords {
@@ -77,27 +76,49 @@ fn crate_() -> Result<Ident, Error> {
     }
 }
 
+struct RegisterValidateBlockInput {
+    pub block: Ident,
+    _comma1: Token![,],
+    pub verifier: Ident,
+    _comma2: Token![,],
+    pub constraint_checker: Ident,
+}
+
+impl Parse for RegisterValidateBlockInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let parsed = Self {
+            block: input.parse()?,
+            _comma1: input.parse()?,
+            verifier: input.parse()?,
+            _comma2: input.parse()?,
+            constraint_checker: input.parse()?,
+        };
+
+        if !input.is_empty() {
+            return Err(Error::new(
+                input.span(),
+                "Expected exactly three parameters: Block, Verifier, ConstraintChecker.",
+            ));
+        }
+
+        Ok(parsed)
+    }
+}
+
 #[proc_macro]
 pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Extract the paths to the parts from the runtime developer's input
     // I will likely need to revise or simplify the fields that are passed in.
     // I hope to only use the exposed runtime APIs here, not some custom trait impls. (if possible)
-    let input: ExprTuple = match syn::parse(input) {
+    let input: RegisterValidateBlockInput = match syn::parse(input) {
         Ok(t) => t,
         Err(e) => return e.into_compile_error().into(),
     };
 
-    let elements = input.elems.into_iter().collect::<Vec<_>>();
+    let block = input.block.clone();
+    let verifier = input.verifier.clone();
+    let constraint_checker = input.constraint_checker.clone();
 
-    assert!(
-        elements.len() == 3,
-        "Expected exactly three parameters, (Block, Verifier, ConstraintChecker), but found {}",
-        elements.len()
-    );
-
-    let block = elements[0].clone();
-    let verifier = elements[1].clone();
-    let constraint_checker = elements[2].clone();
     //TODO some way to specify the para_id from the runtime.
 
     // A way to refer to the tuxedo_core crate from within the macro.

@@ -228,7 +228,6 @@ impl parachain_info::ParachainPieceConfig for Runtime {
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
-
 // The macro doesn't understand conditional compilation flags inside, so we have to
 // feature gate the entire thing, and repeat it twice. I remember this was a problem
 // with frame's construct_runtime! as well.
@@ -482,9 +481,8 @@ impl_runtime_apis! {
 }
 
 // Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
-// Caution, this requires double parentheses because I'm a macro n00b and that's the way I figured out to parse it.
 #[cfg(feature = "parachain")]
-tuxedo_core::register_validate_block!((Block, OuterVerifier, OuterConstraintChecker));
+tuxedo_core::register_validate_block!(Block, OuterVerifier, OuterConstraintChecker);
 
 #[cfg(test)]
 mod tests {
