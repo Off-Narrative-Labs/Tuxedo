@@ -120,7 +120,7 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
 
         // Make sure there is exactly one output which is the current parachain info
         ensure!(!output_data.is_empty(), Self::Error::MissingNewInfo);
-        ensure!(output_data.len() == 1, Self::Error::MissingNewInfo,);
+        ensure!(output_data.len() == 1, Self::Error::MissingNewInfo);
         let current: ParachainInherentData = output_data[0]
             .payload
             .extract::<ParachainInherentDataUtxo>()
@@ -140,8 +140,8 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         }
 
         // Make sure there is exactly one input which is the previous parachain info
-        ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo,);
-        ensure!(input_data.len() == 1, Self::Error::ExtraInputs,);
+        ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo);
+        ensure!(input_data.len() == 1, Self::Error::ExtraInputs);
         let previous: ParachainInherentData = input_data[0]
             .payload
             .extract::<ParachainInherentDataUtxo>()

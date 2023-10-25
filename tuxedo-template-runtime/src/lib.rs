@@ -534,7 +534,7 @@ mod tests {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: 0 as u32,
+                index: 0_u32,
             };
 
             let encoded_utxo =
@@ -569,7 +569,7 @@ mod tests {
             let output_ref = OutputRef {
                 // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
                 tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: 1 as u32,
+                index: 1_u32,
             };
 
             let encoded_utxo =

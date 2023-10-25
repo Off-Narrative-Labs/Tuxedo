@@ -16,7 +16,6 @@ mod tests;
 
 mod relay_state_snapshot;
 use parity_scale_codec::{Decode, Encode};
-pub(crate) use relay_state_snapshot::RelayChainStateProof;
 
 #[cfg(not(feature = "std"))]
 #[doc(hidden)]
@@ -65,23 +64,7 @@ pub struct MemoryOptimizedValidationParams {
 ///
 /// Does *nothing* when `std` feature is enabled.
 ///
-/// Expects as parameters the runtime, a block executor and an inherent checker.
-///
-/// # Example
-///
-/// ```
-///     struct BlockExecutor;
-///     struct Runtime;
-///     struct CheckInherents;
-///
-///     cumulus_pallet_parachain_system::register_validate_block! {
-///         Runtime = Runtime,
-///         BlockExecutor = Executive,
-///         CheckInherents = CheckInherents,
-///     }
-///
-/// # fn main() {}
-/// ```
+/// Expects as parameters the Block type, the OuterVerifier, and the OuterConstraintChecker.
 pub use tuxedo_register_validate_block::register_validate_block;
 
 use crate::dynamic_typing::UtxoData;
