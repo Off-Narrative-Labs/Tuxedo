@@ -287,7 +287,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
                             parent_idp,
                             timestamp,
                             #[cfg(feature = "mock-parachain")]
-                            mocked_parachain
+                            mocked_parachain,
                         ))
                     }
                 },
