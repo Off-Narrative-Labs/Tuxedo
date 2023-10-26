@@ -60,13 +60,6 @@ parachain = [
 	"parachain-info",
 	"tuxedo-parachain-core",
 ]
-parachain-std = [
-	"parachain",
-	"std",
-	"cumulus-primitives-core/std",
-	"parachain-info/std",
-	"tuxedo-parachain-core/std",
-]
 std = [
 	"sp-debug-derive/std",
 	"sp-block-builder/std",
@@ -93,4 +86,8 @@ std = [
 	"kitties/std",
 	"timestamp/std",
 	"runtime-upgrade/std",
+
+	"cumulus-primitives-core?/std",
+	"parachain-info?/std",
+	"tuxedo-parachain-core?/std",
 ]

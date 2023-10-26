@@ -2103,7 +2103,7 @@ dependencies = [
  "sc-client-api",
  "sc-consensus",
  "sp-consensus",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "sp-runtime",
  "tracing",
 ]
@@ -2446,7 +2446,7 @@ dependencies = [
  "sp-std",
  "sp-transaction-pool",
  "sp-version",
- "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "substrate-wasm-builder",
 ]
 
 [[package]]
@@ -7324,7 +7324,7 @@ dependencies = [
  "staging-xcm",
  "staging-xcm-builder",
  "staging-xcm-executor",
- "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "substrate-wasm-builder",
  "westend-runtime-constants",
 ]
 
@@ -7815,7 +7815,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-keyring",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "substrate-build-script-utils",
  "thiserror",
  "try-runtime-cli",
@@ -7951,7 +7951,7 @@ dependencies = [
  "polkadot-node-subsystem-util",
  "polkadot-primitives",
  "sp-core",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "thiserror",
  "tracing-gum",
 ]
@@ -8058,7 +8058,7 @@ dependencies = [
  "polkadot-overseer",
  "polkadot-parachain-primitives",
  "polkadot-primitives",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "tracing-gum",
 ]
 
@@ -8184,7 +8184,7 @@ dependencies = [
  "rand 0.8.5",
  "slotmap",
  "sp-core",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "sp-wasm-interface",
  "substrate-build-script-utils",
  "tempfile",
@@ -8323,7 +8323,7 @@ dependencies = [
  "sp-consensus-babe",
  "sp-core",
  "sp-keystore",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "sp-runtime",
  "thiserror",
  "zstd 0.12.4",
@@ -8823,7 +8823,7 @@ dependencies = [
  "staging-xcm",
  "staging-xcm-builder",
  "staging-xcm-executor",
- "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "substrate-wasm-builder",
  "test-runtime-constants",
 ]
 
@@ -9682,7 +9682,7 @@ dependencies = [
  "staging-xcm-builder",
  "staging-xcm-executor",
  "static_assertions",
- "substrate-wasm-builder 5.0.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "substrate-wasm-builder",
 ]
 
 [[package]]
@@ -10469,7 +10469,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
 dependencies = [
  "sc-allocator",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
+ "sp-maybe-compressed-blob",
  "sp-wasm-interface",
  "thiserror",
  "wasm-instrument",
@@ -12079,15 +12079,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-maybe-compressed-blob"
-version = "4.1.0-dev"
-source = "git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0#4d6ef74cfd68dc748e9118013e4b54455f737145"
-dependencies = [
- "thiserror",
- "zstd 0.12.4",
-]
-
-[[package]]
 name = "sp-metadata-ir"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0#72c453563937c36b895c543bc5e852e213a54f19"
@@ -12751,25 +12742,7 @@ dependencies = [
  "cargo_metadata",
  "filetime",
  "parity-wasm",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/paritytech/polkadot-sdk?tag=polkadot-v1.2.0)",
- "strum",
- "tempfile",
- "toml 0.7.8",
- "walkdir",
- "wasm-opt",
-]
-
-[[package]]
-name = "substrate-wasm-builder"
-version = "5.0.0-dev"
-source = "git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0#4d6ef74cfd68dc748e9118013e4b54455f737145"
-dependencies = [
- "ansi_term",
- "build-helper",
- "cargo_metadata",
- "filetime",
- "parity-wasm",
- "sp-maybe-compressed-blob 4.1.0-dev (git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0)",
+ "sp-maybe-compressed-blob",
  "strum",
  "tempfile",
  "toml 0.7.8",
@@ -13613,7 +13586,7 @@ dependencies = [
  "sp-timestamp",
  "sp-transaction-pool",
  "sp-version",
- "substrate-wasm-builder 5.0.0-dev (git+https://github.com/joshorndorff/polkadot-sdk?branch=joshy-wasm-builder-disable-feature-rebase-1.2.0)",
+ "substrate-wasm-builder",
  "timestamp",
  "tuxedo-core",
  "tuxedo-parachain-core",

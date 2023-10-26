@@ -2,7 +2,6 @@
 fn main() {
     substrate_wasm_builder::WasmBuilder::new()
         .with_current_project()
-        .disable_feature("parachain-std")
         .export_heap_base()
         .import_memory()
         .build()

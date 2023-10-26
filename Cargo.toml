@@ -56,9 +56,7 @@ tokio = "1.25.0"
 substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 
 # Runtime-only dependencies
-# TODO I'm using a forked version here.
-# Return to the official one once https://github.com/paritytech/polkadot-sdk/pull/2034 lands
-substrate-wasm-builder = { branch = "joshy-wasm-builder-disable-feature-rebase-1.2.0", git = "https://github.com/joshorndorff/polkadot-sdk" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 
 # Substrate primitives and client
 sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
