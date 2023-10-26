@@ -22,6 +22,10 @@ sp-std = { default_features = false, workspace = true }
 tuxedo-core = { default-features = false, path = "../../tuxedo-core" }
 tuxedo-parachain-core = { default-features = false, path = "../../tuxedo-parachain-core" }
 
+[dev-dependencies]
+cumulus-primitives-core = { workspace = true }
+cumulus-test-relay-sproof-builder = { workspace = true }
+
 [features]
 default = [ "std" ]
 std = [

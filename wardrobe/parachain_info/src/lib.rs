@@ -121,7 +121,7 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
 
         // Make sure there is exactly one output which is the current parachain info
         ensure!(!output_data.is_empty(), Self::Error::MissingNewInfo);
-        ensure!(output_data.len() == 1, Self::Error::MissingNewInfo);
+        ensure!(output_data.len() == 1, Self::Error::ExtraOutputs);
         let current: ParachainInherentData = output_data[0]
             .payload
             .extract::<ParachainInherentDataUtxo>()
@@ -159,6 +159,14 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         );
 
         // TODO There may be a lot more checks to make here. For now this is where I'll leave it.
+
+        // 1. Maybe we should validate the parent head data?
+        //would require a method in core to expose the header (or at least it's hash)
+        // But I'm not sure if this is necessary or if it is already handled somewhere else.
+        // assert_eq!(
+        //     hash(header_from_core_method),
+        //     current.validation_data.parent_head,
+        // );
 
         Ok(0)
     }

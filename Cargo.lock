@@ -7224,7 +7224,9 @@ dependencies = [
 name = "parachain-info"
 version = "0.1.0"
 dependencies = [
+ "cumulus-primitives-core",
  "cumulus-primitives-parachain-inherent",
+ "cumulus-test-relay-sproof-builder",
  "log",
  "parity-scale-codec",
  "scale-info",
