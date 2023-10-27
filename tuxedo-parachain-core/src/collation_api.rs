@@ -3,7 +3,7 @@
 //! It will get more complex and interesting when we start to support XCM or parachain runtime upgrades.
 
 use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
-use parity_scale_codec::Encode;
+use parity_scale_codec::{Encode, Decode};
 use sp_api::BlockT;
 use sp_std::vec::Vec;
 use tuxedo_core::Executive;
@@ -18,6 +18,12 @@ impl<B: BlockT, V, C> ParachainExecutiveExtension<B::Header> for Executive<B, V,
         // The implementation here is simple. Most of the fields are related to xcm and parachain runtime upgrades,
         // neither or which are supported in the PoC, so they are left blank.
 
+        // Get the relay parent number out of storage so we can advance the hrmp watermark
+        let encoded_watermark = sp_io::storage::get(b"relay_parent")
+            .expect("Some relay parent number should always be stored (collation api)");
+        let hrmp_watermark: u32 = Decode::decode(&mut &encoded_watermark[..])
+            .expect("properly encoded relay parent number should have been stored.");
+
         // The final field allows us to specify head data. We will do the boring / standard / default / original
         // thing which is to just directly encode the block header.
         // The cumulus collator and FRAME pallets allow for custom head data, which seems to be motivated only
@@ -28,9 +34,7 @@ impl<B: BlockT, V, C> ParachainExecutiveExtension<B::Header> for Executive<B, V,
             horizontal_messages: Vec::new(),
             new_validation_code: None,
             processed_downward_messages: 0,
-            //TODO I think I need to set this to the relay parent based on 
-            // https://github.com/paritytech/polkadot/pull/1689
-            hrmp_watermark: 0,
+            hrmp_watermark,
             head_data: HeadData(header.encode()),
         }
     }

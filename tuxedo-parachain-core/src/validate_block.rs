@@ -13,7 +13,7 @@ use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 
 //TODO reevaluate whether TypeInfo is necessary
 use cumulus_primitives_core::ParaId;
-use parity_scale_codec::Encode;
+use parity_scale_codec::{Encode, Decode};
 use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
@@ -228,15 +228,21 @@ where
         // 		head_data
         // 	};
 
+        // Get the relay parent number out of storage so we can advance the hrmp watermark
+        // I think I need to set this to the relay parent based on
+        // https://github.com/paritytech/polkadot/pull/1689
+        let encoded_watermark = sp_io::storage::get(b"relay_parent")
+            .expect("Some relay parent number should always be stored (validate_block)");
+        let hrmp_watermark: u32 = Decode::decode(&mut &encoded_watermark[..])
+            .expect("properly encoded relay parent number should have been stored.");
+
         ValidationResult {
             head_data,
             new_validation_code: None, //new_validation_code.map(Into::into),
             upward_messages: Default::default(),
             processed_downward_messages: 0,
             horizontal_messages: Default::default(),
-            //TODO I think I need to set this to the relay parent based on 
-            // https://github.com/paritytech/polkadot/pull/1689
-            hrmp_watermark: 0,
+            hrmp_watermark,
         }
     })
 }

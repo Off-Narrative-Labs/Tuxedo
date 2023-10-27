@@ -8,13 +8,14 @@ version = "0.1.0"
 
 [dependencies]
 cumulus-primitives-parachain-inherent = { default_features = false, workspace = true }
-log = { default_features = false, workspace = true }
+log = { workspace = true }
 parity-scale-codec = { features = [ "derive" ], default_features = false, workspace = true }
 scale-info = { features = [ "derive" ], default_features = false, workspace = true }
 serde = { features = [ "derive" ], default_features = false, workspace = true }
 sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }
+sp-io = { default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
 # TODO don't really need to depend directly on core because it is re-exported from parachain-core
@@ -37,6 +38,7 @@ std = [
 	"sp-api/std",
 	"sp-core/std",
 	"sp-inherents/std",
+	"sp-io/std",
 	"sp-runtime/std",
 	"sp-std/std",
 	"tuxedo-core/std",

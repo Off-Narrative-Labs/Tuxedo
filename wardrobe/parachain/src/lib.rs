@@ -17,6 +17,9 @@
 //!
 //! Like the timestamp piece, this piece currently abuses the UpForGrabs verifier.
 //! This should be replaced with an Unspendable verifier and an eviction workflow.
+//!
+//! It also just grabs some storage out of thin air to note the relay block number.
+//! Eventually we sill need to store this in some more elegant way. (Maybe an accumulator...)
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -128,6 +131,13 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             .map_err(|_| Self::Error::BadlyTyped)?
             .into();
 
+        // SIDE EFFECT: Write the relay parent number to storage to use later in the collation info api
+        log::info!(target: LOG_TARGET, "About to store parent number: {:?}. encoded as: {:?}", current.validation_data.relay_parent_number, current.validation_data.relay_parent_number.encode());
+        sp_io::storage::set(
+            b"relay_parent",
+            &current.validation_data.relay_parent_number.encode(),
+        );
+
         //TODO this is the first block hack. This one may be slightly harder to remove
         // than it was in the timestamp case, because I'm not sure what data to put in the genesis one.
         // Maybe there is some obvous mock value that will work. Otherwise, we could have the UTXO contain an option.
@@ -159,6 +169,9 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         );
 
         // TODO There may be a lot more checks to make here. For now this is where I'll leave it.
+        // For example I probably have to check that the relay storage proof is correct.
+
+        // Might also need to put a log on the block header
 
         // 1. Maybe we should validate the parent head data?
         //would require a method in core to expose the header (or at least it's hash)
