@@ -234,6 +234,8 @@ where
             upward_messages: Default::default(),
             processed_downward_messages: 0,
             horizontal_messages: Default::default(),
+            //TODO I think I need to set this to the relay parent based on 
+            // https://github.com/paritytech/polkadot/pull/1689
             hrmp_watermark: 0,
         }
     })

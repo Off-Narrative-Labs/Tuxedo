@@ -28,6 +28,8 @@ impl<B: BlockT, V, C> ParachainExecutiveExtension<B::Header> for Executive<B, V,
             horizontal_messages: Vec::new(),
             new_validation_code: None,
             processed_downward_messages: 0,
+            //TODO I think I need to set this to the relay parent based on 
+            // https://github.com/paritytech/polkadot/pull/1689
             hrmp_watermark: 0,
             head_data: HeadData(header.encode()),
         }
