@@ -4,7 +4,7 @@ use super::*;
 use cumulus_primitives_core::PersistedValidationData;
 use cumulus_test_relay_sproof_builder::RelayStateSproofBuilder;
 use tuxedo_core::dynamic_typing::{testing::Bogus, DynamicallyTypedData};
-use ParachainInfoError::*;
+use ParachainError::*;
 
 /// The mock config always says the block number is two.
 pub struct AlwaysBlockTwo;
@@ -58,7 +58,7 @@ fn update_parachain_info_relay_block_not_increasing() {
 
     assert_eq!(
         SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
-        Err(ParachainInfoError::RelayBlockNotIncreasing),
+        Err(RelayBlockNotIncreasing),
     );
 }
 

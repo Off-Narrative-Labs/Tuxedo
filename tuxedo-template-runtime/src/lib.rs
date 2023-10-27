@@ -214,7 +214,7 @@ impl timestamp::TimestampConfig for Runtime {
 }
 
 #[cfg(feature = "parachain")]
-impl parachain_info::ParachainPieceConfig for Runtime {
+impl parachain_piece::ParachainPieceConfig for Runtime {
     fn block_height() -> u32 {
         Executive::block_height()
     }
@@ -242,7 +242,7 @@ pub enum OuterConstraintChecker {
     /// Set some parachain related information via an inherent extrinsic.
     /// TODO This one is first for now so that I can write a hacky algorithm to scrape the
     /// inherent data and assume it is first.
-    ParachainInfo(parachain_info::SetParachainInfo<Runtime>),
+    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions

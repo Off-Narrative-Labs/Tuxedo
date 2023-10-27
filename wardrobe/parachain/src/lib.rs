@@ -1,4 +1,4 @@
-//! Allow collators to include information about the relay chain, parachain, and their relationship via an inherent.
+//! Allow collators to include information about the relay chain, parachain, and their relationship, via an inherent.
 //!
 //! This piece is necessary if the runtime is going to work as a parachain.
 //!
@@ -66,7 +66,7 @@ pub trait ParachainPieceConfig {
 
 /// Reasons that setting or cleaning up the parachain info may go wrong.
 #[derive(Debug, Eq, PartialEq)]
-pub enum ParachainInfoError {
+pub enum ParachainError {
     /// UTXO data has an unexpected type
     BadlyTyped,
     /// When attempting to set a new parachain info, you have not included any output.
@@ -105,7 +105,7 @@ pub struct SetParachainInfo<T>(PhantomData<T>);
 impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChecker<V>
     for SetParachainInfo<T>
 {
-    type Error = ParachainInfoError;
+    type Error = ParachainError;
     type InherentHooks = TuxedoInherentAdapter<Self>;
 
     fn check(

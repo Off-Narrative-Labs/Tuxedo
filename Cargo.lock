@@ -7221,7 +7221,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "parachain-info"
+name = "parachain-piece"
 version = "0.1.0"
 dependencies = [
  "cumulus-primitives-core",
@@ -13562,7 +13562,7 @@ dependencies = [
  "kitties",
  "log",
  "money",
- "parachain-info",
+ "parachain-piece",
  "parity-scale-codec",
  "parity-util-mem",
  "poe",

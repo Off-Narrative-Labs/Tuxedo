@@ -1,7 +1,7 @@
 [package]
 description = "A Tuxedo piece that allows collators to include a information specific to this parachain through an inherent."
 edition = "2021"
-name = "parachain-info"
+name = "parachain-piece"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

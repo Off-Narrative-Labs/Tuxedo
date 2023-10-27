@@ -44,7 +44,7 @@ tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 # Parachain related ones
 cumulus-primitives-core = { default-features = false, optional = true, workspace = true }
-parachain-info = { default-features = false, optional = true, path = "../wardrobe/parachain_info" }
+parachain-piece = { default-features = false, optional = true, path = "../wardrobe/parachain" }
 tuxedo-parachain-core = { default-features = false, optional = true, path = "../tuxedo-parachain-core" }
 
 [build-dependencies]
@@ -57,7 +57,7 @@ sp-keystore = { default_features = false, workspace = true }
 default = [ "std" ]
 parachain = [
 	"cumulus-primitives-core",
-	"parachain-info",
+	"parachain-piece",
 	"tuxedo-parachain-core",
 ]
 std = [
@@ -88,6 +88,6 @@ std = [
 	"runtime-upgrade/std",
 
 	"cumulus-primitives-core?/std",
-	"parachain-info?/std",
+	"parachain-piece?/std",
 	"tuxedo-parachain-core?/std",
 ]
