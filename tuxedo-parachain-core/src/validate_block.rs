@@ -13,7 +13,7 @@ use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 
 //TODO reevaluate whether TypeInfo is necessary
 use cumulus_primitives_core::ParaId;
-use parity_scale_codec::{Encode, Decode};
+use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};

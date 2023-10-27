@@ -64,7 +64,6 @@ fn update_parachain_info_relay_block_not_increasing() {
 
 #[test]
 fn update_parachain_info_extra_inputs() {
-
     let old1: DynamicallyTypedData = new_data_from_relay_parent_number(3).into();
     let old2: DynamicallyTypedData = Bogus.into();
     let inputs: Vec<Output<UpForGrabs>> = vec![old1.into(), old2.into()];
@@ -79,7 +78,6 @@ fn update_parachain_info_extra_inputs() {
 
 #[test]
 fn update_parachain_info_missing_input() {
-
     let inputs: Vec<Output<UpForGrabs>> = vec![];
     let new: DynamicallyTypedData = new_data_from_relay_parent_number(4).into();
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
@@ -105,7 +103,6 @@ fn update_parachain_info_bogus_input() {
 
 #[test]
 fn update_parachain_info_extra_outputs() {
-
     let old: DynamicallyTypedData = new_data_from_relay_parent_number(3).into();
     let inputs: Vec<Output<UpForGrabs>> = vec![old.into()];
     let new1: DynamicallyTypedData = new_data_from_relay_parent_number(4).into();
@@ -120,7 +117,6 @@ fn update_parachain_info_extra_outputs() {
 
 #[test]
 fn update_parachain_info_missing_output() {
-
     let old: DynamicallyTypedData = new_data_from_relay_parent_number(3).into();
     let inputs: Vec<Output<UpForGrabs>> = vec![old.into()];
     let outputs: Vec<Output<UpForGrabs>> = vec![];
@@ -133,7 +129,6 @@ fn update_parachain_info_missing_output() {
 
 #[test]
 fn update_parachain_info_bogus_output() {
-    
     let old: DynamicallyTypedData = new_data_from_relay_parent_number(3).into();
     let inputs: Vec<Output<UpForGrabs>> = vec![old.into()];
     let new: DynamicallyTypedData = Bogus.into();

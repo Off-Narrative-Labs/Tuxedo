@@ -86,7 +86,7 @@ std = [
 	"kitties/std",
 	"timestamp/std",
 	"runtime-upgrade/std",
-
+	# Parachain related ones, don't forget the `?`
 	"cumulus-primitives-core?/std",
 	"parachain-piece?/std",
 	"tuxedo-parachain-core?/std",

@@ -3,7 +3,7 @@
 //! It will get more complex and interesting when we start to support XCM or parachain runtime upgrades.
 
 use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
-use parity_scale_codec::{Encode, Decode};
+use parity_scale_codec::{Decode, Encode};
 use sp_api::BlockT;
 use sp_std::vec::Vec;
 use tuxedo_core::Executive;
