@@ -1,7 +1,7 @@
 # This is a configuration file for zombienet: https://github.com/paritytech/zombienet
 # You can use it to launch a custom relay-para network with relative ease.
-# After building the collator and relay chain binaries, and installing zombienet,
-# zombienet --provider native spawn zombienet.config
+# After building the collator and relay chain binaries, and installing zombienet 1.3.74 onwards,
+# zombienet --provider native spawn zombienet.toml
 
 [relaychain]
 default_command = "../polkadot-sdk/target/release/polkadot"
@@ -10,12 +10,12 @@ default_args = [ "-lparachain=debug" ]
 chain = "rococo-local"
 
   [[relaychain.nodes]]
-  name = "alice"
+  name = "relay-01"
   validator = true
   args = ["-lruntime=debug", "-lparachain=debug", "-ltuxedo-core=debug", "-ltuxvb=debug"]
 
   [[relaychain.nodes]]
-  name = "bob"
+  name = "relay-02"
   validator = true
   args = ["-lruntime=debug", "-lparachain=debug", "-ltuxedo-core=debug", "-ltuxvb=debug"]
 
@@ -24,9 +24,9 @@ chain = "rococo-local"
 id = 2000
 
   [[parachains.collators]]
-  name = "tuxedo-collator-01"
+  name = "alice"
   command = "./target/release/parachain-template-node"
-  args = ["--seriously-fucking-alice"]
+  args = ["--alice"]
 
   [[parachains.collators]]
   name = "tuxedo-full-node"
