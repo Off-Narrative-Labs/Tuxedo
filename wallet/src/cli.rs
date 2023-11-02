@@ -15,7 +15,7 @@ use crate::{h256_from_string, keystore::SHAWN_PUB_KEY, output_ref_from_string, D
 #[command(about, version)]
 pub struct Cli {
     #[arg(long, short, default_value_t = DEFAULT_ENDPOINT.to_string())]
-    /// RPC endpoint of the node that this wallet will connect to
+    /// RPC endpoint of the node that this wallet will connect to.
     pub endpoint: String,
 
     #[arg(long, short, verbatim_doc_comment)]
@@ -28,6 +28,15 @@ pub struct Cli {
     /// Skip the initial sync that the wallet typically performs with the node.
     /// The wallet will use the latest data it had previously synced.
     pub no_sync: bool,
+
+    #[arg(long)]
+    /// A temporary directory will be created to store the configuration and will be deleted at the end of the process.
+    pub tmp: bool,
+
+    #[arg(long, verbatim_doc_comment)]
+    /// Specify a development wallet instance, using a temporary directory (like --tmp).
+    /// The keystore will contain the development key Shawn.
+    pub dev: bool,
 
     #[command(subcommand)]
     pub command: Option<Command>,

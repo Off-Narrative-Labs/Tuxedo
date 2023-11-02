@@ -42,11 +42,16 @@ async fn main() -> anyhow::Result<()> {
     let keystore_path = data_path.join("keystore");
     let db_path = data_path.join("wallet_database");
 
+    // If the user specified --tmp or --dev, then use a temporary directory.
+    let tmp = cli.tmp || cli.dev;
+
     // Setup the keystore
     let keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), None)?;
 
-    // Insert the example Shawn key so example transactions can be signed.
-    crate::keystore::insert_default_key_for_this_session(&keystore)?;
+    if cli.dev {
+        // Insert the example Shawn key so example transactions can be signed.
+        crate::keystore::insert_development_key_for_this_session(&keystore)?;
+    }
 
     // Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
@@ -171,7 +176,20 @@ async fn main() -> anyhow::Result<()> {
             log::info!("No Wallet Command invoked. Exiting.");
             Ok(())
         }
+    }?;
+
+    if tmp {
+        // Cleanup the temporary directory.
+        std::fs::remove_dir_all(data_path.clone()).map_err(|e| {
+            log::warn!(
+                "Unable to remove temporary data directory at {}.\nPlease remove it manually.",
+                data_path.to_string_lossy()
+            );
+            e
+        })?;
     }
+
+    Ok(())
 }
 
 //TODO move to rpc.rs

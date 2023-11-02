@@ -26,9 +26,8 @@ pub const SHAWN_PHRASE: &str =
 /// The public key corresponding to the default seed above.
 pub const SHAWN_PUB_KEY: &str = "d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67";
 
-/// Insert the example "Shawn" key into the keystore for
-/// the current session only. This is convenient for ux when developing.
-pub fn insert_default_key_for_this_session(keystore: &LocalKeystore) -> anyhow::Result<()> {
+/// Insert the example "Shawn" key into the keystore for the current session only.
+pub fn insert_development_key_for_this_session(keystore: &LocalKeystore) -> anyhow::Result<()> {
     keystore.sr25519_generate_new(KEY_TYPE, Some(SHAWN_PHRASE))?;
     Ok(())
 }
