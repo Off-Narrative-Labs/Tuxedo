@@ -37,13 +37,16 @@ async fn main() -> anyhow::Result<()> {
     // Parse command line args
     let cli = Cli::parse();
 
-    // Setup the data paths.
-    let data_path = cli.data_path.unwrap_or_else(default_data_path);
-    let keystore_path = data_path.join("keystore");
-    let db_path = data_path.join("wallet_database");
-
     // If the user specified --tmp or --dev, then use a temporary directory.
     let tmp = cli.tmp || cli.dev;
+
+    // Setup the data paths.
+    let data_path = match tmp {
+        true => temp_dir(),
+        _ => cli.data_path.unwrap_or_else(default_data_path),
+    };
+    let keystore_path = data_path.join("keystore");
+    let db_path = data_path.join("wallet_database");
 
     // Setup the keystore
     let keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), None)?;
@@ -182,7 +185,7 @@ async fn main() -> anyhow::Result<()> {
         // Cleanup the temporary directory.
         std::fs::remove_dir_all(data_path.clone()).map_err(|e| {
             log::warn!(
-                "Unable to remove temporary data directory at {}.\nPlease remove it manually.",
+                "Unable to remove temporary data directory at {}\nPlease remove it manually.",
                 data_path.to_string_lossy()
             );
             e
@@ -237,6 +240,15 @@ fn strip_0x_prefix(s: &str) -> &str {
     } else {
         s
     }
+}
+
+/// Generate a plaform-specific temporary directory for the wallet
+fn temp_dir() -> PathBuf {
+    // Since it is only used for testing purpose, we don't need a secure temp dir, just a unique one.
+    std::env::temp_dir().join(format!(
+        "tuxedo-wallet-{}",
+        std::time::UNIX_EPOCH.elapsed().unwrap().as_millis(),
+    ))
 }
 
 /// Generate the platform-specific default data path for the wallet

@@ -31,6 +31,7 @@ pub struct Cli {
 
     #[arg(long)]
     /// A temporary directory will be created to store the configuration and will be deleted at the end of the process.
+    /// data-path will be ignored if this is set.
     pub tmp: bool,
 
     #[arg(long, verbatim_doc_comment)]
