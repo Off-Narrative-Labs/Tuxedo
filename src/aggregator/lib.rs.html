@@ -274,6 +274,25 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>proc_macro::TokenStream;
 <span class="kw">use </span>quote::quote;
 <span class="kw">use </span>syn::{parse_macro_input, Ident, ItemEnum};
@@ -422,6 +441,7 @@
     <span class="kw">let </span>inner_types3 = inner_types.clone();
     <span class="kw">let </span>inner_types4 = inner_types.clone();
     <span class="kw">let </span>inner_types6 = inner_types.clone();
+    <span class="kw">let </span>inner_types7 = inner_types.clone();
     <span class="kw">let </span>variants2 = variants.clone();
     <span class="kw">let </span>variants3 = variants.clone();
     <span class="kw">let </span>variants4 = variants.clone();
@@ -516,6 +536,24 @@
                 )*
             }
 
+            <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+            </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>all_transactions: Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;&gt; = Vec::new();
+
+                #(
+                    <span class="kw">let </span>transactions =
+                        &lt;&lt;#inner_types6 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::InherentHooks <span class="kw">as </span>tuxedo_core::inherents::InherentInternal&lt;#verifier, #inner_types6&gt;&gt;::genesis_transactions();
+                    all_transactions.extend(
+                        transactions
+                            .into_iter()
+                            .map(|tx| tx.transform::&lt;#outer_type&gt;())
+                            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                    );
+                )*
+
+                all_transactions
+            }
+
         }
 
         <span class="kw">impl </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt; <span class="kw">for </span>#outer_type {
@@ -539,7 +577,7 @@
             <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(
-                        <span class="self">Self</span>::#variants6(inner) =&gt; &lt;#inner_types6 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::is_inherent(inner),
+                        <span class="self">Self</span>::#variants6(inner) =&gt; &lt;#inner_types7 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::is_inherent(inner),
                     )*
                 }
 

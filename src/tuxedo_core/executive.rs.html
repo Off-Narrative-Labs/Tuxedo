@@ -2320,8 +2320,8 @@
                 <span class="macro">assert_eq!</span>(returned_header, expected_header);
 
                 <span class="comment">// Make sure the transient storage has been removed
-                </span><span class="macro">assert!</span>(!sp_io::storage::exists(<span class="kw-2">&amp;</span>HEADER_KEY));
-                <span class="macro">assert!</span>(!sp_io::storage::exists(<span class="kw-2">&amp;</span>EXTRINSIC_KEY));
+                </span><span class="macro">assert!</span>(!sp_io::storage::exists(HEADER_KEY));
+                <span class="macro">assert!</span>(!sp_io::storage::exists(EXTRINSIC_KEY));
             });
     }
 

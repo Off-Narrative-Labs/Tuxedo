@@ -362,6 +362,21 @@
 <a href="#362" id="362">362</a>
 <a href="#363" id="363">363</a>
 <a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A verifier is a piece of logic that determines whether an input can be consumed in a given context.
 //! Because there are multiple reasonable ways to make this decision, we expose a trait to encapsulate
 //! the various options. Each runtime will choose to make one or more verifiers available to its users
@@ -391,6 +406,14 @@
 </span><span class="attr">#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 </span><span class="kw">pub struct </span>SigCheck {
     <span class="kw">pub </span>owner_pubkey: H256,
+}
+
+<span class="kw">impl </span>SigCheck {
+    <span class="kw">pub fn </span>new&lt;T: Into&lt;H256&gt;&gt;(value: T) -&gt; <span class="self">Self </span>{
+        SigCheck {
+            owner_pubkey: value.into(),
+        }
+    }
 }
 
 <span class="kw">impl </span>Verifier <span class="kw">for </span>SigCheck {
@@ -431,6 +454,13 @@
 }
 
 <span class="kw">impl </span>ThresholdMultiSignature {
+    <span class="kw">pub fn </span>new(threshold: u8, signatories: Vec&lt;H256&gt;) -&gt; <span class="self">Self </span>{
+        ThresholdMultiSignature {
+            threshold,
+            signatories,
+        }
+    }
+
     <span class="kw">pub fn </span>has_duplicate_signatories(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">let </span>set: BTreeSet&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.signatories.iter().collect();
         set.len() &lt; <span class="self">self</span>.signatories.len()
@@ -717,13 +747,13 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_verifier_passes() {
         <span class="kw">let </span>result = TestVerifier { verifies: <span class="bool-val">true </span>}.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
-        <span class="macro">assert_eq!</span>(result, <span class="bool-val">true</span>);
+        <span class="macro">assert!</span>(result);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_verifier_fails() {
         <span class="kw">let </span>result = TestVerifier { verifies: <span class="bool-val">false </span>}.verify(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
-        <span class="macro">assert_eq!</span>(result, <span class="bool-val">false</span>);
+        <span class="macro">assert!</span>(!result);
     }
 }
 </code></pre></div></section></main></body></html>

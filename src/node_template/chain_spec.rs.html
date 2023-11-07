@@ -72,14 +72,14 @@
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
 <a href="#74" id="74">74</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>node_template_runtime::GenesisConfig;
+</pre></div><pre class="rust"><code><span class="kw">use </span>node_template_runtime::TuxedoGenesisConfig;
 <span class="kw">use </span>sc_service::ChainType;
 
 <span class="comment">// The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &amp;str = &quot;wss://telemetry.polkadot.io/submit/&quot;;
 
 </span><span class="doccomment">/// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-</span><span class="kw">pub type </span>ChainSpec = sc_service::GenericChainSpec&lt;GenesisConfig&gt;;
+</span><span class="kw">pub type </span>ChainSpec = sc_service::GenericChainSpec&lt;TuxedoGenesisConfig&gt;;
 
 <span class="comment">// /// Generate a crypto pair from seed.
 // pub fn get_from_seed&lt;TPublic: Public&gt;(seed: &amp;str) -&gt; &lt;TPublic::Pair as Pair&gt;::Public {
@@ -110,7 +110,7 @@
         <span class="comment">// ID
         </span><span class="string">&quot;dev&quot;</span>,
         ChainType::Development,
-        GenesisConfig::default,
+        TuxedoGenesisConfig::default,
         <span class="comment">// Bootnodes
         </span><span class="macro">vec!</span>[],
         <span class="comment">// Telemetry
@@ -132,7 +132,7 @@
         <span class="comment">// ID
         </span><span class="string">&quot;local_testnet&quot;</span>,
         ChainType::Local,
-        GenesisConfig::default,
+        TuxedoGenesisConfig::default,
         <span class="comment">// Bootnodes
         </span><span class="macro">vec!</span>[],
         <span class="comment">// Telemetry

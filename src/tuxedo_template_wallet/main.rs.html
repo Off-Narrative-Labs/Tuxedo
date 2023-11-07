@@ -260,49 +260,14 @@
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-</span><span class="kw">use </span>anyhow::anyhow;
-<span class="kw">use </span>clap::Parser;
-<span class="kw">use </span>jsonrpsee::{
-    core::client::ClientT,
-    http_client::{HttpClient, HttpClientBuilder},
-    rpc_params,
-};
+</span><span class="kw">use </span>clap::Parser;
+<span class="kw">use </span>jsonrpsee::http_client::HttpClientBuilder;
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>runtime::OuterVerifier;
 <span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>tuxedo_core::{
-    types::{Output, OutputRef},
-    verifier::<span class="kw-2">*</span>,
-};
+<span class="kw">use </span>tuxedo_core::{types::OutputRef, verifier::<span class="kw-2">*</span>};
 
 <span class="kw">use </span>sp_core::H256;
 
@@ -359,15 +324,14 @@
     <span class="macro">log::debug!</span>(<span class="string">&quot;Node&#39;s Genesis block::{:?}&quot;</span>, node_genesis_hash);
 
     <span class="comment">// Open the local database
-    </span><span class="kw">let </span>db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)<span class="question-mark">?</span>;
+    </span><span class="kw">let </span>db = sync::open_db(db_path, node_genesis_hash, node_genesis_block.clone())<span class="question-mark">?</span>;
 
     <span class="kw">let </span>num_blocks =
         sync::height(<span class="kw-2">&amp;</span>db)<span class="question-mark">?</span>.expect(<span class="string">&quot;db should be initialized automatically when opening.&quot;</span>);
     <span class="macro">log::info!</span>(<span class="string">&quot;Number of blocks in the db: {num_blocks}&quot;</span>);
 
-    <span class="comment">// The filter function that will determine whether the local database should
-    // track a given utxo is based on whether that utxo is privately owned by a
-    // key that is in our keystore.
+    <span class="comment">// The filter function that will determine whether the local database should track a given utxo
+    // is based on whether that utxo is privately owned by a key that is in our keystore.
     </span><span class="kw">let </span>keystore_filter = |v: <span class="kw-2">&amp;</span>OuterVerifier| -&gt; bool {
         <span class="macro">matches!</span>[
             v,
@@ -376,8 +340,8 @@
     };
 
     <span class="kw">if </span>!sled::Db::was_recovered(<span class="kw-2">&amp;</span>db) {
-        <span class="comment">// Before synchronizing init the database with the current Genesis utxos
-        </span>sync::init_from_genesis(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore_filter).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="comment">// This is a new instance, so we need to apply the genesis block to the database.
+        </span>sync::apply_block(<span class="kw-2">&amp;</span>db, node_genesis_block, node_genesis_hash, <span class="kw-2">&amp;</span>keystore_filter).<span class="kw">await</span><span class="question-mark">?</span>;
     }
 
     <span class="comment">// Synchronize the wallet with attached node unless instructed otherwise.
@@ -482,24 +446,6 @@
     }
 
     <span class="prelude-val">Ok</span>(())
-}
-
-<span class="comment">//TODO move to rpc.rs
-</span><span class="doccomment">/// Fetch an output from chain storage given an OutputRef
-</span><span class="kw">pub async fn </span>fetch_storage&lt;V: Verifier&gt;(
-    output_ref: <span class="kw-2">&amp;</span>OutputRef,
-    client: <span class="kw-2">&amp;</span>HttpClient,
-) -&gt; anyhow::Result&lt;Output&lt;V&gt;&gt; {
-    <span class="kw">let </span>ref_hex = hex::encode(output_ref.encode());
-    <span class="kw">let </span>params = <span class="macro">rpc_params!</span>[ref_hex];
-    <span class="kw">let </span>rpc_response: <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;String&gt;, <span class="kw">_</span>&gt; = client.request(<span class="string">&quot;state_getStorage&quot;</span>, params).<span class="kw">await</span>;
-
-    <span class="kw">let </span>response_hex = rpc_response<span class="question-mark">?</span>.ok_or(<span class="macro">anyhow!</span>(<span class="string">&quot;Data cannot be retrieved from storage&quot;</span>))<span class="question-mark">?</span>;
-    <span class="kw">let </span>response_hex = strip_0x_prefix(<span class="kw-2">&amp;</span>response_hex);
-    <span class="kw">let </span>response_bytes = hex::decode(response_hex)<span class="question-mark">?</span>;
-    <span class="kw">let </span>utxo = Output::decode(<span class="kw-2">&amp;mut &amp;</span>response_bytes[..])<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(utxo)
 }
 
 <span class="doccomment">/// Parse a string into an H256 that represents a public key

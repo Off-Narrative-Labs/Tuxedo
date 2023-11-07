@@ -220,6 +220,20 @@
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
 <a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! APIs and utilities for working with Substrate&#39;s Inherents in Tuxedo based chains.
 //!
 //! # Substrate inherents
@@ -324,10 +338,7 @@
     /// The inherent data is supplied by the authoring node.
     </span><span class="kw">fn </span>create_inherent(
         authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        <span class="comment">// The option represents the so-called &quot;first block hack&quot;.
-        // We need a way to initialize the chain with a first inherent on block one
-        // where there is no previous inherent. Once we introduce genesis extrinsics, this can be removed.
-        </span>previous_inherent: <span class="prelude-ty">Option</span>&lt;(Transaction&lt;V, C&gt;, H256)&gt;,
+        previous_inherent: (Transaction&lt;V, C&gt;, H256),
     ) -&gt; Transaction&lt;V, C&gt;;
 
     <span class="doccomment">/// Perform off-chain pre-execution checks on the inherent.
@@ -339,6 +350,12 @@
         inherent: Transaction&lt;V, C&gt;,
         results: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
     );
+
+    <span class="doccomment">/// Return the genesis transactions that are required for this inherent.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
+        Vec::new()
+    }
 }
 
 <span class="doccomment">/// Almost identical to TuxedoInherent, but allows returning multiple extrinsics
@@ -366,6 +383,10 @@
         inherents: Vec&lt;Transaction&lt;V, C&gt;&gt;,
         results: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
     );
+
+    <span class="doccomment">/// Return the genesis transactions that are required for the inherents.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt;;
 }
 
 <span class="doccomment">/// An adapter to transform structured Tuxedo inherents into the more general and powerful
@@ -388,7 +409,7 @@
 
         <span class="macro">vec!</span>[&lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::create_inherent(
             authoring_inherent_data,
-            previous_inherent,
+            previous_inherent.expect(<span class="string">&quot;Previous inherent exists.&quot;</span>),
         )]
     }
 
@@ -413,11 +434,13 @@
                 .expect(<span class="string">&quot;Should be able to put an error.&quot;</span>);
             <span class="kw">return</span>;
         }
-        <span class="kw">let </span>inherent = inherents
-            .get(<span class="number">0</span>)
-            .expect(<span class="string">&quot;We already checked the bounds.&quot;</span>)
-            .clone();
+        <span class="kw">let </span>inherent = inherents.get(<span class="number">0</span>).expect(<span class="string">&quot;Previous inherent exists.&quot;</span>).clone();
         &lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::check_inherent(importing_inherent_data, inherent, results)
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
+        &lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::genesis_transactions()
     }
 }
 
@@ -440,6 +463,11 @@
             inherents.is_empty(),
             <span class="string">&quot;inherent extrinsic was passed to check inherents stub implementation.&quot;
         </span>)
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
+        Vec::new()
     }
 }
 </code></pre></div></section></main></body></html>

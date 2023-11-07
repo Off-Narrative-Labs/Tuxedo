@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"tuxedo_core":[["impl&lt;'a, Block: BlockT, B: Backend&lt;Block&gt;, E: RuntimeVersionOf + CodeExecutor&gt; BuildGenesisBlock&lt;Block&gt; for <a class=\"struct\" href=\"tuxedo_core/genesis/struct.TuxedoGenesisBlockBuilder.html\" title=\"struct tuxedo_core::genesis::TuxedoGenesisBlockBuilder\">TuxedoGenesisBlockBuilder</a>&lt;'a, Block, B, E&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

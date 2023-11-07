@@ -397,6 +397,10 @@
 <a href="#397" id="397">397</a>
 <a href="#398" id="398">398</a>
 <a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Allow block authors to include a timestamp via an inherent transaction.
 //!
 //! This is roughly analogous to FRAME&#39;s pallet timestamp. It relies on the same client-side inherent data provider,
@@ -405,10 +409,8 @@
 //! In each block, the block author must include a single `SetTimestamp` transaction that peeks at the
 //! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
 //!
-//! This piece currently features two prominent hacks which will need to be cleaned up in due course.
-//! 1. It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
-//! 2. In block #1 it allows creating a new best timestamp without comsuming a previous one.
-//!    This should be removed once we are able to include a timestamp in the genesis block.
+//! This piece currently features a prominent hack which will need to be cleaned up in due course.
+//! It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
 
 </span><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
 
@@ -639,7 +641,7 @@
 
     <span class="kw">fn </span>create_inherent(
         authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        previous_inherent: <span class="prelude-ty">Option</span>&lt;(Transaction&lt;V, <span class="self">Self</span>&gt;, H256)&gt;,
+        previous_inherent: (Transaction&lt;V, <span class="self">Self</span>&gt;, H256),
     ) -&gt; tuxedo_core::types::Transaction&lt;V, <span class="self">Self</span>&gt; {
         <span class="kw">let </span>current_timestamp: u64 = authoring_inherent_data
             .get_data(<span class="kw-2">&amp;</span>sp_timestamp::INHERENT_IDENTIFIER)
@@ -655,25 +657,13 @@
             <span class="string">&quot;🕰️🖴 Local timestamp while creating inherent i:: {current_timestamp}&quot;
         </span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>peeks = Vec::new();
-        <span class="kw">match </span>(previous_inherent, T::block_height()) {
-            (<span class="prelude-val">None</span>, <span class="number">1</span>) =&gt; {
-                <span class="comment">// This is the first block hack case.
-                // We don&#39;t need any inputs, so just do nothing.
-            </span>}
-            (<span class="prelude-val">None</span>, <span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Attemping to construct timestamp inherent with no previous inherent (and not block 1).&quot;</span>),
-            (<span class="prelude-val">Some</span>((_previous_inherent, previous_id)), <span class="kw">_</span>) =&gt; {
-                <span class="comment">// This is the the normal case. We create a full previous to peek at.
-
-                // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
-                // But out transactions are simple enough that we know we just need the one and only output.
-                </span>peeks.push(OutputRef {
-                    tx_hash: previous_id,
-                    <span class="comment">// There is always 1 output, so we know right where to find it.
-                    </span>index: <span class="number">0</span>,
-                });
-            }
-        }
+        <span class="comment">// We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
+        // But out transactions are simple enough that we know we just need the one and only output.
+        </span><span class="kw">let </span>old_output = OutputRef {
+            tx_hash: previous_inherent.<span class="number">1</span>,
+            <span class="comment">// There is always 1 output, so we know right where to find it.
+            </span>index: <span class="number">0</span>,
+        };
 
         <span class="kw">let </span>new_output = Output {
             payload: new_timestamp.into(),
@@ -682,7 +672,7 @@
 
         Transaction {
             inputs: Vec::new(),
-            peeks,
+            peeks: <span class="macro">vec!</span>[old_output],
             outputs: <span class="macro">vec!</span>[new_output],
             checker: <span class="self">Self</span>::default(),
         }
@@ -728,6 +718,24 @@
                 .put_error(sp_timestamp::INHERENT_IDENTIFIER, <span class="kw-2">&amp;</span>TooFarInFuture)
                 .expect(<span class="string">&quot;Should be able to push some error&quot;</span>);
         }
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
+        <span class="kw">let </span>time = std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+            .expect(<span class="string">&quot;Time is always after UNIX_EPOCH; qed&quot;</span>)
+            .as_millis() <span class="kw">as </span>u64;
+
+        <span class="macro">vec!</span>[Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: <span class="macro">vec!</span>[Output {
+                payload: Timestamp::new(time, <span class="number">0</span>).into(),
+                verifier: UpForGrabs.into(),
+            }],
+            checker: <span class="self">Self</span>::default(),
+        }]
     }
 }
 

@@ -516,6 +516,30 @@
 <a href="#516" id="516">516</a>
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The Tuxedo Template Runtime is an example runtime that uses
 //! most of the pieces provided in the wardrobe.
 //!
@@ -527,6 +551,7 @@
 #[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>), <span class="string">&quot;/wasm_binary.rs&quot;</span>));
 
+<span class="kw">use </span>kitties::FreeKittyConstraintChecker;
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>scale_info::TypeInfo;
 <span class="kw">use </span>sp_consensus_aura::sr25519::AuthorityId <span class="kw">as </span>AuraId;
@@ -553,7 +578,6 @@
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">use </span>tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction <span class="kw">as </span>TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
@@ -564,9 +588,6 @@
 <span class="kw">pub use </span>money;
 <span class="kw">pub use </span>poe;
 <span class="kw">pub use </span>runtime_upgrade;
-
-<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">use </span>tuxedo_core::types::OutputRef;
 
 <span class="doccomment">/// Opaque types. These are used by the CLI to instantiate machinery that don&#39;t need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -623,69 +644,85 @@
 }
 
 <span class="attr">#[derive(Serialize, Deserialize)]
-</span><span class="kw">pub struct </span>GenesisConfig {
-    <span class="kw">pub </span>genesis_utxos: Vec&lt;Output&gt;,
-}
+</span><span class="doccomment">/// The `TuxedoGenesisConfig` struct is used to configure the genesis state of the runtime.
+/// The only parameter is a list of transactions to be included in the genesis block, and stored along with their outputs.
+/// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
+</span><span class="kw">pub struct </span>TuxedoGenesisConfig(<span class="kw">pub </span>Vec&lt;Transaction&gt;);
 
-<span class="kw">impl </span>Default <span class="kw">for </span>GenesisConfig {
+<span class="kw">impl </span>Default <span class="kw">for </span>TuxedoGenesisConfig {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="kw">use </span>hex_literal::hex;
+        <span class="kw">use </span>kitties::{KittyDNA, KittyData, Parent};
+        <span class="kw">use </span>money::{Coin, MoneyConstraintChecker};
+        <span class="kw">use </span>sp_api::HashT;
 
         <span class="kw">const </span>SHAWN_PUB_KEY_BYTES: [u8; <span class="number">32</span>] =
             <span class="macro">hex!</span>(<span class="string">&quot;d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67&quot;</span>);
         <span class="kw">const </span>ANDREW_PUB_KEY_BYTES: [u8; <span class="number">32</span>] =
             <span class="macro">hex!</span>(<span class="string">&quot;baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a&quot;</span>);
+        <span class="kw">let </span>signatories = <span class="macro">vec!</span>[SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
-        <span class="comment">// Initial Config just for a Money UTXO
-        </span>GenesisConfig {
-            genesis_utxos: <span class="macro">vec!</span>[
-                Output {
-                    verifier: OuterVerifier::SigCheck(SigCheck {
-                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: <span class="number">100u128</span>.encode(),
-                        type_id: &lt;money::Coin&lt;<span class="number">0</span>&gt; <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
-                    },
-                },
-                Output {
-                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                        threshold: <span class="number">1</span>,
-                        signatories: <span class="macro">vec!</span>[SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: <span class="number">100u128</span>.encode(),
-                        type_id: &lt;money::Coin&lt;<span class="number">0</span>&gt; <span class="kw">as </span>UtxoData&gt;::TYPE_ID,
-                    },
-                },
-            ],
-        }
+        <span class="kw">let </span>genesis_transactions = <span class="macro">vec!</span>[
+            <span class="comment">// Money Transaction
+            </span>Transaction {
+                inputs: <span class="macro">vec!</span>[],
+                peeks: <span class="macro">vec!</span>[],
+                outputs: <span class="macro">vec!</span>[
+                    (Coin::&lt;<span class="number">0</span>&gt;(<span class="number">100</span>), SigCheck::new(SHAWN_PUB_KEY_BYTES)).into(),
+                    (Coin::&lt;<span class="number">0</span>&gt;(<span class="number">100</span>), ThresholdMultiSignature::new(<span class="number">1</span>, signatories)).into(),
+                ],
+                checker: MoneyConstraintChecker::Mint.into(),
+            },
+            <span class="comment">// Kitty Transaction
+            </span>Transaction {
+                inputs: <span class="macro">vec!</span>[],
+                peeks: <span class="macro">vec!</span>[],
+                outputs: <span class="macro">vec!</span>[
+                    (
+                        KittyData {
+                            parent: Parent::Mom(Default::default()),
+                            dna: KittyDNA(BlakeTwo256::hash_of(<span class="string">b&quot;mother&quot;</span>)),
+                            ..Default::default()
+                        },
+                        UpForGrabs,
+                    )
+                        .into(),
+                    (
+                        KittyData {
+                            parent: Parent::Dad(Default::default()),
+                            dna: KittyDNA(BlakeTwo256::hash_of(<span class="string">b&quot;father&quot;</span>)),
+                            ..Default::default()
+                        },
+                        UpForGrabs,
+                    )
+                        .into(),
+                ],
+                checker: FreeKittyConstraintChecker.into(),
+            },
+            <span class="comment">// TODO: Initial Transactions for Existence
+        </span>];
 
-        <span class="comment">// TODO: Initial UTXO for Kitties
-
-        // TODO: Initial UTXO for Existence
-    </span>}
+        TuxedoGenesisConfig(genesis_transactions)
+    }
 }
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="kw">impl </span>BuildStorage <span class="kw">for </span>GenesisConfig {
+</span><span class="kw">impl </span>BuildStorage <span class="kw">for </span>TuxedoGenesisConfig {
     <span class="kw">fn </span>assimilate_storage(<span class="kw-2">&amp;</span><span class="self">self</span>, storage: <span class="kw-2">&amp;mut </span>Storage) -&gt; <span class="prelude-ty">Result</span>&lt;(), String&gt; {
-        <span class="comment">// we have nothing to put into storage in genesis, except this:
+        <span class="kw">use </span>tuxedo_core::inherents::InherentInternal;
+
+        <span class="comment">// The wasm binary is stored under a special key.
         </span>storage.top.insert(
             sp_storage::well_known_keys::CODE.into(),
             WASM_BINARY.unwrap().to_vec(),
         );
 
-        <span class="kw">for </span>(index, utxo) <span class="kw">in </span><span class="self">self</span>.genesis_utxos.iter().enumerate() {
-            <span class="kw">let </span>output_ref = OutputRef {
-                <span class="comment">// Genesis UTXOs don&#39;t come from any real transaction, so just use the zero hash
-                </span>tx_hash: &lt;Header <span class="kw">as </span>sp_api::HeaderT&gt;::Hash::zero(),
-                index: index <span class="kw">as </span>u32,
-            };
-            storage.top.insert(output_ref.encode(), utxo.encode());
-        }
+        <span class="comment">// The inherents transactions are computed using the appropriate method,
+        // and placed in the block before the normal transactions.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+        genesis_transactions.extend(<span class="self">self</span>.<span class="number">0</span>.clone());
 
-        <span class="prelude-val">Ok</span>(())
+        tuxedo_core::genesis::assimilate_storage(storage, genesis_transactions)
     }
 }
 
@@ -943,11 +980,14 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>parity_scale_codec::Encode;
+    <span class="kw">use </span>sp_api::HashT;
     <span class="kw">use </span>sp_core::testing::SR25519;
-    <span class="kw">use </span>sp_keystore::testing::MemoryKeystore;
-    <span class="kw">use </span>sp_keystore::{Keystore, KeystoreExt};
-
+    <span class="kw">use </span>sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
     <span class="kw">use </span>std::sync::Arc;
+    <span class="kw">use </span>tuxedo_core::{
+        dynamic_typing::{DynamicallyTypedData, UtxoData},
+        types::OutputRef,
+    };
 
     <span class="comment">// other random account generated with subkey
     </span><span class="kw">const </span>SHAWN_PHRASE: <span class="kw-2">&amp;</span>str =
@@ -958,7 +998,7 @@
     <span class="kw">fn </span>new_test_ext() -&gt; sp_io::TestExternalities {
         <span class="kw">let </span>keystore = MemoryKeystore::new();
 
-        <span class="kw">let </span>t = GenesisConfig::default()
+        <span class="kw">let </span>t = TuxedoGenesisConfig::default()
             .build_storage()
             .expect(<span class="string">&quot;System builds valid default genesis config&quot;</span>);
 
@@ -986,10 +1026,14 @@
                 },
             };
 
+            <span class="kw">let </span>tx = TuxedoGenesisConfig::default().<span class="number">0</span>.get(<span class="number">0</span>).unwrap().clone();
+
+            <span class="macro">assert_eq!</span>(tx.outputs.get(<span class="number">0</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>genesis_utxo));
+
+            <span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
             <span class="kw">let </span>output_ref = OutputRef {
-                <span class="comment">// Genesis UTXOs don&#39;t come from any real transaction, so just uze the zero hash
-                </span>tx_hash: &lt;Header <span class="kw">as </span>sp_api::HeaderT&gt;::Hash::zero(),
-                index: <span class="number">0 </span><span class="kw">as </span>u32,
+                tx_hash,
+                index: <span class="number">0_u32</span>,
             };
 
             <span class="kw">let </span>encoded_utxo =
@@ -1021,10 +1065,14 @@
                 },
             };
 
+            <span class="kw">let </span>tx = TuxedoGenesisConfig::default().<span class="number">0</span>.get(<span class="number">0</span>).unwrap().clone();
+
+            <span class="macro">assert_eq!</span>(tx.outputs.get(<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>genesis_multi_sig_utxo));
+
+            <span class="kw">let </span>tx_hash = BlakeTwo256::hash_of(<span class="kw-2">&amp;</span>tx.encode());
             <span class="kw">let </span>output_ref = OutputRef {
-                <span class="comment">// Genesis UTXOs don&#39;t come from any real transaction, so just uze the zero hash
-                </span>tx_hash: &lt;Header <span class="kw">as </span>sp_api::HeaderT&gt;::Hash::zero(),
-                index: <span class="number">1 </span><span class="kw">as </span>u32,
+                tx_hash,
+                index: <span class="number">1_u32</span>,
             };
 
             <span class="kw">let </span>encoded_utxo =

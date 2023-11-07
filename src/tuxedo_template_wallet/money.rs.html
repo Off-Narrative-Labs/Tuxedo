@@ -147,7 +147,7 @@
 <a href="#147" id="147">147</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Wallet features related to spending money and checking balances.
 
-</span><span class="kw">use crate</span>::{cli::SpendArgs, fetch_storage, sync};
+</span><span class="kw">use crate</span>::{cli::SpendArgs, rpc::fetch_storage, sync};
 
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
