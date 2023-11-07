@@ -102,10 +102,7 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
     /// The inherent data is supplied by the authoring node.
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        // The option represents the so-called "first block hack".
-        // We need a way to initialize the chain with a first inherent on block one
-        // where there is no previous inherent. Once we introduce genesis extrinsics, this can be removed.
-        previous_inherent: Option<(Transaction<V, C>, H256)>,
+        previous_inherent: (Transaction<V, C>, H256),
     ) -> Transaction<V, C>;
 
     /// Perform off-chain pre-execution checks on the inherent.
@@ -117,6 +114,12 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
         inherent: Transaction<V, C>,
         results: &mut CheckInherentsResult,
     );
+
+    /// Return the genesis transactions that are required for this inherent.
+    #[cfg(feature = "std")]
+    fn genesis_transactions() -> Vec<Transaction<V, C>> {
+        Vec::new()
+    }
 }
 
 /// Almost identical to TuxedoInherent, but allows returning multiple extrinsics
@@ -144,6 +147,10 @@ pub trait InherentInternal<V, C: ConstraintChecker<V>>: Sized {
         inherents: Vec<Transaction<V, C>>,
         results: &mut CheckInherentsResult,
     );
+
+    /// Return the genesis transactions that are required for the inherents.
+    #[cfg(feature = "std")]
+    fn genesis_transactions() -> Vec<Transaction<V, C>>;
 }
 
 /// An adapter to transform structured Tuxedo inherents into the more general and powerful
@@ -166,7 +173,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
 
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
-            previous_inherent,
+            previous_inherent.expect("Previous inherent exists."),
         )]
     }
 
@@ -191,11 +198,13 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
                 .expect("Should be able to put an error.");
             return;
         }
-        let inherent = inherents
-            .get(0)
-            .expect("We already checked the bounds.")
-            .clone();
+        let inherent = inherents.get(0).expect("Previous inherent exists.").clone();
         <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)
+    }
+
+    #[cfg(feature = "std")]
+    fn genesis_transactions() -> Vec<Transaction<V, C>> {
+        <T as TuxedoInherent<V, C>>::genesis_transactions()
     }
 }
 
@@ -218,5 +227,10 @@ impl<V, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
             inherents.is_empty(),
             "inherent extrinsic was passed to check inherents stub implementation."
         )
+    }
+
+    #[cfg(feature = "std")]
+    fn genesis_transactions() -> Vec<Transaction<V, C>> {
+        Vec::new()
     }
 }

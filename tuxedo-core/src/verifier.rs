@@ -29,6 +29,14 @@ pub struct SigCheck {
     pub owner_pubkey: H256,
 }
 
+impl SigCheck {
+    pub fn new<T: Into<H256>>(value: T) -> Self {
+        SigCheck {
+            owner_pubkey: value.into(),
+        }
+    }
+}
+
 impl Verifier for SigCheck {
     fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
         let sig = match Signature::try_from(redeemer) {
@@ -67,6 +75,13 @@ pub struct ThresholdMultiSignature {
 }
 
 impl ThresholdMultiSignature {
+    pub fn new(threshold: u8, signatories: Vec<H256>) -> Self {
+        ThresholdMultiSignature {
+            threshold,
+            signatories,
+        }
+    }
+
     pub fn has_duplicate_signatories(&self) -> bool {
         let set: BTreeSet<_> = self.signatories.iter().collect();
         set.len() < self.signatories.len()
@@ -353,12 +368,12 @@ mod test {
     #[test]
     fn test_verifier_passes() {
         let result = TestVerifier { verifies: true }.verify(&[], &[]);
-        assert_eq!(result, true);
+        assert!(result);
     }
 
     #[test]
     fn test_verifier_fails() {
         let result = TestVerifier { verifies: false }.verify(&[], &[]);
-        assert_eq!(result, false);
+        assert!(!result);
     }
 }

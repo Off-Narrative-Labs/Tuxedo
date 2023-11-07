@@ -74,7 +74,7 @@ mod tests {
         };
 
         let my_filter = TestSigCheckFilter::build_filter(verifier).expect("Can build print filter");
-        let _ = my_filter(&vec![output], &H256::zero());
+        let _ = my_filter(&[output], &H256::zero());
     }
 
     #[test]

@@ -80,7 +80,7 @@ fn cleanup_timestamp_input_not_yet_ripe_for_cleaning() {
 
 #[test]
 fn cleanup_timestamp_multiple_happy_path() {
-    let old1 = Timestamp::new(1 * AlwaysBlockMillion::MINIMUM_TIME_INTERVAL, 1);
+    let old1 = Timestamp::new(AlwaysBlockMillion::MINIMUM_TIME_INTERVAL, 1);
     let old2 = Timestamp::new(2 * AlwaysBlockMillion::MINIMUM_TIME_INTERVAL, 2);
     let newer = Timestamp::new(
         2 * AlwaysBlockMillion::MIN_TIME_BEFORE_CLEANUP,
@@ -117,7 +117,7 @@ fn cleanup_timestamp_missing_input() {
 
 #[test]
 fn cleanup_timestamp_multiple_first_valid_second_invalid() {
-    let old = Timestamp::new(1 * AlwaysBlockMillion::MINIMUM_TIME_INTERVAL, 1);
+    let old = Timestamp::new(AlwaysBlockMillion::MINIMUM_TIME_INTERVAL, 1);
     let supposedly_old = Timestamp::new(
         2 * AlwaysBlockMillion::MIN_TIME_BEFORE_CLEANUP,
         2 * AlwaysBlockMillion::MIN_BLOCKS_BEFORE_CLEANUP,

@@ -1050,8 +1050,8 @@ mod tests {
                 assert_eq!(returned_header, expected_header);
 
                 // Make sure the transient storage has been removed
-                assert!(!sp_io::storage::exists(&HEADER_KEY));
-                assert!(!sp_io::storage::exists(&EXTRINSIC_KEY));
+                assert!(!sp_io::storage::exists(HEADER_KEY));
+                assert!(!sp_io::storage::exists(EXTRINSIC_KEY));
             });
     }
 

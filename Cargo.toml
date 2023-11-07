@@ -56,6 +56,7 @@ substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk", t
 
 # Substrate primitives and client
 sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
+sc-chain-spec = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 sc-cli = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
 sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-v1.2.0" }
