@@ -27,45 +27,45 @@ jobs:
           all: true
 
   test:
-      name: Test and code coverage
-      needs: [fmt, toml-sort]
-      runs-on: ubuntu-latest
-      permissions:
-          issues: write
-          pull-requests: write
-      steps:
-        - uses: actions/checkout@v4
-        - name: Install tooling
-          run: |
-            sudo apt-get install -y protobuf-compiler
-            protoc --version
-        - name: Install latest nextest release
-          uses: taiki-e/install-action@nextest
-        - name: Install cargo-llvm-cov
-          uses: taiki-e/install-action@cargo-llvm-cov
-        - name: Rust Cache
-          uses: Swatinem/rust-cache@v2
-          with:
-            cache-targets: true
-            cache-on-failure: true
-        - name: Run tests and print coverage data
-          run: cargo llvm-cov nextest --json --output-path lcov.json
-               --ignore-filename-regex "node/" --summary-only &&
-               echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
-        # if the PR is on the same repo, the coverage data can be reported as a comment
-        - if: github.event_name == 'pull_request' &&
-              github.event.pull_request.head.repo.full_name == github.repository
-          name: Generate lcov report
-          run: cargo llvm-cov report --lcov --output-path lcov.info
-               --ignore-filename-regex "node/"
-        - if: github.event_name == 'pull_request' &&
-              github.event.pull_request.head.repo.full_name == github.repository
-          name: Report code coverage
-          uses: romeovs/lcov-reporter-action@master
-          with:
-            lcov-file: lcov.info
-            pr-number: ${{ github.event.pull_request.number }}
-            delete-old-comments: true
+    name: Test and code coverage
+    needs: [fmt, toml-sort]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tooling
+        run: |
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+      - name: Install latest nextest release
+        uses: taiki-e/install-action@nextest
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: true
+          cache-on-failure: true
+      - name: Run tests and print coverage data
+        run: cargo llvm-cov nextest --json --output-path lcov.json
+          --ignore-filename-regex "node/" --summary-only &&
+          echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
+      # if the PR is on the same repo, the coverage data can be reported as a comment
+      - if: github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        name: Generate lcov report
+        run: cargo llvm-cov report --lcov --output-path lcov.info
+          --ignore-filename-regex "node/"
+      - if: github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        name: Report code coverage
+        uses: romeovs/lcov-reporter-action@master
+        with:
+          lcov-file: lcov.info
+          pr-number: ${{ github.event.pull_request.number }}
+          delete-old-comments: true
 
   clippy:
     name: Clippy
@@ -103,7 +103,4 @@ jobs:
       - name: Build
         run: cargo build
       - name: Run wallet test
-        run: |
-          ./target/debug/node-template --dev &
-          sleep 10 &&
-          ./target/debug/tuxedo-template-wallet --endpoint http://localhost:9944
+        run: ./wallet/test.sh
