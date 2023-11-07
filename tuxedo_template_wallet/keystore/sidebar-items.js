@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["KEY_TYPE","SHAWN_PHRASE","SHAWN_PUB_KEY"],"fn":["generate_key","get_keys","has_key","insert_default_key_for_this_session","insert_key","remove_key","sign_with"]};
+window.SIDEBAR_ITEMS = {"constant":["KEY_TYPE","SHAWN_PHRASE","SHAWN_PUB_KEY"],"fn":["generate_key","get_keys","has_key","insert_development_key_for_this_session","insert_key","remove_key","sign_with"]};
