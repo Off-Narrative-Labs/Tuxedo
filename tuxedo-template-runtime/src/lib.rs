@@ -9,7 +9,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use kitties::FreeKittyConstraintChecker;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -110,9 +109,8 @@ pub struct TuxedoGenesisConfig(pub Vec<Transaction>);
 impl Default for TuxedoGenesisConfig {
     fn default() -> Self {
         use hex_literal::hex;
-        use kitties::{KittyDNA, KittyData, Parent};
-        use money::{Coin, MoneyConstraintChecker};
-        use sp_api::HashT;
+        use kitties::{KittyData, Parent};
+        use money::Coin;
 
         const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
@@ -121,44 +119,14 @@ impl Default for TuxedoGenesisConfig {
         let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
         let genesis_transactions = vec![
-            // Money Transaction
-            Transaction {
-                inputs: vec![],
-                peeks: vec![],
-                outputs: vec![
-                    (Coin::<0>(100), SigCheck::new(SHAWN_PUB_KEY_BYTES)).into(),
-                    (Coin::<0>(100), ThresholdMultiSignature::new(1, signatories)).into(),
-                ],
-                checker: MoneyConstraintChecker::Mint.into(),
-            },
-            // Kitty Transaction
-            Transaction {
-                inputs: vec![],
-                peeks: vec![],
-                outputs: vec![
-                    (
-                        KittyData {
-                            parent: Parent::Mom(Default::default()),
-                            dna: KittyDNA(BlakeTwo256::hash_of(b"mother")),
-                            ..Default::default()
-                        },
-                        UpForGrabs,
-                    )
-                        .into(),
-                    (
-                        KittyData {
-                            parent: Parent::Dad(Default::default()),
-                            dna: KittyDNA(BlakeTwo256::hash_of(b"father")),
-                            ..Default::default()
-                        },
-                        UpForGrabs,
-                    )
-                        .into(),
-                ],
-                checker: FreeKittyConstraintChecker.into(),
-            },
-            // TODO: Initial Transactions for Existence
+            // Money Transactions
+            Coin::<0>::mint(100, SigCheck::new(SHAWN_PUB_KEY_BYTES)),
+            Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
+            // Kitty Transactions
+            KittyData::mint(Parent::mom(), b"mother", UpForGrabs),
+            KittyData::mint(Parent::dad(), b"father", UpForGrabs),
         ];
+        // TODO: Initial Transactions for Existence
 
         TuxedoGenesisConfig(genesis_transactions)
     }
@@ -523,14 +491,14 @@ mod tests {
                 },
             };
 
-            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
+            let tx = TuxedoGenesisConfig::default().0.get(1).unwrap().clone();
 
-            assert_eq!(tx.outputs.get(1), Some(&genesis_multi_sig_utxo));
+            assert_eq!(tx.outputs.get(0), Some(&genesis_multi_sig_utxo));
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
                 tx_hash,
-                index: 1_u32,
+                index: 0_u32,
             };
 
             let encoded_utxo =
