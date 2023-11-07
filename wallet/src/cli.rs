@@ -18,11 +18,9 @@ pub struct Cli {
     /// RPC endpoint of the node that this wallet will connect to.
     pub endpoint: String,
 
-    #[arg(long, short, verbatim_doc_comment)]
-    /// Path where the wallet data is stored.
-    /// Wallet data is just keystore at the moment, but will contain a local database of UTXOs in the future.
-    /// Default value is platform specific.
-    pub data_path: Option<PathBuf>,
+    #[arg(long, short)]
+    /// Path where the wallet data is stored. Default value is platform specific.
+    pub path: Option<PathBuf>,
 
     #[arg(long, verbatim_doc_comment)]
     /// Skip the initial sync that the wallet typically performs with the node.
@@ -31,7 +29,7 @@ pub struct Cli {
 
     #[arg(long)]
     /// A temporary directory will be created to store the configuration and will be deleted at the end of the process.
-    /// data-path will be ignored if this is set.
+    /// path will be ignored if this is set.
     pub tmp: bool,
 
     #[arg(long, verbatim_doc_comment)]

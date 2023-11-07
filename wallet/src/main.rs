@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
     // Setup the data paths.
     let data_path = match tmp {
         true => temp_dir(),
-        _ => cli.data_path.unwrap_or_else(default_data_path),
+        _ => cli.path.unwrap_or_else(default_data_path),
     };
     let keystore_path = data_path.join("keystore");
     let db_path = data_path.join("wallet_database");
