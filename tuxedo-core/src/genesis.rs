@@ -2,14 +2,14 @@
 
 use crate::{
     ensure,
-    types::{OutputRef, Transaction},
-    EXTRINSIC_KEY,
+    types::{Output, OutputRef, Transaction},
+    ConstraintChecker, Verifier, EXTRINSIC_KEY,
 };
 use parity_scale_codec::{Decode, Encode};
 use sc_chain_spec::BuildGenesisBlock;
 use sc_client_api::backend::{Backend, BlockImportOperation};
 use sc_executor::RuntimeVersionOf;
-use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_core::{storage::Storage, traits::CodeExecutor};
 use sp_runtime::{
     traits::{BlakeTwo256, Block as BlockT, Hash as HashT, Header as HeaderT, Zero},
@@ -97,31 +97,78 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     }
 }
 
-/// Assimilate the storage into the genesis block.
-/// This is done by inserting the genesis extrinsics into the genesis block, along with their outputs.
-/// Make sure to pass the transactions in order: the inherents should be first, then the extrinsics.
-pub fn assimilate_storage<V: Encode + TypeInfo, C: Encode + TypeInfo>(
-    storage: &mut Storage,
+#[derive(Serialize, Deserialize)]
+/// The `TuxedoGenesisConfig` struct is used to configure the genesis state of the runtime.
+/// It expects the wasm binary and a list of transactions to be included in the genesis block, and stored along with their outputs.
+/// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
+/// Make sure to pass the inherents before the extrinsics.
+pub struct TuxedoGenesisConfig<V, C> {
+    wasm_binary: Vec<u8>,
     genesis_transactions: Vec<Transaction<V, C>>,
-) -> Result<(), String> {
-    storage
-        .top
-        .insert(EXTRINSIC_KEY.to_vec(), genesis_transactions.encode());
+}
 
-    for tx in genesis_transactions {
-        ensure!(
-            tx.inputs.is_empty() && tx.peeks.is_empty(),
-            "Genesis transactions must not have any inputs or peeks."
-        );
-        let tx_hash = BlakeTwo256::hash_of(&tx.encode());
-        for (index, utxo) in tx.outputs.iter().enumerate() {
-            let output_ref = OutputRef {
-                tx_hash,
-                index: index as u32,
-            };
-            storage.top.insert(output_ref.encode(), utxo.encode());
+impl<V, C> TuxedoGenesisConfig<V, C> {
+    /// Create a new `TuxedoGenesisConfig` from a WASM binary and a list of transactions.
+    /// Make sure to pass the transactions in order: the inherents should be first, then the extrinsics.
+    pub fn new(wasm_binary: Vec<u8>, genesis_transactions: Vec<Transaction<V, C>>) -> Self {
+        Self {
+            wasm_binary,
+            genesis_transactions,
         }
     }
+}
 
-    Ok(())
+impl<V, C> BuildStorage for TuxedoGenesisConfig<V, C>
+where
+    V: Verifier,
+    C: ConstraintChecker<V>,
+    Transaction<V, C>: Encode,
+    Output<V>: Encode,
+{
+    /// Assimilate the storage into the genesis block.
+    /// This is done by inserting the genesis extrinsics into the genesis block, along with their outputs.
+    fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
+        // The wasm binary is stored under a special key.
+        storage.top.insert(
+            sp_storage::well_known_keys::CODE.into(),
+            self.wasm_binary.clone(),
+        );
+
+        // The transactions are stored under a special key.
+        storage
+            .top
+            .insert(EXTRINSIC_KEY.to_vec(), self.genesis_transactions.encode());
+
+        let mut finished_with_opening_inherents = false;
+
+        for tx in self.genesis_transactions.iter() {
+            // Enforce that inherents are in the right place
+            let current_tx_is_inherent = tx.checker.is_inherent();
+            if current_tx_is_inherent && finished_with_opening_inherents {
+                return Err(
+                    "Tried to execute opening inherent after switching to non-inherents.".into(),
+                );
+            }
+            if !current_tx_is_inherent && !finished_with_opening_inherents {
+                // This is the first non-inherent, so we update our flag and continue.
+                finished_with_opening_inherents = true;
+            }
+            // Enforce that transactions do not have any inputs or peeks.
+            ensure!(
+                tx.inputs.is_empty() && tx.peeks.is_empty(),
+                "Genesis transactions must not have any inputs or peeks."
+            );
+            // Insert the outputs into the storage.
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+            for (index, utxo) in tx.outputs.iter().enumerate() {
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: index as u32,
+                };
+                storage.top.insert(output_ref.encode(), utxo.encode());
+            }
+        }
+
+        Ok(())
+    }
 }

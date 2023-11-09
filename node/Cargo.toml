@@ -12,6 +12,7 @@ targets = [ "x86_64-unknown-linux-gnu" ]
 
 [dependencies]
 clap = { features = [ "derive" ], workspace = true }
+hex-literal = { workspace = true }
 
 sc-cli = { workspace = true }
 sc-client-api = { workspace = true }

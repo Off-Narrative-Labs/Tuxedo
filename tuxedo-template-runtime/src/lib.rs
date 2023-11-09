@@ -11,10 +11,12 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use sp_api::impl_runtime_apis;
+use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
@@ -24,15 +26,9 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 
-use sp_core::OpaqueMetadata;
-#[cfg(any(feature = "std", test))]
-use sp_runtime::{BuildStorage, Storage};
-
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-
-use serde::{Deserialize, Serialize};
 
 use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
@@ -97,58 +93,6 @@ pub fn native_version() -> NativeVersion {
     NativeVersion {
         runtime_version: VERSION,
         can_author_with: Default::default(),
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-/// The `TuxedoGenesisConfig` struct is used to configure the genesis state of the runtime.
-/// The only parameter is a list of transactions to be included in the genesis block, and stored along with their outputs.
-/// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
-pub struct TuxedoGenesisConfig(pub Vec<Transaction>);
-
-impl Default for TuxedoGenesisConfig {
-    fn default() -> Self {
-        use hex_literal::hex;
-        use kitties::{KittyData, Parent};
-        use money::Coin;
-
-        const SHAWN_PUB_KEY_BYTES: [u8; 32] =
-            hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
-        const ANDREW_PUB_KEY_BYTES: [u8; 32] =
-            hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
-        let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
-
-        let genesis_transactions = vec![
-            // Money Transactions
-            Coin::<0>::mint(100, SigCheck::new(SHAWN_PUB_KEY_BYTES)),
-            Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
-            // Kitty Transactions
-            KittyData::mint(Parent::mom(), b"mother", UpForGrabs),
-            KittyData::mint(Parent::dad(), b"father", UpForGrabs),
-        ];
-        // TODO: Initial Transactions for Existence
-
-        TuxedoGenesisConfig(genesis_transactions)
-    }
-}
-
-#[cfg(feature = "std")]
-impl BuildStorage for TuxedoGenesisConfig {
-    fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        use tuxedo_core::inherents::InherentInternal;
-
-        // The wasm binary is stored under a special key.
-        storage.top.insert(
-            sp_storage::well_known_keys::CODE.into(),
-            WASM_BINARY.unwrap().to_vec(),
-        );
-
-        // The inherents transactions are computed using the appropriate method,
-        // and placed in the block before the normal transactions.
-        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
-        genesis_transactions.extend(self.0.clone());
-
-        tuxedo_core::genesis::assimilate_storage(storage, genesis_transactions)
     }
 }
 
