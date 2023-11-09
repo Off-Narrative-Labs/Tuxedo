@@ -42,6 +42,12 @@ The best way to explore this runtime is by browsing its [code](./tuxedo-template
 
 There is an example node built with the Tuxedo template runtime. Because Tuxedo is primarily a runtime development framework, there is not much interesting or unique to Tuxedo to see in this crate. It is mostly a copy from the popular [Substrate node template](https://github.com/substrate-developer-hub/substrate-node-template/tree/main/node).
 
+#### Database
+
+PR [#136](https://github.com/Off-Narrative-Labs/Tuxedo/pull/136) set ParityDB as the default database instead of RocksDB.
+This choice is unopinionated, it was made simply because RocksDB takes longer time to compile and adds unnecessary dependencies for our current use case.
+Developers are free to use RocksDB instead by building the node with the feature flag `rocksdb`.
+
 ### Wallet
 
 The repo contains a CLI cryptocurrency wallet that works with the template node in the `wallet` directory.
