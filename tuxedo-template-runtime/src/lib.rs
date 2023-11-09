@@ -9,6 +9,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use kitties::FreeKittyConstraintChecker;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -35,7 +36,6 @@ use sp_version::RuntimeVersion;
 use serde::{Deserialize, Serialize};
 
 use tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
@@ -46,9 +46,6 @@ pub use kitties;
 pub use money;
 pub use poe;
 pub use runtime_upgrade;
-
-#[cfg(feature = "std")]
-use tuxedo_core::types::OutputRef;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -107,69 +104,85 @@ pub fn native_version() -> NativeVersion {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct GenesisConfig {
-    pub genesis_utxos: Vec<Output>,
-}
+/// The `TuxedoGenesisConfig` struct is used to configure the genesis state of the runtime.
+/// The only parameter is a list of transactions to be included in the genesis block, and stored along with their outputs.
+/// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
+pub struct TuxedoGenesisConfig(pub Vec<Transaction>);
 
-impl Default for GenesisConfig {
+impl Default for TuxedoGenesisConfig {
     fn default() -> Self {
         use hex_literal::hex;
+        use kitties::{KittyDNA, KittyData, Parent};
+        use money::{Coin, MoneyConstraintChecker};
+        use sp_api::HashT;
 
         const SHAWN_PUB_KEY_BYTES: [u8; 32] =
             hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
         const ANDREW_PUB_KEY_BYTES: [u8; 32] =
             hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
+        let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
-        // Initial Config just for a Money UTXO
-        GenesisConfig {
-            genesis_utxos: vec![
-                Output {
-                    verifier: OuterVerifier::SigCheck(SigCheck {
-                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
-                },
-                Output {
-                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                        threshold: 1,
-                        signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
-                },
-            ],
-        }
+        let genesis_transactions = vec![
+            // Money Transaction
+            Transaction {
+                inputs: vec![],
+                peeks: vec![],
+                outputs: vec![
+                    (Coin::<0>(100), SigCheck::new(SHAWN_PUB_KEY_BYTES)).into(),
+                    (Coin::<0>(100), ThresholdMultiSignature::new(1, signatories)).into(),
+                ],
+                checker: MoneyConstraintChecker::Mint.into(),
+            },
+            // Kitty Transaction
+            Transaction {
+                inputs: vec![],
+                peeks: vec![],
+                outputs: vec![
+                    (
+                        KittyData {
+                            parent: Parent::Mom(Default::default()),
+                            dna: KittyDNA(BlakeTwo256::hash_of(b"mother")),
+                            ..Default::default()
+                        },
+                        UpForGrabs,
+                    )
+                        .into(),
+                    (
+                        KittyData {
+                            parent: Parent::Dad(Default::default()),
+                            dna: KittyDNA(BlakeTwo256::hash_of(b"father")),
+                            ..Default::default()
+                        },
+                        UpForGrabs,
+                    )
+                        .into(),
+                ],
+                checker: FreeKittyConstraintChecker.into(),
+            },
+            // TODO: Initial Transactions for Existence
+        ];
 
-        // TODO: Initial UTXO for Kitties
-
-        // TODO: Initial UTXO for Existence
+        TuxedoGenesisConfig(genesis_transactions)
     }
 }
 
 #[cfg(feature = "std")]
-impl BuildStorage for GenesisConfig {
+impl BuildStorage for TuxedoGenesisConfig {
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        // we have nothing to put into storage in genesis, except this:
+        use tuxedo_core::inherents::InherentInternal;
+
+        // The wasm binary is stored under a special key.
         storage.top.insert(
             sp_storage::well_known_keys::CODE.into(),
             WASM_BINARY.unwrap().to_vec(),
         );
 
-        for (index, utxo) in self.genesis_utxos.iter().enumerate() {
-            let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just use the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: index as u32,
-            };
-            storage.top.insert(output_ref.encode(), utxo.encode());
-        }
+        // The inherents transactions are computed using the appropriate method,
+        // and placed in the block before the normal transactions.
+        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+        genesis_transactions.extend(self.0.clone());
 
-        Ok(())
+        tuxedo_core::genesis::assimilate_storage(storage, genesis_transactions)
     }
 }
 
@@ -489,11 +502,14 @@ tuxedo_parachain_core::register_validate_block!(Block, OuterVerifier, OuterConst
 mod tests {
     use super::*;
     use parity_scale_codec::Encode;
+    use sp_api::HashT;
     use sp_core::testing::SR25519;
-    use sp_keystore::testing::MemoryKeystore;
-    use sp_keystore::{Keystore, KeystoreExt};
-
+    use sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
     use std::sync::Arc;
+    use tuxedo_core::{
+        dynamic_typing::{DynamicallyTypedData, UtxoData},
+        types::OutputRef,
+    };
 
     // other random account generated with subkey
     const SHAWN_PHRASE: &str =
@@ -504,7 +520,7 @@ mod tests {
     fn new_test_ext() -> sp_io::TestExternalities {
         let keystore = MemoryKeystore::new();
 
-        let t = GenesisConfig::default()
+        let t = TuxedoGenesisConfig::default()
             .build_storage()
             .expect("System builds valid default genesis config");
 
@@ -532,9 +548,13 @@ mod tests {
                 },
             };
 
+            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
+
+            assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
+
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                tx_hash,
                 index: 0_u32,
             };
 
@@ -567,9 +587,13 @@ mod tests {
                 },
             };
 
+            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
+
+            assert_eq!(tx.outputs.get(1), Some(&genesis_multi_sig_utxo));
+
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
+                tx_hash,
                 index: 1_u32,
             };
 

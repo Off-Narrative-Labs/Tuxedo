@@ -1,19 +1,11 @@
 //! A simple CLI wallet. For now it is a toy just to start testing things out.
 
-use anyhow::anyhow;
 use clap::Parser;
-use jsonrpsee::{
-    core::client::ClientT,
-    http_client::{HttpClient, HttpClientBuilder},
-    rpc_params,
-};
+use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
 use runtime::OuterVerifier;
 use std::path::PathBuf;
-use tuxedo_core::{
-    types::{Output, OutputRef},
-    verifier::*,
-};
+use tuxedo_core::{types::OutputRef, verifier::*};
 
 use sp_core::H256;
 
@@ -37,16 +29,24 @@ async fn main() -> anyhow::Result<()> {
     // Parse command line args
     let cli = Cli::parse();
 
+    // If the user specified --tmp or --dev, then use a temporary directory.
+    let tmp = cli.tmp || cli.dev;
+
     // Setup the data paths.
-    let data_path = cli.data_path.unwrap_or_else(default_data_path);
+    let data_path = match tmp {
+        true => temp_dir(),
+        _ => cli.path.unwrap_or_else(default_data_path),
+    };
     let keystore_path = data_path.join("keystore");
     let db_path = data_path.join("wallet_database");
 
     // Setup the keystore
     let keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), None)?;
 
-    // Insert the example Shawn key so example transactions can be signed.
-    crate::keystore::insert_default_key_for_this_session(&keystore)?;
+    if cli.dev {
+        // Insert the example Shawn key so example transactions can be signed.
+        crate::keystore::insert_development_key_for_this_session(&keystore)?;
+    }
 
     // Setup jsonrpsee and endpoint-related information.
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
@@ -62,15 +62,14 @@ async fn main() -> anyhow::Result<()> {
     log::debug!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
-    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block)?;
+    let db = sync::open_db(db_path, node_genesis_hash, node_genesis_block.clone())?;
 
     let num_blocks =
         sync::height(&db)?.expect("db should be initialized automatically when opening.");
     log::info!("Number of blocks in the db: {num_blocks}");
 
-    // The filter function that will determine whether the local database should
-    // track a given utxo is based on whether that utxo is privately owned by a
-    // key that is in our keystore.
+    // The filter function that will determine whether the local database should track a given utxo
+    // is based on whether that utxo is privately owned by a key that is in our keystore.
     let keystore_filter = |v: &OuterVerifier| -> bool {
         matches![
             v,
@@ -79,8 +78,8 @@ async fn main() -> anyhow::Result<()> {
     };
 
     if !sled::Db::was_recovered(&db) {
-        // Before synchronizing init the database with the current Genesis utxos
-        sync::init_from_genesis(&db, &client, &keystore_filter).await?;
+        // This is a new instance, so we need to apply the genesis block to the database.
+        sync::apply_block(&db, node_genesis_block, node_genesis_hash, &keystore_filter).await?;
     }
 
     // Synchronize the wallet with attached node unless instructed otherwise.
@@ -171,25 +170,20 @@ async fn main() -> anyhow::Result<()> {
             log::info!("No Wallet Command invoked. Exiting.");
             Ok(())
         }
+    }?;
+
+    if tmp {
+        // Cleanup the temporary directory.
+        std::fs::remove_dir_all(data_path.clone()).map_err(|e| {
+            log::warn!(
+                "Unable to remove temporary data directory at {}\nPlease remove it manually.",
+                data_path.to_string_lossy()
+            );
+            e
+        })?;
     }
-}
 
-//TODO move to rpc.rs
-/// Fetch an output from chain storage given an OutputRef
-pub async fn fetch_storage<V: Verifier>(
-    output_ref: &OutputRef,
-    client: &HttpClient,
-) -> anyhow::Result<Output<V>> {
-    let ref_hex = hex::encode(output_ref.encode());
-    let params = rpc_params![ref_hex];
-    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
-
-    let response_hex = rpc_response?.ok_or(anyhow!("Data cannot be retrieved from storage"))?;
-    let response_hex = strip_0x_prefix(&response_hex);
-    let response_bytes = hex::decode(response_hex)?;
-    let utxo = Output::decode(&mut &response_bytes[..])?;
-
-    Ok(utxo)
+    Ok(())
 }
 
 /// Parse a string into an H256 that represents a public key
@@ -219,6 +213,15 @@ fn strip_0x_prefix(s: &str) -> &str {
     } else {
         s
     }
+}
+
+/// Generate a plaform-specific temporary directory for the wallet
+fn temp_dir() -> PathBuf {
+    // Since it is only used for testing purpose, we don't need a secure temp dir, just a unique one.
+    std::env::temp_dir().join(format!(
+        "tuxedo-wallet-{}",
+        std::time::UNIX_EPOCH.elapsed().unwrap().as_millis(),
+    ))
 }
 
 /// Generate the platform-specific default data path for the wallet

@@ -132,7 +132,7 @@ impl Default for Parent {
     Debug,
     TypeInfo,
 )]
-pub struct KittyDNA(H256);
+pub struct KittyDNA(pub H256);
 
 #[derive(
     Serialize,

@@ -1,10 +1,16 @@
 //! Strongly typed helper functions for communicating with the Node's
 //! RPC endpoint.
 
+use crate::strip_0x_prefix;
+use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
 use runtime::{opaque::Block as OpaqueBlock, Block};
 use sp_core::H256;
+use tuxedo_core::{
+    types::{Output, OutputRef},
+    Verifier,
+};
 
 /// Typed helper to get the Node's block hash at a particular height
 pub async fn node_get_block_hash(height: u32, client: &HttpClient) -> anyhow::Result<Option<H256>> {
@@ -35,4 +41,21 @@ pub async fn node_get_block(hash: H256, client: &HttpClient) -> anyhow::Result<O
     let structured_block = Block::decode(&mut &scale_bytes[..]).unwrap();
 
     Ok(Some(structured_block))
+}
+
+/// Fetch an output from chain storage given an OutputRef
+pub async fn fetch_storage<V: Verifier>(
+    output_ref: &OutputRef,
+    client: &HttpClient,
+) -> anyhow::Result<Output<V>> {
+    let ref_hex = hex::encode(output_ref.encode());
+    let params = rpc_params![ref_hex];
+    let rpc_response: Result<Option<String>, _> = client.request("state_getStorage", params).await;
+
+    let response_hex = rpc_response?.ok_or(anyhow!("Data cannot be retrieved from storage"))?;
+    let response_hex = strip_0x_prefix(&response_hex);
+    let response_bytes = hex::decode(response_hex)?;
+    let utxo = Output::decode(&mut &response_bytes[..])?;
+
+    Ok(utxo)
 }
