@@ -44,7 +44,9 @@ There is an example node built with the Tuxedo template runtime. Because Tuxedo 
 
 #### Database
 
-PR [#136](https://github.com/Off-Narrative-Labs/Tuxedo/pull/136) removed RocksDB for ParityDB. This choice is unopinionated, it was made simply because RocksDB takes longer time to compile and adds unnecessary dependencies for our current use case. Developers are free to use any database they want.
+PR [#136](https://github.com/Off-Narrative-Labs/Tuxedo/pull/136) set ParityDB as the default database instead of RocksDB.
+This choice is unopinionated, it was made simply because RocksDB takes longer time to compile and adds unnecessary dependencies for our current use case.
+Developers are free to use RocksDB instead by building the node with the feature flag `rocksdb`.
 
 ### Wallet
 
