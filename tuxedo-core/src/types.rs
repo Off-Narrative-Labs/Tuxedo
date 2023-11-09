@@ -60,7 +60,7 @@ impl<V: Clone, C: Clone> Transaction<V, C> {
 
 // Manually implement Encode and Decode for the Transaction type
 // so that its encoding is the same as an opaque Vec<u8>.
-impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
+impl<V: Encode, C: Encode> Encode for Transaction<V, C> {
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
         let inputs = self.inputs.encode();
         let peeks = self.peeks.encode();
@@ -78,7 +78,7 @@ impl<V: Encode + TypeInfo, C: Encode + TypeInfo> Encode for Transaction<V, C> {
     }
 }
 
-impl<V: Decode + TypeInfo, C: Decode + TypeInfo> Decode for Transaction<V, C> {
+impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
     fn decode<I: parity_scale_codec::Input>(
         input: &mut I,
     ) -> Result<Self, parity_scale_codec::Error> {

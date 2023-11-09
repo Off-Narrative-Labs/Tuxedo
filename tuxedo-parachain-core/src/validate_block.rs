@@ -11,10 +11,8 @@ use polkadot_parachain_primitives::primitives::{
 };
 use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 
-//TODO reevaluate whether TypeInfo is necessary
 use cumulus_primitives_core::ParaId;
 use parity_scale_codec::{Decode, Encode};
-use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
 use sp_io::KillStorageResult;
@@ -70,10 +68,9 @@ pub fn validate_block<B, V, C>(
     }: MemoryOptimizedValidationParams,
 ) -> ValidationResult
 where
-    //TODO re-evaluate TypeInfo bound both here and on `impl Executive`
     B: BlockT<Extrinsic = Transaction<V, C>>,
-    V: Verifier + TypeInfo,
-    C: ConstraintChecker<V> + TypeInfo, // + Into<SetParachainInfo<V>>,
+    V: Verifier,
+    C: ConstraintChecker<V>, // + Into<SetParachainInfo<V>>,
 {
     // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE");
     sp_runtime::runtime_logger::RuntimeLogger::init();
