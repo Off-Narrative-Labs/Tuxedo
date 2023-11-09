@@ -352,7 +352,7 @@ impl_runtime_apis! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kitties::{KittyData, Parent};
+
     use money::Coin;
     use parity_scale_codec::Encode;
     use sp_api::HashT;
@@ -435,7 +435,7 @@ mod tests {
             let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
 
             let tx = default_runtime_genesis_config()
-                .get_transaction(0 + inherents_len)
+                .get_transaction(inherents_len)
                 .unwrap()
                 .clone();
 
