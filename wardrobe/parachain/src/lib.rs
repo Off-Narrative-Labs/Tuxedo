@@ -198,7 +198,7 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Option<(Transaction<V, Self>, H256)>,
+        (_previous_inherent, previous_id): (Transaction<V, Self>, H256),
     ) -> tuxedo_core::types::Transaction<V, Self> {
         let current_info: ParachainInherentData = authoring_inherent_data
             .get_data(&INHERENT_IDENTIFIER)
@@ -210,32 +210,19 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
             "parachain inherent data while creating inherent: {:?}", current_info
         );
 
-        let mut inputs: Vec<Input> = Vec::new();
-        match (previous_inherent, T::block_height()) {
-            (None, 1) => {
-                // This is the first block hack case.
-                // We don't need any inputs, so just do nothing.
-            }
-            (None, _) => panic!("Attemping to construct parachain inherent with no previous inherent (and not block 1)."),
-            (Some((_previous_inherent, previous_id)), _) => {
-                // This is the the normal case. We create a full previous to peek at.
+        // The first task is to construct the input that we will consume.
+        // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
+        // But our transactions are simple enough that we know we just need the one and only output.
+        let output_ref = OutputRef {
+            tx_hash: previous_id,
+            // There is always 1 output, so we know right where to find it.
+            index: 0,
+        };
 
-                // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
-                // But out transactions are simple enough that we know we just need the one and only output.
-                let output_ref = OutputRef {
-                    tx_hash: previous_id,
-                    // There is always 1 output, so we know right where to find it.
-                    index: 0,
-                };
-
-                let input = Input {
-                    output_ref,
-                    redeemer: Vec::new(),
-                };
-
-                inputs.push(input);
-            }
-        }
+        let input = Input {
+            output_ref,
+            redeemer: Vec::new(),
+        };
 
         let new_output = Output {
             payload: ParachainInherentDataUtxo::from(current_info).into(),
@@ -243,7 +230,7 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
         };
 
         let t = Transaction {
-            inputs,
+            inputs: vec![input],
             peeks: Vec::new(),
             outputs: vec![new_output],
             checker: Self::default(),
