@@ -116,6 +116,10 @@ impl<V, C> TuxedoGenesisConfig<V, C> {
             genesis_transactions,
         }
     }
+
+    pub fn get_transaction(&self, i: usize) -> Option<&Transaction<V, C>> {
+        self.genesis_transactions.get(i)
+    }
 }
 
 impl<V, C> BuildStorage for TuxedoGenesisConfig<V, C>

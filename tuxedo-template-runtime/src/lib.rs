@@ -102,6 +102,9 @@ pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
 pub type Block = sp_runtime::generic::Block<Header, Transaction>;
 pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
 pub type Output = tuxedo_core::types::Output<OuterVerifier>;
+#[cfg(feature = "std")]
+pub type RuntimeGenesisConfig =
+    tuxedo_core::genesis::TuxedoGenesisConfig<OuterVerifier, OuterConstraintChecker>;
 
 impl sp_runtime::traits::GetNodeBlockType for Runtime {
     type NodeBlock = opaque::Block;
@@ -349,13 +352,17 @@ impl_runtime_apis! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use kitties::{KittyData, Parent};
+    use money::Coin;
     use parity_scale_codec::Encode;
     use sp_api::HashT;
     use sp_core::testing::SR25519;
     use sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
+    use sp_runtime::BuildStorage;
     use std::sync::Arc;
     use tuxedo_core::{
         dynamic_typing::{DynamicallyTypedData, UtxoData},
+        inherents::InherentInternal,
         types::OutputRef,
     };
 
@@ -365,20 +372,49 @@ mod tests {
     const ANDREW_PHRASE: &str =
         "monkey happy total rib lumber scrap guide photo country online rose diet";
 
-    fn new_test_ext() -> sp_io::TestExternalities {
+    fn default_runtime_genesis_config() -> RuntimeGenesisConfig {
         let keystore = MemoryKeystore::new();
 
-        let t = TuxedoGenesisConfig::default()
+        let shawn_pub_key_bytes = keystore
+            .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
+            .unwrap()
+            .0;
+
+        let andrew_pub_key_bytes = keystore
+            .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
+            .unwrap()
+            .0;
+
+        let signatories = vec![shawn_pub_key_bytes.into(), andrew_pub_key_bytes.into()];
+
+        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+        genesis_transactions.extend([
+            // Money Transactions
+            Coin::<0>::mint(100, SigCheck::new(shawn_pub_key_bytes)),
+            Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
+        ]);
+
+        RuntimeGenesisConfig::new(
+            WASM_BINARY
+                .expect("Runtime WASM binary must exist.")
+                .to_vec(),
+            genesis_transactions,
+        )
+    }
+
+    fn new_test_ext() -> sp_io::TestExternalities {
+        let keystore = MemoryKeystore::new();
+        let storage = default_runtime_genesis_config()
             .build_storage()
             .expect("System builds valid default genesis config");
 
-        let mut ext = sp_io::TestExternalities::from(t);
+        let mut ext = sp_io::TestExternalities::from(storage);
         ext.register_extension(KeystoreExt(Arc::new(keystore)));
         ext
     }
 
     #[test]
-    fn utxo_money_test_genesis() {
+    fn genesis_utxo_money() {
         new_test_ext().execute_with(|| {
             let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
@@ -396,7 +432,12 @@ mod tests {
                 },
             };
 
-            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
+            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+
+            let tx = default_runtime_genesis_config()
+                .get_transaction(0 + inherents_len)
+                .unwrap()
+                .clone();
 
             assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
 
@@ -414,7 +455,7 @@ mod tests {
     }
 
     #[test]
-    fn utxo_money_multi_sig_genesis_test() {
+    fn genesis_utxo_money_multi_sig() {
         new_test_ext().execute_with(|| {
             let keystore = MemoryKeystore::new();
             let shawn_pub_key = keystore
@@ -435,7 +476,12 @@ mod tests {
                 },
             };
 
-            let tx = TuxedoGenesisConfig::default().0.get(1).unwrap().clone();
+            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+
+            let tx = default_runtime_genesis_config()
+                .get_transaction(1 + inherents_len)
+                .unwrap()
+                .clone();
 
             assert_eq!(tx.outputs.get(0), Some(&genesis_multi_sig_utxo));
 

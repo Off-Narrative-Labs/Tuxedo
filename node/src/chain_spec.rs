@@ -2,7 +2,8 @@ use hex_literal::hex;
 use node_template_runtime::{
     kitties::{KittyData, Parent},
     money::Coin,
-    OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier, WASM_BINARY,
+    OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier,
+    RuntimeGenesisConfig, WASM_BINARY,
 };
 use sc_service::ChainType;
 use tuxedo_core::{
@@ -15,8 +16,7 @@ use tuxedo_core::{
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec =
-    sc_service::GenericChainSpec<TuxedoGenesisConfig<OuterVerifier, OuterConstraintChecker>>;
+pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 
 // /// Generate a crypto pair from seed.
 // pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
