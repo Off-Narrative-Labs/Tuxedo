@@ -8,7 +8,6 @@
 //!
 //! Better docs coming after this takes shape. For now it is hack'n'slash.
 
-// TODO Maybe this doesn't even need to be conditional. Just always build to no_std.
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(test)]
