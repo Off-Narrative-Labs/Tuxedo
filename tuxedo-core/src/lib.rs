@@ -3,7 +3,6 @@
 //! All Tuxedo runtimes will use this machinery and plug in their specific
 //! Tuxedo piece(s)
 
-// TODO Maybe this doesn't even need to be conditional. Just always build to no_std.
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod dynamic_typing;
