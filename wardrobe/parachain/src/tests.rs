@@ -1,8 +1,6 @@
 //! Unit tests for the Parachain Info inherent piece
 
 use super::*;
-use cumulus_primitives_core::PersistedValidationData;
-use cumulus_test_relay_sproof_builder::RelayStateSproofBuilder;
 use tuxedo_core::dynamic_typing::{testing::Bogus, DynamicallyTypedData};
 use ParachainError::*;
 
@@ -13,27 +11,6 @@ impl ParachainPieceConfig for AlwaysBlockTwo {
     fn block_height() -> u32 {
         2
     }
-}
-
-fn new_data_from_relay_parent_number(relay_parent_number: u32) -> ParachainInherentDataUtxo {
-    let sproof_builder = RelayStateSproofBuilder::default();
-    //TODO consider changing the para_id here. For sure do it if we keep the piece config item.
-
-    let (relay_parent_storage_root, relay_chain_state_proof) =
-        sproof_builder.into_state_root_and_proof();
-
-    ParachainInherentData {
-        validation_data: PersistedValidationData {
-            parent_head: Default::default(),
-            relay_parent_number,
-            relay_parent_storage_root,
-            max_pov_size: Default::default(),
-        },
-        relay_chain_state: relay_chain_state_proof,
-        downward_messages: Default::default(),
-        horizontal_messages: Default::default(),
-    }
-    .into()
 }
 
 #[test]
