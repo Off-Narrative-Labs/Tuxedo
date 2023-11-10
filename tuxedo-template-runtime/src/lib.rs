@@ -185,7 +185,10 @@ impl BuildStorage for TuxedoGenesisConfig {
         tuxedo_core::genesis::assimilate_storage(storage, genesis_transactions)
     }
 }
-
+#[cfg(feature = "parachain")]
+pub type OuterConstraintChecker = ParachainConstraintChecker;
+#[cfg(not(feature = "parachain"))]
+pub type OuterConstraintChecker = AggregateConstraintChecker;
 pub type Transaction = TuxedoTransaction<OuterVerifier, OuterConstraintChecker>;
 pub type BlockNumber = u32;
 pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
@@ -244,6 +247,7 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
 // The macro doesn't understand conditional compilation flags inside, so we have to
 // feature gate the entire thing, and repeat it twice. I remember this was a problem
 // with frame's construct_runtime! as well.
+// If the recursive aggregation works, that would be a nice way to avoid it.
 
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
@@ -251,32 +255,13 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
 #[cfg(feature = "parachain")]
-pub enum OuterConstraintChecker {
+pub enum ParachainConstraintChecker {
     /// Set some parachain related information via an inherent extrinsic.
     /// TODO This one is first for now so that I can write a hacky algorithm to scrape the
     /// inherent data and assume it is first.
     ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
-    /// Checks monetary transactions in a basic fungible cryptocurrency
-    Money(money::MoneyConstraintChecker<0>),
-    /// Checks Free Kitty transactions
-    FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
-    /// Checks that an amoeba can split into two new amoebas
-    AmoebaMitosis(amoeba::AmoebaMitosis),
-    /// Checks that a single amoeba is simply removed from the state
-    AmoebaDeath(amoeba::AmoebaDeath),
-    /// Checks that a single amoeba is simply created from the void... and it is good
-    AmoebaCreation(amoeba::AmoebaCreation),
-    /// Checks that new valid proofs of existence are claimed
-    PoeClaim(poe::PoeClaim<Runtime>),
-    /// Checks that proofs of existence are revoked.
-    PoeRevoke(poe::PoeRevoke),
-    /// Checks that one winning claim came earlier than all the other claims, and thus
-    /// the losing claims can be removed from storage.
-    PoeDispute(poe::PoeDispute),
-    /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
-    /// Upgrade the Wasm Runtime
-    RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+    /// All the other non-parachain checkers that are present also in the sovereign runtime.
+    NonParachain(AggregateConstraintChecker),
 }
 
 /// A constraint checker is a piece of logic that can be used to check a transaction.
@@ -284,8 +269,7 @@ pub enum OuterConstraintChecker {
 /// For example, this may check that input token values exceed output token values.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
-#[cfg(not(feature = "parachain"))]
-pub enum OuterConstraintChecker {
+pub enum AggregateConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
