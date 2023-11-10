@@ -138,18 +138,6 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             &current.validation_data.relay_parent_number.encode(),
         );
 
-        //TODO this is the first block hack. This one may be slightly harder to remove
-        // than it was in the timestamp case, because I'm not sure what data to put in the genesis one.
-        // Maybe there is some obvous mock value that will work. Otherwise, we could have the UTXO contain an option.
-        if T::block_height() == 1 {
-            log::debug!(
-                target: LOG_TARGET,
-                "Executing parachain inherent during first block hack. Returning early."
-            );
-
-            return Ok(0);
-        }
-
         // Make sure there is exactly one input which is the previous parachain info
         ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo);
         ensure!(input_data.len() == 1, Self::Error::ExtraInputs);
@@ -257,4 +245,43 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
         //TODO The debug message above reflects the current design which is a copy of basti's design.
         // I think the process of checking this inherent should be accessible through some abstract interface in the end.
     }
+
+    #[cfg(feature = "std")]
+    fn genesis_transactions() -> Vec<Transaction<V, Self>> {
+        let payload = new_data_from_relay_parent_number(0).into();
+
+        vec![Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: vec![Output {
+                payload,
+                verifier: UpForGrabs.into(),
+            }],
+            checker: Self::default(),
+        }]
+    }
+
+    
+}
+
+#[cfg(feature = "std")]
+fn new_data_from_relay_parent_number(relay_parent_number: u32) -> ParachainInherentDataUtxo {
+    let sproof_builder = cumulus_test_relay_sproof_builder::RelayStateSproofBuilder::default();
+    //TODO consider changing the para_id here. For sure do it if we keep the piece config item.
+
+    let (relay_parent_storage_root, relay_chain_state_proof) =
+        sproof_builder.into_state_root_and_proof();
+
+    ParachainInherentData {
+        validation_data: cumulus_primitives_core::PersistedValidationData {
+            parent_head: Default::default(),
+            relay_parent_number,
+            relay_parent_storage_root,
+            max_pov_size: Default::default(),
+        },
+        relay_chain_state: relay_chain_state_proof,
+        downward_messages: Default::default(),
+        horizontal_messages: Default::default(),
+    }
+    .into()
 }
