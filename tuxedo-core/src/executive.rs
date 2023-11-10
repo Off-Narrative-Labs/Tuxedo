@@ -298,9 +298,6 @@ impl<
             "Entering execute_block. block: {:?}", block
         );
 
-        // Putting panics here for debugging is going to be harder than doing it in the
-        // validate_block impl because the normal Substrate workflow also calls this one.
-
         // Store the header. Although we don't need to mutate it, we do need to make
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
