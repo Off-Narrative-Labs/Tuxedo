@@ -8,65 +8,6 @@ use syn::{
     Error, Ident, Token,
 };
 
-// mod keywords {
-//     syn::custom_keyword!(Runtime);
-//     syn::custom_keyword!(BlockExecutor);
-//     syn::custom_keyword!(CheckInherents);
-// }
-
-// struct Input {
-//     block: Ident,
-//     verifier: Ident,
-//     constraint_checker: Ident,
-// }
-
-// impl Parse for Input {
-//     fn parse(input: ParseStream) -> Result<Self, Error> {
-//         let mut runtime = None;
-//         let mut block_executor = None;
-//         let mut check_inherents = None;
-
-//         fn parse_inner<KW: Parse + Spanned>(
-//             input: ParseStream,
-//             result: &mut Option<Ident>,
-//         ) -> Result<(), Error> {
-//             let kw = input.parse::<KW>()?;
-
-//             if result.is_none() {
-//                 input.parse::<token::Eq>()?;
-//                 *result = Some(input.parse::<Ident>()?);
-//                 if input.peek(token::Comma) {
-//                     input.parse::<token::Comma>()?;
-//                 }
-
-//                 Ok(())
-//             } else {
-//                 Err(Error::new(kw.span(), "Is only allowed to be passed once"))
-//             }
-//         }
-
-//         while !input.is_empty() || runtime.is_none() || block_executor.is_none() {
-//             let lookahead = input.lookahead1();
-
-//             if lookahead.peek(keywords::Runtime) {
-//                 parse_inner::<keywords::Runtime>(input, &mut runtime)?;
-//             } else if lookahead.peek(keywords::BlockExecutor) {
-//                 parse_inner::<keywords::BlockExecutor>(input, &mut block_executor)?;
-//             } else if lookahead.peek(keywords::CheckInherents) {
-//                 parse_inner::<keywords::CheckInherents>(input, &mut check_inherents)?;
-//             } else {
-//                 return Err(lookahead.error());
-//             }
-//         }
-
-//         Ok(Self {
-//             runtime: runtime.expect("Everything is parsed before; qed"),
-//             block_executor: block_executor.expect("Everything is parsed before; qed"),
-//             check_inherents,
-//         })
-//     }
-// }
-
 /// Provides an identifier that is a safe way to refer to the crate tuxedo_core within the macro
 fn crate_() -> Result<Ident, Error> {
     match crate_name("tuxedo-parachain-core") {
