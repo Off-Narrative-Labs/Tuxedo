@@ -9,13 +9,17 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use kitties::FreeKittyConstraintChecker;
+#[cfg(feature = "std")]
+pub mod genesis;
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use sp_api::impl_runtime_apis;
+use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
@@ -25,15 +29,9 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 
-use sp_core::OpaqueMetadata;
-#[cfg(any(feature = "std", test))]
-use sp_runtime::{BuildStorage, Storage};
-
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-
-use serde::{Deserialize, Serialize};
 
 use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
@@ -98,89 +96,6 @@ pub fn native_version() -> NativeVersion {
     NativeVersion {
         runtime_version: VERSION,
         can_author_with: Default::default(),
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-/// The `TuxedoGenesisConfig` struct is used to configure the genesis state of the runtime.
-/// The only parameter is a list of transactions to be included in the genesis block, and stored along with their outputs.
-/// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
-pub struct TuxedoGenesisConfig(pub Vec<Transaction>);
-
-impl Default for TuxedoGenesisConfig {
-    fn default() -> Self {
-        use hex_literal::hex;
-        use kitties::{KittyDNA, KittyData, Parent};
-        use money::{Coin, MoneyConstraintChecker};
-        use sp_api::HashT;
-
-        const SHAWN_PUB_KEY_BYTES: [u8; 32] =
-            hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
-        const ANDREW_PUB_KEY_BYTES: [u8; 32] =
-            hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
-        let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
-
-        let genesis_transactions = vec![
-            // Money Transaction
-            Transaction {
-                inputs: vec![],
-                peeks: vec![],
-                outputs: vec![
-                    (Coin::<0>(100), SigCheck::new(SHAWN_PUB_KEY_BYTES)).into(),
-                    (Coin::<0>(100), ThresholdMultiSignature::new(1, signatories)).into(),
-                ],
-                checker: MoneyConstraintChecker::Mint.into(),
-            },
-            // Kitty Transaction
-            Transaction {
-                inputs: vec![],
-                peeks: vec![],
-                outputs: vec![
-                    (
-                        KittyData {
-                            parent: Parent::Mom(Default::default()),
-                            dna: KittyDNA(BlakeTwo256::hash_of(b"mother")),
-                            ..Default::default()
-                        },
-                        UpForGrabs,
-                    )
-                        .into(),
-                    (
-                        KittyData {
-                            parent: Parent::Dad(Default::default()),
-                            dna: KittyDNA(BlakeTwo256::hash_of(b"father")),
-                            ..Default::default()
-                        },
-                        UpForGrabs,
-                    )
-                        .into(),
-                ],
-                checker: FreeKittyConstraintChecker.into(),
-            },
-            // TODO: Initial Transactions for Existence
-        ];
-
-        TuxedoGenesisConfig(genesis_transactions)
-    }
-}
-
-#[cfg(feature = "std")]
-impl BuildStorage for TuxedoGenesisConfig {
-    fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        use tuxedo_core::inherents::InherentInternal;
-
-        // The wasm binary is stored under a special key.
-        storage.top.insert(
-            sp_storage::well_known_keys::CODE.into(),
-            WASM_BINARY.unwrap().to_vec(),
-        );
-
-        // The inherents transactions are computed using the appropriate method,
-        // and placed in the block before the normal transactions.
-        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
-        genesis_transactions.extend(self.0.clone());
-
-        tuxedo_core::genesis::assimilate_storage(storage, genesis_transactions)
     }
 }
 
@@ -431,112 +346,5 @@ impl_runtime_apis! {
         ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
             None
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use parity_scale_codec::Encode;
-    use sp_api::HashT;
-    use sp_core::testing::SR25519;
-    use sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
-    use std::sync::Arc;
-    use tuxedo_core::{
-        dynamic_typing::{DynamicallyTypedData, UtxoData},
-        types::OutputRef,
-    };
-
-    // other random account generated with subkey
-    const SHAWN_PHRASE: &str =
-        "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-    const ANDREW_PHRASE: &str =
-        "monkey happy total rib lumber scrap guide photo country online rose diet";
-
-    fn new_test_ext() -> sp_io::TestExternalities {
-        let keystore = MemoryKeystore::new();
-
-        let t = TuxedoGenesisConfig::default()
-            .build_storage()
-            .expect("System builds valid default genesis config");
-
-        let mut ext = sp_io::TestExternalities::from(t);
-        ext.register_extension(KeystoreExt(Arc::new(keystore)));
-        ext
-    }
-
-    #[test]
-    fn utxo_money_test_genesis() {
-        new_test_ext().execute_with(|| {
-            let keystore = MemoryKeystore::new();
-            let shawn_pub_key = keystore
-                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
-                .unwrap();
-
-            // Grab genesis value from storage and assert it is correct
-            let genesis_utxo = Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
-                    owner_pubkey: shawn_pub_key.into(),
-                }),
-                payload: DynamicallyTypedData {
-                    data: 100u128.encode(),
-                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                },
-            };
-
-            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
-
-            assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
-
-            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
-            let output_ref = OutputRef {
-                tx_hash,
-                index: 0_u32,
-            };
-
-            let encoded_utxo =
-                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-            assert_eq!(utxo, genesis_utxo);
-        })
-    }
-
-    #[test]
-    fn utxo_money_multi_sig_genesis_test() {
-        new_test_ext().execute_with(|| {
-            let keystore = MemoryKeystore::new();
-            let shawn_pub_key = keystore
-                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
-                .unwrap();
-            let andrew_pub_key = keystore
-                .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
-                .unwrap();
-
-            let genesis_multi_sig_utxo = Output {
-                verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                    threshold: 1,
-                    signatories: vec![shawn_pub_key.into(), andrew_pub_key.into()],
-                }),
-                payload: DynamicallyTypedData {
-                    data: 100u128.encode(),
-                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                },
-            };
-
-            let tx = TuxedoGenesisConfig::default().0.get(0).unwrap().clone();
-
-            assert_eq!(tx.outputs.get(1), Some(&genesis_multi_sig_utxo));
-
-            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
-            let output_ref = OutputRef {
-                tx_hash,
-                index: 1_u32,
-            };
-
-            let encoded_utxo =
-                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis MultiSig UTXO");
-            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-            assert_eq!(utxo, genesis_multi_sig_utxo);
-        })
     }
 }
