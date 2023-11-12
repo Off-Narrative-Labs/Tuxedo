@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["development_genesis_config"],"type":["RuntimeGenesisConfig"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["assimilate_storage"],"struct":["TuxedoGenesisBlockBuilder"]};
+window.SIDEBAR_ITEMS = {"struct":["TuxedoGenesisBlockBuilder","TuxedoGenesisConfig"]};
