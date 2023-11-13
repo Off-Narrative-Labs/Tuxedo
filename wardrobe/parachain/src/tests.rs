@@ -3,6 +3,7 @@
 use super::*;
 use tuxedo_core::dynamic_typing::{testing::Bogus, DynamicallyTypedData};
 use ParachainError::*;
+use tuxedo_parachain_core::MockRelayParentNumberStorage;
 
 /// The mock config always says the block number is two.
 pub struct AlwaysBlockTwo;
@@ -11,6 +12,9 @@ impl ParachainPieceConfig for AlwaysBlockTwo {
     fn block_height() -> u32 {
         2
     }
+
+    type SetRelayParentNumberStorage = MockRelayParentNumberStorage;
+    
 }
 
 #[test]
