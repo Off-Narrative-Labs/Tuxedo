@@ -35,7 +35,6 @@ pub fn create_full<C, P>(
 where
     C: ProvideRuntimeApi<Block>
         + HeaderBackend<Block>
-        + AuxStore
         + HeaderMetadata<Block, Error = BlockChainError>
         + Send
         + Sync
