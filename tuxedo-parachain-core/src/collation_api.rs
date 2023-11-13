@@ -8,7 +8,7 @@ use sp_api::BlockT;
 use sp_std::vec::Vec;
 use tuxedo_core::Executive;
 
-use crate::{RelayParentNumberStorage, GetRelayParentNumberStorage};
+use crate::{GetRelayParentNumberStorage, RelayParentNumberStorage};
 
 /// An extension trait that allows us to implement more methods on tuxedo-core's executive.
 pub trait ParachainExecutiveExtension<Header> {

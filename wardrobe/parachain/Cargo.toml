@@ -18,9 +18,6 @@ sp-inherents = { default_features = false, workspace = true }
 sp-io = { default_features = false, workspace = true }
 sp-runtime = { default_features = false, workspace = true }
 sp-std = { default_features = false, workspace = true }
-# TODO don't really need to depend directly on core because it is re-exported from parachain-core
-# Consider dropping this one.
-tuxedo-core = { default-features = false, path = "../../tuxedo-core" }
 tuxedo-parachain-core = { default-features = false, path = "../../tuxedo-parachain-core" }
 
 [dev-dependencies]
@@ -41,6 +38,5 @@ std = [
 	"sp-io/std",
 	"sp-runtime/std",
 	"sp-std/std",
-	"tuxedo-core/std",
 	"tuxedo-parachain-core/std",
 ]
