@@ -21,7 +21,7 @@ use sp_core::H256;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, OutputRef},
-    verifier::SigCheck,
+    verifier::Sr25519Signature,
 };
 
 use jsonrpsee::http_client::HttpClient;
@@ -274,7 +274,7 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
         };
 
         match output.verifier {
-            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
                 // Add it to the global unspent_outputs table
                 add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
             }
