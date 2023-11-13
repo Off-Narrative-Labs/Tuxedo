@@ -33,8 +33,8 @@ use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
-//TODO maybe get this from the re-export from parachain-core.
-use tuxedo_core::{
+// We get all the Tuxedo core stuff through the re-export so we don't risk crossed versions.
+use tuxedo_parachain_core::tuxedo_core::{
     ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
