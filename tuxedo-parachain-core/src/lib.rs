@@ -41,6 +41,11 @@ pub use sp_runtime::traits::GetRuntimeBlockType;
 #[doc(hidden)]
 pub use sp_std;
 
+/// Re-export of the Tuxedo-core crates. This allows parachain-specific
+/// Tuxedo-pieces to depend only on tuxedo-parachain-core without worrying about
+/// accidental version mismatches.
+pub use tuxedo_core;
+
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
 use tuxedo_core::{
     dynamic_typing::UtxoData,
