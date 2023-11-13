@@ -33,6 +33,7 @@ use sc_service::{Configuration, PartialComponents, TFullBackend, TFullClient, Ta
 use sc_telemetry::{Telemetry, TelemetryHandle, TelemetryWorker, TelemetryWorkerHandle};
 use sp_keystore::KeystorePtr;
 use substrate_prometheus_endpoint::Registry;
+use tuxedo_core::genesis::TuxedoGenesisBlockBuilder;
 
 /// Native executor type.
 pub struct ParachainNativeExecutor;
@@ -106,11 +107,21 @@ pub fn new_partial(
 
     let executor = ParachainExecutor::new_with_wasm_executor(wasm);
 
+    let backend = sc_service::new_db_backend(config.db_config())?;
+    let genesis_block_builder = TuxedoGenesisBlockBuilder::new(
+        config.chain_spec.as_storage_builder(),
+        !config.no_genesis(),
+        backend.clone(),
+        executor.clone(),
+    )?;
+
     let (client, backend, keystore_container, task_manager) =
-        sc_service::new_full_parts::<Block, RuntimeApi, _>(
+        sc_service::new_full_parts_with_genesis_builder::<Block, RuntimeApi, _, _>(
             config,
             telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
             executor,
+            backend,
+            genesis_block_builder,
         )?;
     let client = Arc::new(client);
 
