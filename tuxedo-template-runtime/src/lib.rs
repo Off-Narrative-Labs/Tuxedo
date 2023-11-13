@@ -229,10 +229,6 @@ impl timestamp::TimestampConfig for Runtime {
 
 #[cfg(feature = "parachain")]
 impl parachain_piece::ParachainPieceConfig for Runtime {
-    fn block_height() -> u32 {
-        Executive::block_height()
-    }
-
     //TODO decide what to do about this para id
     // This is in the trait, but I don't think it is currently used.
     // const PARA_ID: u32 = 2_000;

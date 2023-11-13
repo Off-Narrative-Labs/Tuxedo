@@ -56,11 +56,6 @@ const LOG_TARGET: &str = "parachain-info";
 /// Options to configure the timestamp piece in your runtime.
 /// Currently we only need access to a block number.
 pub trait ParachainPieceConfig {
-    //TODO consider whether we will need this at all after the first block hack is removed
-    /// A means of getting the current block height.
-    /// Probably this will be the Tuxedo Executive
-    fn block_height() -> u32;
-
     //TODO Consider whetther including this config item is useful or wise. It is just an idea I had
     // and I'm scribbling it here so I don't forget it.
     //

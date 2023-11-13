@@ -7,14 +7,10 @@ use tuxedo_parachain_core::{
 };
 use ParachainError::*;
 
-/// The mock config always says the block number is two.
-pub struct AlwaysBlockTwo;
+/// The mock config ignores the set relay parent storage number.
+pub struct MockConfig;
 
-impl ParachainPieceConfig for AlwaysBlockTwo {
-    fn block_height() -> u32 {
-        2
-    }
-
+impl ParachainPieceConfig for MockConfig {
     type SetRelayParentNumberStorage = MockRelayParentNumberStorage;
 }
 
@@ -26,7 +22,7 @@ fn update_parachain_info_happy_path() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Ok(0),
     );
 }
@@ -39,7 +35,7 @@ fn update_parachain_info_relay_block_not_increasing() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(RelayBlockNotIncreasing),
     );
 }
@@ -53,7 +49,7 @@ fn update_parachain_info_extra_inputs() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(ExtraInputs)
     );
 }
@@ -65,7 +61,7 @@ fn update_parachain_info_missing_input() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(MissingPreviousInfo)
     );
 }
@@ -78,7 +74,7 @@ fn update_parachain_info_bogus_input() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(BadlyTyped)
     );
 }
@@ -92,7 +88,7 @@ fn update_parachain_info_extra_outputs() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new1.into(), new2.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(ExtraOutputs)
     );
 }
@@ -104,7 +100,7 @@ fn update_parachain_info_missing_output() {
     let outputs: Vec<Output<UpForGrabs>> = vec![];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(MissingNewInfo)
     );
 }
@@ -117,7 +113,7 @@ fn update_parachain_info_bogus_output() {
     let outputs: Vec<Output<UpForGrabs>> = vec![new.into()];
 
     assert_eq!(
-        SetParachainInfo::<AlwaysBlockTwo>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
         Err(BadlyTyped)
     );
 }
