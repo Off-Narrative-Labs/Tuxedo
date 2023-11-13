@@ -95,6 +95,10 @@ pub use tuxedo_register_validate_block::register_validate_block;
     CloneNoBound,
     scale_info::TypeInfo,
 )]
+
+/// A wrapper type around Cumulus's ParachainInherentData type.
+/// This type is convertable Into and From the inner type.
+/// This is necessary so that we can implement the `UtxoData` trait.
 pub struct ParachainInherentDataUtxo(ParachainInherentData);
 
 impl UtxoData for ParachainInherentDataUtxo {
