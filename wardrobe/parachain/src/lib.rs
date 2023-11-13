@@ -121,9 +121,9 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
 
     fn check(
         &self,
-        input_data: &[tuxedo_core::types::Output<V>],
-        _peek_data: &[tuxedo_core::types::Output<V>],
-        output_data: &[tuxedo_core::types::Output<V>],
+        input_data: &[Output<V>],
+        _peek_data: &[Output<V>],
+        output_data: &[Output<V>],
     ) -> Result<TransactionPriority, Self::Error> {
         log::debug!(
             target: LOG_TARGET,
@@ -191,7 +191,7 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
     fn create_inherent(
         authoring_inherent_data: &InherentData,
         (_previous_inherent, previous_id): (Transaction<V, Self>, H256),
-    ) -> tuxedo_core::types::Transaction<V, Self> {
+    ) -> Transaction<V, Self> {
         let current_info: ParachainInherentData = authoring_inherent_data
             .get_data(&INHERENT_IDENTIFIER)
             .expect("Inherent data should decode properly")

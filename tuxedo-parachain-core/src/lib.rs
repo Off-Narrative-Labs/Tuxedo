@@ -63,7 +63,6 @@ pub trait GetRelayParentNumberStorage {
     fn get() -> u32;
 }
 
-
 /// An abstraction over setting the ambiently available relay parent number.
 /// This allows it to be mocked during tests and require actual externalities.
 pub trait SetRelayParentNumberStorage {
