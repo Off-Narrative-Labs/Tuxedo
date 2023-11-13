@@ -2,7 +2,7 @@
 
 use super::{
     trie_cache, MemoryOptimizedValidationParams, ParachainInherentDataUtxo,
-    RelayParentNumberStorage,
+    RelayParentNumberStorage, GetRelayParentNumberStorage,
 };
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
