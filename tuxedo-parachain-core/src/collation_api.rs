@@ -3,10 +3,12 @@
 //! It will get more complex and interesting when we start to support XCM or parachain runtime upgrades.
 
 use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use sp_api::BlockT;
 use sp_std::vec::Vec;
 use tuxedo_core::Executive;
+
+use crate::{RelayParentNumberStorage, GetRelayParentNumberStorage};
 
 /// An extension trait that allows us to implement more methods on tuxedo-core's executive.
 pub trait ParachainExecutiveExtension<Header> {
@@ -19,10 +21,7 @@ impl<B: BlockT, V, C> ParachainExecutiveExtension<B::Header> for Executive<B, V,
         // neither or which are supported in the PoC, so they are left blank.
 
         // Get the relay parent number out of storage so we can advance the hrmp watermark
-        let encoded_watermark = sp_io::storage::get(b"relay_parent")
-            .expect("Some relay parent number should always be stored (collation api)");
-        let hrmp_watermark: u32 = Decode::decode(&mut &encoded_watermark[..])
-            .expect("properly encoded relay parent number should have been stored.");
+        let hrmp_watermark = RelayParentNumberStorage::get();
 
         // The final field allows us to specify head data. We will do the boring / standard / default / original
         // thing which is to just directly encode the block header.
