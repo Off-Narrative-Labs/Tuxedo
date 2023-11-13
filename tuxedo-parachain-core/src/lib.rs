@@ -57,15 +57,22 @@ use tuxedo_core::{
 /// through the parachain inherent
 const RELAY_PARENT_NUMBER_KEY: &[u8] = b"relay_parent_number";
 
-/// A public interface for accessing and mutating the relay parent number. This is
-/// expected to be called from the parachain piece
-pub enum RelayParentNumberStorage {}
-
 /// An abstraction over reading the ambiently available relay parent number.
 /// This allows it to be mocked during tests and require actual externalities.
 pub trait GetRelayParentNumberStorage {
     fn get() -> u32;
 }
+
+
+/// An abstraction over setting the ambiently available relay parent number.
+/// This allows it to be mocked during tests and require actual externalities.
+pub trait SetRelayParentNumberStorage {
+    fn set(new_parent_number: u32);
+}
+
+/// A public interface for accessing and mutating the relay parent number. This is
+/// expected to be called from the parachain piece
+pub enum RelayParentNumberStorage {}
 
 impl GetRelayParentNumberStorage for RelayParentNumberStorage {
     fn get() -> u32 {
@@ -76,16 +83,17 @@ impl GetRelayParentNumberStorage for RelayParentNumberStorage {
     }
 }
 
-/// An abstraction over setting the ambiently available relay parent number.
-/// This allows it to be mocked during tests and require actual externalities.
-pub trait SetRelayParentNumberStorage {
-    fn set(new_parent_number: u32);
-}
-
 impl SetRelayParentNumberStorage for RelayParentNumberStorage {
     fn set(new_parent_number: u32) {
         sp_io::storage::set(RELAY_PARENT_NUMBER_KEY, &new_parent_number.encode());
     }
+}
+
+/// A mock version of the RelayParentNumberStorage that can be used in tests without externalities.
+pub enum MockRelayParentNumberStorage {}
+
+impl SetRelayParentNumberStorage for MockRelayParentNumberStorage {
+    fn set(new_parent_number: u32) {}
 }
 
 /// Basically the same as

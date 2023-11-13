@@ -5,6 +5,7 @@ use cumulus_primitives_core::PersistedValidationData;
 use cumulus_test_relay_sproof_builder::RelayStateSproofBuilder;
 use tuxedo_core::dynamic_typing::{testing::Bogus, DynamicallyTypedData};
 use ParachainError::*;
+use tuxedo_parachain_core::MockRelayParentNumberStorage;
 
 /// The mock config always says the block number is two.
 pub struct AlwaysBlockTwo;
@@ -13,6 +14,9 @@ impl ParachainPieceConfig for AlwaysBlockTwo {
     fn block_height() -> u32 {
         2
     }
+
+    type SetRelayParentNumberStorage = MockRelayParentNumberStorage;
+    
 }
 
 fn new_data_from_relay_parent_number(relay_parent_number: u32) -> ParachainInherentDataUtxo {
