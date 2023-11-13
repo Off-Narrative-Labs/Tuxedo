@@ -1,8 +1,8 @@
 //! The actual implementation of the validate block functionality.
 
 use super::{
-    trie_cache, MemoryOptimizedValidationParams, ParachainInherentDataUtxo,
-    RelayParentNumberStorage, GetRelayParentNumberStorage,
+    trie_cache, GetRelayParentNumberStorage, MemoryOptimizedValidationParams,
+    ParachainInherentDataUtxo, RelayParentNumberStorage,
 };
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
