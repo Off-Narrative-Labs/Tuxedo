@@ -17,7 +17,6 @@ use crate::{
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
-use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
