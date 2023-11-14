@@ -34,8 +34,6 @@ use tuxedo_core::{
 #[cfg(test)]
 mod cleanup_tests;
 #[cfg(test)]
-mod first_block_special_case_tests;
-#[cfg(test)]
 mod update_timestamp_tests;
 
 /// A piece-wide target for logging
@@ -188,19 +186,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             new_timestamp.block == T::block_height(),
             Self::Error::NewTimestampWrongHeight,
         );
-
-        // Next we need to check peeks, but there is a special case for block 1.
-        // We need to initialize the timestamp in block 1, so there are no requirements on
-        // the peeks at that height.
-        if T::block_height() == 1 {
-            // If this special case remains for a while, we should do some checks here like
-            // making sure there are no inputs at all. For now, We'll just leave it as is.
-            log::debug!(
-                target: LOG_TARGET,
-                "🕰️🖴 Executing timestamp inherent. Triggering first-block special case."
-            );
-            return Ok(0);
-        }
 
         // Make sure there at least one peek that is the previous block's timestamp.
         // We don't expect any additional peeks typically, but they are harmless.
