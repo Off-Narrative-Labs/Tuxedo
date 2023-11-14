@@ -23,7 +23,7 @@ pub struct TuxedoGenesisBlockBuilder<
     B: Backend<Block>,
     E: RuntimeVersionOf + CodeExecutor,
 > {
-    genesis_config: &TuxedoGenesisConfig,
+    build_genesis_storage: &'a dyn BuildStorage,
     commit_genesis_state: bool,
     backend: Arc<B>,
     executor: E,
@@ -34,13 +34,13 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     TuxedoGenesisBlockBuilder<'a, Block, B, E>
 {
     pub fn new(
-        genesis_config: &TuxedoGenesisConfig,
+        build_genesis_storage: &'a dyn BuildStorage,
         commit_genesis_state: bool,
         backend: Arc<B>,
         executor: E,
     ) -> sp_blockchain::Result<Self> {
         Ok(Self {
-            genesis_config,
+            build_genesis_storage,
             commit_genesis_state,
             backend,
             executor,
@@ -54,28 +54,33 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
 {
     type BlockImportOperation = <B as Backend<Block>>::BlockImportOperation;
 
-    /// Build the genesis block, including the extrinsics from the genesis config.
+    /// Build the genesis block, including the extrinsics found in storage at EXTRINSIC_KEY.
+    /// The extrinsics are not checked for validity, nor executed, so the values in storage must be placed manually.
+    /// This can be done by using the `assimilate_storage` function.
     fn build_genesis_block(self) -> sp_blockchain::Result<(Block, Self::BlockImportOperation)> {
-        
-        let genesis_storage = self
-            .genesis_config
+        // We build it here to gain mutable access to the storage.
+        let mut genesis_storage = self
+            .build_genesis_storage
             .build_storage()
             .map_err(sp_blockchain::Error::Storage)?;
 
-        let genesis_state_version =
+        let state_version =
             sc_chain_spec::resolve_state_version_from_wasm(&genesis_storage, &self.executor)?;
-        
-        let mut op = self.backend.begin_operation()?;
 
-        let state_root =
-            op.set_genesis_state(genesis_storage, self.commit_genesis_state, genesis_state_version)?;
-        
+        let extrinsics = match genesis_storage.top.remove(crate::EXTRINSIC_KEY) {
+            Some(v) => <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default(),
+            None => Vec::new(),
+        };
 
         let extrinsics_root =
             <<<Block as BlockT>::Header as HeaderT>::Hashing as HashT>::ordered_trie_root(
-                self.genesis_config.genesis_transactions.iter().map(Encode::encode).collect(),
-                genesis_state_version,
+                extrinsics.iter().map(Encode::encode).collect(),
+                state_version,
             );
+
+        let mut op = self.backend.begin_operation()?;
+        let state_root =
+            op.set_genesis_state(genesis_storage, self.commit_genesis_state, state_version)?;
 
         let block = Block::new(
             HeaderT::new(
@@ -133,8 +138,11 @@ where
             self.wasm_binary.clone(),
         );
 
-        // I'm not so sure we need this in the genesis builder, but
-        // I also don't see any problem with it. Let's leave it for now.
+        // The transactions are stored under a special key.
+        storage
+            .top
+            .insert(EXTRINSIC_KEY.to_vec(), self.genesis_transactions.encode());
+
         let mut finished_with_opening_inherents = false;
 
         for tx in self.genesis_transactions.iter() {
