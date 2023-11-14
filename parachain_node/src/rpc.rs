@@ -9,7 +9,6 @@ use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
 use parachain_template_runtime::opaque::Block;
-use sc_client_api::AuxStore;
 pub use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
