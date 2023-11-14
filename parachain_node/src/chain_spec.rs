@@ -1,10 +1,10 @@
-use parachain_template_runtime::TuxedoGenesisConfig;
+use parachain_template_runtime::genesis::*;
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type ChainSpec = sc_service::GenericChainSpec<TuxedoGenesisConfig, Extensions>;
+pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig, Extensions>;
 
 /// The extensions for the [`ChainSpec`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ChainSpecGroup, ChainSpecExtension)]
@@ -60,7 +60,7 @@ pub fn development_config() -> ChainSpec {
         // ID
         "dev",
         ChainType::Development,
-        TuxedoGenesisConfig::default,
+        development_genesis_config,
         Vec::new(),
         None,
         None,
@@ -86,7 +86,7 @@ pub fn local_testnet_config() -> ChainSpec {
         // ID
         "local_testnet",
         ChainType::Local,
-        TuxedoGenesisConfig::default,
+        development_genesis_config,
         // Bootnodes
         Vec::new(),
         // Telemetry
