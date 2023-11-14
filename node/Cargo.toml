@@ -44,7 +44,7 @@ sp-block-builder = { workspace = true }
 sp-blockchain = { workspace = true }
 
 # Local Dependencies
-node-template-runtime = { features = [ "std" ], default_features = false, package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+node-template-runtime = { package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
 tuxedo-core = { path = "../tuxedo-core" }
 
 # Cumulus (for testing parachain runtimes without relay chain)
