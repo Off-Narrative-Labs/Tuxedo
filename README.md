@@ -40,12 +40,15 @@ The best way to explore this runtime is by browsing its [code](./tuxedo-template
 
 ### Template Node
 
-There is an example node built with the Tuxedo template runtime. Because Tuxedo is primarily a runtime development framework, there is not much interesting or unique to Tuxedo to see in this crate. It is mostly a copy from the popular [Substrate node template](https://github.com/substrate-developer-hub/substrate-node-template/tree/main/node).
+There is an example node built with the Tuxedo template runtime. Because Tuxedo is primarily a runtime development framework, it is mostly a copy from the popular [Substrate node template](https://github.com/substrate-developer-hub/substrate-node-template/tree/main/node).
+
+The main difference is that Tuxedo nodes use a custom `GenesisBlockBuilder`, introduced in [PR #127](https://github.com/Off-Narrative-Labs/Tuxedo/pull/127), to include transactions in the genesis block.
 
 #### Database
 
 PR [#136](https://github.com/Off-Narrative-Labs/Tuxedo/pull/136) set ParityDB as the default database instead of RocksDB.
 This choice is unopinionated, it was made simply because RocksDB takes longer time to compile and adds unnecessary dependencies for our current use case.
+
 Developers are free to use RocksDB instead by building the node with the feature flag `rocksdb`.
 
 ### Wallet

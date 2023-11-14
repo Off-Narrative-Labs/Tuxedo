@@ -1,11 +1,11 @@
-use node_template_runtime::TuxedoGenesisConfig;
+use node_template_runtime::genesis::*;
 use sc_service::ChainType;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<TuxedoGenesisConfig>;
+pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 
 // /// Generate a crypto pair from seed.
 // pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -36,7 +36,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
         // ID
         "dev",
         ChainType::Development,
-        TuxedoGenesisConfig::default,
+        // TuxedoGenesisConfig
+        development_genesis_config,
         // Bootnodes
         vec![],
         // Telemetry
@@ -58,7 +59,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         // ID
         "local_testnet",
         ChainType::Local,
-        TuxedoGenesisConfig::default,
+        // TuxedoGenesisConfig
+        development_genesis_config,
         // Bootnodes
         vec![],
         // Telemetry
