@@ -44,7 +44,6 @@ pub use kitties;
 pub use money;
 pub use poe;
 pub use runtime_upgrade;
-use tuxedo_parachain_core::RelayParentNumberStorage;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -148,7 +147,7 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
     // This is in the trait, but I don't think it is currently used.
     // const PARA_ID: u32 = 2_000;
 
-    type SetRelayParentNumberStorage = RelayParentNumberStorage;
+    type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
 }
 
 // Observation: For some applications, it will be invalid to simply delete
