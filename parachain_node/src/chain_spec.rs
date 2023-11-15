@@ -1,4 +1,4 @@
-use parachain_template_runtime::GenesisConfig;
+use parachain_template_runtime::genesis::RuntimeGenesisConfig as GenesisConfig;
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
@@ -60,7 +60,7 @@ pub fn development_config() -> ChainSpec {
         // ID
         "dev",
         ChainType::Development,
-        GenesisConfig::default,
+        parachain_template_runtime::genesis::development_genesis_config,
         Vec::new(),
         None,
         None,
@@ -86,7 +86,7 @@ pub fn local_testnet_config() -> ChainSpec {
         // ID
         "local_testnet",
         ChainType::Local,
-        GenesisConfig::default,
+        parachain_template_runtime::genesis::development_genesis_config,
         // Bootnodes
         Vec::new(),
         // Telemetry
