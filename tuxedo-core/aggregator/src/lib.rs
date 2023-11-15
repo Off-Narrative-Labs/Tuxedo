@@ -146,6 +146,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
     let inner_types3 = inner_types.clone();
     let inner_types4 = inner_types.clone();
     let inner_types6 = inner_types.clone();
+    let inner_types7 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
     let variants4 = variants.clone();
@@ -240,6 +241,24 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 )*
             }
 
+            #[cfg(feature = "std")]
+            fn genesis_transactions() -> Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> {
+                let mut all_transactions: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> = Vec::new();
+
+                #(
+                    let transactions =
+                        <<#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::InherentHooks as tuxedo_core::inherents::InherentInternal<#verifier, #inner_types6>>::genesis_transactions();
+                    all_transactions.extend(
+                        transactions
+                            .into_iter()
+                            .map(|tx| tx.transform::<#outer_type>())
+                            .collect::<Vec<_>>()
+                    );
+                )*
+
+                all_transactions
+            }
+
         }
 
         impl tuxedo_core::ConstraintChecker<#verifier> for #outer_type {
@@ -263,7 +282,7 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
             fn is_inherent(&self) -> bool {
                 match self {
                     #(
-                        Self::#variants6(inner) => <#inner_types6 as tuxedo_core::ConstraintChecker<#verifier>>::is_inherent(inner),
+                        Self::#variants6(inner) => <#inner_types7 as tuxedo_core::ConstraintChecker<#verifier>>::is_inherent(inner),
                     )*
                 }
 

@@ -11,7 +11,8 @@ use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
     traits::Cash,
-    SimpleConstraintChecker,
+    types::Transaction,
+    SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -74,6 +75,21 @@ pub struct Coin<const ID: u8>(pub u128);
 impl<const ID: u8> Coin<ID> {
     pub fn new(amt: u128) -> Self {
         Coin(amt)
+    }
+
+    /// Create a mint transaction for a single Coin.
+    pub fn mint<V, OV, OC>(amt: u128, v: V) -> Transaction<OV, OC>
+    where
+        V: Verifier,
+        OV: Verifier + From<V>,
+        OC: tuxedo_core::ConstraintChecker<OV> + From<MoneyConstraintChecker<ID>>,
+    {
+        Transaction {
+            inputs: vec![],
+            peeks: vec![],
+            outputs: vec![(Self::new(amt), v).into()],
+            checker: MoneyConstraintChecker::Mint.into(),
+        }
     }
 }
 

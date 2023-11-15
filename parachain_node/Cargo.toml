@@ -70,3 +70,4 @@ substrate-build-script-utils = { workspace = true }
 
 [features]
 default = []
+rocksdb = [ "sc-cli/rocksdb", "sc-service/rocksdb" ]

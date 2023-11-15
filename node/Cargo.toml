@@ -62,3 +62,4 @@ mock-parachain = [
 	"cumulus-primitives-parachain-inherent",
 	"node-template-runtime/parachain",
 ]
+rocksdb = [ "sc-cli/rocksdb", "sc-service/rocksdb" ]

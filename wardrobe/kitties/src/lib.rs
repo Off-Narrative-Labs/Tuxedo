@@ -28,7 +28,9 @@ use sp_runtime::{
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    ensure,
+    types::Transaction,
+    SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -111,6 +113,16 @@ pub enum Parent {
     Dad(DadKittyStatus),
 }
 
+impl Parent {
+    pub fn dad() -> Self {
+        Parent::Dad(DadKittyStatus::RearinToGo)
+    }
+
+    pub fn mom() -> Self {
+        Parent::Mom(MomKittyStatus::RearinToGo)
+    }
+}
+
 impl Default for Parent {
     fn default() -> Self {
         Parent::Mom(MomKittyStatus::RearinToGo)
@@ -132,7 +144,7 @@ impl Default for Parent {
     Debug,
     TypeInfo,
 )]
-pub struct KittyDNA(H256);
+pub struct KittyDNA(pub H256);
 
 #[derive(
     Serialize,
@@ -153,6 +165,31 @@ pub struct KittyData {
     pub free_breedings: u64, // Ignore in breed for money case
     pub dna: KittyDNA,
     pub num_breedings: u128,
+}
+
+impl KittyData {
+    /// Create a mint transaction for a single Kitty.
+    pub fn mint<V, OV, OC>(parent: Parent, dna_preimage: &[u8], v: V) -> Transaction<OV, OC>
+    where
+        V: Verifier,
+        OV: Verifier + From<V>,
+        OC: tuxedo_core::ConstraintChecker<OV> + From<FreeKittyConstraintChecker>,
+    {
+        Transaction {
+            inputs: vec![],
+            peeks: vec![],
+            outputs: vec![(
+                KittyData {
+                    parent,
+                    dna: KittyDNA(BlakeTwo256::hash(dna_preimage)),
+                    ..Default::default()
+                },
+                v,
+            )
+                .into()],
+            checker: FreeKittyConstraintChecker.into(),
+        }
+    }
 }
 
 impl Default for KittyData {

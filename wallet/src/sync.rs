@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use crate::{fetch_storage, rpc};
+use crate::rpc;
 use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sled::Db;
@@ -24,7 +24,6 @@ use tuxedo_core::{
     verifier::SigCheck,
 };
 
-use futures::{stream, StreamExt, TryStreamExt};
 use jsonrpsee::http_client::HttpClient;
 use runtime::{money::Coin, Block, OuterVerifier, Transaction};
 
@@ -39,66 +38,6 @@ const UNSPENT: &str = "unspent";
 
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
-
-/// TODO remove this constant. Instead we should just iterate output refs until we find one that doesn't exist.
-pub const NUM_GENESIS_UTXOS: u32 = 1;
-
-pub(crate) async fn init_from_genesis<F: Fn(&OuterVerifier) -> bool>(
-    db: &Db,
-    client: &HttpClient,
-    filter: &F,
-) -> anyhow::Result<()> {
-    let genesis_utxo_refs: Vec<OutputRef> = (0..NUM_GENESIS_UTXOS)
-        .map(|utxo_index| OutputRef {
-            tx_hash: H256::zero(),
-            index: utxo_index,
-        })
-        .collect();
-
-    let genesis_utxos = stream::iter(
-        genesis_utxo_refs
-            .iter()
-            //TODO Fetch storage will read the latest storage. We want to read genesis utxos from the genesis state.
-            .map(|utxo_ref| fetch_storage::<OuterVerifier>(utxo_ref, client)),
-    )
-    .buffer_unordered(5)
-    .try_collect::<Vec<_>>()
-    .await?;
-
-    log::debug!("The fetched genesis_utxos are {:?}", genesis_utxos);
-
-    let filtered_outputs_and_refs =
-        genesis_utxos
-            .iter()
-            .zip(genesis_utxo_refs)
-            .filter_map(|(output, output_ref)| {
-                if filter(&output.verifier) {
-                    Some((output, output_ref))
-                } else {
-                    None
-                }
-            });
-
-    for (output, output_ref) in filtered_outputs_and_refs {
-        // For now the wallet only supports simple coins, so skip anything else
-        let amount = match output.payload.extract::<Coin<0>>() {
-            Ok(Coin(amount)) => amount,
-            Err(_) => continue,
-        };
-
-        // At this point we already know we have a coin that matches our filter.
-        // So we extract its owner.
-        match output.verifier {
-            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
-                // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
-            }
-            _ => return Err(anyhow!("{:?}", ())),
-        }
-    }
-
-    Ok(())
-}
 
 /// Open a database at the given location intended for the given genesis block.
 ///

@@ -6,10 +6,8 @@
 //! In each block, the block author must include a single `SetTimestamp` transaction that peeks at the
 //! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
 //!
-//! This piece currently features two prominent hacks which will need to be cleaned up in due course.
-//! 1. It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
-//! 2. In block #1 it allows creating a new best timestamp without comsuming a previous one.
-//!    This should be removed once we are able to include a timestamp in the genesis block.
+//! This piece currently features a prominent hack which will need to be cleaned up in due course.
+//! It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -35,8 +33,6 @@ use tuxedo_core::{
 
 #[cfg(test)]
 mod cleanup_tests;
-#[cfg(test)]
-mod first_block_special_case_tests;
 #[cfg(test)]
 mod update_timestamp_tests;
 
@@ -191,19 +187,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
             Self::Error::NewTimestampWrongHeight,
         );
 
-        // Next we need to check peeks, but there is a special case for block 1.
-        // We need to initialize the timestamp in block 1, so there are no requirements on
-        // the peeks at that height.
-        if T::block_height() == 1 {
-            // If this special case remains for a while, we should do some checks here like
-            // making sure there are no inputs at all. For now, We'll just leave it as is.
-            log::debug!(
-                target: LOG_TARGET,
-                "🕰️🖴 Executing timestamp inherent. Triggering first-block special case."
-            );
-            return Ok(0);
-        }
-
         // Make sure there at least one peek that is the previous block's timestamp.
         // We don't expect any additional peeks typically, but they are harmless.
         ensure!(!peek_data.is_empty(), Self::Error::MissingPreviousTimestamp);
@@ -240,7 +223,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
     fn create_inherent(
         authoring_inherent_data: &InherentData,
-        previous_inherent: Option<(Transaction<V, Self>, H256)>,
+        previous_inherent: (Transaction<V, Self>, H256),
     ) -> tuxedo_core::types::Transaction<V, Self> {
         let current_timestamp: u64 = authoring_inherent_data
             .get_data(&sp_timestamp::INHERENT_IDENTIFIER)
@@ -256,25 +239,13 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             "🕰️🖴 Local timestamp while creating inherent i:: {current_timestamp}"
         );
 
-        let mut peeks = Vec::new();
-        match (previous_inherent, T::block_height()) {
-            (None, 1) => {
-                // This is the first block hack case.
-                // We don't need any inputs, so just do nothing.
-            }
-            (None, _) => panic!("Attemping to construct timestamp inherent with no previous inherent (and not block 1)."),
-            (Some((_previous_inherent, previous_id)), _) => {
-                // This is the the normal case. We create a full previous to peek at.
-
-                // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
-                // But out transactions are simple enough that we know we just need the one and only output.
-                peeks.push(OutputRef {
-                    tx_hash: previous_id,
-                    // There is always 1 output, so we know right where to find it.
-                    index: 0,
-                });
-            }
-        }
+        // We are given the entire previous inherent in case we need data from it or need to scrape the outputs.
+        // But out transactions are simple enough that we know we just need the one and only output.
+        let old_output = OutputRef {
+            tx_hash: previous_inherent.1,
+            // There is always 1 output, so we know right where to find it.
+            index: 0,
+        };
 
         let new_output = Output {
             payload: new_timestamp.into(),
@@ -283,7 +254,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
         Transaction {
             inputs: Vec::new(),
-            peeks,
+            peeks: vec![old_output],
             outputs: vec![new_output],
             checker: Self::default(),
         }
@@ -329,6 +300,24 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
                 .put_error(sp_timestamp::INHERENT_IDENTIFIER, &TooFarInFuture)
                 .expect("Should be able to push some error");
         }
+    }
+
+    #[cfg(feature = "std")]
+    fn genesis_transactions() -> Vec<Transaction<V, Self>> {
+        let time = std::time::SystemTime::now()
+            .duration_since(std::time::SystemTime::UNIX_EPOCH)
+            .expect("Time is always after UNIX_EPOCH; qed")
+            .as_millis() as u64;
+
+        vec![Transaction {
+            inputs: Vec::new(),
+            peeks: Vec::new(),
+            outputs: vec![Output {
+                payload: Timestamp::new(time, 0).into(),
+                verifier: UpForGrabs.into(),
+            }],
+            checker: Self::default(),
+        }]
     }
 }
 

@@ -9,12 +9,17 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+#[cfg(feature = "std")]
+pub mod genesis;
+
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
 
 use sp_api::impl_runtime_apis;
+use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
@@ -24,18 +29,11 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 
-use sp_core::OpaqueMetadata;
-#[cfg(any(feature = "std", test))]
-use sp_runtime::{BuildStorage, Storage};
-
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
-use serde::{Deserialize, Serialize};
-
 use tuxedo_core::{
-    dynamic_typing::{DynamicallyTypedData, UtxoData},
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
@@ -46,9 +44,6 @@ pub use kitties;
 pub use money;
 pub use poe;
 pub use runtime_upgrade;
-
-#[cfg(feature = "std")]
-use tuxedo_core::types::OutputRef;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -103,73 +98,6 @@ pub fn native_version() -> NativeVersion {
     NativeVersion {
         runtime_version: VERSION,
         can_author_with: Default::default(),
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct GenesisConfig {
-    pub genesis_utxos: Vec<Output>,
-}
-
-impl Default for GenesisConfig {
-    fn default() -> Self {
-        use hex_literal::hex;
-
-        const SHAWN_PUB_KEY_BYTES: [u8; 32] =
-            hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
-        const ANDREW_PUB_KEY_BYTES: [u8; 32] =
-            hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
-
-        // Initial Config just for a Money UTXO
-        GenesisConfig {
-            genesis_utxos: vec![
-                Output {
-                    verifier: OuterVerifier::SigCheck(SigCheck {
-                        owner_pubkey: SHAWN_PUB_KEY_BYTES.into(),
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
-                },
-                Output {
-                    verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                        threshold: 1,
-                        signatories: vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()],
-                    }),
-                    payload: DynamicallyTypedData {
-                        data: 100u128.encode(),
-                        type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                    },
-                },
-            ],
-        }
-
-        // TODO: Initial UTXO for Kitties
-
-        // TODO: Initial UTXO for Existence
-    }
-}
-
-#[cfg(feature = "std")]
-impl BuildStorage for GenesisConfig {
-    fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        // we have nothing to put into storage in genesis, except this:
-        storage.top.insert(
-            sp_storage::well_known_keys::CODE.into(),
-            WASM_BINARY.unwrap().to_vec(),
-        );
-
-        for (index, utxo) in self.genesis_utxos.iter().enumerate() {
-            let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just use the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: index as u32,
-            };
-            storage.top.insert(output_ref.encode(), utxo.encode());
-        }
-
-        Ok(())
     }
 }
 
@@ -484,99 +412,3 @@ impl_runtime_apis! {
 // Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
 #[cfg(feature = "parachain")]
 tuxedo_parachain_core::register_validate_block!(Block, OuterVerifier, OuterConstraintChecker);
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use parity_scale_codec::Encode;
-    use sp_core::testing::SR25519;
-    use sp_keystore::testing::MemoryKeystore;
-    use sp_keystore::{Keystore, KeystoreExt};
-
-    use std::sync::Arc;
-
-    // other random account generated with subkey
-    const SHAWN_PHRASE: &str =
-        "news slush supreme milk chapter athlete soap sausage put clutch what kitten";
-    const ANDREW_PHRASE: &str =
-        "monkey happy total rib lumber scrap guide photo country online rose diet";
-
-    fn new_test_ext() -> sp_io::TestExternalities {
-        let keystore = MemoryKeystore::new();
-
-        let t = GenesisConfig::default()
-            .build_storage()
-            .expect("System builds valid default genesis config");
-
-        let mut ext = sp_io::TestExternalities::from(t);
-        ext.register_extension(KeystoreExt(Arc::new(keystore)));
-        ext
-    }
-
-    #[test]
-    fn utxo_money_test_genesis() {
-        new_test_ext().execute_with(|| {
-            let keystore = MemoryKeystore::new();
-            let shawn_pub_key = keystore
-                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
-                .unwrap();
-
-            // Grab genesis value from storage and assert it is correct
-            let genesis_utxo = Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
-                    owner_pubkey: shawn_pub_key.into(),
-                }),
-                payload: DynamicallyTypedData {
-                    data: 100u128.encode(),
-                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                },
-            };
-
-            let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: 0_u32,
-            };
-
-            let encoded_utxo =
-                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis UTXO");
-            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-            assert_eq!(utxo, genesis_utxo);
-        })
-    }
-
-    #[test]
-    fn utxo_money_multi_sig_genesis_test() {
-        new_test_ext().execute_with(|| {
-            let keystore = MemoryKeystore::new();
-            let shawn_pub_key = keystore
-                .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
-                .unwrap();
-            let andrew_pub_key = keystore
-                .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
-                .unwrap();
-
-            let genesis_multi_sig_utxo = Output {
-                verifier: OuterVerifier::ThresholdMultiSignature(ThresholdMultiSignature {
-                    threshold: 1,
-                    signatories: vec![shawn_pub_key.into(), andrew_pub_key.into()],
-                }),
-                payload: DynamicallyTypedData {
-                    data: 100u128.encode(),
-                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
-                },
-            };
-
-            let output_ref = OutputRef {
-                // Genesis UTXOs don't come from any real transaction, so just uze the zero hash
-                tx_hash: <Header as sp_api::HeaderT>::Hash::zero(),
-                index: 1_u32,
-            };
-
-            let encoded_utxo =
-                sp_io::storage::get(&output_ref.encode()).expect("Retrieve Genesis MultiSig UTXO");
-            let utxo = Output::decode(&mut &encoded_utxo[..]).expect("Can Decode UTXO correctly");
-            assert_eq!(utxo, genesis_multi_sig_utxo);
-        })
-    }
-}
