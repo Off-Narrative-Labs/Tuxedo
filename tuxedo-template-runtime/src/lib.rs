@@ -135,11 +135,11 @@ impl poe::PoeConfig for Runtime {
     }
 }
 
-impl timestamp::TimestampConfig for Runtime {
-    fn block_height() -> u32 {
-        Executive::block_height()
-    }
-}
+// impl timestamp::TimestampConfig for Runtime {
+//     fn block_height() -> u32 {
+//         Executive::block_height()
+//     }
+// }
 
 #[cfg(feature = "parachain")]
 impl parachain_piece::ParachainPieceConfig for Runtime {
@@ -186,8 +186,8 @@ pub enum OuterConstraintChecker {
     /// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
-    /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    // /// Set the block's timestamp via an inherent extrinsic.
+    // SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
@@ -216,8 +216,8 @@ pub enum OuterConstraintChecker {
     /// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
-    /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    // /// Set the block's timestamp via an inherent extrinsic.
+    // SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
