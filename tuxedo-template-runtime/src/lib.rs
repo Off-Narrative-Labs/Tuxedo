@@ -46,7 +46,6 @@ pub use kitties;
 pub use money;
 pub use poe;
 pub use runtime_upgrade;
-use tuxedo_parachain_core::RelayParentNumberStorage;
 
 #[cfg(feature = "std")]
 use tuxedo_core::types::OutputRef;
@@ -224,7 +223,7 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
     // This is in the trait, but I don't think it is currently used.
     // const PARA_ID: u32 = 2_000;
 
-    type SetRelayParentNumberStorage = RelayParentNumberStorage;
+    type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
 }
 
 // Observation: For some applications, it will be invalid to simply delete
