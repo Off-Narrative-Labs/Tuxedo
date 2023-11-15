@@ -52,6 +52,42 @@ use tuxedo_core::{
     support_macros::{CloneNoBound, DebugNoBound},
 };
 
+/// A transient storage key that will hold the block number of the relay chain parent
+/// that is associated with the current parachain block. This data enters the parachain
+/// through the parachain inherent
+const RELAY_PARENT_NUMBER_KEY: &[u8] = b"relay_parent_number";
+
+/// A public interface for accessing and mutating the relay parent number. This is
+/// expected to be called from the parachain piece
+pub enum RelayParentNumberStorage {}
+
+/// An abstraction over reading the ambiently available relay parent number.
+/// This allows it to be mocked during tests and require actual externalities.
+pub trait GetRelayParentNumberStorage {
+    fn get() -> u32;
+}
+
+impl GetRelayParentNumberStorage for RelayParentNumberStorage {
+    fn get() -> u32 {
+        let encoded = sp_io::storage::get(RELAY_PARENT_NUMBER_KEY)
+            .expect("Some relay parent number should always be stored");
+        Decode::decode(&mut &encoded[..])
+            .expect("properly encoded relay parent number should have been stored.")
+    }
+}
+
+/// An abstraction over setting the ambiently available relay parent number.
+/// This allows it to be mocked during tests and require actual externalities.
+pub trait SetRelayParentNumberStorage {
+    fn set(new_parent_number: u32);
+}
+
+impl SetRelayParentNumberStorage for RelayParentNumberStorage {
+    fn set(new_parent_number: u32) {
+        sp_io::storage::set(RELAY_PARENT_NUMBER_KEY, &new_parent_number.encode());
+    }
+}
+
 /// Basically the same as
 /// [`ValidationParams`](polkadot_parachain_primitives::primitives::ValidationParams), but a little
 /// bit optimized for our use case here.
@@ -83,18 +119,7 @@ pub use tuxedo_register_validate_block::register_validate_block;
 /// A wrapper type around Cumulus's ParachainInherentData ype that can be stored.
 /// Having to do this wrapping is one more reason to abandon this UtxoData trait,
 /// and go for a more strongly typed aggregate type approach.
-#[derive(
-    // Serialize,
-    // Deserialize,
-    Encode,
-    Decode,
-    DebugNoBound,
-    // DefaultNoBound,
-    // PartialEq,
-    // Eq,
-    CloneNoBound,
-    scale_info::TypeInfo,
-)]
+#[derive(Encode, Decode, DebugNoBound, CloneNoBound, scale_info::TypeInfo)]
 
 /// A wrapper type around Cumulus's ParachainInherentData type.
 /// This type is convertable Into and From the inner type.

@@ -34,15 +34,18 @@ use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
 // We get all the Tuxedo core stuff through the re-export so we don't risk crossed versions.
-use tuxedo_parachain_core::tuxedo_core::{
-    ensure,
-    inherents::{TuxedoInherent, TuxedoInherentAdapter},
-    support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
-    types::{Input, Output, OutputRef, Transaction},
-    verifier::UpForGrabs,
-    ConstraintChecker, Verifier,
-};
 use tuxedo_parachain_core::ParachainInherentDataUtxo;
+use tuxedo_parachain_core::{
+    tuxedo_core::{
+        ensure,
+        inherents::{TuxedoInherent, TuxedoInherentAdapter},
+        support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
+        types::{Input, Output, OutputRef, Transaction},
+        verifier::UpForGrabs,
+        ConstraintChecker, Verifier,
+    },
+    SetRelayParentNumberStorage,
+};
 
 #[cfg(test)]
 mod tests;
@@ -65,6 +68,11 @@ pub trait ParachainPieceConfig {
     // This duplication of info on the client side and runtime side was a problem in the original Cumulus design as well.
     /// The Parachain Id associated with this parachain
     const PARA_ID: u32 = 2_000;
+
+    /// A means of setting an ambiently available relay parent number. This value
+    /// WILL be used when the colaltor calls the colaltion API and also in validate_block.
+    /// Additionally, it MAY be used by any other pieces in the runtime who have access to it.
+    type SetRelayParentNumberStorage: SetRelayParentNumberStorage;
 }
 
 /// Reasons that setting or cleaning up the parachain info may go wrong.
@@ -132,11 +140,7 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             .into();
 
         // SIDE EFFECT: Write the relay parent number to storage to use later in the collation info api
-        log::info!(target: LOG_TARGET, "About to store parent number: {:?}. encoded as: {:?}", current.validation_data.relay_parent_number, current.validation_data.relay_parent_number.encode());
-        sp_io::storage::set(
-            b"relay_parent",
-            &current.validation_data.relay_parent_number.encode(),
-        );
+        T::SetRelayParentNumberStorage::set(current.validation_data.relay_parent_number);
 
         //TODO this is the first block hack. This one may be slightly harder to remove
         // than it was in the timestamp case, because I'm not sure what data to put in the genesis one.

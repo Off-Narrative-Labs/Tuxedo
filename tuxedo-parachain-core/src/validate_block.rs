@@ -1,6 +1,9 @@
 //! The actual implementation of the validate block functionality.
 
-use super::{trie_cache, MemoryOptimizedValidationParams, ParachainInherentDataUtxo};
+use super::{
+    trie_cache, MemoryOptimizedValidationParams, ParachainInherentDataUtxo,
+    RelayParentNumberStorage,
+};
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
 };
@@ -226,12 +229,7 @@ where
         // 	};
 
         // Get the relay parent number out of storage so we can advance the hrmp watermark
-        // I think I need to set this to the relay parent based on
-        // https://github.com/paritytech/polkadot/pull/1689
-        let encoded_watermark = sp_io::storage::get(b"relay_parent")
-            .expect("Some relay parent number should always be stored (validate_block)");
-        let hrmp_watermark: u32 = Decode::decode(&mut &encoded_watermark[..])
-            .expect("properly encoded relay parent number should have been stored.");
+        let hrmp_watermark = RelayParentNumberStorage::get();
 
         ValidationResult {
             head_data,
