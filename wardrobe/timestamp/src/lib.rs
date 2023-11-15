@@ -304,9 +304,11 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
     #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, Self>> {
-        let time = std::time::SystemTime::now()
-            .duration_since(std::time::SystemTime::UNIX_EPOCH)
-            .expect("Time is always after UNIX_EPOCH; qed")
+        use std::time::{Duration, SystemTime};
+        let time = SystemTime::UNIX_EPOCH
+            .elapsed()
+            .expect("Time went backwards!")
+            .saturating_sub(Duration::from_millis(T::MINIMUM_TIME_INTERVAL))
             .as_millis() as u64;
 
         vec![Transaction {
