@@ -93,7 +93,7 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
             extrinsics,
         );
 
-        println!("About to finish build_genesis_block. The hash at this point is {:?}", block.header().hash());
+        eprintln!("About to finish build_genesis_block. The hash at this point is {:?}", block.header().hash());
 
         Ok((block, op))
     }
