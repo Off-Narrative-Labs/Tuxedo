@@ -1,4 +1,4 @@
-use node_template_runtime::genesis::*;
+use node_template_runtime::{genesis::*, WASM_BINARY};
 use sc_service::ChainType;
 
 // The URL for the telemetry server.
@@ -29,6 +29,7 @@ pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 // 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 // }
 
+//TODO try the new builder pattern. I just wasn't sure about this patch thing.
 pub fn development_config() -> Result<ChainSpec, String> {
     Ok(ChainSpec::from_genesis(
         // Name
@@ -49,6 +50,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
         None,
         // Extensions
         None,
+        // wasm
+        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
     ))
 }
 
@@ -72,5 +75,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         None,
         // Extensions
         None,
+        // wasm
+        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
     ))
 }

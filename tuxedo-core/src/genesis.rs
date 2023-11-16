@@ -103,16 +103,16 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
 /// They must not contain any inputs or peeks. These transactions will not be validated by the corresponding ConstraintChecker or Verifier.
 /// Make sure to pass the inherents before the extrinsics.
 pub struct TuxedoGenesisConfig<V, C> {
-    wasm_binary: Vec<u8>,
+    // wasm_binary: Vec<u8>,
     genesis_transactions: Vec<Transaction<V, C>>,
 }
 
 impl<V, C> TuxedoGenesisConfig<V, C> {
     /// Create a new `TuxedoGenesisConfig` from a WASM binary and a list of transactions.
     /// Make sure to pass the transactions in order: the inherents should be first, then the extrinsics.
-    pub fn new(wasm_binary: Vec<u8>, genesis_transactions: Vec<Transaction<V, C>>) -> Self {
+    pub fn new(genesis_transactions: Vec<Transaction<V, C>>) -> Self {
         Self {
-            wasm_binary,
+            // wasm_binary,
             genesis_transactions,
         }
     }
@@ -132,11 +132,6 @@ where
     /// Assimilate the storage into the genesis block.
     /// This is done by inserting the genesis extrinsics into the genesis block, along with their outputs.
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-        // The wasm binary is stored under a special key.
-        storage.top.insert(
-            sp_storage::well_known_keys::CODE.into(),
-            self.wasm_binary.clone(),
-        );
 
         // The transactions are stored under a special key.
         storage

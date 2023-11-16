@@ -37,9 +37,6 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
     ]);
 
     RuntimeGenesisConfig::new(
-        WASM_BINARY
-            .expect("Runtime WASM binary must exist.")
-            .to_vec(),
         genesis_transactions,
     )
 }
@@ -90,9 +87,9 @@ mod tests {
         ]);
 
         RuntimeGenesisConfig::new(
-            WASM_BINARY
-                .expect("Runtime WASM binary must exist.")
-                .to_vec(),
+            // WASM_BINARY
+            //     .expect("Runtime WASM binary must exist.")
+            //     .to_vec(),
             genesis_transactions,
         )
     }
