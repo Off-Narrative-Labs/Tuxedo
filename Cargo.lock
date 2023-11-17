@@ -8862,6 +8862,7 @@ dependencies = [
  "runtime-upgrade",
  "scale-info",
  "serde",
+ "serde_json",
  "sp-api",
  "sp-application-crypto",
  "sp-block-builder",
