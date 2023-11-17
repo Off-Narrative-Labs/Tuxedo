@@ -4,7 +4,7 @@ panic = "unwind"
 [workspace]
 members = [
 	"node",
-	"parachain_node",
+	"parachain-node",
 	"tuxedo-template-runtime",
 	"tuxedo-core",
 	"tuxedo-core/aggregator",
