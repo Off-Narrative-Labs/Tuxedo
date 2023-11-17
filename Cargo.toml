@@ -53,78 +53,78 @@ sled = "0.34.7"
 tokio = "1.25.0"
 
 # Node-only dependencies
-substrate-build-script-utils = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
+substrate-build-script-utils = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
 
 # Runtime-only dependencies
-substrate-wasm-builder = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
+substrate-wasm-builder = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
 
 # Substrate primitives and client
-sc-basic-authorship = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-chain-spec = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-cli = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-client-api = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-consensus = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-consensus-aura = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-consensus-grandpa = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-executor = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-keystore = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-network = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-network-sync = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-rpc = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-rpc-api = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-sysinfo = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-service = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-telemetry = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-tracing = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-transaction-pool = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sc-transaction-pool-api = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-api = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-application-crypto = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-block-builder = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-blockchain = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-consensus = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-consensus-aura = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-consensus-grandpa = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-core = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-debug-derive = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-inherents = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-io = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-keyring = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-keystore = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-runtime = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-session = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-std = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-storage = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-timestamp = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-transaction-pool = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-version = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
+sc-basic-authorship = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-chain-spec = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-cli = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-client-api = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-consensus = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-consensus-aura = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-consensus-grandpa = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-executor = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-keystore = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-network = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-network-sync = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-rpc = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-rpc-api = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-sysinfo = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-service = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-telemetry = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-tracing = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-transaction-pool = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sc-transaction-pool-api = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-api = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-application-crypto = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-block-builder = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-blockchain = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-consensus = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-consensus-aura = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-consensus-grandpa = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-core = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-debug-derive = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-inherents = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-io = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-keyring = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-keystore = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-runtime = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-session = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-std = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-storage = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-timestamp = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-transaction-pool = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-version = { default-features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
 
 # x
-substrate-prometheus-endpoint = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
+substrate-prometheus-endpoint = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
 
 # Polkadot
 color-print = "0.3.4"
 # xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
 
 # Cumulus
-cumulus-client-cli = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-client-collator = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-client-consensus-aura = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-client-consensus-common = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-client-consensus-proposer = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-client-service = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-primitives-core = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-primitives-parachain-inherent = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-relay-chain-interface = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-test-client = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-cumulus-test-relay-sproof-builder = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-polkadot-cli = { features = [ "rococo-native" ], git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-polkadot-parachain-primitives = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-polkadot-primitives = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
+cumulus-client-cli = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-client-collator = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-client-consensus-aura = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-client-consensus-common = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-client-consensus-proposer = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-client-service = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-primitives-core = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-primitives-parachain-inherent = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-relay-chain-interface = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-test-client = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+cumulus-test-relay-sproof-builder = { git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+polkadot-cli = { features = [ "rococo-native" ], git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+polkadot-parachain-primitives = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+polkadot-primitives = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
 
 # Added while adding Polkadot / Cumulus support
-sp-externalities = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-state-machine = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-tracing = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
-sp-trie = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "polkadot-v1.2.0-hack" }
+sp-externalities = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-state-machine = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-tracing = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
+sp-trie = { default_features = false, git = "https://github.com/joshorndorff/polkadot-sdk", branch = "joshy-export-genesis-head-original" }
 trie-db = { version = "0.28.0", default-features = false }
