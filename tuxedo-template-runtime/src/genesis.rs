@@ -36,9 +36,7 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
         // TODO: Initial Transactions for Existence
     ]);
 
-    RuntimeGenesisConfig::new(
-        genesis_transactions,
-    )
+    RuntimeGenesisConfig::new(genesis_transactions)
 }
 
 #[cfg(test)]

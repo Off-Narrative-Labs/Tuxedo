@@ -132,7 +132,6 @@ where
     /// Assimilate the storage into the genesis block.
     /// This is done by inserting the genesis extrinsics into the genesis block, along with their outputs.
     fn assimilate_storage(&self, storage: &mut Storage) -> Result<(), String> {
-
         // The transactions are stored under a special key.
         storage
             .top
