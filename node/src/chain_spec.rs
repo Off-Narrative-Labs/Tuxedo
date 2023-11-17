@@ -31,51 +31,25 @@ pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 
 //TODO try the new builder pattern. I just wasn't sure about this patch thing.
 pub fn development_config() -> Result<ChainSpec, String> {
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Development",
-        // ID
-        "dev",
-        ChainType::Development,
-        // TuxedoGenesisConfig
-        development_genesis_config,
-        // Bootnodes
-        vec![],
-        // Telemetry
-        None,
-        // Protocol ID
-        None,
-        None,
-        // Properties
-        None,
-        // Extensions
-        None,
-        // wasm
-        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
-    ))
+    Ok(ChainSpec::builder(
+		WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
+		None, // Extension
+	)
+	.with_name("Development")
+	.with_id("dev")
+	.with_chain_type(ChainType::Development)
+	.with_genesis_config_patch(development_genesis_config())
+	.build())
 }
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Local Testnet",
-        // ID
-        "local_testnet",
-        ChainType::Local,
-        // TuxedoGenesisConfig
-        development_genesis_config,
-        // Bootnodes
-        vec![],
-        // Telemetry
-        None,
-        // Protocol ID
-        None,
-        // Properties
-        None,
-        None,
-        // Extensions
-        None,
-        // wasm
-        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
-    ))
+    Ok(ChainSpec::builder(
+		WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
+		None, // Extension
+	)
+	.with_name("Local Testnet")
+	.with_id("local_testnet")
+	.with_chain_type(ChainType::Local)
+	.with_genesis_config_patch(development_genesis_config())
+	.build())
 }
