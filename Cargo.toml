@@ -49,45 +49,45 @@ sled = "0.34.7"
 tokio = "1.25.0"
 
 # Node-only dependencies
-substrate-build-script-utils = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
+substrate-build-script-utils = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
 
 # Runtime-only dependencies
-substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
+substrate-wasm-builder = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
 
 # Substrate primitives and client
-sc-basic-authorship = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-chain-spec = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-cli = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-client-api = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-consensus = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-consensus-aura = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-consensus-grandpa = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-executor = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-keystore = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-network = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-rpc = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-rpc-api = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-service = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-telemetry = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-transaction-pool = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sc-transaction-pool-api = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-api = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-application-crypto = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-block-builder = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-blockchain = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-consensus = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-consensus-aura = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-consensus-grandpa = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-core = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-debug-derive = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-inherents = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-io = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-keyring = { git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-keystore = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-session = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-std = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-storage = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-timestamp = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-transaction-pool = { default_features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
-sp-version = { default-features = false, git = "https://github.com/paritytech/polkadot-sdk", branch = "master" }
+sc-basic-authorship = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-chain-spec = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-cli = { branch = "master", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sc-client-api = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-consensus = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-consensus-aura = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-consensus-grandpa = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-executor = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-keystore = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-network = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-rpc = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-rpc-api = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-service = { branch = "master", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sc-telemetry = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-transaction-pool = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sc-transaction-pool-api = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-api = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-application-crypto = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-block-builder = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-blockchain = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-consensus = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-consensus-aura = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-consensus-grandpa = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-core = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-debug-derive = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-inherents = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-io = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-keyring = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }
+sp-keystore = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-runtime = { branch = "master", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-session = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-std = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-storage = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-timestamp = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-transaction-pool = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-version = { branch = "master", default-features = false, git = "https://github.com/paritytech/polkadot-sdk" }
