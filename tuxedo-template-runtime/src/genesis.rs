@@ -20,7 +20,7 @@ const SHAWN_PUB_KEY_BYTES: [u8; 32] =
 const ANDREW_PUB_KEY_BYTES: [u8; 32] =
     hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
 
-pub fn development_genesis_config() -> RuntimeGenesisConfig {
+pub fn development_genesis_config() -> serde_json::Value {
     let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
     // The inherents are computed using the appropriate method, and placed before the extrinsics.
@@ -36,7 +36,10 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
         // TODO: Initial Transactions for Existence
     ]);
 
-    RuntimeGenesisConfig::new(genesis_transactions)
+    let config = RuntimeGenesisConfig::new(genesis_transactions);
+    serde_json::to_string(&config)
+        .expect("Genesis configuration should serialize to json")
+        .into()
 }
 
 #[cfg(test)]
