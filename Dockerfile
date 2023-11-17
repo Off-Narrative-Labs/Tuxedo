@@ -7,7 +7,7 @@
 FROM docker.io/paritytech/ci-linux:production as builder
 WORKDIR /node-template
 COPY . /node-template
-RUN cargo build --locked --release 
+RUN cargo build --locked --release -p node-template
 
 
 # For the second stage, we use a minimal Ubuntu image
