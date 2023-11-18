@@ -8870,6 +8870,7 @@ dependencies = [
  "sp-consensus-grandpa",
  "sp-core",
  "sp-debug-derive 8.0.0 (git+https://github.com/paritytech/polkadot-sdk?branch=master)",
+ "sp-genesis-builder",
  "sp-inherents",
  "sp-io",
  "sp-keystore",

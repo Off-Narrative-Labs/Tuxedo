@@ -18,6 +18,7 @@ sp-api = { default_features = false, workspace = true }
 sp-block-builder = { default_features = false, workspace = true }
 sp-core = { features = [ "serde" ], default_features = false, workspace = true }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
+sp-genesis-builder = { default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }
 sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
 sp-runtime = { features = [ "serde" ], default_features = false, workspace = true }

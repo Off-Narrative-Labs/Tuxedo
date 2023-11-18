@@ -3,7 +3,7 @@
 use crate::{
     ensure,
     types::{Output, OutputRef, Transaction},
-    ConstraintChecker, Verifier, EXTRINSIC_KEY,
+    ConstraintChecker, Verifier, EXTRINSIC_KEY, utxo_set,
 };
 use parity_scale_codec::{Decode, Encode};
 use sc_chain_spec::BuildGenesisBlock;
@@ -122,6 +122,39 @@ impl<V, C> TuxedoGenesisConfig<V, C> {
     }
 }
 
+// This is the method for the new genesis builder api.
+// I wonder if it can entirely replace the BuildStorage implementation below?
+impl<V, C> TuxedoGenesisConfig<V, C>
+where
+    V: Verifier,
+    C: ConstraintChecker<V>,
+    Transaction<V, C>: Encode,
+    Output<V>: Encode,
+{
+    /// Writes all the genesis config stuff to storage.
+    pub fn build_storage(&self) {
+
+        // The transactions are stored under a special key.
+        sp_io::storage::set(EXTRINSIC_KEY, &self.genesis_transactions.encode());
+        
+        for tx in &self.genesis_transactions {
+            // Transactions are not actually executed and are not really required to be valid in any way
+            // We consider them valid by virtue of being in the genesis block.
+            // All outputs are directly written to storage.
+            let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+            for (index, output) in tx.outputs.iter().enumerate() {
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: index as u32,
+                };
+                utxo_set::TransparentUtxoSet::store_utxo(output_ref, output)
+            }
+        }
+    }
+}
+
+
+//TODO can this be removed now??
 impl<V, C> BuildStorage for TuxedoGenesisConfig<V, C>
 where
     V: Verifier,

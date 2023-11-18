@@ -80,6 +80,7 @@ sp-consensus-aura = { branch = "master", default_features = false, git = "https:
 sp-consensus-grandpa = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-core = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-debug-derive = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
+sp-genesis-builder = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-inherents = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-io = { branch = "master", default_features = false, git = "https://github.com/paritytech/polkadot-sdk" }
 sp-keyring = { branch = "master", git = "https://github.com/paritytech/polkadot-sdk" }

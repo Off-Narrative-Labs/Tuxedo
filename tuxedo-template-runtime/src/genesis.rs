@@ -93,13 +93,16 @@ mod tests {
     }
 
     fn new_test_ext() -> sp_io::TestExternalities {
-        let keystore = MemoryKeystore::new();
-        let storage = default_runtime_genesis_config()
-            .build_storage()
-            .expect("System builds valid default genesis config");
 
-        let mut ext = sp_io::TestExternalities::from(storage);
+        let mut ext = sp_io::TestExternalities::default();
+
+        // Populate the storage
+        ext.execute_with(|| default_runtime_genesis_config().build_storage());
+
+        // Add the keystore
+        let keystore = MemoryKeystore::new();
         ext.register_extension(KeystoreExt(Arc::new(keystore)));
+
         ext
     }
 
