@@ -17,7 +17,6 @@ pub mod types;
 pub mod utxo_set;
 pub mod verifier;
 
-#[cfg(feature = "std")]
 pub mod genesis;
 
 pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};

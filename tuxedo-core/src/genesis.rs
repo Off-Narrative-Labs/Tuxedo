@@ -1,22 +1,28 @@
 //! Custom GenesisBlockBuilder for Tuxedo, to allow extrinsics to be added to the genesis block.
 
 use crate::{
-    ensure,
     types::{Output, OutputRef, Transaction},
-    ConstraintChecker, Verifier, EXTRINSIC_KEY, utxo_set,
+    utxo_set, ConstraintChecker, Verifier, EXTRINSIC_KEY,
 };
 use parity_scale_codec::{Decode, Encode};
+#[cfg(feature = "std")]
 use sc_chain_spec::BuildGenesisBlock;
+#[cfg(feature = "std")]
 use sc_client_api::backend::{Backend, BlockImportOperation};
+#[cfg(feature = "std")]
 use sc_executor::RuntimeVersionOf;
 use serde::{Deserialize, Serialize};
-use sp_core::{storage::Storage, traits::CodeExecutor};
-use sp_runtime::{
-    traits::{BlakeTwo256, Block as BlockT, Hash as HashT, Header as HeaderT, Zero},
-    BuildStorage,
-};
+#[cfg(feature = "std")]
+use sp_core::traits::CodeExecutor;
+use sp_runtime::traits::{BlakeTwo256, Block as BlockT, Hash as HashT, Header as HeaderT, Zero};
+#[cfg(feature = "std")]
+use sp_runtime::BuildStorage;
+use sp_std::vec::Vec;
+#[cfg(feature = "std")]
+use sp_storage::Storage;
+#[cfg(feature = "std")]
 use std::sync::Arc;
-
+#[cfg(feature = "std")]
 pub struct TuxedoGenesisBlockBuilder<
     'a,
     Block: BlockT,
@@ -30,6 +36,7 @@ pub struct TuxedoGenesisBlockBuilder<
     _phantom: std::marker::PhantomData<Block>,
 }
 
+#[cfg(feature = "std")]
 impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     TuxedoGenesisBlockBuilder<'a, Block, B, E>
 {
@@ -49,6 +56,7 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     }
 }
 
+#[cfg(feature = "std")]
 impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
     BuildGenesisBlock<Block> for TuxedoGenesisBlockBuilder<'a, Block, B, E>
 {
@@ -133,10 +141,9 @@ where
 {
     /// Writes all the genesis config stuff to storage.
     pub fn build_storage(&self) {
-
         // The transactions are stored under a special key.
         sp_io::storage::set(EXTRINSIC_KEY, &self.genesis_transactions.encode());
-        
+
         for tx in &self.genesis_transactions {
             // Transactions are not actually executed and are not really required to be valid in any way
             // We consider them valid by virtue of being in the genesis block.
@@ -153,8 +160,8 @@ where
     }
 }
 
-
-//TODO can this be removed now??
+//TODO can this be removed now?? Seems not.
+#[cfg(feature = "std")]
 impl<V, C> BuildStorage for TuxedoGenesisConfig<V, C>
 where
     V: Verifier,
@@ -184,11 +191,6 @@ where
                 // This is the first non-inherent, so we update our flag and continue.
                 finished_with_opening_inherents = true;
             }
-            // Enforce that transactions do not have any inputs or peeks.
-            ensure!(
-                tx.inputs.is_empty() && tx.peeks.is_empty(),
-                "Genesis transactions must not have any inputs or peeks."
-            );
             // Insert the outputs into the storage.
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             for (index, utxo) in tx.outputs.iter().enumerate() {

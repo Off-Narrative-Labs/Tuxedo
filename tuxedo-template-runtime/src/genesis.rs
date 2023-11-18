@@ -6,6 +6,7 @@ use super::{
     OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier,
 };
 use hex_literal::hex;
+use sp_std::vec;
 use tuxedo_core::{
     inherents::InherentInternal,
     verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
@@ -93,7 +94,6 @@ mod tests {
     }
 
     fn new_test_ext() -> sp_io::TestExternalities {
-
         let mut ext = sp_io::TestExternalities::default();
 
         // Populate the storage

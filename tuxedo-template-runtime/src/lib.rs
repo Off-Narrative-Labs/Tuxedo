@@ -9,7 +9,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-#[cfg(feature = "std")]
 pub mod genesis;
 
 use parity_scale_codec::{Decode, Encode};
@@ -349,21 +348,21 @@ impl_runtime_apis! {
     }
 
     impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
-		fn create_default_config() -> Vec<u8> {
+        fn create_default_config() -> Vec<u8> {
             let default_config = genesis::development_genesis_config();
 
-			serde_json::to_string(&default_config)
+            serde_json::to_string(&default_config)
                 .expect("serialization to json is expected to work. qed.")
                 .into_bytes()
-		}
+        }
 
-		fn build_config(config_json: Vec<u8>) -> sp_genesis_builder::Result {
-			let genesis_config = serde_json::from_slice::<genesis::RuntimeGenesisConfig>(&config_json)
+        fn build_config(config_json: Vec<u8>) -> sp_genesis_builder::Result {
+            let genesis_config = serde_json::from_slice::<genesis::RuntimeGenesisConfig>(&config_json)
                 .map_err(|e| sp_runtime::format_runtime_string!("Invalid JSON blob: {}", e))?;
 
             genesis_config.build_storage();
 
             Ok(())
-		}
-	}
+        }
+    }
 }
