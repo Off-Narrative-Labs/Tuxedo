@@ -23,7 +23,7 @@ RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
   chown -R node-dev:node-dev /chain-data && \
   ln -s /chain-data /node-dev/.local/share/parachain-template-node && \
   # unclutter and minimize the attack surface
-  rm -rf /usr/bin /usr/sbin && \
+  # rm -rf /usr/bin /usr/sbin && \
   # check if executable works in this container
   /usr/local/bin/parachain-template-node --version
 
