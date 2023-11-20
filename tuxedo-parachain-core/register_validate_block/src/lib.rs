@@ -118,17 +118,8 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                         //#para_id,
                     >(params);
 
-                    // So I know we can make it to here without panicing at least.
-                    // This panic happens as expected, and shows reasonable data.
-                    // I didn't check the bytes of the head data, but it is bytes and the other fields are empty.
-                    // So what is the problem then.
-                    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE Back in macro. head_data: {:?}, new_code: {:?}, upward_messages: {:?}, hrmp_watermark: {:?}", res.head_data, res.new_validation_code, res.upward_messages, res.hrmp_watermark);
-
                     // Step 3: Write the return value back into the shared memory
                     let return_pointer = #crate_::polkadot_parachain_primitives::write_result(&res);
-
-                    // And even this panic was reachable as expected. So IDK why my blocks don't get in.
-                    // panic!("Finished writing results. This is the last possible place to intercept the execution.");
 
                     return_pointer
                 }

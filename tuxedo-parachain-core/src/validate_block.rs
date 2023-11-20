@@ -75,7 +75,6 @@ where
     V: Verifier,
     C: ConstraintChecker<V>, // + Into<SetParachainInfo<V>>,
 {
-    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE");
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
     // Step 1: Decode block data
@@ -97,8 +96,6 @@ where
 
     let inherent_data = extract_parachain_inherent_data(&block);
 
-    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE past inherent data scraping");
-
     validate_validation_data(
         &inherent_data.validation_data,
         relay_parent_number,
@@ -106,16 +103,12 @@ where
         parent_head,
     );
 
-    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE validation data successfully validated");
-
     // Step 3: Create the sparse in-memory db
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 3");
     let db = match storage_proof.to_memory_db(Some(parent_header.state_root())) {
         Ok((db, _)) => db,
         Err(_) => panic!("Compact proof decoding failure."),
     };
-
-    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE made db");
 
     sp_std::mem::drop(storage_proof);
 
@@ -128,9 +121,6 @@ where
         cache_provider,
     )
     .build();
-
-    // Okay, turns out we can get this one, just need to be patient.
-    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE backend built");
 
     // Step 4: Replace host functions
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 4");
@@ -196,16 +186,11 @@ where
     // 	}
     // });
 
-    // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE about to enter externalities closure");
-
     run_with_externalities::<B, _, _>(&backend, || {
-        // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE in externalities closure");
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ In the run_with_externalities closure");
         let head_data = HeadData(block.header().encode());
 
         Executive::<B, V, C>::execute_block(block);
-
-        // panic!("MADE IT HEREEEEEEEEEEEEEEEEEEE returned from execute_block");
 
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ returned from execute block");
 
