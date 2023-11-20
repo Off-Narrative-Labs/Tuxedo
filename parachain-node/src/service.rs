@@ -378,7 +378,6 @@ fn start_consensus(
             let maybe_parent_block = client_for_cidp.clone().block(parent_hash);
 
             async move {
-                
                 let parent_block = maybe_parent_block?
                     .ok_or(sp_blockchain::Error::UnknownBlock(parent_hash.to_string()))?
                     .block;
