@@ -36,4 +36,4 @@ USER node-dev
 EXPOSE 30333 30334 9944 9615 9616
 VOLUME ["/chain-data"]
 
-ENTRYPOINT ["/usr/local/bin/node-template"]
+ENTRYPOINT ["/usr/local/bin/parachain-template-node"]
