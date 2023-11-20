@@ -378,6 +378,7 @@ fn start_consensus(
             let maybe_parent_block = client_for_cidp.clone().block(parent_hash);
 
             async move {
+                
                 let parent_block = maybe_parent_block?
                     .ok_or(sp_blockchain::Error::UnknownBlock(parent_hash.to_string()))?
                     .block;
@@ -385,6 +386,9 @@ fn start_consensus(
                     tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
                 let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
+                // There is no slot IDP here. This differs from the sovereign node. It is copied form
+                // the SDK's own parachain template. A clarification question remains unanswered on SE:
+                // https://substrate.stackexchange.com/questions/10435/is-the-aura-slot-inherent-necessary
                 Ok((parent_idp, timestamp))
             }
         },
