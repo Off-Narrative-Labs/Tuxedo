@@ -4,7 +4,8 @@
 # zombienet --provider native spawn zombienet.toml
 
 [relaychain]
-default_command = "../polkadot-sdk/target/release/polkadot"
+default_image = "docker.io/parity/polkadot:latest"
+default_command = "polkadot"
 default_args = [ "-lparachain=debug" ]
 
 chain = "rococo-local"
@@ -25,11 +26,13 @@ id = 2000
 
   [[parachains.collators]]
   name = "alice"
-  command = "./target/release/parachain-template-node"
+  image = "ghcr.io/off-narrative-labs/tuxedo-parachain:latest"
+  command = "parachain-template-node"
   args = ["--alice"]
 
   [[parachains.collators]]
   name = "tuxedo-full-node"
-  command = "./target/release/parachain-template-node"
+  image = "ghcr.io/off-narrative-labs/tuxedo-parachain:latest"
+  command = "parachain-template-node"
   # This makes this node a full node instead of a collator (despite the schema name)
   validator = false
