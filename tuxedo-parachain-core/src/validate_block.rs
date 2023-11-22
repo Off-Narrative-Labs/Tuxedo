@@ -233,6 +233,7 @@ where
     // It is nicer than my hack because it searches the transactions,
     // But it is still not good enough because it lived right here in this file as
     // opposed to with the runtime.
+    // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/146
 
     // block
     // 	.extrinsics()
