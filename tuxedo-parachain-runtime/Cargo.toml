@@ -1,0 +1,89 @@
+[package]
+description = "An example and template runtime built with Tuxedo."
+edition = "2021"
+license = "Apache-2.0"
+name = "tuxedo-parachain-runtime"
+repository = "https://github.com/Off-Narative-Labs/Tuxedo"
+version = "1.0.0-dev"
+
+[dependencies]
+log = { workspace = true }
+parity-scale-codec = { features = [ "derive" ], workspace = true }
+parity-util-mem = { optional = true, workspace = true }
+scale-info = { features = [ "derive", "serde" ], workspace = true }
+serde = { features = [ "derive" ], workspace = true }
+
+sp-api = { default_features = false, workspace = true }
+sp-block-builder = { default_features = false, workspace = true }
+sp-core = { features = [ "serde" ], default_features = false, workspace = true }
+sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
+sp-inherents = { default_features = false, workspace = true }
+sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
+sp-runtime = { features = [ "serde" ], default_features = false, workspace = true }
+sp-session = { default_features = false, workspace = true }
+sp-std = { default_features = false, workspace = true }
+sp-storage = { default_features = false, workspace = true }
+sp-timestamp = { default_features = false, workspace = true }
+sp-transaction-pool = { default_features = false, workspace = true }
+sp-version = { default_features = false, workspace = true }
+
+# The inner runtime
+inner-runtime = { default-features = false, package = "tuxedo-template-runtime", path = "../tuxedo-template-runtime" }
+
+# These were added for Aura / Grandpa API support
+hex-literal = { workspace = true }
+sp-application-crypto = { default_features = false, workspace = true }
+sp-consensus-aura = { default_features = false, workspace = true }
+sp-consensus-grandpa = { default_features = false, workspace = true }
+
+# Tuxedo Core and Pieces
+amoeba = { default-features = false, path = "../wardrobe/amoeba" }
+kitties = { default-features = false, path = "../wardrobe/kitties" }
+money = { default-features = false, path = "../wardrobe/money" }
+poe = { default-features = false, path = "../wardrobe/poe" }
+runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
+timestamp = { default-features = false, path = "../wardrobe/timestamp" }
+
+# Parachain related ones
+cumulus-primitives-core = { default-features = false, workspace = true }
+parachain-piece = { default-features = false, path = "../wardrobe/parachain" }
+tuxedo-parachain-core = { default-features = false, path = "../tuxedo-parachain-core" }
+
+[build-dependencies]
+substrate-wasm-builder = { workspace = true }
+
+[dev-dependencies]
+sp-keystore = { default_features = false, workspace = true }
+
+[features]
+default = [ "std" ]
+std = [
+	"sp-debug-derive/std",
+	"sp-block-builder/std",
+	"sp-inherents/std",
+	"parity-scale-codec/std",
+	"sp-core/std",
+	"sp-std/std",
+	"serde/std",
+	"sp-api/std",
+	"sp-session/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-transaction-pool/std",
+	"sp-version/std",
+	"parity-util-mem",
+	"sp-storage/std",
+	"sp-consensus-aura/std",
+	"sp-application-crypto/std",
+	"sp-consensus-grandpa/std",
+	"amoeba/std",
+	"money/std",
+	"poe/std",
+	"kitties/std",
+	"timestamp/std",
+	"runtime-upgrade/std",
+	"inner-runtime/std",
+	"cumulus-primitives-core/std",
+	"parachain-piece/std",
+	"tuxedo-parachain-core/std",
+]

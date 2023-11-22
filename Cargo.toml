@@ -6,6 +6,7 @@ members = [
 	"node",
 	"parachain-node",
 	"tuxedo-template-runtime",
+	"tuxedo-parachain-runtime",
 	"tuxedo-core",
 	"tuxedo-core/aggregator",
 	"tuxedo-core/no_bound",

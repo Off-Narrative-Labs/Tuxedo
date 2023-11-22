@@ -13919,6 +13919,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "tuxedo-parachain-runtime"
+version = "1.0.0-dev"
+dependencies = [
+ "amoeba",
+ "cumulus-primitives-core",
+ "hex-literal",
+ "kitties",
+ "log",
+ "money",
+ "parachain-piece",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "poe",
+ "runtime-upgrade",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-application-crypto",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-consensus-grandpa",
+ "sp-core",
+ "sp-debug-derive",
+ "sp-inherents",
+ "sp-io",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-storage",
+ "sp-timestamp",
+ "sp-transaction-pool",
+ "sp-version",
+ "substrate-wasm-builder",
+ "timestamp",
+ "tuxedo-parachain-core",
+ "tuxedo-template-runtime",
+]
+
+[[package]]
 name = "tuxedo-register-validate-block"
 version = "0.1.0"
 dependencies = [
