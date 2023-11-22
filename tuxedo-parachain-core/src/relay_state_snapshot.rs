@@ -15,6 +15,15 @@
 // along with Cumulus.  If not, see <http://www.gnu.org/licenses/>.
 
 //! Relay chain state proof provides means for accessing part of relay chain storage for reads.
+//! This is copied entirely from Cumulus. Some of it will liekly be removed in the future, and
+//! perhaps some added as well.
+//!
+//! For now it is mostly unused and is kept here in preparation for a fully secure validate_block
+//! implementation and XCM support.
+
+// These warnings should be unsuppressed after validate_block is complete and XCM is working.
+// FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/149
+#![allow(dead_code)]
 
 use cumulus_primitives_core::{
     relay_chain, AbridgedHostConfiguration, AbridgedHrmpChannel, ParaId,
