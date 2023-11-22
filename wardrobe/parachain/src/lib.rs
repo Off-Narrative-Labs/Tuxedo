@@ -5,21 +5,17 @@
 //! In each block, the block author must include a single `SetParachainInfo` transaction that consumes the
 //! corresponding UTXO that was created in the previous block, and creates a new one with updated parachain info.
 //! This is quite similar to how the timestamp inherent works, except that in this case we are consuming the previous
-//! input directly instead of peeking. This decision is to keep things simple to get started. It may be revisitied if
-//! keeping this info around would be useful.
+//! input directly instead of peeking. This decision may be revisitied if keeping the info around would be useful.
 //!
 //! ## Comparison with Cumulus Pallet Parachain System
 //!
 //! This is similar to FRAME's pallet parachain system, although this piece is only responsible for the inherent flow
-//! while that pallet is responsible for most of the core parachain requirements including the validate block function
+//! while that pallet is responsible for most of the core parachain requirements including the validate block function.
 //!
 //! ## Hack Warning
 //!
 //! Like the timestamp piece, this piece currently abuses the UpForGrabs verifier.
 //! This should be replaced with an Unspendable verifier and an eviction workflow.
-//!
-//! It also just grabs some storage out of thin air to note the relay block number.
-//! Eventually we sill need to store this in some more elegant way. (Maybe an accumulator...)
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -53,8 +49,7 @@ mod tests;
 /// A piece-wide target for logging
 const LOG_TARGET: &str = "parachain-info";
 
-/// Options to configure the timestamp piece in your runtime.
-/// Currently we only need access to a block number.
+/// Options to configure the timestamp piece when it is aggregated or used in a runtime.
 pub trait ParachainPieceConfig {
     //TODO Consider whetther including this config item is useful or wise. It is just an idea I had
     // and I'm scribbling it here so I don't forget it.
@@ -64,8 +59,8 @@ pub trait ParachainPieceConfig {
     /// The Parachain Id associated with this parachain
     const PARA_ID: u32 = 2_000;
 
-    /// A means of setting an ambiently available relay parent number. This value
-    /// WILL be used when the colaltor calls the colaltion API and also in validate_block.
+    /// A means of setting an ambiently available relay parent number. This value WILL be used when
+    /// the colaltor calls the colaltion API after the block is authored and also in validate_block.
     /// Additionally, it MAY be used by any other pieces in the runtime who have access to it.
     type SetRelayParentNumberStorage: SetRelayParentNumberStorage;
 }
@@ -155,10 +150,9 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             Self::Error::RelayBlockNotIncreasing,
         );
 
-        // TODO There may be a lot more checks to make here. For now this is where I'll leave it.
-        // For example I probably have to check that the relay storage proof is correct.
-
-        // Might also need to put a log on the block header
+        // We may need to put a log on the block header at some point.
+        // Frame does this. However, it seems this design is not fully fleshed out in cumulus itself.
+        // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/147 for more context and info.
 
         // 1. Maybe we should validate the parent head data?
         //would require a method in core to expose the header (or at least it's hash)
