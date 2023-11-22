@@ -92,7 +92,7 @@ impl SetRelayParentNumberStorage for RelayParentNumberStorage {
 pub enum MockRelayParentNumberStorage {}
 
 impl SetRelayParentNumberStorage for MockRelayParentNumberStorage {
-    fn set(new_parent_number: u32) {}
+    fn set(_new_parent_number: u32) {}
 }
 
 /// Basically the same as
