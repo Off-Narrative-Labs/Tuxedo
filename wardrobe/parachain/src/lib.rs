@@ -154,13 +154,9 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         // Frame does this. However, it seems this design is not fully fleshed out in cumulus itself.
         // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/147 for more context and info.
 
-        // 1. Maybe we should validate the parent head data?
-        //would require a method in core to expose the header (or at least it's hash)
-        // But I'm not sure if this is necessary or if it is already handled somewhere else.
-        // assert_eq!(
-        //     hash(header_from_core_method),
-        //     current.validation_data.parent_head,
-        // );
+        // When we support async backing, we will need to validate that the parent is included
+        // and perform consensus checks as well. For now, we rely on synchronous backing.
+        // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/148
 
         Ok(0)
     }
