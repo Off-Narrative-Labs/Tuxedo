@@ -24,6 +24,7 @@ resolver = "2"
 
 [workspace.dependencies]
 # Generic dependencies
+async-io = "2.0"
 async-trait = "0.1.73"
 clap = "4.3.0"
 hex-literal = "0.4.1"
@@ -66,6 +67,7 @@ sc-client-api = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrat
 sc-consensus = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sc-consensus-aura = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sc-consensus-grandpa = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
+sc-consensus-manual-seal = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sc-executor = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sc-keystore = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sc-network = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }

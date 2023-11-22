@@ -9,6 +9,7 @@ publish = false
 version = "0.1.0"
 
 [dependencies]
+async-io = { workspace = true }
 clap = { features = [ "derive" ], workspace = true }
 futures = { workspace = true }
 jsonrpsee = { features = [ "server" ], workspace = true }
@@ -25,8 +26,8 @@ sc-basic-authorship = { workspace = true }
 sc-chain-spec = { workspace = true }
 sc-cli = { workspace = true }
 sc-client-api = { workspace = true }
-# sc-offchain = { workspace = true }
 sc-consensus = { workspace = true }
+sc-consensus-manual-seal = { workspace = true }
 sc-executor = { workspace = true }
 sc-network = { workspace = true }
 sc-network-sync = { workspace = true }
@@ -50,7 +51,6 @@ substrate-prometheus-endpoint = { workspace = true }
 
 # Polkadot
 color-print = { workspace = true }
-# xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
 
 # Cumulus
 cumulus-client-cli = { workspace = true }
