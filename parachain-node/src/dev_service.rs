@@ -40,7 +40,9 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
     let import_queue = sc_consensus_manual_seal::import_queue(
         Box::new(block_import.clone()),
         &task_manager.spawn_essential_handle(),
-        config.prometheus_registry(),
+        None, //TODO Re-evaluate this.
+		// Using None avoids "Failed to register Prometheus metrics: Duplicate metrics collector registration attempted"
+		// That might just be a warning though. Ultimately the node crashes with "Essential task `basic-block-import-worker` failed. Shutting down service."
     );
 
     let net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
@@ -83,7 +85,6 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
         let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
         let client_set_aside_for_cidp = client.clone();
-        let slot_duration = cumulus_client_consensus_aura::slot_duration(&*client)?;
 
         // Create channels for mocked XCM messages.
         // let (downward_xcm_sender, downward_xcm_receiver) = flume::bounded::<Vec<u8>>(100);
@@ -116,12 +117,6 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
                     async move {
                         let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-                        let slot =
-							sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-								*timestamp,
-								slot_duration,
-							);
-
                         let mocked_parachain = MockValidationDataInherentDataProvider {
                             current_para_block,
                             relay_offset: 1000,
@@ -133,7 +128,7 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
                             raw_horizontal_messages: Default::default(),
                         };
 
-                        Ok((slot, timestamp, mocked_parachain))
+                        Ok((timestamp, mocked_parachain))
                     }
                 },
             }),
