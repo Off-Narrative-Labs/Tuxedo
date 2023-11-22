@@ -12,6 +12,7 @@ use sp_runtime::traits::AccountIdConversion;
 use crate::{
     chain_spec,
     cli::{Cli, RelayChainCli, Subcommand},
+    dev_service::new_dev,
     service::new_partial,
 };
 
@@ -184,6 +185,14 @@ pub fn run() -> Result<()> {
             let collator_options = cli.run.collator_options();
 
             runner.run_node_until_exit(|config| async move {
+                // This is where we detect and enable the development service.
+                // For now it can ONLY be used for --dev. If we later desire more
+                // flexibility, we could take inspiration from:
+                // https://github.com/moonbeam-foundation/moonbeam/pull/260
+                if cli.run.base.shared_params.dev {
+                    return new_dev(config).map_err(sc_cli::Error::Service);
+                }
+
                 let hwbench = (!cli.no_hardware_benchmarks)
                     .then_some(config.database.path().map(|database_path| {
                         let _ = std::fs::create_dir_all(database_path);
