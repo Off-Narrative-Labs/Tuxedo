@@ -60,6 +60,6 @@ substrate-build-script-utils = { workspace = true }
 default = []
 mock-parachain = [
 	"cumulus-primitives-parachain-inherent",
-	"node-template-runtime/parachain",
+	# "node-template-runtime/parachain",
 ]
 rocksdb = [ "sc-cli/rocksdb", "sc-service/rocksdb" ]
