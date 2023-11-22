@@ -163,8 +163,13 @@ where
         sp_io::offchain_index::host_clear.replace_implementation(host_offchain_index_clear),
     );
 
+    //TODO Consider whether and how to check inherents.
+    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/144
+    // https://substrate.stackexchange.com/questions/10436
+    // The code below is commented from Cumulus, and is one option. I prefer to re-use the
+    // existing check-inehrent logic if possible.
+
     // Step 5: Check inherents.
-    // TODO For now I'm skipping this entirely to try to make something "work"
     // run_with_externalities::<B, _, _>(&backend, || {
     // 	let relay_chain_proof = super::RelayChainStateProof::new(
     // 		PID::get(),
@@ -172,16 +177,16 @@ where
     // 		inherent_data.relay_chain_state.clone(),
     // 	)
     // 	.expect("Invalid relay chain state proof");
-
+    //
     // 	let res = CI::check_inherents(&block, &relay_chain_proof);
-
+    //
     // 	if !res.ok() {
     // 		if log::log_enabled!(log::Level::Error) {
     // 			res.into_errors().for_each(|e| {
     // 				log::error!("Checking inherent with identifier `{:?}` failed", e.0)
     // 			});
     // 		}
-
+    //
     // 		panic!("Checking inherents failed");
     // 	}
     // });
