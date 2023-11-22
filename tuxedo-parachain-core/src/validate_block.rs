@@ -194,24 +194,10 @@ where
 
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ returned from execute block");
 
+        // Once we support XCM, we will need to gather some messaging state stuff here
         // Seems like we could call the existing collect_collation_info api to get this information here
-        // instead of tightly coupling to pallet parachain system
-        // let new_validation_code = crate::NewValidationCode::<PSC>::get();
-        // let upward_messages = crate::UpwardMessages::<PSC>::get().try_into().expect(
-        // 	"Number of upward messages should not be greater than `MAX_UPWARD_MESSAGE_NUM`",
-        // );
-        // let processed_downward_messages = crate::ProcessedDownwardMessages::<PSC>::get();
-        // let horizontal_messages = crate::HrmpOutboundMessages::<PSC>::get().try_into().expect(
-        // 	"Number of horizontal messages should not be greater than `MAX_HORIZONTAL_MESSAGE_NUM`",
-        // );
-        // let hrmp_watermark = crate::HrmpWatermark::<PSC>::get();
-
-        // let head_data =
-        // 	if let Some(custom_head_data) = crate::CustomValidationHeadData::<PSC>::get() {
-        // 		HeadData(custom_head_data)
-        // 	} else {
-        // 		head_data
-        // 	};
+        // instead of FRAME's approach of tightly coupling to pallet parachain system.
+        // That would mean less duplicated code as well as a more flexible validate block macro.
 
         // Get the relay parent number out of storage so we can advance the hrmp watermark
         let hrmp_watermark = RelayParentNumberStorage::get();
