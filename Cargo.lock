@@ -14068,12 +14068,10 @@ name = "tuxedo-template-runtime"
 version = "1.0.0-dev"
 dependencies = [
  "amoeba",
- "cumulus-primitives-core",
  "hex-literal",
  "kitties",
  "log",
  "money",
- "parachain-piece",
  "parity-scale-codec",
  "parity-util-mem",
  "poe",
@@ -14100,7 +14098,6 @@ dependencies = [
  "substrate-wasm-builder",
  "timestamp",
  "tuxedo-core",
- "tuxedo-parachain-core",
 ]
 
 [[package]]
