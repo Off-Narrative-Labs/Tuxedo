@@ -20,12 +20,13 @@ use sled::Db;
 use sp_core::H256;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
+    dynamic_typing::UtxoData,
     types::{Input, OutputRef},
     verifier::Sr25519Signature,
 };
 
 use jsonrpsee::http_client::HttpClient;
-use runtime::{money::Coin, Block, OuterVerifier, Transaction};
+use runtime::{money::Coin, timestamp::Timestamp, Block, OuterVerifier, Transaction};
 
 /// The identifier for the blocks tree in the db.
 const BLOCKS: &str = "blocks";
@@ -38,6 +39,9 @@ const UNSPENT: &str = "unspent";
 
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
+
+/// The identifier for the current timestamp in the db.
+const TIMESTAMP: &str = "timestamp";
 
 /// Open a database at the given location intended for the given genesis block.
 ///
@@ -262,23 +266,30 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
         .filter(|o| filter(&o.verifier))
         .enumerate()
     {
-        // For now the wallet only supports simple coins, so skip anything else
-        let amount = match output.payload.extract::<Coin<0>>() {
-            Ok(Coin(amount)) => amount,
-            Err(_) => continue,
-        };
+        // For now the wallet only supports simple coins and timestamp
+        match output.payload.type_id {
+            Coin::<0>::TYPE_ID => {
+                let amount = output.payload.extract::<Coin<0>>()?.0;
 
-        let output_ref = OutputRef {
-            tx_hash,
-            index: index as u32,
-        };
+                let output_ref = OutputRef {
+                    tx_hash,
+                    index: index as u32,
+                };
 
-        match output.verifier {
-            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
-                // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+                match output.verifier {
+                    OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
+                        // Add it to the global unspent_outputs table
+                        add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+                    }
+                    _ => return Err(anyhow!("{:?}", ())),
+                }
             }
-            _ => return Err(anyhow!("{:?}", ())),
+            Timestamp::TYPE_ID => {
+                let timestamp = output.payload.extract::<Timestamp>()?.time;
+                let timestamp_tree = db.open_tree(TIMESTAMP)?;
+                timestamp_tree.insert([0], timestamp.encode())?;
+            }
+            _ => continue,
         }
     }
 
@@ -455,4 +466,13 @@ pub(crate) fn get_balances(db: &Db) -> anyhow::Result<impl Iterator<Item = (H256
     }
 
     Ok(balances.into_iter())
+}
+
+pub(crate) fn get_timestamp(db: &Db) -> anyhow::Result<u64> {
+    let timestamp_tree = db.open_tree(TIMESTAMP)?;
+    let timestamp = timestamp_tree
+        .get([0])?
+        .ok_or_else(|| anyhow!("Could not find timestamp in database."))?;
+    u64::decode(&mut &timestamp[..])
+        .map_err(|_| anyhow!("Could not decode timestamp from database."))
 }

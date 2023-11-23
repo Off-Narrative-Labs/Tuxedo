@@ -44,6 +44,7 @@ pub use kitties;
 pub use money;
 pub use poe;
 pub use runtime_upgrade;
+pub use timestamp;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
