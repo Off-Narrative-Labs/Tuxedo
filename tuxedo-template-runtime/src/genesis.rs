@@ -5,11 +5,14 @@ pub use super::WASM_BINARY;
 use super::{
     kitties::{KittyData, Parent},
     money::Coin,
-    Transaction,
+    OuterConstraintCheckerInherentHooks, Transaction,
 };
 use hex_literal::hex;
 use sp_std::{vec, vec::Vec};
-use tuxedo_core::verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs};
+use tuxedo_core::{
+    inherents::InherentInternal,
+    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
+};
 
 const SHAWN_PUB_KEY_BYTES: [u8; 32] =
     hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
@@ -23,9 +26,7 @@ pub fn development_genesis_transactions() -> Vec<Transaction> {
     let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
     // The inherents are computed using the appropriate method, and placed before the extrinsics.
-    let mut genesis_transactions = Vec::new();
-    // TODO restore this once inherent genesis can work with no_std
-    // OuterConstraintCheckerInherentHooks::genesis_transactions();
+    let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
 
     genesis_transactions.extend([
         // Money Transactions
@@ -98,9 +99,7 @@ mod tests {
                 },
             };
 
-            // TODO restore this once inherent genesis can work with no_std
-            // let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
-            let inherents_len = 0;
+            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
 
             let tx = development_genesis_transactions()
                 .get(inherents_len)
@@ -144,9 +143,7 @@ mod tests {
                 },
             };
 
-            // TODO restore this once inherent genesis can work with no_std
-            // let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
-            let inherents_len = 0;
+            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
 
             let tx = development_genesis_transactions()
                 .get(1 + inherents_len)

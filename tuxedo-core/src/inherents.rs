@@ -117,7 +117,6 @@ pub trait TuxedoInherent<V, C: ConstraintChecker<V>>: Sized {
     );
 
     /// Return the genesis transactions that are required for this inherent.
-    #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, C>> {
         Vec::new()
     }
@@ -150,7 +149,6 @@ pub trait InherentInternal<V, C: ConstraintChecker<V>>: Sized {
     );
 
     /// Return the genesis transactions that are required for the inherents.
-    #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, C>>;
 }
 
@@ -203,7 +201,6 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
         <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)
     }
 
-    #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, C>> {
         <T as TuxedoInherent<V, C>>::genesis_transactions()
     }
@@ -230,7 +227,6 @@ impl<V, C: ConstraintChecker<V>> InherentInternal<V, C> for () {
         )
     }
 
-    #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, C>> {
         Vec::new()
     }

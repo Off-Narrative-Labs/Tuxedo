@@ -182,9 +182,8 @@ pub enum OuterConstraintChecker {
     /// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
-    // TODO restore this once inherent genesis can work with no_std
-    // /// Set the block's timestamp via an inherent extrinsic.
-    // SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    /// Set the block's timestamp via an inherent extrinsic.
+    SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 
