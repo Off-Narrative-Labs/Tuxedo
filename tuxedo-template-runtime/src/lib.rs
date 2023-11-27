@@ -228,16 +228,7 @@ pub enum OuterConstraintChecker {
 }
 
 #[derive(
-    Serialize,
-    Deserialize,
-    Encode,
-    Decode,
-    Debug,
-    Default,
-    PartialEq,
-    Eq,
-    Clone,
-    TypeInfo,
+    Serialize, Deserialize, Encode, Decode, Debug, Default, PartialEq, Eq, Clone, TypeInfo,
 )]
 /// A Dummy constraint checker that does nothing. It is only present to make the
 /// Parachain and non-parahcain OuterConstraintCheckers scale compatible
