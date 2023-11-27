@@ -115,7 +115,7 @@ pub fn new_partial(
 
 /// Builds a new development service. This service uses manual seal, and mocks
 /// the parachain inherent.
-pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
+pub fn new_dev(config: Configuration) -> Result<TaskManager, ServiceError> {
     use async_io::Timer;
     use sc_consensus_manual_seal::{run_manual_seal, EngineCommand, ManualSealParams};
 
@@ -128,7 +128,7 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
         select_chain,
         transaction_pool,
         other: telemetry,
-    } = new_partial(&mut config)?;
+    } = new_partial(&config)?;
 
     let net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
