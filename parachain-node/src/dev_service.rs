@@ -43,7 +43,7 @@ pub fn new_partial(
         FullSelectChain,
         sc_consensus::DefaultImportQueue<Block>,
         sc_transaction_pool::FullPool<Block, FullClient>,
-        (Option<Telemetry>),
+        Option<Telemetry>,
     >,
     ServiceError,
 > {
@@ -127,7 +127,7 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
         keystore_container,
         select_chain: _,
         transaction_pool,
-        other: (telemetry),
+        other: telemetry,
     } = new_partial(&mut config)?;
 
     // We don't use the block import or import queue provided from new_partial
