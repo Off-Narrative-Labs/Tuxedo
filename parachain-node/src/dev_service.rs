@@ -123,25 +123,12 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
         client,
         backend,
         mut task_manager,
-        import_queue: _,
+        import_queue,
         keystore_container,
-        select_chain: _,
+        select_chain,
         transaction_pool,
         other: telemetry,
     } = new_partial(&mut config)?;
-
-    // We don't use the block import or import queue provided from new_partial
-    // because they are for a parachain, and will mark new blocks as
-    // not best (because parachains wait for the relay chain to do that)
-    let block_import = client.clone();
-
-    let import_queue = sc_consensus_manual_seal::import_queue(
-        Box::new(block_import.clone()),
-        &task_manager.spawn_essential_handle(),
-        None, //TODO Re-evaluate this.
-              // Using None avoids "Failed to register Prometheus metrics: Duplicate metrics collector registration attempted"
-              // That might just be a warning though. Ultimately the node crashes with "Essential task `basic-block-import-worker` failed. Shutting down service."
-    );
 
     let net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
 
@@ -171,7 +158,7 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
         );
 
         let commands_stream = Box::new(futures::StreamExt::map(
-            Timer::interval(Duration::from_millis(12_000)),
+            Timer::interval(Duration::from_millis(6_000)),
             |_| EngineCommand::SealNewBlock {
                 create_empty: true,
                 finalize: false,
@@ -179,8 +166,6 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
                 sender: None,
             },
         ));
-
-        let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
         let client_for_cidp = client.clone();
 
@@ -193,7 +178,7 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
             "authorship_task",
             Some("block-authoring"),
             run_manual_seal(ManualSealParams {
-                block_import,
+                block_import: client.clone(),
                 env,
                 client: client.clone(),
                 pool: transaction_pool.clone(),
