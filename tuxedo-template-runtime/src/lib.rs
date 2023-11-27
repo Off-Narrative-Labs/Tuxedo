@@ -165,10 +165,6 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
 #[tuxedo_constraint_checker(OuterVerifier)]
 #[cfg(feature = "parachain")]
 pub enum OuterConstraintChecker {
-    /// Set some parachain related information via an inherent extrinsic.
-    /// TODO This one is first for now so that I can write a hacky algorithm to scrape the
-    /// inherent data and assume it is first.
-    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
@@ -190,6 +186,11 @@ pub enum OuterConstraintChecker {
     SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+
+    // TODO This one is last for now so that I can write a hacky algorithm to scrape
+    // the inherent data and assume it is last.
+    /// Set some parachain related information via an inherent extrinsic.
+    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
 }
 
 /// A constraint checker is a piece of logic that can be used to check a transaction.
@@ -220,6 +221,39 @@ pub enum OuterConstraintChecker {
     SetTimestamp(timestamp::SetTimestamp<Runtime>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
+
+    /// A Dummy Constraint Checker to make the encoding compatible with the parachain.
+    /// This does nothing.
+    ParachainInfo(DummyParachainInfo),
+}
+
+#[derive(
+    Serialize,
+    Deserialize,
+    Encode,
+    Decode,
+    Debug,
+    Default,
+    PartialEq,
+    Eq,
+    Clone,
+    TypeInfo,
+)]
+/// A Dummy constraint checker that does nothing. It is only present to make the
+/// Parachain and non-parahcain OuterConstraintCheckers scale compatible
+pub struct DummyParachainInfo;
+
+impl tuxedo_core::SimpleConstraintChecker for DummyParachainInfo {
+    type Error = ();
+
+    fn check(
+        &self,
+        _input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+        _peeks: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+        _output_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+    ) -> Result<TransactionPriority, ()> {
+        Ok(0)
+    }
 }
 
 /// The main struct in this module.

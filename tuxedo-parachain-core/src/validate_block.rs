@@ -72,6 +72,7 @@ pub fn validate_block<B, V, C>(
 ) -> ValidationResult
 where
     B: BlockT<Extrinsic = Transaction<V, C>>,
+    Transaction<V, C>: Extrinsic,
     V: Verifier,
     C: ConstraintChecker<V>, // + Into<SetParachainInfo<V>>,
 {
@@ -222,7 +223,7 @@ where
 /// The data has to be extracted from the extrinsics themselves.
 /// I want the runtime to expose a method to do this, and I also want it to
 /// be nice and flexible by searching for the right transactions.
-/// For now I have a hacky implementation that assumes the parachain inherent is first
+/// For now I have a hacky implementation that assumes the parachain inherent is last
 fn extract_parachain_inherent_data<B, V, C>(block: &B) -> ParachainInherentData
 where
     B: BlockT<Extrinsic = Transaction<V, C>>,
@@ -252,8 +253,11 @@ where
 
     block
         .extrinsics()
-        .get(0)
-        .expect("There should be  at least one extrinsic.")
+        .iter()
+        .take_while(|&e| !e.is_signed().unwrap_or(true))
+        .collect::<Vec<_>>()
+        .last()
+        .expect("There should be at least one inherent extrinsic which is the parachain inherent.")
         .outputs
         .get(0)
         .expect("Parachain inherent should be first and should have exactly one output.")
