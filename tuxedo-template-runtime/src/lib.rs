@@ -143,9 +143,9 @@ impl timestamp::TimestampConfig for Runtime {
 
 #[cfg(feature = "parachain")]
 impl parachain_piece::ParachainPieceConfig for Runtime {
-    //TODO decide what to do about this para id
-    // This is in the trait, but I don't think it is currently used.
-    // const PARA_ID: u32 = 2_000;
+    // Use the para ID 2_000 which is the first available in the rococo-local runtime.
+    // This is the default value, so this could be omitted, but explicit is better.
+    const PARA_ID: u32 = 2_000;
 
     type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
 }

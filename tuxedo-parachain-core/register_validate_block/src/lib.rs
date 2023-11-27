@@ -60,15 +60,14 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
     let verifier = input.verifier.clone();
     let constraint_checker = input.constraint_checker.clone();
 
-    //TODO some way to specify the para_id from the runtime.
-
-    // A way to refer to the tuxedo_core crate from within the macro.
+    // A way to refer to the tuxedo_parachain_core crate from within the macro.
     let crate_ = match crate_() {
         Ok(c) => c,
         Err(e) => return e.into_compile_error().into(),
     };
 
     //TODO We need to check inherents. At least the timestamp one, and maybe also the parachain one?
+    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/144
     // But I think the parachain one is handled already.
     // To start the hack, we will just not check them at all. Fewer places to panic XD
     // let check_inherents = match check_inherents {
@@ -115,7 +114,6 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                         #block,
                         #verifier,
                         #constraint_checker,
-                        //#para_id,
                     >(params);
 
                     // Step 3: Write the return value back into the shared memory

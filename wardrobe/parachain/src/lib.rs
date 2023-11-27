@@ -51,12 +51,14 @@ const LOG_TARGET: &str = "parachain-info";
 
 /// Options to configure the timestamp piece when it is aggregated or used in a runtime.
 pub trait ParachainPieceConfig {
-    //TODO Consider whetther including this config item is useful or wise. It is just an idea I had
-    // and I'm scribbling it here so I don't forget it.
-    //
-    // Also, there is currently a value in the chainspec as well, and it is duplicated.
-    // This duplication of info on the client side and runtime side was a problem in the original Cumulus design as well.
-    /// The Parachain Id associated with this parachain
+    // This value is duplicated in the chain spec extension. Soon (as soon as SDK 1.4.0) the API
+    // for genesis storage is being refactored to have access to the chain spec, and this design
+    // should be revised. We will likely want to leverage storage similar to how we have
+
+    /// The Parachain Id of this chain.
+    /// This is currently a copmile time constant, which is simple but not that flexible.
+    ///
+    /// The default value is set to 2_000 to match the first available id in the rococo-local runtime.
     const PARA_ID: u32 = 2_000;
 
     /// A means of setting an ambiently available relay parent number. This value WILL be used when
