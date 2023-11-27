@@ -33,7 +33,6 @@ pub(crate) type FullClient =
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
-
 #[allow(clippy::type_complexity)]
 pub fn new_partial(
     config: &Configuration,
@@ -97,10 +96,10 @@ pub fn new_partial(
     );
 
     let import_queue = sc_consensus_manual_seal::import_queue(
-		Box::new(client.clone()),
-		&task_manager.spawn_essential_handle(),
-		config.prometheus_registry(),
-	);
+        Box::new(client.clone()),
+        &task_manager.spawn_essential_handle(),
+        config.prometheus_registry(),
+    );
 
     Ok(sc_service::PartialComponents {
         client,
@@ -140,8 +139,8 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
         Box::new(block_import.clone()),
         &task_manager.spawn_essential_handle(),
         None, //TODO Re-evaluate this.
-		// Using None avoids "Failed to register Prometheus metrics: Duplicate metrics collector registration attempted"
-		// That might just be a warning though. Ultimately the node crashes with "Essential task `basic-block-import-worker` failed. Shutting down service."
+              // Using None avoids "Failed to register Prometheus metrics: Duplicate metrics collector registration attempted"
+              // That might just be a warning though. Ultimately the node crashes with "Essential task `basic-block-import-worker` failed. Shutting down service."
     );
 
     let net_config = sc_network::config::FullNetworkConfiguration::new(&config.network);
@@ -230,11 +229,7 @@ pub fn new_dev(mut config: Configuration) -> Result<TaskManager, ServiceError> {
                             tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
                         let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-                        Ok((
-                            parent_idp,
-                            timestamp,
-                            mocked_parachain,
-                        ))
+                        Ok((parent_idp, timestamp, mocked_parachain))
                     }
                 },
             }),
