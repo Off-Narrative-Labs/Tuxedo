@@ -28,6 +28,7 @@ impl<B: BlockT, V, C> ParachainExecutiveExtension<B::Header> for Executive<B, V,
         // The cumulus collator and FRAME pallets allow for custom head data, which seems to be motivated only
         // by the solo to para migration path, so I will put that all off as well. For more details see
         // https://github.com/paritytech/cumulus/pull/825 and https://github.com/paritytech/cumulus/pull/882
+        // and https://substrate.stackexchange.com/q/10522/372
         CollationInfo {
             upward_messages: Vec::new(),
             horizontal_messages: Vec::new(),
