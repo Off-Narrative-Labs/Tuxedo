@@ -237,6 +237,11 @@ where
     // opposed to with the runtime.
     // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/146
 
+    // One idea from github.com/Off-Narrative-Labs/Tuxedo/pull/130#discussion_r1408250978
+    // is to find the inehrent based o nthe dynamic type of the output.
+    // This is a reason to keep dynamic typing which is discussed in
+    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/153
+
     // block
     // 	.extrinsics()
     // 	.iter()

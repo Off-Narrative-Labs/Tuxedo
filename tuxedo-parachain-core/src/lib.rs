@@ -1,12 +1,20 @@
-//! This module provides the majority of Tuxedo's parachain support.
-//! It's primary jobs are to recieve the parachain inehrent,
-//! provide collation information to the client side collator service,
-//! and implement the `validate_block` funtion required by relay chain validators
+//! This module is the core of Tuxedo's parachain support.
+//! 
+//! The types and methods defined in this crate are of equal importance to
+//! those in the `tuxedo-core` crate, and this crate should be considered
+//! a simple extension to that one and equally "core"y. The reason Tuxedo
+//! separates the parachain specific aspects is because Polkadot and Cumulus
+//! are quite heavy to compile, and sovereign chains are able to completely avoid it.
+//! 
+//! It's primary jobs are to
+//! * Manage transiet storage details for the parachain inherent, specifically the relay 
+//!   parent block number.
+//! * Provide collation information to the client side collator service.
+//! * Implement the `validate_block` funtion required by relay chain validators.
+//!   This task is achieved through the `register_validate_block!` macro.
 //!
-//! This is mostly copied and stripped down from cumulus pallet parachain system
+//! This code is inspired by, cumulus pallet parachain system
 //! https://paritytech.github.io/polkadot-sdk/master/cumulus_pallet_parachain_system/index.html
-//!
-//! Better docs coming after this takes shape. For now it is hack'n'slash.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -41,7 +49,7 @@ pub use sp_runtime::traits::GetRuntimeBlockType;
 #[doc(hidden)]
 pub use sp_std;
 
-/// Re-export of the Tuxedo-core crates. This allows parachain-specific
+/// Re-export of the Tuxedo-core crate. This allows parachain-specific
 /// Tuxedo-pieces to depend only on tuxedo-parachain-core without worrying about
 /// accidental version mismatches.
 pub use tuxedo_core;
@@ -58,7 +66,7 @@ use tuxedo_core::{
 const RELAY_PARENT_NUMBER_KEY: &[u8] = b"relay_parent_number";
 
 /// An abstraction over reading the ambiently available relay parent block number.
-/// This allows it to be mocked during tests and require actual externalities.
+/// This allows it to be mocked during tests and not require actual externalities.
 pub trait GetRelayParentNumberStorage {
     fn get() -> u32;
 }
@@ -123,9 +131,11 @@ pub struct MemoryOptimizedValidationParams {
 /// Expects as parameters the Block type, the OuterVerifier, and the OuterConstraintChecker.
 pub use tuxedo_register_validate_block::register_validate_block;
 
+
+// Having to do this wrapping is one more reason to abandon this UtxoData trait,
+// and go for a more strongly typed aggregate type approach.
+// Tracking issue: https://github.com/Off-Narrative-Labs/Tuxedo/issues/153
 /// A wrapper type around Cumulus's ParachainInherentData type that can be stored.
-/// Having to do this wrapping is one more reason to abandon this UtxoData trait,
-/// and go for a more strongly typed aggregate type approach.
 #[derive(Encode, Decode, DebugNoBound, CloneNoBound, scale_info::TypeInfo)]
 
 /// A wrapper type around Cumulus's ParachainInherentData type.

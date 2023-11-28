@@ -63,7 +63,7 @@ pub trait ParachainPieceConfig {
     const PARA_ID: u32 = 2_000;
 
     /// A means of setting an ambiently available relay parent number. This value WILL be used when
-    /// the colaltor calls the colaltion API after the block is authored and also in validate_block.
+    /// the collator calls the collation API after the block is authored and also in validate_block.
     /// Additionally, it MAY be used by any other pieces in the runtime who have access to it.
     type SetRelayParentNumberStorage: SetRelayParentNumberStorage;
 }
