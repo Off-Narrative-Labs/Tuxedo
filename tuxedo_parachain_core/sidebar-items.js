@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MockRelayParentNumberStorage","RelayParentNumberStorage"],"macro":["register_validate_block"],"struct":["ParachainInherentDataUtxo"],"trait":["GetRelayParentNumberStorage","ParachainExecutiveExtension","SetRelayParentNumberStorage"]};

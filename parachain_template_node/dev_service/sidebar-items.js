@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["new_dev","new_partial"],"struct":["ExecutorDispatch","NativeElseWasmExecutor"],"type":["FullBackend","FullClient","FullSelectChain"]};

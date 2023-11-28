@@ -1,3 +1,4 @@
 (function() {var implementors = {
-"node_template":[["impl NativeExecutionDispatch for <a class=\"struct\" href=\"node_template/service/struct.ExecutorDispatch.html\" title=\"struct node_template::service::ExecutorDispatch\">ExecutorDispatch</a>"]]
+"node_template":[["impl NativeExecutionDispatch for <a class=\"struct\" href=\"node_template/service/struct.ExecutorDispatch.html\" title=\"struct node_template::service::ExecutorDispatch\">ExecutorDispatch</a>"]],
+"parachain_template_node":[["impl NativeExecutionDispatch for <a class=\"struct\" href=\"parachain_template_node/service/struct.ParachainNativeExecutor.html\" title=\"struct parachain_template_node::service::ParachainNativeExecutor\">ParachainNativeExecutor</a>"],["impl NativeExecutionDispatch for <a class=\"struct\" href=\"parachain_template_node/dev_service/struct.ExecutorDispatch.html\" title=\"struct parachain_template_node::dev_service::ExecutorDispatch\">ExecutorDispatch</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AuraAppPublic","GrandpaAppPublic","SessionKeys"],"type":["Block"]};
+window.SIDEBAR_ITEMS = {"struct":["AuraAppPublic","GrandpaAppPublic","SessionKeys"],"type":["Block","Hash"]};
