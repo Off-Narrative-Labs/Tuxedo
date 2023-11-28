@@ -1,13 +1,13 @@
 //! This module is the core of Tuxedo's parachain support.
-//! 
+//!
 //! The types and methods defined in this crate are of equal importance to
 //! those in the `tuxedo-core` crate, and this crate should be considered
 //! a simple extension to that one and equally "core"y. The reason Tuxedo
 //! separates the parachain specific aspects is because Polkadot and Cumulus
 //! are quite heavy to compile, and sovereign chains are able to completely avoid it.
-//! 
+//!
 //! It's primary jobs are to
-//! * Manage transiet storage details for the parachain inherent, specifically the relay 
+//! * Manage transiet storage details for the parachain inherent, specifically the relay
 //!   parent block number.
 //! * Provide collation information to the client side collator service.
 //! * Implement the `validate_block` funtion required by relay chain validators.
@@ -130,7 +130,6 @@ pub struct MemoryOptimizedValidationParams {
 ///
 /// Expects as parameters the Block type, the OuterVerifier, and the OuterConstraintChecker.
 pub use tuxedo_register_validate_block::register_validate_block;
-
 
 // Having to do this wrapping is one more reason to abandon this UtxoData trait,
 // and go for a more strongly typed aggregate type approach.
