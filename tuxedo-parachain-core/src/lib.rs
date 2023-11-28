@@ -57,13 +57,13 @@ use tuxedo_core::{
 /// through the parachain inherent
 const RELAY_PARENT_NUMBER_KEY: &[u8] = b"relay_parent_number";
 
-/// An abstraction over reading the ambiently available relay parent number.
+/// An abstraction over reading the ambiently available relay parent block number.
 /// This allows it to be mocked during tests and require actual externalities.
 pub trait GetRelayParentNumberStorage {
     fn get() -> u32;
 }
 
-/// An abstraction over setting the ambiently available relay parent number.
+/// An abstraction over setting the ambiently available relay parent block number.
 /// This allows it to be mocked during tests and require actual externalities.
 pub trait SetRelayParentNumberStorage {
     fn set(new_parent_number: u32);
@@ -123,7 +123,7 @@ pub struct MemoryOptimizedValidationParams {
 /// Expects as parameters the Block type, the OuterVerifier, and the OuterConstraintChecker.
 pub use tuxedo_register_validate_block::register_validate_block;
 
-/// A wrapper type around Cumulus's ParachainInherentData ype that can be stored.
+/// A wrapper type around Cumulus's ParachainInherentData type that can be stored.
 /// Having to do this wrapping is one more reason to abandon this UtxoData trait,
 /// and go for a more strongly typed aggregate type approach.
 #[derive(Encode, Decode, DebugNoBound, CloneNoBound, scale_info::TypeInfo)]

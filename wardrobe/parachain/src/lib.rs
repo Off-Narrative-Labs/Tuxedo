@@ -54,6 +54,7 @@ pub trait ParachainPieceConfig {
     // This value is duplicated in the chain spec extension. Soon (as soon as SDK 1.4.0) the API
     // for genesis storage is being refactored to have access to the chain spec, and this design
     // should be revised. We will likely want to leverage storage similar to how we have
+    // for the relay chain parent id.
 
     /// The Parachain Id of this chain.
     /// This is currently a copmile time constant, which is simple but not that flexible.
