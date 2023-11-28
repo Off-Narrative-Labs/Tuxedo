@@ -132,7 +132,7 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
             .map_err(|_| Self::Error::BadlyTyped)?
             .into();
 
-        // SIDE EFFECT: Write the relay parent number to storage to use later in the collation info api
+        // SIDE EFFECT: Write the relay parent block number to storage to use later in the collation info api
         T::SetRelayParentNumberStorage::set(current.validation_data.relay_parent_number);
 
         // Make sure there is exactly one input which is the previous parachain info
