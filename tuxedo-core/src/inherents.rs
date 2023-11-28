@@ -30,13 +30,12 @@
 //! that update environmental data), needs to include this foundational previous block inherent data provider
 //! so that the Tuxedo executive can scrape it to find the output references of the previous inherent transactions.
 
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_inherents::{
     CheckInherentsResult, InherentData, InherentIdentifier, IsFatalError, MakeFatalError,
 };
-use sp_runtime::traits::Block as BlockT;
 use sp_std::{vec, vec::Vec};
 
 use crate::{types::Transaction, ConstraintChecker, Verifier};
@@ -59,7 +58,9 @@ impl<B> sp_std::ops::Deref for ParentBlockInherentDataProvider<B> {
 }
 #[cfg(feature = "std")]
 #[async_trait::async_trait]
-impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataProvider<B> {
+impl<B: sp_runtime::traits::Block> sp_inherents::InherentDataProvider
+    for ParentBlockInherentDataProvider<B>
+{
     async fn provide_inherent_data(
         &self,
         inherent_data: &mut InherentData,
@@ -75,7 +76,7 @@ impl<B: BlockT> sp_inherents::InherentDataProvider for ParentBlockInherentDataPr
         if identifier == &PARENT_INHERENT_IDENTIFIER {
             println!("UH OH! INHERENT ERROR!!!!!!!!!!!!!!!!!!!!!!");
             Some(Err(sp_inherents::Error::Application(Box::from(
-                String::decode(&mut &error[..]).ok()?,
+                <String as parity_scale_codec::Decode>::decode(&mut &error[..]).ok()?,
             ))))
         } else {
             None

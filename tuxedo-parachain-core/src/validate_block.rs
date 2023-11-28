@@ -8,14 +8,13 @@ use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
 };
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
-
 use polkadot_parachain_primitives::primitives::{
     HeadData, RelayChainBlockNumber, ValidationResult,
 };
 use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
 
-use cumulus_primitives_core::ParaId;
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
+use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
 use sp_io::KillStorageResult;
