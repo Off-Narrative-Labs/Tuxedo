@@ -385,9 +385,8 @@ fn start_consensus(
                     tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
                 let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-                // There is no slot IDP here. This differs from the sovereign node. It is copied form
-                // the SDK's own parachain template. A clarification question remains unanswered on SE:
-                // https://substrate.stackexchange.com/questions/10435/is-the-aura-slot-inherent-necessary
+                // There is no slot IDP here. This intentionally differs from the sovereign node.
+                // See https://substrate.stackexchange.com/questions/10435/
                 Ok((parent_idp, timestamp))
             }
         },

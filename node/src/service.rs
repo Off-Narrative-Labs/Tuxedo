@@ -129,9 +129,6 @@ pub fn new_partial(
             create_inherent_data_providers: move |_, ()| async move {
                 let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
-                // There is a slot IDP here. This differs from the parachain node. It is copied form
-                // the SDK's own node template. A clarification question remains unanswered on SE:
-                // https://substrate.stackexchange.com/questions/10435/is-the-aura-slot-inherent-necessary
                 let slot =
 					sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
 						*timestamp,
