@@ -1,5 +1,5 @@
 [package]
-description = "Core components that all Tuxedo runtimes will use."
+description = "UTXO framework for Substrate and Polkadot."
 edition = "2021"
 license = "Apache-2.0"
 name = "tuxedo-core"
@@ -14,9 +14,11 @@ parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive" ], workspace = true }
 serde = { features = [ "derive" ], workspace = true }
 
+# Macros in Tuxedo Core
 aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
 
+# Substrate
 sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }

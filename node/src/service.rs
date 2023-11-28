@@ -262,6 +262,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
                         let parent_block = maybe_parent_block?
                             .ok_or(sp_blockchain::Error::UnknownBlock(parent_hash.to_string()))?
                             .block;
+
                         let parent_idp =
                             tuxedo_core::inherents::ParentBlockInherentDataProvider(parent_block);
                         let timestamp = sp_timestamp::InherentDataProvider::from_system_time();

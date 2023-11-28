@@ -3,7 +3,7 @@
 use crate::{
     ensure,
     types::{Output, OutputRef, Transaction},
-    ConstraintChecker, Verifier, EXTRINSIC_KEY,
+    ConstraintChecker, Verifier, EXTRINSIC_KEY, LOG_TARGET,
 };
 use parity_scale_codec::{Decode, Encode};
 use sc_chain_spec::BuildGenesisBlock;
@@ -91,6 +91,12 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
                 Default::default(),
             ),
             extrinsics,
+        );
+
+        log::debug!(
+            target: LOG_TARGET,
+            "About to finish build_genesis_block. The hash at this point is {:?}",
+            block.header().hash()
         );
 
         Ok((block, op))

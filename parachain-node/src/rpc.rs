@@ -8,15 +8,17 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use node_template_runtime::opaque::Block;
+use parachain_template_runtime::opaque::Block;
+pub use sc_rpc::{DenyUnsafe, SubscriptionTaskExecutor};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 
-pub use sc_rpc_api::DenyUnsafe;
+/// A type representing all RPC extensions.
+pub type RpcExtension = jsonrpsee::RpcModule<()>;
 
-/// Full client dependencies.
+/// Full client dependencies
 pub struct FullDeps<C, P> {
     /// The client instance to use.
     pub client: Arc<C>,
@@ -26,10 +28,10 @@ pub struct FullDeps<C, P> {
     pub deny_unsafe: DenyUnsafe,
 }
 
-/// Instantiate all full RPC extensions.
+/// Instantiate all RPC extensions.
 pub fn create_full<C, P>(
     _deps: FullDeps<C, P>,
-) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
+) -> Result<RpcExtension, Box<dyn std::error::Error + Send + Sync>>
 where
     C: ProvideRuntimeApi<Block>
         + HeaderBackend<Block>
@@ -38,7 +40,7 @@ where
         + Sync
         + 'static,
     C::Api: BlockBuilder<Block>,
-    P: TransactionPool + 'static,
+    P: TransactionPool + Sync + Send + 'static,
 {
     let module = RpcModule::new(());
     // Extend this RPC with a custom API by using the following syntax.

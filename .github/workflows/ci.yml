@@ -25,6 +25,7 @@ jobs:
       - uses: Off-Narrative-Labs/toml_sort@v1
         with:
           all: true
+          match: "Cargo.toml"
 
   test:
     name: Test and code coverage
@@ -49,8 +50,10 @@ jobs:
           cache-targets: true
           cache-on-failure: true
       - name: Run tests and print coverage data
-        run: cargo llvm-cov nextest --json --output-path lcov.json
-          --ignore-filename-regex "node/" --summary-only &&
+        run: cargo llvm-cov nextest --workspace
+          --exclude node-template --exclude parachain-template-node
+          --exclude derive-no-bound
+          --json --output-path lcov.json --summary-only &&
           echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
       # if the PR is on the same repo, the coverage data can be reported as a comment
       - if: github.event_name == 'pull_request' &&
@@ -101,6 +104,9 @@ jobs:
           cache-targets: true
           cache-on-failure: true
       - name: Build
-        run: cargo build
+        # We do not need the parachain node for the wallet test.
+        # However, this is more than merely an optimization.
+        # If we just `cargo build` the runtime will be incorrectly built with the parachain feature.
+        run: cargo build -p node-template -p tuxedo-template-wallet
       - name: Run wallet test
         run: ./wallet/test.sh

@@ -1,0 +1,42 @@
+[package]
+description = "A Tuxedo piece that allows collators to include a information specific to this parachain through an inherent."
+edition = "2021"
+name = "parachain-piece"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cumulus-primitives-core = { optional = true, workspace = true }
+cumulus-primitives-parachain-inherent = { default_features = false, workspace = true }
+cumulus-test-relay-sproof-builder = { optional = true, workspace = true }
+log = { workspace = true }
+parity-scale-codec = { features = [ "derive" ], default_features = false, workspace = true }
+scale-info = { features = [ "derive" ], default_features = false, workspace = true }
+serde = { features = [ "derive" ], default_features = false, workspace = true }
+sp-api = { default_features = false, workspace = true }
+sp-core = { default_features = false, workspace = true }
+sp-inherents = { default_features = false, workspace = true }
+sp-io = { default_features = false, workspace = true }
+sp-runtime = { default_features = false, workspace = true }
+sp-std = { default_features = false, workspace = true }
+tuxedo-parachain-core = { default-features = false, path = "../../tuxedo-parachain-core" }
+
+[features]
+default = [ "std" ]
+std = [
+	"cumulus-primitives-parachain-inherent/std",
+	"cumulus-primitives-core",
+	"cumulus-test-relay-sproof-builder",
+	"log/std",
+	"parity-scale-codec/std",
+	"scale-info/std",
+	"serde/std",
+	"sp-api/std",
+	"sp-core/std",
+	"sp-inherents/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"tuxedo-parachain-core/std",
+]

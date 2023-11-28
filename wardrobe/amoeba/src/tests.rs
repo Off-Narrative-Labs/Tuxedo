@@ -12,7 +12,7 @@ fn creation_valid_transaction_works() {
     let input_data = Vec::new();
     let output_data = vec![to_spawn.into()];
 
-    assert_eq!(AmoebaCreation.check(&input_data, &[], &output_data), Ok(0),);
+    assert_eq!(AmoebaCreation.check(&input_data, &[], &output_data), Ok(0));
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn mitosis_valid_transaction_works() {
     let input_data = vec![mother.into()];
     let output_data = vec![d1.into(), d2.into()];
 
-    assert_eq!(AmoebaMitosis.check(&input_data, &[], &output_data), Ok(0),);
+    assert_eq!(AmoebaMitosis.check(&input_data, &[], &output_data), Ok(0));
 }
 
 #[test]
@@ -241,7 +241,7 @@ fn death_valid_transaction_works() {
     let input_data = vec![example.into()];
     let output_data = vec![];
 
-    assert_eq!(AmoebaDeath.check(&input_data, &[], &output_data), Ok(0),);
+    assert_eq!(AmoebaDeath.check(&input_data, &[], &output_data), Ok(0));
 }
 
 #[test]

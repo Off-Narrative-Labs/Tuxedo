@@ -6,6 +6,7 @@
 # For the build stage, we use an image provided by Parity
 FROM docker.io/paritytech/ci-linux:production as builder
 WORKDIR /wallet
+#TODO The Workdir and Copy command is different here than in the node...
 COPY . .
 RUN cargo build --locked --release -p tuxedo-template-wallet
 
@@ -28,7 +29,7 @@ RUN useradd -m -u 1000 -U -s /bin/sh -d /node-dev node-dev && \
 
 USER node-dev
 
-EXPOSE 9933 9944
+EXPOSE 9944
 VOLUME ["/wallet-data"]
 
 ENTRYPOINT ["/usr/local/bin/tuxedo-template-wallet"]

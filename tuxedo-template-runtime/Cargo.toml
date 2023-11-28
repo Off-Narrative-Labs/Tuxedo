@@ -42,6 +42,11 @@ runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrad
 timestamp = { default-features = false, path = "../wardrobe/timestamp" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
+# Parachain related ones
+cumulus-primitives-core = { default-features = false, optional = true, workspace = true }
+parachain-piece = { default-features = false, optional = true, path = "../wardrobe/parachain" }
+tuxedo-parachain-core = { default-features = false, optional = true, path = "../tuxedo-parachain-core" }
+
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
 
@@ -50,6 +55,11 @@ sp-keystore = { default_features = false, workspace = true }
 
 [features]
 default = [ "std" ]
+parachain = [
+	"cumulus-primitives-core",
+	"parachain-piece",
+	"tuxedo-parachain-core",
+]
 std = [
 	"sp-debug-derive/std",
 	"sp-block-builder/std",
@@ -76,4 +86,8 @@ std = [
 	"kitties/std",
 	"timestamp/std",
 	"runtime-upgrade/std",
+	# Parachain related ones, don't forget the `?`
+	"cumulus-primitives-core?/std",
+	"parachain-piece?/std",
+	"tuxedo-parachain-core?/std",
 ]

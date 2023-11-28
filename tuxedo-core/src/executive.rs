@@ -17,7 +17,6 @@ use crate::{
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
-use scale_info::TypeInfo;
 use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
@@ -36,11 +35,8 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<
-        B: BlockT<Extrinsic = Transaction<V, C>>,
-        V: Verifier + TypeInfo,
-        C: ConstraintChecker<V> + TypeInfo,
-    > Executive<B, V, C>
+impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker<V>>
+    Executive<B, V, C>
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
@@ -395,9 +391,15 @@ impl<
         } else {
             // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
             // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-            // For now, I just make them all custom zero
-            Self::validate_tuxedo_transaction(&tx)
-                .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))
+            // For now, I just make them all custom zero, and log the error variant
+            Self::validate_tuxedo_transaction(&tx).map_err(|e| {
+                log::warn!(
+                    target: LOG_TARGET,
+                    "Tuxedo Transaction did not validate (in the pool): {:?}",
+                    e,
+                );
+                TransactionValidityError::Invalid(InvalidTransaction::Custom(0))
+            })
         };
 
         debug!(target: LOG_TARGET, "Validation result: {:?}", r);
@@ -405,7 +407,7 @@ impl<
         r
     }
 
-    // The last two are for the standard beginning-of-block inherent extrinsics.
+    // The next two are for the standard beginning-of-block inherent extrinsics.
     pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<B as BlockT>::Extrinsic> {
         debug!(
             target: LOG_TARGET,

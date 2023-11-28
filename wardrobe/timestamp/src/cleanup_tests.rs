@@ -28,7 +28,7 @@ fn cleanup_timestamp_happy_path() {
     let peek = vec![newer.into()];
 
     assert_eq!(
-        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[],),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &[]),
         Ok(0),
     );
 }
@@ -179,7 +179,7 @@ fn cleanup_timestamp_cannot_create_state() {
     let out = vec![Bogus.into()];
 
     assert_eq!(
-        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &out,),
+        CleanUpTimestamp::<AlwaysBlockMillion>::default().check(&inp, &peek, &out),
         Err(CleanupCannotCreateState)
     );
 }
