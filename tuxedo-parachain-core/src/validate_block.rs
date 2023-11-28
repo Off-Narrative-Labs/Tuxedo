@@ -72,8 +72,8 @@ pub fn validate_block<B, V, C>(
 where
     B: BlockT<Extrinsic = Transaction<V, C>>,
     Transaction<V, C>: Extrinsic,
-    V: Verifier,
-    C: ConstraintChecker<V>, // + Into<SetParachainInfo<V>>,
+    V: TypeInfo + Verifier + 'static,
+    C: TypeInfo + ConstraintChecker<V> + 'static, // + Into<SetParachainInfo<V>>,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
@@ -226,8 +226,10 @@ where
 fn extract_parachain_inherent_data<B, V, C>(block: &B) -> ParachainInherentData
 where
     B: BlockT<Extrinsic = Transaction<V, C>>,
-    V: Verifier,
-    C: ConstraintChecker<V>,
+    // Consider an alternative way to express the bounds here:
+    // Transaction<V, C>: Extrinsic
+    V: TypeInfo + Verifier + 'static,
+    C: TypeInfo + ConstraintChecker<V> + 'static,
 {
     // The commented stuff is Basti's algo.
     // It is nicer than my hack because it searches the transactions,
