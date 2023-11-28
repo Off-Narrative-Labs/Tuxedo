@@ -199,7 +199,7 @@ where
 
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ returned from execute block");
 
-        // Once we support XCM, we will need to gather some messaging state stuff here
+        // TODO Once we support XCM, we will need to gather some messaging state stuff here
         // Seems like we could call the existing collect_collation_info api to get this information here
         // instead of FRAME's approach of tightly coupling to pallet parachain system.
         // That would mean less duplicated code as well as a more flexible validate block macro.

@@ -77,7 +77,7 @@ pub enum ParachainError {
     MissingNewInfo,
     /// Multiple outputs were specified while setting the parachain info, but exactly one is required.
     ExtraOutputs,
-    /// No previous parachain info was consumed in this transaction, but at consuming the previous utxo is required.
+    /// No previous parachain info was consumed in this transaction, but consuming the previous UTXO is required.
     MissingPreviousInfo,
     /// Multiple inputs were specified while setting the parachain info, but exacctly one is required.
     ExtraInputs,
