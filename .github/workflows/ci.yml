@@ -104,6 +104,9 @@ jobs:
           cache-targets: true
           cache-on-failure: true
       - name: Build
-        run: cargo build
+        # We do not need the parachain node for the wallet test.
+        # However, this is more than merely an optimization.
+        # If we just `cargo build` the runtime will be incorrectly built with the parachain feature.
+        run: cargo build -p node-template -p tuxedo-template-wallet
       - name: Run wallet test
         run: ./wallet/test.sh
