@@ -50,6 +50,5 @@ runs:
       uses: romeovs/lcov-reporter-action@master
       with:
         lcov-file: lcov.info
-        pr-number: ${{ github.event.pull_request.number }}
         delete-old-comments: true
         title: ${{ inputs.title }}

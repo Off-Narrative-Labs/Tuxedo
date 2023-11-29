@@ -32,7 +32,6 @@ jobs:
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
-      issues: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +45,6 @@ jobs:
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
-      issues: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +52,35 @@ jobs:
         with:
           args: -p tuxedo-parachain-core
           title: "Code Coverage for `tuxedo-parachain-core`"
+
+  test-runtime:
+    name: Test and Code Coverage for `tuxedo-template-runtime`
+    needs: [fmt, toml-sort]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+        with:
+          args: -p tuxedo-template-runtime
+          title: "Code Coverage for `tuxedo-template-runtime`"
+
+  test-wardrobe:
+    name: Test and Code Coverage for Tuxedo Wardrobe
+    needs: [fmt, toml-sort]
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
+        with:
+          args: \
+            -p amoeba -p kitties -p money \
+            -p parachain-piece -p poe \
+            -p runtime-upgrade -p timestamp
+          title: "Code Coverage for Tuxedo Wardrobe"
 
   clippy:
     name: Clippy
