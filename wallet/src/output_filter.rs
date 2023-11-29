@@ -16,8 +16,8 @@ pub trait OutputFilter {
     fn build_filter(verifier: OuterVerifier) -> Self::Filter;
 }
 
-pub struct SigCheckFilter;
-impl OutputFilter for SigCheckFilter {
+pub struct Sr25519SignatureFilter;
+impl OutputFilter for Sr25519SignatureFilter {
     // Todo Add filter error
     type Filter = Result<Filter, ()>;
 
@@ -48,8 +48,8 @@ mod tests {
     #[cfg(test)]
     use tuxedo_core::{dynamic_typing::DynamicallyTypedData, verifier::*};
 
-    pub struct TestSigCheckFilter;
-    impl OutputFilter for TestSigCheckFilter {
+    pub struct TestSr25519SignatureFilter;
+    impl OutputFilter for TestSr25519SignatureFilter {
         type Filter = Result<Filter, ()>;
 
         fn build_filter(_verifier: OuterVerifier) -> Self::Filter {
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn filter_prints() {
-        let verifier = OuterVerifier::SigCheck(SigCheck {
+        let verifier = OuterVerifier::Sr25519Signature(Sr25519Signature {
             owner_pubkey: H256::zero(),
         });
         let output = Output {
@@ -73,13 +73,14 @@ mod tests {
             },
         };
 
-        let my_filter = TestSigCheckFilter::build_filter(verifier).expect("Can build print filter");
+        let my_filter =
+            TestSr25519SignatureFilter::build_filter(verifier).expect("Can build print filter");
         let _ = my_filter(&[output], &H256::zero());
     }
 
     #[test]
-    fn filter_sig_check_works() {
-        let verifier = OuterVerifier::SigCheck(SigCheck {
+    fn filter_sr25519_signature_works() {
+        let verifier = OuterVerifier::Sr25519Signature(Sr25519Signature {
             owner_pubkey: H256::zero(),
         });
 
@@ -92,7 +93,7 @@ mod tests {
                 },
             },
             Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
+                verifier: OuterVerifier::Sr25519Signature(Sr25519Signature {
                     owner_pubkey: H256::from_slice(b"asdfasdfasdfasdfasdfasdfasdfasdf"),
                 }),
                 payload: DynamicallyTypedData {
@@ -126,7 +127,8 @@ mod tests {
             },
         )];
 
-        let my_filter = SigCheckFilter::build_filter(verifier).expect("Can build sigcheck filter");
+        let my_filter = Sr25519SignatureFilter::build_filter(verifier)
+            .expect("Can build Sr25519Signature filter");
         let filtered_output_infos = my_filter(&outputs_to_filter, &H256::zero())
             .expect("Can filter the outputs by verifier correctly");
 

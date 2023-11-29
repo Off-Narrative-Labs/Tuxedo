@@ -73,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
     let keystore_filter = |v: &OuterVerifier| -> bool {
         matches![
             v,
-            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) if crate::keystore::has_key(&keystore, owner_pubkey)
+            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) if crate::keystore::has_key(&keystore, owner_pubkey)
         ]
     };
 
@@ -243,8 +243,8 @@ fn default_data_path() -> PathBuf {
 /// Utility to pretty print an outer verifier
 pub fn pretty_print_verifier(v: &OuterVerifier) {
     match v {
-        OuterVerifier::SigCheck(sig_check) => {
-            println! {"owned by {}", sig_check.owner_pubkey}
+        OuterVerifier::Sr25519Signature(sr25519_signature) => {
+            println! {"owned by {}", sr25519_signature.owner_pubkey}
         }
         OuterVerifier::UpForGrabs(_) => println!("that can be spent by anyone"),
         OuterVerifier::ThresholdMultiSignature(multi_sig) => {

@@ -15,7 +15,7 @@ use sp_core::sr25519::Public;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef},
-    verifier::SigCheck,
+    verifier::Sr25519Signature,
 };
 
 /// Create and send a transaction that spends coins on the network
@@ -40,7 +40,7 @@ pub async fn spend_coins(
     for amount in &args.output_amount {
         let output = Output {
             payload: Coin::<0>::new(*amount).into(),
-            verifier: OuterVerifier::SigCheck(SigCheck {
+            verifier: OuterVerifier::Sr25519Signature(Sr25519Signature {
                 owner_pubkey: args.recipient,
             }),
         };
@@ -93,7 +93,7 @@ pub async fn spend_coins(
 
         // Construct the proof that it can be consumed
         let redeemer = match utxo.verifier {
-            OuterVerifier::SigCheck(SigCheck { owner_pubkey }) => {
+            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
                 let public = Public::from_h256(owner_pubkey);
                 crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?
             }

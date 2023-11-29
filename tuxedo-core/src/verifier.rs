@@ -25,19 +25,19 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 
 /// A typical verifier that checks an sr25519 signature
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct SigCheck {
+pub struct Sr25519Signature {
     pub owner_pubkey: H256,
 }
 
-impl SigCheck {
+impl Sr25519Signature {
     pub fn new<T: Into<H256>>(value: T) -> Self {
-        SigCheck {
+        Sr25519Signature {
             owner_pubkey: value.into(),
         }
     }
 }
 
-impl Verifier for SigCheck {
+impl Verifier for Sr25519Signature {
     fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
         let sig = match Signature::try_from(redeemer) {
             Ok(s) => s,
@@ -190,17 +190,17 @@ mod test {
     }
 
     #[test]
-    fn sig_check_with_good_sig() {
+    fn sr25519_signature_with_good_sig() {
         let pair = Pair::from_seed(&[0u8; 32]);
         let simplified_tx = b"hello world".as_slice();
         let sig = pair.sign(simplified_tx);
         let redeemer: &[u8] = sig.as_ref();
 
-        let sig_check = SigCheck {
+        let sr25519_signature = Sr25519Signature {
             owner_pubkey: pair.public().into(),
         };
 
-        assert!(sig_check.verify(simplified_tx, redeemer));
+        assert!(sr25519_signature.verify(simplified_tx, redeemer));
     }
 
     #[test]
@@ -354,15 +354,15 @@ mod test {
     }
 
     #[test]
-    fn sig_check_with_bad_sig() {
+    fn sr25519_signature_with_bad_sig() {
         let simplified_tx = b"hello world".as_slice();
         let redeemer = b"bogus_signature".as_slice();
 
-        let sig_check = SigCheck {
+        let sr25519_signature = Sr25519Signature {
             owner_pubkey: H256::zero(),
         };
 
-        assert!(!sig_check.verify(simplified_tx, redeemer));
+        assert!(!sr25519_signature.verify(simplified_tx, redeemer));
     }
 
     #[test]

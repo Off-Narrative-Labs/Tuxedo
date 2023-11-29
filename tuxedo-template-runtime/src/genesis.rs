@@ -8,7 +8,7 @@ use super::{
 use hex_literal::hex;
 use tuxedo_core::{
     inherents::InherentInternal,
-    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
+    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
 };
 
 /// Helper type for the ChainSpec.
@@ -28,7 +28,7 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
 
     genesis_transactions.extend([
         // Money Transactions
-        Coin::<0>::mint(100, SigCheck::new(SHAWN_PUB_KEY_BYTES)),
+        Coin::<0>::mint(100, Sr25519Signature::new(SHAWN_PUB_KEY_BYTES)),
         Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
         // Kitty Transactions
         KittyData::mint(Parent::mom(), b"mother", UpForGrabs),
@@ -85,7 +85,7 @@ mod tests {
         let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
         genesis_transactions.extend([
             // Money Transactions
-            Coin::<0>::mint(100, SigCheck::new(shawn_pub_key_bytes)),
+            Coin::<0>::mint(100, Sr25519Signature::new(shawn_pub_key_bytes)),
             Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
         ]);
 
@@ -118,7 +118,7 @@ mod tests {
 
             // Grab genesis value from storage and assert it is correct
             let genesis_utxo = Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
+                verifier: OuterVerifier::Sr25519Signature(Sr25519Signature {
                     owner_pubkey: shawn_pub_key.into(),
                 }),
                 payload: DynamicallyTypedData {
