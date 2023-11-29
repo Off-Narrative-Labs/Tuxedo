@@ -1,7 +1,6 @@
 //! Custom GenesisConfigBuilder for Tuxedo, to allow extrinsics to be added to the genesis block.
 
 use crate::{
-    ensure,
     types::{OutputRef, Transaction},
     ConstraintChecker, Verifier, EXTRINSIC_KEY,
 };
@@ -40,7 +39,7 @@ where
                 finished_with_opening_inherents = true;
             }
             // Enforce that transactions do not have any inputs or peeks.
-            ensure!(
+            sp_runtime::ensure!(
                 tx.inputs.is_empty() && tx.peeks.is_empty(),
                 "Genesis transactions must not have any inputs or peeks."
             );

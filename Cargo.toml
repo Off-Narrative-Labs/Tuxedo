@@ -8,7 +8,6 @@ members = [
 	"tuxedo-template-runtime",
 	"tuxedo-core",
 	"tuxedo-core/aggregator",
-	"tuxedo-core/no_bound",
 	"tuxedo-parachain-core/register_validate_block",
 	"tuxedo-parachain-core",
 	"wallet",

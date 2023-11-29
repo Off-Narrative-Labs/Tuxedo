@@ -11,7 +11,6 @@ mod executive;
 pub mod constraint_checker;
 pub mod genesis;
 pub mod inherents;
-pub mod support_macros;
 pub mod traits;
 pub mod types;
 pub mod utxo_set;
