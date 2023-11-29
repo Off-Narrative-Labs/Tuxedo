@@ -6,10 +6,14 @@ branding:
   color: "green"
 
 inputs:
-  args:
-    description: "Arguments to pass to `cargo nextest run`."
+  packages:
+    description: "Packages to be tested by `cargo nextest`."
     required: true
     default: ""
+  ignore:
+    description: "Folders or files to be ignored by `cargo llvm-cov report`."
+    required: true
+    default: "target" # we need a default value, otherwise the command doesn't work
   title:
     description: "Title of the comment with the code coverage."
     required: true
@@ -33,17 +37,21 @@ runs:
         cache-on-failure: true
     - name: Run tests and print coverage data
       shell: bash
-      run: cargo llvm-cov nextest
-        ${{ inputs.args }}
-        --json --output-path lcov.json --summary-only &&
-        echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
+      run: |
+        pkgs=`for p in ${{ inputs.packages }}; do echo -n "-p $p "; done`;
+        cargo llvm-cov nextest $pkgs --json --summary-only --output-path lcov.json &&
+        perc=`jq ".data[0].totals.lines.percent" lcov.json` &&
+        echo Lines coverage: ${perc:0:5}%
     # if the PR is on the same repo, the coverage data can be reported as a comment
     - if: github.event_name == 'pull_request' &&
         github.event.pull_request.head.repo.full_name == github.repository
       name: Generate lcov report
       shell: bash
-      run: cargo llvm-cov report --lcov --output-path lcov.info
-        --ignore-filename-regex "node/"
+      run: |
+        function join_by { local IFS="$1"; shift; echo "$*"; };
+        ignore=`join_by \| ${{ inputs.ignore }}`;
+        cargo llvm-cov report --lcov --output-path lcov.info \
+        --ignore-filename-regex "$ignore"
     - if: github.event_name == 'pull_request' &&
         github.event.pull_request.head.repo.full_name == github.repository
       name: Report code coverage
