@@ -11,7 +11,7 @@ use hex_literal::hex;
 use sp_std::{vec, vec::Vec};
 use tuxedo_core::{
     inherents::InherentInternal,
-    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
+    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
 };
 
 const SHAWN_PUB_KEY_BYTES: [u8; 32] =
@@ -30,7 +30,7 @@ pub fn development_genesis_transactions() -> Vec<Transaction> {
 
     genesis_transactions.extend([
         // Money Transactions
-        Coin::<0>::mint(100, SigCheck::new(SHAWN_PUB_KEY_BYTES)),
+        Coin::<0>::mint(100, Sr25519Signature::new(SHAWN_PUB_KEY_BYTES)),
         Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
         // Kitty Transactions
         KittyData::mint(Parent::mom(), b"mother", UpForGrabs),
@@ -90,7 +90,7 @@ mod tests {
 
             // Grab genesis value from storage and assert it is correct
             let genesis_utxo = Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
+                verifier: OuterVerifier::Sr25519Signature(Sr25519Signature {
                     owner_pubkey: shawn_pub_key.into(),
                 }),
                 payload: DynamicallyTypedData {

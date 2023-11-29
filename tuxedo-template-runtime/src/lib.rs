@@ -36,7 +36,7 @@ use tuxedo_core::{
     genesis::TuxedoGenesisConfigBuilder,
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
-    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
+    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
 };
 
 pub use amoeba;
@@ -124,7 +124,7 @@ const BLOCK_TIME: u64 = 3000;
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_verifier]
 pub enum OuterVerifier {
-    SigCheck(SigCheck),
+    Sr25519Signature(Sr25519Signature),
     UpForGrabs(UpForGrabs),
     ThresholdMultiSignature(ThresholdMultiSignature),
 }
