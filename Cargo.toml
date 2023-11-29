@@ -26,13 +26,13 @@ resolver = "2"
 # Generic dependencies
 async-io = "2.0"
 async-trait = "0.1.73"
-clap = "4.3.0"
+clap = "4.4"
 hex-literal = "0.4.1"
 jsonrpsee = "0.16.2"
 log = "0.4"
 parity-scale-codec = { version = "3.6", default-features = false }
 parity-util-mem = "0.12.0"
-scale-info = { version = "2.1.1", default-features = false }
+scale-info = { version = "2.10", default-features = false }
 serde = { version = "1.0.188", default-features = false }
 serde_json = { version = "1.0", default-features = false }
 
@@ -61,7 +61,7 @@ substrate-wasm-builder = { branch = "tuxedo-v1.4.0", git = "https://github.com/m
 
 # Substrate primitives and client
 sc-basic-authorship = { branch = "tuxedo-v1.4.0", git = "https://github.com/muraca/polkadot-sdk" }
-sc-chain-spec = { branch = "tuxedo-v1.4.0", git = "https://github.com/muraca/polkadot-sdk" }
+sc-chain-spec = { branch = "tuxedo-v1.4.0", default-features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sc-cli = { branch = "tuxedo-v1.4.0", default_features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sc-client-api = { branch = "tuxedo-v1.4.0", git = "https://github.com/muraca/polkadot-sdk" }
 sc-consensus = { branch = "tuxedo-v1.4.0", git = "https://github.com/muraca/polkadot-sdk" }
@@ -89,6 +89,7 @@ sp-consensus-aura = { branch = "tuxedo-v1.4.0", default_features = false, git = 
 sp-consensus-grandpa = { branch = "tuxedo-v1.4.0", default_features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sp-core = { branch = "tuxedo-v1.4.0", default_features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sp-debug-derive = { branch = "tuxedo-v1.4.0", default_features = false, git = "https://github.com/muraca/polkadot-sdk" }
+sp-genesis-builder = { branch = "tuxedo-v1.4.0", default-features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sp-inherents = { branch = "tuxedo-v1.4.0", default_features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sp-io = { branch = "tuxedo-v1.4.0", default_features = false, git = "https://github.com/muraca/polkadot-sdk" }
 sp-keyring = { branch = "tuxedo-v1.4.0", git = "https://github.com/muraca/polkadot-sdk" }

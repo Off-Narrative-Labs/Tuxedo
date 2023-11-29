@@ -4,7 +4,7 @@ use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
-pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig, Extensions>;
+pub type ChainSpec = sc_service::GenericChainSpec<(), Extensions>;
 
 /// The extensions for the [`ChainSpec`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ChainSpecGroup, ChainSpecExtension)]
@@ -55,7 +55,7 @@ pub fn development_config() -> ChainSpec {
     properties.insert("ss58Format".into(), 42.into());
 
     ChainSpec::builder(
-        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
+        WASM_BINARY.expect("Development wasm not available"),
         Extensions {
             relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
             // CAUTION: This value is dupliocated in the runtime code. The value here must match, or...
@@ -79,7 +79,7 @@ pub fn local_testnet_config() -> ChainSpec {
     properties.insert("ss58Format".into(), 42.into());
 
     ChainSpec::builder(
-        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
+        WASM_BINARY.expect("Development wasm not available"),
         Extensions {
             relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
             para_id: 2000,

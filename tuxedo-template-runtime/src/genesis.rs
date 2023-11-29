@@ -1,30 +1,31 @@
 //! Helper module to build a genesis configuration for the template runtime.
 
+#[cfg(feature = "std")]
+pub use super::WASM_BINARY;
 use super::{
     kitties::{KittyData, Parent},
     money::Coin,
-    OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier, WASM_BINARY,
+    Transaction,
 };
 use hex_literal::hex;
-use tuxedo_core::{
-    inherents::InherentInternal,
-    verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs},
-};
-
-/// Helper type for the ChainSpec.
-pub type RuntimeGenesisConfig =
-    tuxedo_core::genesis::TuxedoGenesisConfig<OuterVerifier, OuterConstraintChecker>;
+use sp_std::{vec, vec::Vec};
+use tuxedo_core::verifier::{SigCheck, ThresholdMultiSignature, UpForGrabs};
 
 const SHAWN_PUB_KEY_BYTES: [u8; 32] =
     hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
 const ANDREW_PUB_KEY_BYTES: [u8; 32] =
     hex!("baa81e58b1b4d053c2e86d93045765036f9d265c7dfe8b9693bbc2c0f048d93a");
 
-pub fn development_genesis_config() -> RuntimeGenesisConfig {
+/// This function returns a list of valid transactions to be included in the genesis block.
+/// It is called by the `ChainSpec::build` method, via the `development_genesis_config` function.
+/// The resulting transactions must be ordered: inherent first, then extrinsics.
+pub fn development_genesis_transactions() -> Vec<Transaction> {
     let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
     // The inherents are computed using the appropriate method, and placed before the extrinsics.
-    let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+    let mut genesis_transactions = Vec::new();
+    // TODO restore this once inherent genesis can work with no_std
+    // OuterConstraintCheckerInherentHooks::genesis_transactions();
 
     genesis_transactions.extend([
         // Money Transactions
@@ -36,12 +37,11 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
         // TODO: Initial Transactions for Existence
     ]);
 
-    RuntimeGenesisConfig::new(
-        WASM_BINARY
-            .expect("Runtime WASM binary must exist.")
-            .to_vec(),
-        genesis_transactions,
-    )
+    genesis_transactions
+}
+
+pub fn development_genesis_config() -> serde_json::Value {
+    serde_json::json!(development_genesis_transactions())
 }
 
 #[cfg(test)]
@@ -53,11 +53,11 @@ mod tests {
     use sp_api::HashT;
     use sp_core::testing::SR25519;
     use sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
-    use sp_runtime::{traits::BlakeTwo256, BuildStorage};
+    use sp_runtime::traits::BlakeTwo256;
     use std::sync::Arc;
     use tuxedo_core::{
         dynamic_typing::{DynamicallyTypedData, UtxoData},
-        inherents::InherentInternal,
+        genesis::TuxedoGenesisConfigBuilder,
         types::{Output, OutputRef},
     };
 
@@ -67,44 +67,15 @@ mod tests {
     const ANDREW_PHRASE: &str =
         "monkey happy total rib lumber scrap guide photo country online rose diet";
 
-    fn default_runtime_genesis_config() -> RuntimeGenesisConfig {
-        let keystore = MemoryKeystore::new();
-
-        let shawn_pub_key_bytes = keystore
-            .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
-            .unwrap()
-            .0;
-
-        let andrew_pub_key_bytes = keystore
-            .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
-            .unwrap()
-            .0;
-
-        let signatories = vec![shawn_pub_key_bytes.into(), andrew_pub_key_bytes.into()];
-
-        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
-        genesis_transactions.extend([
-            // Money Transactions
-            Coin::<0>::mint(100, SigCheck::new(shawn_pub_key_bytes)),
-            Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
-        ]);
-
-        RuntimeGenesisConfig::new(
-            WASM_BINARY
-                .expect("Runtime WASM binary must exist.")
-                .to_vec(),
-            genesis_transactions,
-        )
-    }
-
     fn new_test_ext() -> sp_io::TestExternalities {
         let keystore = MemoryKeystore::new();
-        let storage = default_runtime_genesis_config()
-            .build_storage()
-            .expect("System builds valid default genesis config");
-
-        let mut ext = sp_io::TestExternalities::from(storage);
+        let mut ext = sp_io::TestExternalities::new_empty();
         ext.register_extension(KeystoreExt(Arc::new(keystore)));
+
+        ext.execute_with(|| {
+            TuxedoGenesisConfigBuilder::build(development_genesis_transactions())
+                .expect("Genesis Config Build Failed")
+        });
         ext
     }
 
@@ -127,10 +98,12 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            // TODO restore this once inherent genesis can work with no_std
+            // let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len = 0;
 
-            let tx = default_runtime_genesis_config()
-                .get_transaction(inherents_len)
+            let tx = development_genesis_transactions()
+                .get(inherents_len)
                 .unwrap()
                 .clone();
 
@@ -171,10 +144,12 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            // TODO restore this once inherent genesis can work with no_std
+            // let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len = 0;
 
-            let tx = default_runtime_genesis_config()
-                .get_transaction(1 + inherents_len)
+            let tx = development_genesis_transactions()
+                .get(1 + inherents_len)
                 .unwrap()
                 .clone();
 

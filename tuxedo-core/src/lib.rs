@@ -9,15 +9,13 @@ pub mod dynamic_typing;
 mod executive;
 
 pub mod constraint_checker;
+pub mod genesis;
 pub mod inherents;
 pub mod support_macros;
 pub mod traits;
 pub mod types;
 pub mod utxo_set;
 pub mod verifier;
-
-#[cfg(feature = "std")]
-pub mod genesis;
 
 pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};

@@ -3,11 +3,10 @@
 //! Constraint Checkers do not typically calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
 
-use sp_std::{fmt::Debug, vec::Vec};
-
 use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
+use sp_std::{fmt::Debug, vec::Vec};
 
 /// A simplified constraint checker that a transaction can choose to call.
 /// Checks whether the input and output data from a transaction meets the codified constraints.
@@ -98,11 +97,10 @@ impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(test)]
 pub mod testing {
-    use scale_info::TypeInfo;
-    use serde::{Deserialize, Serialize};
-
     use super::*;
     use crate::{types::Output, verifier::TestVerifier};
+    use scale_info::TypeInfo;
+    use serde::{Deserialize, Serialize};
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
