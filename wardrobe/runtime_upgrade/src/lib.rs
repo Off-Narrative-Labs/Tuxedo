@@ -16,12 +16,12 @@
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_runtime::transaction_validity::TransactionPriority;
+use sp_runtime::{ensure, transaction_validity::TransactionPriority};
 use sp_std::vec::Vec;
 use sp_storage::well_known_keys::CODE;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure, SimpleConstraintChecker,
+    SimpleConstraintChecker,
 };
 
 #[cfg(test)]

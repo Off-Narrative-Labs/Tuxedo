@@ -241,7 +241,6 @@ pub fn tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -> Token
                 )*
             }
 
-            #[cfg(feature = "std")]
             fn genesis_transactions() -> Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> {
                 let mut all_transactions: Vec<tuxedo_core::types::Transaction<#verifier, #outer_type>> = Vec::new();
 

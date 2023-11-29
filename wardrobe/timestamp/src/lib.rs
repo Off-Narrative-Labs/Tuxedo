@@ -18,14 +18,14 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
-use sp_runtime::transaction_validity::TransactionPriority;
+use sp_runtime::{
+    ensure, transaction_validity::TransactionPriority, CloneNoBound, DebugNoBound, DefaultNoBound,
+};
 use sp_std::{vec, vec::Vec};
 use sp_timestamp::InherentError::TooFarInFuture;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure,
     inherents::{TuxedoInherent, TuxedoInherentAdapter},
-    support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Output, OutputRef, Transaction},
     verifier::UpForGrabs,
     ConstraintChecker, SimpleConstraintChecker, Verifier,
@@ -197,7 +197,8 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
 
         // Compare the new timestamp to the previous timestamp
         ensure!(
-            new_timestamp.time >= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
+            old_timestamp.block == 0 // first block hack
+                || new_timestamp.time >= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
         );
 
@@ -302,20 +303,12 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         }
     }
 
-    #[cfg(feature = "std")]
     fn genesis_transactions() -> Vec<Transaction<V, Self>> {
-        use std::time::{Duration, SystemTime};
-        let time = SystemTime::UNIX_EPOCH
-            .elapsed()
-            .expect("Time went backwards!")
-            .saturating_sub(Duration::from_millis(T::MINIMUM_TIME_INTERVAL))
-            .as_millis() as u64;
-
         vec![Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: vec![Output {
-                payload: Timestamp::new(time, 0).into(),
+                payload: Timestamp::new(0, 0).into(),
                 verifier: UpForGrabs.into(),
             }],
             checker: Self::default(),

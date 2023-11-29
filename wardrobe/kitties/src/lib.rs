@@ -22,13 +22,13 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_runtime::{
+    ensure,
     traits::{BlakeTwo256, Hash as HashT},
     transaction_validity::TransactionPriority,
 };
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
-    ensure,
     types::Transaction,
     SimpleConstraintChecker, Verifier,
 };
