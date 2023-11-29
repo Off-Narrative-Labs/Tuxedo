@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["SigCheck","SignatureAndIndex","TestVerifier","ThresholdMultiSignature","UpForGrabs"],"trait":["Verifier"]};
+window.SIDEBAR_ITEMS = {"struct":["SignatureAndIndex","Sr25519Signature","TestVerifier","ThresholdMultiSignature","UpForGrabs"],"trait":["Verifier"]};

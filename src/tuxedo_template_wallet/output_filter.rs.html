@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wallet/src/output_filter.rs`."><title>output_filter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_wallet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (49b3924bd 2023-11-27)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wallet/src/output_filter.rs`."><title>output_filter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_wallet" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (5facb422f 2023-11-28)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -133,6 +133,8 @@
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>runtime::{OuterVerifier, Output};
 <span class="kw">use </span>sp_core::H256;
 <span class="kw">use </span>tuxedo_core::types::OutputRef;
@@ -151,8 +153,8 @@
     </span><span class="kw">fn </span>build_filter(verifier: OuterVerifier) -&gt; <span class="self">Self</span>::Filter;
 }
 
-<span class="kw">pub struct </span>SigCheckFilter;
-<span class="kw">impl </span>OutputFilter <span class="kw">for </span>SigCheckFilter {
+<span class="kw">pub struct </span>Sr25519SignatureFilter;
+<span class="kw">impl </span>OutputFilter <span class="kw">for </span>Sr25519SignatureFilter {
     <span class="comment">// Todo Add filter error
     </span><span class="kw">type </span>Filter = <span class="prelude-ty">Result</span>&lt;Filter, ()&gt;;
 
@@ -183,8 +185,8 @@
     <span class="attr">#[cfg(test)]
     </span><span class="kw">use </span>tuxedo_core::{dynamic_typing::DynamicallyTypedData, verifier::<span class="kw-2">*</span>};
 
-    <span class="kw">pub struct </span>TestSigCheckFilter;
-    <span class="kw">impl </span>OutputFilter <span class="kw">for </span>TestSigCheckFilter {
+    <span class="kw">pub struct </span>TestSr25519SignatureFilter;
+    <span class="kw">impl </span>OutputFilter <span class="kw">for </span>TestSr25519SignatureFilter {
         <span class="kw">type </span>Filter = <span class="prelude-ty">Result</span>&lt;Filter, ()&gt;;
 
         <span class="kw">fn </span>build_filter(_verifier: OuterVerifier) -&gt; <span class="self">Self</span>::Filter {
@@ -197,7 +199,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>filter_prints() {
-        <span class="kw">let </span>verifier = OuterVerifier::SigCheck(SigCheck {
+        <span class="kw">let </span>verifier = OuterVerifier::Sr25519Signature(Sr25519Signature {
             owner_pubkey: H256::zero(),
         });
         <span class="kw">let </span>output = Output {
@@ -208,13 +210,14 @@
             },
         };
 
-        <span class="kw">let </span>my_filter = TestSigCheckFilter::build_filter(verifier).expect(<span class="string">&quot;Can build print filter&quot;</span>);
+        <span class="kw">let </span>my_filter =
+            TestSr25519SignatureFilter::build_filter(verifier).expect(<span class="string">&quot;Can build print filter&quot;</span>);
         <span class="kw">let _ </span>= my_filter(<span class="kw-2">&amp;</span>[output], <span class="kw-2">&amp;</span>H256::zero());
     }
 
     <span class="attr">#[test]
-    </span><span class="kw">fn </span>filter_sig_check_works() {
-        <span class="kw">let </span>verifier = OuterVerifier::SigCheck(SigCheck {
+    </span><span class="kw">fn </span>filter_sr25519_signature_works() {
+        <span class="kw">let </span>verifier = OuterVerifier::Sr25519Signature(Sr25519Signature {
             owner_pubkey: H256::zero(),
         });
 
@@ -227,7 +230,7 @@
                 },
             },
             Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
+                verifier: OuterVerifier::Sr25519Signature(Sr25519Signature {
                     owner_pubkey: H256::from_slice(<span class="string">b&quot;asdfasdfasdfasdfasdfasdfasdfasdf&quot;</span>),
                 }),
                 payload: DynamicallyTypedData {
@@ -261,7 +264,8 @@
             },
         )];
 
-        <span class="kw">let </span>my_filter = SigCheckFilter::build_filter(verifier).expect(<span class="string">&quot;Can build sigcheck filter&quot;</span>);
+        <span class="kw">let </span>my_filter = Sr25519SignatureFilter::build_filter(verifier)
+            .expect(<span class="string">&quot;Can build Sr25519Signature filter&quot;</span>);
         <span class="kw">let </span>filtered_output_infos = my_filter(<span class="kw-2">&amp;</span>outputs_to_filter, <span class="kw-2">&amp;</span>H256::zero())
             .expect(<span class="string">&quot;Can filter the outputs by verifier correctly&quot;</span>);
 

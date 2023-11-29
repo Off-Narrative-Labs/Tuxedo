@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["TestSigCheckFilter"]};
+window.SIDEBAR_ITEMS = {"struct":["TestSr25519SignatureFilter"]};
