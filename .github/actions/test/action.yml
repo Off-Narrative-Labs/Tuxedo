@@ -1,0 +1,55 @@
+name: "Test and code coverage"
+description: "Run tests with nextest and report code coverage in a PR comment."
+author: "Off-Narrative Labs"
+branding:
+  icon: "check-circle"
+  color: "green"
+
+inputs:
+  args:
+    description: "Arguments to pass to `cargo nextest run`."
+    required: true
+    default: ""
+  title:
+    description: "Title of the comment with the code coverage."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install tooling
+      shell: bash
+      run: |
+        sudo apt-get install -y protobuf-compiler
+        protoc --version
+    - name: Install latest nextest release
+      uses: taiki-e/install-action@nextest
+    - name: Install cargo-llvm-cov
+      uses: taiki-e/install-action@cargo-llvm-cov
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        cache-targets: true
+        cache-on-failure: true
+    - name: Run tests and print coverage data
+      shell: bash
+      run: cargo llvm-cov nextest
+        ${{ inputs.args }}
+        --json --output-path lcov.json --summary-only &&
+        echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
+    # if the PR is on the same repo, the coverage data can be reported as a comment
+    - if: github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      name: Generate lcov report
+      shell: bash
+      run: cargo llvm-cov report --lcov --output-path lcov.info
+        --ignore-filename-regex "node/"
+    - if: github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      name: Report code coverage
+      uses: romeovs/lcov-reporter-action@master
+      with:
+        lcov-file: lcov.info
+        pr-number: ${{ github.event.pull_request.number }}
+        delete-old-comments: true
+        title: ${{ inputs.title }}

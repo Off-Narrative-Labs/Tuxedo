@@ -27,8 +27,8 @@ jobs:
           all: true
           match: "Cargo.toml"
 
-  test:
-    name: Test and code coverage
+  test-core:
+    name: Test and Code Coverage for `tuxedo-core`
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
@@ -36,39 +36,24 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install tooling
-        run: |
-          sudo apt-get install -y protobuf-compiler
-          protoc --version
-      - name: Install latest nextest release
-        uses: taiki-e/install-action@nextest
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+      - uses: ./.github/actions/test
         with:
-          cache-targets: true
-          cache-on-failure: true
-      - name: Run tests and print coverage data
-        run: cargo llvm-cov nextest --workspace
-          --exclude node-template --exclude parachain-template-node
-          --exclude derive-no-bound
-          --json --output-path lcov.json --summary-only &&
-          echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
-      # if the PR is on the same repo, the coverage data can be reported as a comment
-      - if: github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        name: Generate lcov report
-        run: cargo llvm-cov report --lcov --output-path lcov.info
-          --ignore-filename-regex "node/"
-      - if: github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        name: Report code coverage
-        uses: romeovs/lcov-reporter-action@master
+          args: -p tuxedo-core
+          title: "Code Coverage for `tuxedo-core`"
+
+  test-parachain:
+    name: Test and Code Coverage for `tuxedo-parachain-core`
+    needs: [fmt, toml-sort]
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
         with:
-          lcov-file: lcov.info
-          pr-number: ${{ github.event.pull_request.number }}
-          delete-old-comments: true
+          args: -p tuxedo-parachain-core
+          title: "Code Coverage for `tuxedo-parachain-core`"
 
   clippy:
     name: Clippy
