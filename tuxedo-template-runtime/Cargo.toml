@@ -12,6 +12,7 @@ parity-scale-codec = { features = [ "derive" ], workspace = true }
 parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive", "serde" ], workspace = true }
 serde = { features = [ "derive" ], workspace = true }
+serde_json = { default-features = false, features = ["alloc"], workspace = true }
 
 sp-api = { default_features = false, workspace = true }
 sp-block-builder = { default_features = false, workspace = true }
@@ -25,13 +26,13 @@ sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
 sp-timestamp = { default_features = false, workspace = true }
 sp-transaction-pool = { default_features = false, workspace = true }
-sp-version = { default_features = false, workspace = true }
+sp-version = { default_features = false, features = ["serde"], workspace = true }
 
 # These were added for Aura / Grandpa API support
 hex-literal = { workspace = true }
 sp-application-crypto = { default_features = false, workspace = true }
-sp-consensus-aura = { default_features = false, workspace = true }
-sp-consensus-grandpa = { default_features = false, workspace = true }
+sp-consensus-aura = { default_features = false, features = ["serde"], workspace = true }
+sp-consensus-grandpa = { default_features = false, features = ["serde"], workspace = true }
 
 # Tuxedo Core and Pieces
 amoeba = { default-features = false, path = "../wardrobe/amoeba" }

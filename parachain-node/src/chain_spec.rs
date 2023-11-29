@@ -54,18 +54,8 @@ pub fn development_config() -> ChainSpec {
     properties.insert("tokenDecimals".into(), 12.into());
     properties.insert("ss58Format".into(), 42.into());
 
-    ChainSpec::from_genesis(
-        // Name
-        "Development",
-        // ID
-        "dev",
-        ChainType::Development,
-        development_genesis_config,
-        Vec::new(),
-        None,
-        None,
-        None,
-        None,
+    ChainSpec::builder(
+        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
         Extensions {
             relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
             // CAUTION: This value is dupliocated in the runtime code. The value here must match, or...
@@ -74,6 +64,11 @@ pub fn development_config() -> ChainSpec {
             para_id: 2000,
         },
     )
+    .with_name("Development")
+    .with_id("dev")
+    .with_chain_type(ChainType::Development)
+    .with_genesis_config_patch(development_genesis_config())
+    .build()
 }
 
 pub fn local_testnet_config() -> ChainSpec {
@@ -83,27 +78,18 @@ pub fn local_testnet_config() -> ChainSpec {
     properties.insert("tokenDecimals".into(), 12.into());
     properties.insert("ss58Format".into(), 42.into());
 
-    ChainSpec::from_genesis(
-        // Name
-        "Local Testnet",
-        // ID
-        "local_testnet",
-        ChainType::Local,
-        development_genesis_config,
-        // Bootnodes
-        Vec::new(),
-        // Telemetry
-        None,
-        // Protocol ID
-        Some("template-local"),
-        // Fork ID
-        None,
-        // Properties
-        Some(properties),
-        // Extensions
+    ChainSpec::builder(
+        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
         Extensions {
             relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
             para_id: 2000,
         },
     )
+    .with_name("Local Testnet")
+    .with_id("local_testnet")
+    .with_chain_type(ChainType::Local)
+    .with_genesis_config_patch(development_genesis_config())
+    .with_protocol_id("template-local")
+    .with_properties(properties)
+    .build()
 }
