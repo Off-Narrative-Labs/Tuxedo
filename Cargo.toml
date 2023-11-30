@@ -120,7 +120,7 @@ cumulus-primitives-parachain-inherent = { branch = "tuxedo-no-rocks", default_fe
 cumulus-relay-chain-interface = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-test-client = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-test-relay-sproof-builder = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
-polkadot-cli = { features = [ "rococo-native" ], branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
+polkadot-cli = { default-features = false, branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 polkadot-parachain-primitives = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 polkadot-primitives = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 

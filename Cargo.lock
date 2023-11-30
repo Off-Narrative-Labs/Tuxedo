@@ -8908,7 +8908,6 @@ dependencies = [
  "hex-literal",
  "is_executable",
  "kvdb",
- "kvdb-rocksdb",
  "log",
  "mmr-gadget",
  "pallet-babe",
