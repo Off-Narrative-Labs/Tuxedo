@@ -84,16 +84,13 @@ jobs:
           title: "Code Coverage for Tuxedo Wardrobe Pieces"
 
   clippy:
-    if: false
     name: Clippy
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install tooling
-        run: |
-          sudo apt-get install -y protobuf-compiler
-          protoc --version
+        run: sudo apt-get install -y protobuf-compiler && protoc --version
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -103,16 +100,13 @@ jobs:
         run: cargo clippy --no-deps -- -D warnings
 
   wallet:
-    if: false
     name: Wallet end-to-end test
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install tooling
-        run: |
-          sudo apt-get install -y protobuf-compiler
-          protoc --version
+        run: sudo apt-get install -y protobuf-compiler && protoc --version
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
