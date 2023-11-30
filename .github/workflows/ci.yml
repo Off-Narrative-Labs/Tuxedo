@@ -28,7 +28,7 @@ jobs:
           match: "Cargo.toml"
 
   test-core:
-    name: Test and Code Coverage for `tuxedo-core`
+    name: Test and Code Coverage for Tuxedo Core
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
@@ -38,11 +38,11 @@ jobs:
       - uses: ./.github/actions/test
         with:
           packages: tuxedo-core
-          title: "Code Coverage for `tuxedo-core`"
+          title: "Code Coverage for Tuxedo Core"
 
   test-parachain:
     if: false # we skip this for now because of not enough space
-    name: Test and Code Coverage for `tuxedo-parachain-core`
+    name: Test and Code Coverage for Tuxedo Parachain Core and Piece
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
@@ -51,12 +51,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/test
         with:
-          packages: tuxedo-parachain-core
+          packages: tuxedo-parachain-core parachain-piece
           ignore: tuxedo-core
-          title: "Code Coverage for `tuxedo-parachain-core`"
+          title: "Code Coverage for Tuxedo Parachain Core and Piece"
 
   test-runtime:
-    name: Test and Code Coverage for `tuxedo-template-runtime`
+    name: Test and Code Coverage for Tuxedo Template Runtime
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
@@ -67,10 +67,10 @@ jobs:
         with:
           packages: tuxedo-template-runtime
           ignore: tuxedo-core wardrobe
-          title: "Code Coverage for `tuxedo-template-runtime`"
+          title: "Code Coverage for Tuxedo Template Runtime"
 
   test-wardrobe:
-    name: Test and Code Coverage for Tuxedo Wardrobe
+    name: Test and Code Coverage for Tuxedo Wardrobe Pieces
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
     permissions:
@@ -79,9 +79,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/test
         with:
-          packages: kitties money parachain-piece poe runtime-upgrade timestamp
-          ignore: tuxedo-core tuxedo-parachain-core
-          title: "Code Coverage for Tuxedo Wardrobe"
+          packages: kitties money poe runtime-upgrade timestamp
+          ignore: tuxedo-core
+          title: "Code Coverage for Tuxedo Wardrobe Pieces"
 
   clippy:
     if: false
