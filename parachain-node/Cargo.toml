@@ -24,7 +24,7 @@ tuxedo-core = { path = "../tuxedo-core" }
 # Substrate
 sc-basic-authorship = { workspace = true }
 sc-chain-spec = { workspace = true }
-sc-cli = { workspace = true, default-features = false }
+sc-cli = { default-features = false, workspace = true }
 sc-client-api = { workspace = true }
 sc-consensus = { workspace = true }
 sc-consensus-manual-seal = { workspace = true }
@@ -32,7 +32,7 @@ sc-executor = { workspace = true }
 sc-network = { workspace = true }
 sc-network-sync = { workspace = true }
 sc-rpc = { workspace = true }
-sc-service = { workspace = true, default-features = false }
+sc-service = { default-features = false, workspace = true }
 sc-sysinfo = { workspace = true }
 sc-telemetry = { workspace = true }
 sc-tracing = { workspace = true }
@@ -53,7 +53,7 @@ substrate-prometheus-endpoint = { workspace = true }
 color-print = { workspace = true }
 
 # Cumulus
-cumulus-client-cli = { workspace = true, default-features = false }
+cumulus-client-cli = { default-features = false, workspace = true }
 cumulus-client-collator = { workspace = true }
 cumulus-client-consensus-aura = { workspace = true }
 cumulus-client-consensus-common = { workspace = true }
@@ -62,7 +62,7 @@ cumulus-client-service = { workspace = true }
 cumulus-primitives-core = { workspace = true }
 cumulus-primitives-parachain-inherent = { workspace = true }
 cumulus-relay-chain-interface = { workspace = true }
-polkadot-cli = { features = [ "rococo-native" ], workspace = true, default-features = false }
+polkadot-cli = { features = [ "rococo-native" ], default-features = false, workspace = true }
 polkadot-primitives = { workspace = true }
 
 [build-dependencies]
