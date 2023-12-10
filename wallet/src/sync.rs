@@ -22,7 +22,6 @@ use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     dynamic_typing::UtxoData,
     types::{Input, OutputRef},
-    verifier::Sr25519Signature,
 };
 
 use jsonrpsee::http_client::HttpClient;
@@ -39,9 +38,6 @@ const UNSPENT: &str = "unspent";
 
 /// The identifier for the spent tree in the db.
 const SPENT: &str = "spent";
-
-/// The identifier for the current timestamp in the db.
-const TIMESTAMP: &str = "timestamp";
 
 /// Open a database at the given location intended for the given genesis block.
 ///
@@ -269,25 +265,10 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
         // For now the wallet only supports simple coins and timestamp
         match output.payload.type_id {
             Coin::<0>::TYPE_ID => {
-                let amount = output.payload.extract::<Coin<0>>()?.0;
-
-                let output_ref = OutputRef {
-                    tx_hash,
-                    index: index as u32,
-                };
-
-                match output.verifier {
-                    OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
-                        // Add it to the global unspent_outputs table
-                        add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
-                    }
-                    _ => return Err(anyhow!("{:?}", ())),
-                }
+                crate::money::apply_transaction(db, tx_hash, index as u32, output)?;
             }
             Timestamp::TYPE_ID => {
-                let timestamp = output.payload.extract::<Timestamp>()?.time;
-                let timestamp_tree = db.open_tree(TIMESTAMP)?;
-                timestamp_tree.insert([0], timestamp.encode())?;
+                crate::timestamp::apply_transaction(db, output)?;
             }
             _ => continue,
         }
@@ -303,7 +284,7 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
 }
 
 /// Add a new output to the database updating all tables.
-fn add_unspent_output(
+pub(crate) fn add_unspent_output(
     db: &Db,
     output_ref: &OutputRef,
     owner_pubkey: &H256,
@@ -466,13 +447,4 @@ pub(crate) fn get_balances(db: &Db) -> anyhow::Result<impl Iterator<Item = (H256
     }
 
     Ok(balances.into_iter())
-}
-
-pub(crate) fn get_timestamp(db: &Db) -> anyhow::Result<u64> {
-    let timestamp_tree = db.open_tree(TIMESTAMP)?;
-    let timestamp = timestamp_tree
-        .get([0])?
-        .ok_or_else(|| anyhow!("Could not find timestamp in database."))?;
-    u64::decode(&mut &timestamp[..])
-        .map_err(|_| anyhow!("Could not decode timestamp from database."))
 }

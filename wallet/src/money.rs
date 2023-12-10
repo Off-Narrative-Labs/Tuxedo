@@ -145,3 +145,22 @@ pub async fn get_coin_from_storage(
 
     Ok((coin_in_storage, utxo.verifier))
 }
+
+pub(crate) fn apply_transaction(
+    db: &Db,
+    tx_hash: <BlakeTwo256 as Hash>::Output,
+    index: u32,
+    output: &Output<OuterVerifier>,
+) -> anyhow::Result<()> {
+    {
+        let amount = output.payload.extract::<Coin<0>>()?.0;
+        let output_ref = OutputRef { tx_hash, index };
+        match output.verifier {
+            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
+                // Add it to the global unspent_outputs table
+                crate::sync::add_unspent_output(db, &output_ref, &owner_pubkey, &amount)
+            }
+            _ => return Err(anyhow!("{:?}", ())),
+        }
+    }
+}

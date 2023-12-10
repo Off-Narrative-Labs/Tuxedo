@@ -16,6 +16,7 @@ mod money;
 mod output_filter;
 mod rpc;
 mod sync;
+mod timestamp;
 
 use cli::{Cli, Command};
 
@@ -167,7 +168,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Some(Command::ShowTimestamp) => {
-            println!("Timestamp: {}", sync::get_timestamp(&db)?);
+            println!("Timestamp: {}", timestamp::get_timestamp(&db)?);
             Ok(())
         }
         None => {
