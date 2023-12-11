@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (5facb422f 2023-11-28)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-template-runtime/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_template_runtime" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (d86d65bbc 2023-12-10)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -435,18 +435,19 @@
 <a href="#435" id="435">435</a>
 <a href="#436" id="436">436</a>
 <a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The Tuxedo Template Runtime is an example runtime that uses
 //! most of the pieces provided in the wardrobe.
 //!
 //! Runtime developers wishing to get started with Tuxedo should
 //! consider copying this template.
 
-</span><span class="attr">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
+</span><span class="attr">#![cfg_attr(not(feature = <span class="string">"std"</span>), no_std)]
 
-#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
-</span><span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">&quot;OUT_DIR&quot;</span>), <span class="string">&quot;/wasm_binary.rs&quot;</span>));
+#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">"OUT_DIR"</span>), <span class="string">"/wasm_binary.rs"</span>));
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">pub mod </span>genesis;
 
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
@@ -466,7 +467,7 @@
 };
 <span class="kw">use </span>sp_std::prelude::<span class="kw-2">*</span>;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">use </span>sp_version::NativeVersion;
 <span class="kw">use </span>sp_version::RuntimeVersion;
 
@@ -481,8 +482,9 @@
 <span class="kw">pub use </span>money;
 <span class="kw">pub use </span>poe;
 <span class="kw">pub use </span>runtime_upgrade;
+<span class="kw">pub use </span>timestamp;
 
-<span class="doccomment">/// Opaque types. These are used by the CLI to instantiate machinery that don&#39;t need to know
+<span class="doccomment">/// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
 /// to even the core data structures.
@@ -519,8 +521,8 @@
 <span class="doccomment">/// This runtime version.
 </span><span class="attr">#[sp_version::runtime_version]
 </span><span class="kw">pub const </span>VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: <span class="macro">create_runtime_str!</span>(<span class="string">&quot;tuxedo-template-runtime&quot;</span>),
-    impl_name: <span class="macro">create_runtime_str!</span>(<span class="string">&quot;tuxedo-template-runtime&quot;</span>),
+    spec_name: <span class="macro">create_runtime_str!</span>(<span class="string">"tuxedo-template-runtime"</span>),
+    impl_name: <span class="macro">create_runtime_str!</span>(<span class="string">"tuxedo-template-runtime"</span>),
     authoring_version: <span class="number">1</span>,
     spec_version: <span class="number">1</span>,
     impl_version: <span class="number">1</span>,
@@ -530,7 +532,7 @@
 };
 
 <span class="doccomment">/// The version information used to identify this runtime when compiled natively.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
 </span><span class="kw">pub fn </span>native_version() -&gt; NativeVersion {
     NativeVersion {
         runtime_version: VERSION,
@@ -578,7 +580,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;parachain&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"parachain"</span>)]
 </span><span class="kw">impl </span>parachain_piece::ParachainPieceConfig <span class="kw">for </span>Runtime {
     <span class="comment">// Use the para ID 2_000 which is the first available in the rococo-local runtime.
     // This is the default value, so this could be omitted, but explicit is better.
@@ -591,16 +593,16 @@
 // a UTXO without any further processing. Therefore, we explicitly include
 // AmoebaDeath and PoeRevoke on an application-specific basis
 
-// The macro doesn&#39;t understand conditional compilation flags inside, so we have to
+// The macro doesn't understand conditional compilation flags inside, so we have to
 // feature gate the entire thing, and repeat it twice. I remember this was a problem
-// with frame&#39;s construct_runtime! as well.
+// with frame's construct_runtime! as well.
 
 </span><span class="doccomment">/// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 </span><span class="attr">#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
-#[cfg(feature = <span class="string">&quot;parachain&quot;</span>)]
+#[cfg(feature = <span class="string">"parachain"</span>)]
 </span><span class="kw">pub enum </span>OuterConstraintChecker {
     <span class="doccomment">/// Checks monetary transactions in a basic fungible cryptocurrency
     </span>Money(money::MoneyConstraintChecker&lt;<span class="number">0</span>&gt;),
@@ -619,7 +621,7 @@
     <span class="doccomment">/// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     </span>PoeDispute(poe::PoeDispute),
-    <span class="doccomment">/// Set the block&#39;s timestamp via an inherent extrinsic.
+    <span class="doccomment">/// Set the block's timestamp via an inherent extrinsic.
     </span>SetTimestamp(timestamp::SetTimestamp&lt;Runtime&gt;),
     <span class="doccomment">/// Upgrade the Wasm Runtime
     </span>RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
@@ -635,7 +637,7 @@
 /// For example, this may check that input token values exceed output token values.
 </span><span class="attr">#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
-#[cfg(not(feature = <span class="string">&quot;parachain&quot;</span>))]
+#[cfg(not(feature = <span class="string">"parachain"</span>))]
 </span><span class="kw">pub enum </span>OuterConstraintChecker {
     <span class="doccomment">/// Checks monetary transactions in a basic fungible cryptocurrency
     </span>Money(money::MoneyConstraintChecker&lt;<span class="number">0</span>&gt;),
@@ -654,7 +656,7 @@
     <span class="doccomment">/// Checks that one winning claim came earlier than all the other claims, and thus
     /// the losing claims can be removed from storage.
     </span>PoeDispute(poe::PoeDispute),
-    <span class="doccomment">/// Set the block&#39;s timestamp via an inherent extrinsic.
+    <span class="doccomment">/// Set the block's timestamp via an inherent extrinsic.
     </span>SetTimestamp(timestamp::SetTimestamp&lt;Runtime&gt;),
     <span class="doccomment">/// Upgrade the Wasm Runtime
     </span>RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
@@ -700,20 +702,20 @@
 
         [
             <span class="comment">// Alice
-            </span><span class="macro">hex!</span>(<span class="string">&quot;d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d&quot;</span>),
+            </span><span class="macro">hex!</span>(<span class="string">"d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"</span>),
             <span class="comment">// Bob
-            // hex!(&quot;8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48&quot;),
+            // hex!("8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"),
             // Charlie
-            // hex!(&quot;90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22&quot;),
+            // hex!("90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22"),
             // Dave
-            // hex!(&quot;306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20&quot;),
+            // hex!("306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20"),
             // Eve
-            // hex!(&quot;e659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e&quot;),
+            // hex!("e659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e"),
             // Ferdie
-            // hex!(&quot;1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c&quot;),
+            // hex!("1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c"),
         </span>]
         .iter()
-        .map(|hex| AuraId::from_slice(hex.as_ref()).expect(<span class="string">&quot;Valid Aura authority hex was provided&quot;</span>))
+        .map(|hex| AuraId::from_slice(hex.as_ref()).expect(<span class="string">"Valid Aura authority hex was provided"</span>))
         .collect()
     }
 
@@ -724,23 +726,23 @@
 
         [
             <span class="comment">// Alice
-            </span><span class="macro">hex!</span>(<span class="string">&quot;88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee&quot;</span>),
+            </span><span class="macro">hex!</span>(<span class="string">"88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"</span>),
             <span class="comment">// Bob
-            // hex!(&quot;d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69&quot;),
+            // hex!("d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69"),
             // Charlie
-            // hex!(&quot;439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f&quot;),
+            // hex!("439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f"),
             // Dave
-            // hex!(&quot;5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9&quot;),
+            // hex!("5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9"),
             // Eve
-            // hex!(&quot;1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5&quot;),
+            // hex!("1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5"),
             // Ferdie
-            // hex!(&quot;568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5&quot;),
+            // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
         </span>]
         .iter()
         .map(|hex| {
             (
                 GrandpaId::from_slice(hex.as_ref())
-                    .expect(<span class="string">&quot;Valid Grandpa authority hex was provided&quot;</span>),
+                    .expect(<span class="string">"Valid Grandpa authority hex was provided"</span>),
                 <span class="number">1</span>,
             )
         })
@@ -860,7 +862,7 @@
         </span>}
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;parachain&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"parachain"</span>)]
     </span><span class="kw">impl </span>cumulus_primitives_core::CollectCollationInfo&lt;Block&gt; <span class="kw">for </span>Runtime {
         <span class="kw">fn </span>collect_collation_info(header: <span class="kw-2">&amp;</span>&lt;Block <span class="kw">as </span>BlockT&gt;::Header) -&gt; cumulus_primitives_core::CollationInfo {
             <span class="kw">use </span>tuxedo_parachain_core::ParachainExecutiveExtension;
@@ -870,6 +872,6 @@
 }
 
 <span class="comment">// Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;parachain&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"parachain"</span>)]
 </span><span class="macro">tuxedo_parachain_core::register_validate_block!</span>(Block, OuterVerifier, OuterConstraintChecker);
 </code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (5facb422f 2023-11-28)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (d86d65bbc 2023-12-10)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1319,7 +1319,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ValidTransaction, UtxoError&lt;C::Error&gt;&gt; {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;validating tuxedo transaction&quot;</span>,
+            <span class="string">"validating tuxedo transaction"</span>,
         );
 
         <span class="comment">// Make sure there are no duplicate inputs
@@ -1381,7 +1381,7 @@
 
             <span class="macro">debug!</span>(
                 target: LOG_TARGET,
-                <span class="string">&quot;Checking for pre-existing output {:?}&quot;</span>, output_ref
+                <span class="string">"Checking for pre-existing output {:?}"</span>, output_ref
             );
 
             <span class="macro">ensure!</span>(
@@ -1407,7 +1407,7 @@
         </span><span class="kw">if </span>!missing_inputs.is_empty() {
             <span class="macro">debug!</span>(
                 target: LOG_TARGET,
-                <span class="string">&quot;Transaction is valid but still has missing inputs. Returning early.&quot;</span>,
+                <span class="string">"Transaction is valid but still has missing inputs. Returning early."</span>,
             );
             <span class="kw">return </span><span class="prelude-val">Ok</span>(ValidTransaction {
                 requires: missing_inputs,
@@ -1440,10 +1440,10 @@
     </span><span class="kw">pub fn </span>apply_tuxedo_transaction(transaction: Transaction&lt;V, C&gt;) -&gt; DispatchResult&lt;C::Error&gt; {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;applying tuxedo transaction {:?}&quot;</span>, transaction
+            <span class="string">"applying tuxedo transaction {:?}"</span>, transaction
         );
 
-        <span class="comment">// Re-do the pre-checks. These should have been done in the pool, but we can&#39;t
+        <span class="comment">// Re-do the pre-checks. These should have been done in the pool, but we can't
         // guarantee that foreign nodes to these checks faithfully, so we need to check on-chain.
         </span><span class="kw">let </span>valid_transaction = <span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>transaction)<span class="question-mark">?</span>;
 
@@ -1472,7 +1472,7 @@
 
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Transaction before updating storage {:?}&quot;</span>, transaction
+            <span class="string">"Transaction before updating storage {:?}"</span>, transaction
         );
         <span class="comment">// Write the newly created utxos
         </span><span class="kw">for </span>(index, output) <span class="kw">in </span>transaction.outputs.iter().enumerate() {
@@ -1491,7 +1491,7 @@
     {
         <span class="kw-2">*</span>sp_io::storage::get(HEADER_KEY)
             .and_then(|d| B::Header::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
-            .expect(<span class="string">&quot;A header is always stored at the beginning of the block&quot;</span>)
+            .expect(<span class="string">"A header is always stored at the beginning of the block"</span>)
             .number()
     }
 
@@ -1501,7 +1501,7 @@
     </span><span class="kw">pub fn </span>open_block(header: <span class="kw-2">&amp;</span>&lt;B <span class="kw">as </span>BlockT&gt;::Header) {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Entering initialize_block. header: {:?}&quot;</span>, header
+            <span class="string">"Entering initialize_block. header: {:?}"</span>, header
         );
 
         <span class="comment">// Store the transient partial header for updating at the end of the block.
@@ -1512,7 +1512,7 @@
     <span class="kw">pub fn </span>apply_extrinsic(extrinsic: &lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic) -&gt; ApplyExtrinsicResult {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Entering apply_extrinsic: {:?}&quot;</span>, extrinsic
+            <span class="string">"Entering apply_extrinsic: {:?}"</span>, extrinsic
         );
 
         <span class="comment">// Append the current extrinsic to the transient list of extrinsics.
@@ -1533,7 +1533,7 @@
     <span class="kw">pub fn </span>close_block() -&gt; &lt;B <span class="kw">as </span>BlockT&gt;::Header {
         <span class="kw">let </span><span class="kw-2">mut </span>header = sp_io::storage::get(HEADER_KEY)
             .and_then(|d| &lt;B <span class="kw">as </span>BlockT&gt;::Header::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
-            .expect(<span class="string">&quot;We initialized with header, it never got mutated, qed&quot;</span>);
+            .expect(<span class="string">"We initialized with header, it never got mutated, qed"</span>);
 
         <span class="comment">// the header itself contains the state root, so it cannot be inside the state (circular
         // dependency..). Make sure in execute block path we have the same rule.
@@ -1554,7 +1554,7 @@
             &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hash::decode(<span class="kw-2">&amp;mut &amp;</span>raw_state_root[..]).unwrap();
         header.set_state_root(state_root);
 
-        <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">&quot;finalizing block {:?}&quot;</span>, header);
+        <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">"finalizing block {:?}"</span>, header);
         header
     }
 
@@ -1563,10 +1563,10 @@
     </span><span class="kw">pub fn </span>execute_block(block: B) {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Entering execute_block. block: {:?}&quot;</span>, block
+            <span class="string">"Entering execute_block. block: {:?}"</span>, block
         );
 
-        <span class="comment">// Store the header. Although we don&#39;t need to mutate it, we do need to make
+        <span class="comment">// Store the header. Although we don't need to mutate it, we do need to make
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
         </span>sp_io::storage::set(HEADER_KEY, <span class="kw-2">&amp;</span>block.header().encode());
@@ -1580,7 +1580,7 @@
             <span class="comment">// Enforce that inherents are in the right place
             </span><span class="kw">let </span>current_tx_is_inherent = extrinsic.checker.is_inherent();
             <span class="kw">if </span>current_tx_is_inherent &amp;&amp; finished_with_opening_inherents {
-                <span class="macro">panic!</span>(<span class="string">&quot;Tried to execute opening inherent after switching to non-inherents.&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">"Tried to execute opening inherent after switching to non-inherents."</span>);
             }
             <span class="kw">if </span>!current_tx_is_inherent &amp;&amp; !finished_with_opening_inherents {
                 <span class="comment">// This is the first non-inherent, so we update our flag and continue.
@@ -1590,9 +1590,9 @@
             <span class="kw">match </span><span class="self">Self</span>::apply_tuxedo_transaction(extrinsic.clone()) {
                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="macro">debug!</span>(
                     target: LOG_TARGET,
-                    <span class="string">&quot;Successfully executed extrinsic: {:?}&quot;</span>, extrinsic
+                    <span class="string">"Successfully executed extrinsic: {:?}"</span>, extrinsic
                 ),
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;{:?}&quot;</span>, e),
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">"{:?}"</span>, e),
             }
         }
 
@@ -1606,7 +1606,7 @@
         <span class="macro">assert_eq!</span>(
             <span class="kw-2">*</span>block.header().state_root(),
             state_root,
-            <span class="string">&quot;state root mismatch&quot;
+            <span class="string">"state root mismatch"
         </span>);
 
         <span class="comment">// Print state for quick debugging
@@ -1615,7 +1615,7 @@
         //     let val = sp_io::storage::get(&amp;next).unwrap().to_vec();
         //     log::trace!(
         //         target: LOG_TARGET,
-        //         &quot;{} &lt;=&gt; {}&quot;,
+        //         "{} &lt;=&gt; {}",
         //         HexDisplay::from(&amp;next),
         //         HexDisplay::from(&amp;val)
         //     );
@@ -1635,7 +1635,7 @@
         <span class="macro">assert_eq!</span>(
             <span class="kw-2">*</span>block.header().extrinsics_root(),
             extrinsics_root,
-            <span class="string">&quot;extrinsics root mismatch&quot;
+            <span class="string">"extrinsics root mismatch"
         </span>);
     }
 
@@ -1648,7 +1648,7 @@
     ) -&gt; TransactionValidity {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}&quot;</span>,
+            <span class="string">"Entering validate_transaction. source: {:?}, tx: {:?}, block hash: {:?}"</span>,
             source,
             tx,
             block_hash
@@ -1667,14 +1667,14 @@
             </span><span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).map_err(|e| {
                 <span class="macro">log::warn!</span>(
                     target: LOG_TARGET,
-                    <span class="string">&quot;Tuxedo Transaction did not validate (in the pool): {:?}&quot;</span>,
+                    <span class="string">"Tuxedo Transaction did not validate (in the pool): {:?}"</span>,
                     e,
                 );
                 TransactionValidityError::Invalid(InvalidTransaction::Custom(<span class="number">0</span>))
             })
         };
 
-        <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">&quot;Validation result: {:?}&quot;</span>, r);
+        <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">"Validation result: {:?}"</span>, r);
 
         r
     }
@@ -1683,14 +1683,14 @@
     </span><span class="kw">pub fn </span>inherent_extrinsics(data: sp_inherents::InherentData) -&gt; Vec&lt;&lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic&gt; {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Entering `inherent_extrinsics`.&quot;
+            <span class="string">"Entering `inherent_extrinsics`."
         </span>);
 
         <span class="comment">// Extract the complete parent block from the inheret data
         </span><span class="kw">let </span>parent: B = data
             .get_data(<span class="kw-2">&amp;</span>PARENT_INHERENT_IDENTIFIER)
-            .expect(<span class="string">&quot;Parent block inherent data should be able to decode.&quot;</span>)
-            .expect(<span class="string">&quot;Parent block should be present among authoring inherent data.&quot;</span>);
+            .expect(<span class="string">"Parent block inherent data should be able to decode."</span>)
+            .expect(<span class="string">"Parent block should be present among authoring inherent data."</span>);
 
         <span class="comment">// Extract the inherents from the previous block, which can be found at the beginning of the extrinsics list.
         // The parent is already imported, so we know it is valid and we know its inherents came first.
@@ -1710,17 +1710,17 @@
 
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;The previous block had {} extrinsics ({} inherents).&quot;</span>, parent.extrinsics().len(), previous_blocks_inherents.len()
+            <span class="string">"The previous block had {} extrinsics ({} inherents)."</span>, parent.extrinsics().len(), previous_blocks_inherents.len()
         );
 
-        <span class="comment">// Call into constraint checker&#39;s own inherent hooks to create the actual transactions
+        <span class="comment">// Call into constraint checker's own inherent hooks to create the actual transactions
         </span>C::InherentHooks::create_inherents(<span class="kw-2">&amp;</span>data, previous_blocks_inherents)
     }
 
     <span class="kw">pub fn </span>check_inherents(block: B, data: InherentData) -&gt; sp_inherents::CheckInherentsResult {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
-            <span class="string">&quot;Entering `check_inherents`&quot;
+            <span class="string">"Entering `check_inherents`"
         </span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>result = CheckInherentsResult::new();
@@ -1768,7 +1768,7 @@
     /// When setting up tests, it is often useful to have some Utxos in the storage
     /// before the test begins. There are no real transactions before the test, so there
     /// are also no real OutputRefs. This function constructs an OutputRef that can be
-    /// used in the test from a &quot;transaction number&quot; (a simple u32) and an output index in
+    /// used in the test from a "transaction number" (a simple u32) and an output index in
     /// that transaction (also a u32).
     </span><span class="kw">fn </span>mock_output_ref(tx_num: u32, index: u32) -&gt; OutputRef {
         OutputRef {
@@ -1875,7 +1875,7 @@
         /// block. This function allows setting up a test case with som extrinsics
         /// already noted.
         ///
-        /// The extrinsic is already encoded so that it doesn&#39;t have to be a proper
+        /// The extrinsic is already encoded so that it doesn't have to be a proper
         /// extrinsic, but can just be some example bytes.
         </span><span class="kw">fn </span>with_noted_extrinsic(<span class="kw-2">mut </span><span class="self">self</span>, ext: Vec&lt;u8&gt;) -&gt; <span class="self">Self </span>{
             <span class="self">self</span>.noted_extrinsics.push(ext);
@@ -2101,7 +2101,7 @@
     </span><span class="kw">fn </span>validate_with_pre_existing_output_fails() {
         <span class="comment">// This test requires a transaction to create an output at a location where
         // an output already exists. This could happen in the wild when two transactions
-        // don&#39;t have inputs and have the same outputs. I initially couldn&#39;t think of how
+        // don't have inputs and have the same outputs. I initially couldn't think of how
         // this could happen.
 
         // First we create the transaction that will be submitted in the test.
@@ -2249,7 +2249,7 @@
             <span class="comment">// Fetch the header back out of storage
             </span><span class="kw">let </span>retrieved_header = sp_io::storage::get(HEADER_KEY)
                 .and_then(|d| TestHeader::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
-                .expect(<span class="string">&quot;Open block should have written a header to storage&quot;</span>);
+                .expect(<span class="string">"Open block should have written a header to storage"</span>);
 
             <span class="comment">// Make sure the header that came out is the same one that went in.
             </span><span class="macro">assert_eq!</span>(retrieved_header, header);
@@ -2337,10 +2337,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314&quot;</span>,
+                        <span class="string">"03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2359,10 +2359,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca&quot;</span>,
+                        <span class="string">"d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2374,7 +2374,7 @@
     }
 
     <span class="attr">#[test]
-    #[should_panic(expected = <span class="string">&quot;ConstraintCheckerError(())&quot;</span>)]
+    #[should_panic(expected = <span class="string">"ConstraintCheckerError(())"</span>)]
     </span><span class="kw">fn </span>execute_block_invalid_transaction() {
         ExternalityBuilder::default().build().execute_with(|| {
             <span class="kw">let </span>b = TestBlock {
@@ -2382,10 +2382,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314&quot;</span>,
+                        <span class="string">"03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2397,7 +2397,7 @@
     }
 
     <span class="attr">#[test]
-    #[should_panic(expected = <span class="string">&quot;state root mismatch&quot;</span>)]
+    #[should_panic(expected = <span class="string">"state root mismatch"</span>)]
     </span><span class="kw">fn </span>execute_block_state_root_mismatch() {
         ExternalityBuilder::default().build().execute_with(|| {
             <span class="kw">let </span>b = TestBlock {
@@ -2406,7 +2406,7 @@
                     number: <span class="number">6</span>,
                     state_root: H256::zero(),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314&quot;</span>,
+                        <span class="string">"03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2418,7 +2418,7 @@
     }
 
     <span class="attr">#[test]
-    #[should_panic(expected = <span class="string">&quot;extrinsics root mismatch&quot;</span>)]
+    #[should_panic(expected = <span class="string">"extrinsics root mismatch"</span>)]
     </span><span class="kw">fn </span>execute_block_extrinsic_root_mismatch() {
         ExternalityBuilder::default().build().execute_with(|| {
             <span class="kw">let </span>b = TestBlock {
@@ -2426,7 +2426,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: H256::zero(),
                     digest: Default::default(),
@@ -2446,10 +2446,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c&quot;</span>,
+                        <span class="string">"799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2468,10 +2468,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9&quot;</span>,
+                        <span class="string">"bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2487,7 +2487,7 @@
 
     <span class="attr">#[test]
     #[should_panic(
-        expected = <span class="string">&quot;Tried to execute opening inherent after switching to non-inherents.&quot;
+        expected = <span class="string">"Tried to execute opening inherent after switching to non-inherents."
     </span>)]
     </span><span class="kw">fn </span>execute_block_inherents_must_be_first() {
         ExternalityBuilder::default().build().execute_with(|| {
@@ -2496,10 +2496,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984&quot;</span>,
+                        <span class="string">"df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984"</span>,
                     ),
                     digest: Default::default(),
                 },
@@ -2515,7 +2515,7 @@
 
     <span class="attr">#[test]
     #[should_panic(
-        expected = <span class="string">&quot;Tried to execute opening inherent after switching to non-inherents.&quot;
+        expected = <span class="string">"Tried to execute opening inherent after switching to non-inherents."
     </span>)]
     </span><span class="kw">fn </span>execute_block_inherents_must_all_be_first() {
         ExternalityBuilder::default().build().execute_with(|| {
@@ -2524,10 +2524,10 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071&quot;</span>,
+                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">&quot;0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f&quot;</span>,
+                        <span class="string">"0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f"</span>,
                     ),
                     digest: Default::default(),
                 },

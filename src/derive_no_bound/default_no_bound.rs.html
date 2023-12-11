@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/no_bound/src/default_no_bound.rs`."><title>default_no_bound.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="derive_no_bound" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (5facb422f 2023-11-28)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/no_bound/src/default_no_bound.rs`."><title>default_no_bound.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="derive_no_bound" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (d86d65bbc 2023-12-10)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -174,14 +174,14 @@
 // Copyright (C) Parity Technologies (UK) Ltd.
 // SPDX-License-Identifier: Apache-2.0
 
-// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 // 	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
@@ -224,12 +224,12 @@
         },
         Data::Enum(enum_) =&gt; {
             <span class="kw">if </span>enum_.variants.is_empty() {
-                <span class="kw">return </span>syn::Error::new_spanned(name, <span class="string">&quot;cannot derive Default for an empty enum&quot;</span>)
+                <span class="kw">return </span>syn::Error::new_spanned(name, <span class="string">"cannot derive Default for an empty enum"</span>)
                     .to_compile_error()
                     .into();
             }
 
-            <span class="comment">// all #[default] attrs with the variant they&#39;re on; i.e. a var
+            <span class="comment">// all #[default] attrs with the variant they're on; i.e. a var
             </span><span class="kw">let </span>default_variants = enum_
                 .variants
                 .into_iter()
@@ -237,7 +237,7 @@
                     variant
                         .attrs
                         .iter()
-                        .any(|attr| attr.path().is_ident(<span class="string">&quot;default&quot;</span>))
+                        .any(|attr| attr.path().is_ident(<span class="string">"default"</span>))
                 })
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
@@ -245,7 +245,7 @@
                 [] =&gt; {
                     <span class="kw">return </span>syn::Error::new(
 						name.clone().span(),
-						<span class="string">&quot;no default declared, make a variant default by placing `#[default]` above it&quot;</span>,
+						<span class="string">"no default declared, make a variant default by placing `#[default]` above it"</span>,
 					)
 					.into_compile_error()
 					.into();
@@ -255,22 +255,22 @@
                     <span class="kw">let </span>variant_attrs = default_variant
                         .attrs
                         .iter()
-                        .filter(|a| a.path().is_ident(<span class="string">&quot;default&quot;</span>))
+                        .filter(|a| a.path().is_ident(<span class="string">"default"</span>))
                         .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
                     <span class="comment">// check that there is only one #[default] attribute on the variant
                     </span><span class="kw">if let </span>[first_attr, second_attr, additional_attrs @ ..] = <span class="kw-2">&amp;*</span>variant_attrs {
                         <span class="kw">let </span><span class="kw-2">mut </span>err =
-                            syn::Error::new(Span::call_site(), <span class="string">&quot;multiple `#[default]` attributes&quot;</span>);
+                            syn::Error::new(Span::call_site(), <span class="string">"multiple `#[default]` attributes"</span>);
 
                         err.combine(syn::Error::new_spanned(
                             first_attr,
-                            <span class="string">&quot;`#[default]` used here&quot;</span>,
+                            <span class="string">"`#[default]` used here"</span>,
                         ));
 
                         err.extend([second_attr].into_iter().chain(additional_attrs).map(
                             |variant| {
-                                syn::Error::new_spanned(variant, <span class="string">&quot;`#[default]` used again here&quot;</span>)
+                                syn::Error::new_spanned(variant, <span class="string">"`#[default]` used again here"</span>)
                             },
                         ));
 
@@ -305,14 +305,14 @@
                     }
                 }
                 [first, additional @ ..] =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>err = syn::Error::new(Span::call_site(), <span class="string">&quot;multiple declared defaults&quot;</span>);
+                    <span class="kw">let </span><span class="kw-2">mut </span>err = syn::Error::new(Span::call_site(), <span class="string">"multiple declared defaults"</span>);
 
-                    err.combine(syn::Error::new_spanned(first, <span class="string">&quot;first default&quot;</span>));
+                    err.combine(syn::Error::new_spanned(first, <span class="string">"first default"</span>));
 
                     err.extend(
                         additional
                             .iter()
-                            .map(|variant| syn::Error::new_spanned(variant, <span class="string">&quot;additional default&quot;</span>)),
+                            .map(|variant| syn::Error::new_spanned(variant, <span class="string">"additional default"</span>)),
                     );
 
                     <span class="kw">return </span>err.into_compile_error().into();
@@ -322,7 +322,7 @@
         Data::Union(union_) =&gt; {
             <span class="kw">return </span>syn::Error::new_spanned(
                 union_.union_token,
-                <span class="string">&quot;Union type not supported by `derive(DefaultNoBound)`&quot;</span>,
+                <span class="string">"Union type not supported by `derive(DefaultNoBound)`"</span>,
             )
             .to_compile_error()
             .into()

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-parachain-core/register_validate_block/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_register_validate_block" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (5facb422f 2023-11-28)" data-channel="nightly" data-search-js="search-56a624991a76cfad.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-parachain-core/register_validate_block/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e883e87179a81222.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_register_validate_block" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (d86d65bbc 2023-12-10)" data-channel="nightly" data-search-js="search-5a66c239c06b3a66.js" data-settings-js="settings-fe03fdc259827cd2.js" ><script src="../../static.files/storage-bc37acceda91d44a.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-77dede896d6ac08e.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -130,7 +130,7 @@
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This macro is copied from cumulus-pallet-parachain-system-proc-macro crate
-//! and modified slightly to fit Tuxedo&#39;s needs.
+//! and modified slightly to fit Tuxedo's needs.
 
 </span><span class="kw">use </span>proc_macro2::Span;
 <span class="kw">use </span>proc_macro_crate::{crate_name, FoundCrate};
@@ -141,8 +141,8 @@
 
 <span class="doccomment">/// Provides an identifier that is a safe way to refer to the crate tuxedo_core within the macro
 </span><span class="kw">fn </span>crate_() -&gt; <span class="prelude-ty">Result</span>&lt;Ident, Error&gt; {
-    <span class="kw">match </span>crate_name(<span class="string">&quot;tuxedo-parachain-core&quot;</span>) {
-        <span class="prelude-val">Ok</span>(FoundCrate::Itself) =&gt; <span class="prelude-val">Ok</span>(syn::Ident::new(<span class="string">&quot;tuxedo_parachain_core&quot;</span>, Span::call_site())),
+    <span class="kw">match </span>crate_name(<span class="string">"tuxedo-parachain-core"</span>) {
+        <span class="prelude-val">Ok</span>(FoundCrate::Itself) =&gt; <span class="prelude-val">Ok</span>(syn::Ident::new(<span class="string">"tuxedo_parachain_core"</span>, Span::call_site())),
         <span class="prelude-val">Ok</span>(FoundCrate::Name(name)) =&gt; <span class="prelude-val">Ok</span>(Ident::new(<span class="kw-2">&amp;</span>name, Span::call_site())),
         <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(Error::new(Span::call_site(), e)),
     }
@@ -169,7 +169,7 @@
         <span class="kw">if </span>!input.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
                 input.span(),
-                <span class="string">&quot;Expected exactly three parameters: Block, Verifier, ConstraintChecker.&quot;</span>,
+                <span class="string">"Expected exactly three parameters: Block, Verifier, ConstraintChecker."</span>,
             ));
         }
 
@@ -179,7 +179,7 @@
 
 <span class="attr">#[proc_macro]
 </span><span class="kw">pub fn </span>register_validate_block(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
-    <span class="comment">// Extract the paths to the parts from the runtime developer&#39;s input
+    <span class="comment">// Extract the paths to the parts from the runtime developer's input
     // I will likely need to revise or simplify the fields that are passed in.
     // I hope to only use the exposed runtime APIs here, not some custom trait impls. (if possible)
     </span><span class="kw">let </span>input: RegisterValidateBlockInput = <span class="kw">match </span>syn::parse(input) {
@@ -212,7 +212,7 @@
     // 	},
     // };
 
-    </span><span class="kw">if </span><span class="macro">cfg!</span>(not(feature = <span class="string">&quot;std&quot;</span>)) {
+    </span><span class="kw">if </span><span class="macro">cfg!</span>(not(feature = <span class="string">"std"</span>)) {
         <span class="macro">quote::quote! </span>{
             <span class="attr">#[doc(hidden)]
             </span><span class="kw">mod </span>parachain_validate_block {
@@ -238,7 +238,7 @@
                     <span class="comment">// Then we decode from these bytes the `MemoryOptimizedValidationParams`.
                     </span><span class="kw">let </span>params = #crate_::decode_from_bytes::&lt;
                         #crate_::MemoryOptimizedValidationParams
-                    &gt;(args).expect(<span class="string">&quot;Invalid arguments to `validate_block`.&quot;</span>);
+                    &gt;(args).expect(<span class="string">"Invalid arguments to `validate_block`."</span>);
 
                     <span class="comment">// Step 2: Call the actual validate_block implementation
                     </span><span class="kw">let </span>res = #crate_::validate_block::validate_block::&lt;
@@ -255,7 +255,7 @@
             }
         }
     } <span class="kw">else </span>{
-        <span class="comment">// If we are building to std, we don&#39;t include this validate_block entry point at all
+        <span class="comment">// If we are building to std, we don't include this validate_block entry point at all
         </span><span class="macro">quote::quote!</span>()
     }
     .into()

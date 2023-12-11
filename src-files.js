@@ -14,6 +14,6 @@ var srcIndex = JSON.parse('{\
 "tuxedo_parachain_core":["",[],["collation_api.rs","lib.rs","relay_state_snapshot.rs"]],\
 "tuxedo_register_validate_block":["",[],["lib.rs"]],\
 "tuxedo_template_runtime":["",[],["genesis.rs","lib.rs"]],\
-"tuxedo_template_wallet":["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","rpc.rs","sync.rs"]]\
+"tuxedo_template_wallet":["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","rpc.rs","sync.rs","timestamp.rs"]]\
 }');
 createSrcSidebar();
