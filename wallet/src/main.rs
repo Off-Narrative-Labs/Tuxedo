@@ -16,6 +16,7 @@ mod money;
 mod output_filter;
 mod rpc;
 mod sync;
+mod timestamp;
 
 use cli::{Cli, Command};
 
@@ -71,10 +72,10 @@ async fn main() -> anyhow::Result<()> {
     // The filter function that will determine whether the local database should track a given utxo
     // is based on whether that utxo is privately owned by a key that is in our keystore.
     let keystore_filter = |v: &OuterVerifier| -> bool {
-        matches![
-            v,
-            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) if crate::keystore::has_key(&keystore, owner_pubkey)
-        ]
+        matches![v,
+            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey })
+                if crate::keystore::has_key(&keystore, owner_pubkey)
+        ] || matches![v, OuterVerifier::UpForGrabs(UpForGrabs)] // used for timestamp
     };
 
     if !sled::Db::was_recovered(&db) {
@@ -164,6 +165,10 @@ async fn main() -> anyhow::Result<()> {
             println!("###### Unspent outputs ###########");
             sync::print_unspent_tree(&db)?;
 
+            Ok(())
+        }
+        Some(Command::ShowTimestamp) => {
+            println!("Timestamp: {}", timestamp::get_timestamp(&db)?);
             Ok(())
         }
         None => {

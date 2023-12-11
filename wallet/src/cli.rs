@@ -98,6 +98,9 @@ pub enum Command {
 
     /// Show the complete list of UTXOs known to the wallet.
     ShowAllOutputs,
+
+    /// Show the latest on-chain timestamp.
+    ShowTimestamp,
 }
 
 #[derive(Debug, Args)]
