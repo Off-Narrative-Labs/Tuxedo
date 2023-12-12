@@ -109,7 +109,7 @@ color-print = "0.3.4"
 # xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
 
 # Cumulus
-cumulus-client-cli = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
+cumulus-client-cli = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk", default_features = false }
 cumulus-client-collator = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-aura = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-common = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
