@@ -7548,6 +7548,7 @@ dependencies = [
  "parity-scale-codec",
  "polkadot-cli",
  "polkadot-primitives",
+ "polkadot-service",
  "sc-basic-authorship",
  "sc-chain-spec",
  "sc-cli",

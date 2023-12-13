@@ -27,6 +27,7 @@ resolver = "2"
 async-io = "2.0"
 async-trait = "0.1.73"
 clap = "4.3.0"
+color-print = "0.3.4"
 hex-literal = "0.4.1"
 jsonrpsee = "0.16.2"
 log = "0.4"
@@ -100,16 +101,10 @@ sp-storage = { branch = "tuxedo-no-rocks", default_features = false, git = "http
 sp-timestamp = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sp-transaction-pool = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sp-version = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
-
-# x
 substrate-prometheus-endpoint = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 
-# Polkadot
-color-print = "0.3.4"
-# xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
-
 # Cumulus
-cumulus-client-cli = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk", default_features = false }
+cumulus-client-cli = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-collator = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-aura = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-common = { branch = "tuxedo-no-rocks", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
@@ -130,3 +125,7 @@ sp-state-machine = { branch = "tuxedo-no-rocks", default_features = false, git =
 sp-tracing = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sp-trie = { branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 trie-db = { version = "0.28.0", default-features = false }
+
+# We need to depend on this explicitly so we can enable the "full-node" feature
+# See https://github.com/paritytech/polkadot-sdk/issues/2551 for more details
+polkadot-service = { features = [ "full-node" ], branch = "tuxedo-no-rocks", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
