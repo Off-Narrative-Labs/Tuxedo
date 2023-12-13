@@ -27,6 +27,7 @@ resolver = "2"
 async-io = "2.0"
 async-trait = "0.1.73"
 clap = "4.3.0"
+color-print = "0.3.4"
 hex-literal = "0.4.1"
 jsonrpsee = "0.16.2"
 log = "0.4"
@@ -100,16 +101,10 @@ sp-storage = { branch = "tuxedo-v1.3.0", default_features = false, git = "https:
 sp-timestamp = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sp-transaction-pool = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sp-version = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
-
-# x
 substrate-prometheus-endpoint = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 
-# Polkadot
-color-print = "0.3.4"
-# xcm = { package = "staging-xcm", path = "../../../polkadot/xcm", default-features = false}
-
 # Cumulus
-cumulus-client-cli = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
+cumulus-client-cli = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-collator = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-aura = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-common = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
@@ -120,7 +115,7 @@ cumulus-primitives-parachain-inherent = { branch = "tuxedo-v1.3.0", default_feat
 cumulus-relay-chain-interface = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-test-client = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-test-relay-sproof-builder = { branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
-polkadot-cli = { features = [ "rococo-native" ], branch = "tuxedo-v1.3.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
+polkadot-cli = { branch = "tuxedo-v1.3.0", default-features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 polkadot-parachain-primitives = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 polkadot-primitives = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 
@@ -130,3 +125,7 @@ sp-state-machine = { branch = "tuxedo-v1.3.0", default_features = false, git = "
 sp-tracing = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 sp-trie = { branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 trie-db = { version = "0.28.0", default-features = false }
+
+# We need to depend on this explicitly so we can enable the "full-node" feature
+# See https://github.com/paritytech/polkadot-sdk/issues/2551 for more details
+polkadot-service = { features = [ "full-node" ], branch = "tuxedo-v1.3.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
