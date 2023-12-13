@@ -35,6 +35,8 @@ jobs:
       issues: write
       pull-requests: write
     steps:
+      # Polkadot crates are so bloaty, we need this hacky action to claim more disk space.
+      - uses: easimon/maximize-build-space@v10
       - uses: actions/checkout@v4
       - name: Install tooling
         run: |
