@@ -37,7 +37,8 @@ runs:
       shell: bash
       run: |
         pkgs=`for p in ${{ inputs.packages }}; do echo -n "-p $p "; done`;
-        cargo llvm-cov nextest $pkgs --json --summary-only --output-path lcov.json &&
+        cargo llvm-cov nextest --release \
+        $pkgs --json --summary-only --output-path lcov.json &&
         perc=`jq ".data[0].totals.lines.percent" lcov.json` &&
         echo Lines coverage: ${perc:0:5}%
     # if the PR is on the same repo, the coverage data can be reported as a comment
