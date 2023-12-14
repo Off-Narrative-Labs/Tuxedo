@@ -52,7 +52,7 @@ jobs:
           cache-targets: true
           cache-on-failure: true
       - name: Run tests and print coverage data
-        run: cargo llvm-cov nextest --workspace
+        run: cargo llvm-cov nextest --release --workspace
           --exclude node-template --exclude parachain-template-node
           --exclude derive-no-bound
           --json --output-path lcov.json --summary-only &&
