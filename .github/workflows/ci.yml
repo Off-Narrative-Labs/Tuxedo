@@ -50,11 +50,13 @@ jobs:
           cache-targets: true
           cache-on-failure: true
       - name: Run tests and print coverage data
-        run: cargo llvm-cov nextest --workspace
+        run: |
+          cargo llvm-cov nextest --release --workspace
           --exclude node-template --exclude parachain-template-node
           --exclude derive-no-bound
-          --json --output-path lcov.json --summary-only &&
-          echo "Lines coverage " && jq ".data[0].totals.lines.percent" lcov.json
+          --json --output-path lcov.json --summary-only
+          perc=`jq ".data[0].totals.lines.percent" lcov.json` &&
+          echo Lines coverage: ${perc:0:5}%
       # if the PR is on the same repo, the coverage data can be reported as a comment
       - if: github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
