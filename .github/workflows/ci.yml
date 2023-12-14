@@ -62,7 +62,7 @@ jobs:
           github.event.pull_request.head.repo.full_name == github.repository
         name: Generate lcov report
         run: cargo llvm-cov report --lcov --output-path lcov.info
-          --ignore-filename-regex "node/"
+          --ignore-filename-regex "node" --release
       - if: github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
         name: Report code coverage
