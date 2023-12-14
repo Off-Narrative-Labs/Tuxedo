@@ -41,7 +41,6 @@ jobs:
           title: "Code Coverage for Tuxedo Core"
 
   test-parachain:
-    if: false # we skip this for now because of not enough space
     name: Test and Code Coverage for Tuxedo Parachain Core and Piece
     needs: [fmt, toml-sort]
     runs-on: ubuntu-latest
