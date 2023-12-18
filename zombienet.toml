@@ -1,7 +1,7 @@
 # This is a configuration file for zombienet: https://github.com/paritytech/zombienet
 # You can use it to launch a custom relay-para network with relative ease.
 # After building the collator and relay chain binaries, and installing zombienet 1.3.74 onwards,
-# zombienet --provider native spawn zombienet.toml
+# zombienet --provider podman spawn zombienet.toml
 
 [relaychain]
 default_image = "docker.io/parity/polkadot:latest"

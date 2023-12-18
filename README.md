@@ -11,9 +11,9 @@ Browse this repository, or get hands on with the [Tuxedo Order Book Dex Tutorial
   - [Template Runtime](#template-runtime)
   - [Template Node](#template-node)
   - [Wallet](#wallet)
-- [Funding and Roadmap](#funding-and-roadmap)
 - [Building and Running Locally](#building-and-running-locally)
 - [Docker](#docker)
+- [Parachain](#parachain)
 - [Testing and Code Quality](#testing-and-code-quality)
 - [License](#license)
 
@@ -58,17 +58,6 @@ The wallet allows users to see their token balances and send transactions.
 It also allows advanced interactions like seeing the exact UTXOs you own, choosing specific UTXOs for a transaction, and constructing transactions with UTXOs from diverse owners.
 From a developer perspective, this wallet can serve as a starting point for building your own CLI dApp UI.
 
-## Funding and Roadmap
-
-Special thanks to the [Web 3 Foundation](https://web3.foundation/) for their [support of Tuxedo](https://github.com/w3f/Grants-Program/blob/master/applications/tuxedo.md) through their grants program.
-
-Our current rough roadmap is:
-
-- 🏗️ Cumulus and Parachain support including cross-chain UTXOs
-- 🔜 Benchmarking
-- 🔮 Zero-knowledge runtimes a-la [zero-cash](https://www.ieee-security.org/TC/SP2014/papers/Zerocash_c_DecentralizedAnonymousPaymentsfromBitcoin.pdf) and [zexe](https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=9152634&ref=)
-- 🔮 UTXO-native Smart Contracts based on the pi-calculus
-
 ## Building and Running Locally
 
 If you want to learn how to use Tuxedo in your runtime, we recommend starting with the [Tuxedo Order Book Dex Tutorial](https://github.com/Off-Narrative-Labs/Tuxedo-Order-Book-Dex-Tutorial/).
@@ -85,11 +74,16 @@ cd tuxedo
 # Build the node
 cargo build --release -p node-template
 
+# If you need the parachain node, build it
+# This will take a while to compile
+cargo build --release -p parachain-template-node
+
 # Build the wallet
 cargo build --release -p tuxedo-template-wallet
 ```
 
 Once you have the node and wallet built, you can run a development node.
+(These commands work for the parachain node as well.)
 
 ```sh
 # Check out the CLI if you want to
@@ -143,8 +137,10 @@ Docker is a complex software and there are many ways to pull and run images and 
 The following commands are meant as a quickstart that will work on most platforms for users who already have Docker setup.
 
 ```sh
-# Run a development node with Docker
+# Run a development node with Docker.
+# Use the sovereign node when possible, or the parachain node when necessary, not both.
 docker run --network host ghcr.io/off-narrative-labs/tuxedo --dev
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-parachain --dev
 
 # In a separate terminal, explore the PoC wallet's CLI
 docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet --help
@@ -159,6 +155,30 @@ total      : 100
 ```
 
 More example commands are listed above in the section on [running locally](#building-and-running-locally). They all work with docker as well.
+
+
+## Parachain
+
+### The Dev Service
+
+The Tuxedo parachain node provides a convenient "dev service" that allows it to run without a relay chain. The commands in the previous section all use this dev service. This mode is good for most situations and is much easier to start than a full relay-para network.
+
+### Zombienet
+
+When you do need, or want, a full relay-para network, it is convenient to use [zombienet](https://github.com/paritytech/zombienet) to start it. Tuxedo ships with a [zombienet config file](./zombienet.toml) to make this process easy.
+
+:warning: Because of a [bug in zombienet](https://github.com/paritytech/zombienet/issues/1519), you MUST purge your local data directory before starting zombienet.
+
+```sh
+# Purge local data directory
+# This is necessary until https://github.com/paritytech/zombienet/issues/1519 is resolved
+docker run ghcr.io/off-narrative-labs/tuxedo-parachain:latest purge-chain --dev -y
+
+# Start Zombienet
+zombienet --provider podman spawn zombienet.toml
+```
+
+Be advised that zombienet is changing quickly, and podman has its own platform-specific issues. If you struggle with zombienet, please open an issue, or consider using the local backend instead.
 
 ## Testing and Code Quality
 
