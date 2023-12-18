@@ -178,6 +178,8 @@ docker run ghcr.io/off-narrative-labs/tuxedo-parachain:latest purge-chain --dev 
 zombienet --provider podman spawn zombienet.toml
 ```
 
+Once your network is started, you can point the cli wallet to a local collator and perform the stame token transfers and balance checking as any other Tuxedo node.
+
 Be advised that zombienet is changing quickly, and podman has its own platform-specific issues. If you struggle with zombienet, please open an issue, or consider using the local backend instead.
 
 ## Testing and Code Quality
