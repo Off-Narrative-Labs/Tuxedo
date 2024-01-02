@@ -199,7 +199,10 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
                 .expect("Should be able to put an error.");
             return;
         }
-        let inherent = inherents.first().expect("Previous inherent exists.").clone();
+        let inherent = inherents
+            .first()
+            .expect("Previous inherent exists.")
+            .clone();
         <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)
     }
 
