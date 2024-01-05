@@ -139,14 +139,14 @@ The following commands are meant as a quickstart that will work on most platform
 ```sh
 # Run a development node with Docker.
 # Use the sovereign node when possible, or the parachain node when necessary, not both.
-docker run --network host ghcr.io/off-narrative-labs/tuxedo --dev
-docker run --network host ghcr.io/off-narrative-labs/tuxedo-parachain --dev
+docker run --network host ghcr.io/off-narrative-labs/tuxedo:main --dev
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-parachain:main --dev
 
 # In a separate terminal, explore the PoC wallet's CLI
-docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet --help
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet:main --help
 
 # Use the PoC wallet to confirm that a 100 token genesis utxo is present
-docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet show-balance
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet:main show-balance
 
 Balance Summary
 0xd2bf…df67: 100
