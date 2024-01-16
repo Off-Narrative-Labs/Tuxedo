@@ -133,6 +133,25 @@ Both sources agree that the coin exists, is worth 100, and is owned by Shawn.
 
 Let's "split" this coin by creating a transaction that spends it and creates two new coins worth 40 and 50, burning the remaining 10.
 
+### Minting coins
+It is possible to mint the coins via wallet.
+We can optionally pass the amount and public key of the owner as arguments to mint_coins.
+If optional arguments are not passed below are the default values:
+the amount is 100 coin
+owner(public key) is 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67 i.e SHAWN_PUB_KEY
+The max limit for coin value is 1000. If the amount >1000 then the minting amount will be floored to 1000.
+
+```sh
+$ tuxedo-template-wallet mint-coins \
+ --owner f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b \
+ --amount 700 \
+
+[2024-01-16T07:23:31Z INFO  tuxedo_template_wallet] Number of blocks in the db: 66
+[2024-01-16T07:23:32Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 260
+Minted coin from storage = (Coin(700), Sr25519Signature(Sr25519Signature { owner_pubkey: 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67 }))
+
+Now check all the coins available in the wallet, newly minted coins must exist by the below cmd.
+
 ```sh
 $ tuxedo-template-wallet spend-coins \
   --output-amount 40 \
