@@ -47,6 +47,12 @@ pub enum Command {
     /// Demonstrate creating an amoeba and performing mitosis on it.
     AmoebaDemo,
 
+    /// Mint coins , optionally amount and publicKey of owner can be passed 
+    /// if amount is not passed , 100 coins are minted 
+    /// If publickKey of owner is not passed , then by default SHAWN_PUB_KEY is used.
+    #[command(verbatim_doc_comment)]
+    MintCoins(MintCoinArgs),
+
     /// Verify that a particular coin exists.
     /// Show its value and owner from both chain storage and the local database.
     #[command(verbatim_doc_comment)]
@@ -101,6 +107,20 @@ pub enum Command {
 
     /// Show the latest on-chain timestamp.
     ShowTimestamp,
+}
+
+#[derive(Debug, Args)]
+pub struct MintCoinArgs {
+
+    /// Pass the amount to be minted, if not passed 100 coins will be minted 
+    #[arg(long, short, verbatim_doc_comment, action = Append)]
+    pub amount: Option<u128>,
+
+    // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html
+    // shows how to specify a custom parsing function
+    /// Hex encoded address (sr25519 pubkey) of the owner, if not passed ,by defauly SHAWN_PUB_KEY is used.
+    #[arg(long, short, verbatim_doc_comment, value_parser = h256_from_string, default_value = SHAWN_PUB_KEY)]
+    pub owner: H256,
 }
 
 #[derive(Debug, Args)]

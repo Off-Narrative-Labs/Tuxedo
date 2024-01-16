@@ -43,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Setup the keystore
     let keystore = sc_keystore::LocalKeystore::open(keystore_path.clone(), None)?;
-
+    
     if cli.dev {
         // Insert the example Shawn key so example transactions can be signed.
         crate::keystore::insert_development_key_for_this_session(&keystore)?;
@@ -99,6 +99,7 @@ async fn main() -> anyhow::Result<()> {
     match cli.command {
         Some(Command::AmoebaDemo) => amoeba::amoeba_demo(&client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
+        Some(Command::MintCoins(args)) => money::mint_coins(&client, args).await,
         Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
