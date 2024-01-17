@@ -139,7 +139,6 @@ We can optionally pass the amount and public key of the owner as arguments to mi
 If optional arguments are not passed below are the default values:
 the amount is 100 coin
 owner(public key) is 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67 i.e SHAWN_PUB_KEY
-The max limit for coin value is 1000. If the amount >1000 then the minting amount will be floored to 1000.
 
 ```sh
 $ tuxedo-template-wallet mint-coins \

@@ -21,34 +21,20 @@ use tuxedo_core::{
 use std::{thread::sleep, time::Duration};
 
 /// The default number of coins to be minted.
-const DEFAULT_NUM_OF_COINS: u128 = 100;
-
-/// The Max value of coins can be minted.
-const MAX_NUM_OF_COINS: u128 = 1000;
+pub const DEFAULT_NUM_OF_COINS: &str = "100";
 
 /// Create and send a transaction that mints the coins on the network
 pub async fn mint_coins(
     client: &HttpClient,
     args: MintCoinArgs,
 ) -> anyhow::Result<()> {
-    log::debug!("The args are:: {:?}", args);
-    let amount = match args.amount {
-        Some(mut amt) => {
-            if amt > MAX_NUM_OF_COINS {
-                amt = MAX_NUM_OF_COINS; // if the amount is >1k 
-            }
-            amt
-        },
-        None => DEFAULT_NUM_OF_COINS,// 100 coin is default amount.
-    };
-
-    let owner = args.owner;
+    log::info!("The args are:: {:?}", args);
 
     let transaction = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
-        outputs: vec![(Coin::<0>::new(amount), OuterVerifier::Sr25519Signature(Sr25519Signature {
-            owner_pubkey: owner,
+        outputs: vec![(Coin::<0>::new(args.amount), OuterVerifier::Sr25519Signature(Sr25519Signature {
+            owner_pubkey: args.owner,
         })).into()],
         checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Mint),
     };

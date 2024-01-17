@@ -10,6 +10,7 @@ use tuxedo_core::types::OutputRef;
 
 use crate::{h256_from_string, keystore::SHAWN_PUB_KEY, output_ref_from_string, DEFAULT_ENDPOINT};
 
+use crate::{money::DEFAULT_NUM_OF_COINS};
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
 #[command(about, version)]
@@ -112,13 +113,13 @@ pub enum Command {
 #[derive(Debug, Args)]
 pub struct MintCoinArgs {
 
-    /// Pass the amount to be minted, if not passed 100 coins will be minted 
-    #[arg(long, short, verbatim_doc_comment, action = Append)]
-    pub amount: Option<u128>,
+    /// Pass the amount to be minted.
+    #[arg(long, short, verbatim_doc_comment, action = Append,default_value = DEFAULT_NUM_OF_COINS)]
+    pub amount: u128,
 
     // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html
     // shows how to specify a custom parsing function
-    /// Hex encoded address (sr25519 pubkey) of the owner, if not passed ,by defauly SHAWN_PUB_KEY is used.
+    /// Hex encoded address (sr25519 pubkey) of the owner.
     #[arg(long, short, verbatim_doc_comment, value_parser = h256_from_string, default_value = SHAWN_PUB_KEY)]
     pub owner: H256,
 }
