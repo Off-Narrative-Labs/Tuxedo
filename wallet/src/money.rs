@@ -24,21 +24,21 @@ use std::{thread::sleep, time::Duration};
 pub const DEFAULT_NUM_OF_COINS: &str = "100";
 
 /// Create and send a transaction that mints the coins on the network
-pub async fn mint_coins(
-    client: &HttpClient,
-    args: MintCoinArgs,
-) -> anyhow::Result<()> {
+pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
     log::info!("The args are:: {:?}", args);
 
     let transaction = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
-        outputs: vec![(Coin::<0>::new(args.amount), OuterVerifier::Sr25519Signature(Sr25519Signature {
-            owner_pubkey: args.owner,
-        })).into()],
+        outputs: vec![(
+            Coin::<0>::new(args.amount),
+            OuterVerifier::Sr25519Signature(Sr25519Signature {
+                owner_pubkey: args.owner,
+            }),
+        )
+            .into()],
         checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Mint),
     };
-
 
     let spawn_hex = hex::encode(transaction.encode());
     let params = rpc_params![spawn_hex];
@@ -51,8 +51,8 @@ pub async fn mint_coins(
     sleep(Duration::from_secs(3));
 
     let coin_from_storage = get_coin_from_storage(&minted_coin_ref, client).await?;
-    println!("Minted coin from storage = {:?}",coin_from_storage);
-    Ok(()) 
+    println!("Minted coin from storage = {:?}", coin_from_storage);
+    Ok(())
 }
 
 /// Create and send a transaction that spends coins on the network

@@ -10,7 +10,7 @@ use tuxedo_core::types::OutputRef;
 
 use crate::{h256_from_string, keystore::SHAWN_PUB_KEY, output_ref_from_string, DEFAULT_ENDPOINT};
 
-use crate::{money::DEFAULT_NUM_OF_COINS};
+use crate::money::DEFAULT_NUM_OF_COINS;
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
 #[command(about, version)]
@@ -48,8 +48,8 @@ pub enum Command {
     /// Demonstrate creating an amoeba and performing mitosis on it.
     AmoebaDemo,
 
-    /// Mint coins , optionally amount and publicKey of owner can be passed 
-    /// if amount is not passed , 100 coins are minted 
+    /// Mint coins , optionally amount and publicKey of owner can be passed
+    /// if amount is not passed , 100 coins are minted
     /// If publickKey of owner is not passed , then by default SHAWN_PUB_KEY is used.
     #[command(verbatim_doc_comment)]
     MintCoins(MintCoinArgs),
@@ -112,7 +112,6 @@ pub enum Command {
 
 #[derive(Debug, Args)]
 pub struct MintCoinArgs {
-
     /// Pass the amount to be minted.
     #[arg(long, short, verbatim_doc_comment, action = Append,default_value = DEFAULT_NUM_OF_COINS)]
     pub amount: u128,
