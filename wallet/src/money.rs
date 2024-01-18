@@ -20,9 +20,6 @@ use tuxedo_core::{
 
 use std::{thread::sleep, time::Duration};
 
-/// The default number of coins to be minted.
-pub const DEFAULT_NUM_OF_COINS: &str = "100";
-
 /// Create and send a transaction that mints the coins on the network
 pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
     log::info!("The args are:: {:?}", args);
@@ -48,10 +45,12 @@ pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Resu
         tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
         index: 0,
     };
+
     sleep(Duration::from_secs(3));
 
     let coin_from_storage = get_coin_from_storage(&minted_coin_ref, client).await?;
     println!("Minted coin from storage = {:?}", coin_from_storage);
+
     Ok(())
 }
 
