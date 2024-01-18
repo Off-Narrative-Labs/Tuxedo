@@ -18,11 +18,9 @@ use tuxedo_core::{
     verifier::Sr25519Signature,
 };
 
-use std::{thread::sleep, time::Duration};
-
 /// Create and send a transaction that mints the coins on the network
 pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
-    log::info!("The args are:: {:?}", args);
+    log::debug!("The args are:: {:?}", args);
 
     let transaction = Transaction {
         inputs: Vec::new(),
@@ -41,15 +39,22 @@ pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Resu
     let params = rpc_params![spawn_hex];
     let _spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
 
+    log::info!(
+        "Node's response to mint-coin transaction: {:?}",
+        _spawn_response
+    );
+
     let minted_coin_ref = OutputRef {
         tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
         index: 0,
     };
-
-    sleep(Duration::from_secs(3));
-
-    let coin_from_storage = get_coin_from_storage(&minted_coin_ref, client).await?;
-    println!("Minted coin from storage = {:?}", coin_from_storage);
+    let output = &transaction.outputs[0];
+    let amount = output.payload.extract::<Coin<0>>()?.0;
+    print!(
+        "Minted {:?} worth {amount}. ",
+        hex::encode(minted_coin_ref.encode())
+    );
+    crate::pretty_print_verifier(&output.verifier);
 
     Ok(())
 }
