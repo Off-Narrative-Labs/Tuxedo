@@ -237,6 +237,9 @@
 <a href="#235" id="235">235</a>
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! APIs and utilities for working with Substrate's Inherents in Tuxedo based chains.
 //!
 //! # Substrate inherents
@@ -409,7 +412,7 @@
             <span class="macro">panic!</span>(<span class="string">"Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied."</span>)
         }
 
-        <span class="kw">let </span>previous_inherent = previous_inherents.get(<span class="number">0</span>).cloned();
+        <span class="kw">let </span>previous_inherent = previous_inherents.first().cloned();
 
         <span class="macro">vec!</span>[&lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::create_inherent(
             authoring_inherent_data,
@@ -438,7 +441,10 @@
                 .expect(<span class="string">"Should be able to put an error."</span>);
             <span class="kw">return</span>;
         }
-        <span class="kw">let </span>inherent = inherents.get(<span class="number">0</span>).expect(<span class="string">"Previous inherent exists."</span>).clone();
+        <span class="kw">let </span>inherent = inherents
+            .first()
+            .expect(<span class="string">"Previous inherent exists."</span>)
+            .clone();
         &lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::check_inherent(importing_inherent_data, inherent, results)
     }
 
