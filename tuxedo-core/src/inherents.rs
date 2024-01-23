@@ -170,7 +170,7 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
 
-        let previous_inherent = previous_inherents.get(0).cloned();
+        let previous_inherent = previous_inherents.first().cloned();
 
         vec![<T as TuxedoInherent<V, C>>::create_inherent(
             authoring_inherent_data,
@@ -199,7 +199,10 @@ impl<V: Verifier, C: ConstraintChecker<V>, T: TuxedoInherent<V, C> + 'static> In
                 .expect("Should be able to put an error.");
             return;
         }
-        let inherent = inherents.get(0).expect("Previous inherent exists.").clone();
+        let inherent = inherents
+            .first()
+            .expect("Previous inherent exists.")
+            .clone();
         <T as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)
     }
 
