@@ -1,6 +1,6 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{cli::SpendArgs, rpc::fetch_storage, sync};
+use crate::{cli::MintCoinArgs, cli::SpendArgs, rpc::fetch_storage, sync};
 
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
@@ -17,6 +17,47 @@ use tuxedo_core::{
     types::{Input, Output, OutputRef},
     verifier::Sr25519Signature,
 };
+
+/// Create and send a transaction that mints the coins on the network
+pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
+    log::debug!("The args are:: {:?}", args);
+
+    let transaction = Transaction {
+        inputs: Vec::new(),
+        peeks: Vec::new(),
+        outputs: vec![(
+            Coin::<0>::new(args.amount),
+            OuterVerifier::Sr25519Signature(Sr25519Signature {
+                owner_pubkey: args.owner,
+            }),
+        )
+            .into()],
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Mint),
+    };
+
+    let spawn_hex = hex::encode(transaction.encode());
+    let params = rpc_params![spawn_hex];
+    let _spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
+
+    log::info!(
+        "Node's response to mint-coin transaction: {:?}",
+        _spawn_response
+    );
+
+    let minted_coin_ref = OutputRef {
+        tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
+        index: 0,
+    };
+    let output = &transaction.outputs[0];
+    let amount = output.payload.extract::<Coin<0>>()?.0;
+    print!(
+        "Minted {:?} worth {amount}. ",
+        hex::encode(minted_coin_ref.encode())
+    );
+    crate::pretty_print_verifier(&output.verifier);
+
+    Ok(())
+}
 
 /// Create and send a transaction that spends coins on the network
 pub async fn spend_coins(
