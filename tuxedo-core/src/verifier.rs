@@ -16,12 +16,18 @@ use sp_std::collections::btree_set::BTreeSet;
 use sp_std::fmt::Debug;
 use sp_std::vec::Vec;
 
-/// A means of checking that an output can be verified (aka spent). This check is made on a
+/// A means of checking that an output can be spent. This check is made on a
 /// per-output basis and neither knows nor cares anything about the validation logic that will
 /// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
 /// we take the entire stripped and serialized transaction as a parameter.
+/// 
+/// Information available when verifying an input includes:
+/// * The simplified transaction - a stripped encoded version of the transaction
+/// * Some environmental information such as the block current block number
+/// * An encoded redeemer supplied by the user attempting to spend the input.
+///   The redeemer is opaque to the trait and must be interpreted by the implementation.
 pub trait Verifier: Debug + Encode + Decode + Clone {
-    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool;
+    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &[u8]) -> bool;
 }
 
 /// A typical verifier that checks an sr25519 signature
@@ -39,7 +45,7 @@ impl Sr25519Signature {
 }
 
 impl Verifier for Sr25519Signature {
-    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+    fn verify(&self, simplified_tx: &[u8], _: u32, redeemer: &[u8]) -> bool {
         let sig = match Signature::try_from(redeemer) {
             Ok(s) => s,
             Err(_) => return false,
@@ -56,7 +62,7 @@ impl Verifier for Sr25519Signature {
 pub struct UpForGrabs;
 
 impl Verifier for UpForGrabs {
-    fn verify(&self, _simplified_tx: &[u8], _redeemer: &[u8]) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], __: u32, redeemer: &[u8]) -> bool {
         true
     }
 }
@@ -100,7 +106,7 @@ pub struct SignatureAndIndex {
 }
 
 impl Verifier for ThresholdMultiSignature {
-    fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+    fn verify(&self, simplified_tx: &[u8], _: u32, redeemer: &[u8]) -> bool {
         if self.has_duplicate_signatories() {
             return false;
         }
@@ -157,8 +163,40 @@ pub struct BlakeTwoHashLock {
 }
 
 impl Verifier for BlakeTwoHashLock {
-    fn verify(&self, _: &[u8], redeemer: &[u8]) -> bool {
+    fn verify(&self, _: &[u8], _: u32, redeemer: &[u8]) -> bool {
         BlakeTwo256::hash(redeemer) == self.hash_lock
+    }
+}
+
+/// Allows UTXOs to be spent after a certain block height has been reached.
+/// This is useful for locking up tokens as a future investment. Timelocking
+/// also form the basis of timeout paths in swapping protocols.
+/// 
+/// This verifier is unlike many others because it requires some environmental information,
+/// namely the current block number. So there is a decision to be made:
+/// * Allow the verifier to take come config and grab that info by calling a function given in the config.
+///   This is what we do with constraint checker.
+/// * Modify the `Verifier` trait to pass along the block number.
+/// 
+/// On the one hand the block number seems like a pretty fundamental and basic thing to add. On the other
+/// hand there could be many more things to pass. For example, the timestamp.
+/// However any more complex information would require coupling with Constraint Checkers and it is not
+/// easy to red state like in accounts.
+/// 
+/// Decision: I will add block number to the signature. And remain open to adding more blockchain-level
+/// fundamental things. Especially if they are available in bitcoin script.
+/// 
+/// Regarding the verifier constraint checker separation, perhaps the right line to be drawn is
+/// that verifiers are useful in a lot of places, but perhaps not expressive enough in others.
+/// When they are not expressive enough, just use `UpForGrabs` and rely on the constraint checker,
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct TimeLock {
+    pub unlock_block_height: u32,
+}
+
+impl Verifier for TimeLock {
+    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &[u8]) -> bool {
+        block_height >= self.unlock_block_height
     }
 }
 
@@ -173,7 +211,7 @@ pub struct TestVerifier {
 
 #[cfg(feature = "std")]
 impl Verifier for TestVerifier {
-    fn verify(&self, _simplified_tx: &[u8], _redeemer: &[u8]) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], __: u32, redeemer: &[u8]) -> bool {
         self.verifies
     }
 }
@@ -201,7 +239,7 @@ mod test {
 
     #[test]
     fn up_for_grabs_always_verifies() {
-        assert!(UpForGrabs.verify(&[], &[]))
+        assert!(UpForGrabs.verify(&[], 0, &[]))
     }
 
     #[test]
@@ -215,7 +253,7 @@ mod test {
             owner_pubkey: pair.public().into(),
         };
 
-        assert!(sr25519_signature.verify(simplified_tx, redeemer));
+        assert!(sr25519_signature.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
@@ -241,7 +279,7 @@ mod test {
             signatories,
         };
 
-        assert!(threshold_multisig.verify(simplified_tx, redeemer));
+        assert!(threshold_multisig.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
@@ -268,7 +306,7 @@ mod test {
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, redeemer));
+        assert!(!threshold_multisig.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
@@ -294,7 +332,7 @@ mod test {
             signatories,
         };
 
-        assert!(threshold_multisig.verify(simplified_tx, redeemer));
+        assert!(threshold_multisig.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
@@ -323,7 +361,7 @@ mod test {
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, redeemer));
+        assert!(!threshold_multisig.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
@@ -351,7 +389,7 @@ mod test {
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, redeemer));
+        assert!(!threshold_multisig.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
@@ -365,7 +403,7 @@ mod test {
             signatories: vec![],
         };
 
-        assert!(!threshold_multisig.verify(b"bogus_message".as_slice(), bogus.encode().as_slice()))
+        assert!(!threshold_multisig.verify(b"bogus_message".as_slice(), 0, bogus.encode().as_slice()))
     }
 
     #[test]
@@ -377,18 +415,18 @@ mod test {
             owner_pubkey: H256::zero(),
         };
 
-        assert!(!sr25519_signature.verify(simplified_tx, redeemer));
+        assert!(!sr25519_signature.verify(simplified_tx, 0, redeemer));
     }
 
     #[test]
     fn test_verifier_passes() {
-        let result = TestVerifier { verifies: true }.verify(&[], &[]);
+        let result = TestVerifier { verifies: true }.verify(&[], 0, &[]);
         assert!(result);
     }
 
     #[test]
     fn test_verifier_fails() {
-        let result = TestVerifier { verifies: false }.verify(&[], &[]);
+        let result = TestVerifier { verifies: false }.verify(&[], 0, &[]);
         assert!(!result);
     }
 }
