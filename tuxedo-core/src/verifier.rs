@@ -20,7 +20,7 @@ use sp_std::vec::Vec;
 /// per-output basis and neither knows nor cares anything about the validation logic that will
 /// be applied to the transaction as a whole. Nonetheless, in order to avoid malleability, we
 /// we take the entire stripped and serialized transaction as a parameter.
-/// 
+///
 /// Information available when verifying an input includes:
 /// * The simplified transaction - a stripped encoded version of the transaction
 /// * Some environmental information such as the block current block number
@@ -171,21 +171,21 @@ impl Verifier for BlakeTwoHashLock {
 /// Allows UTXOs to be spent after a certain block height has been reached.
 /// This is useful for locking up tokens as a future investment. Timelocking
 /// also form the basis of timeout paths in swapping protocols.
-/// 
+///
 /// This verifier is unlike many others because it requires some environmental information,
 /// namely the current block number. So there is a decision to be made:
 /// * Allow the verifier to take come config and grab that info by calling a function given in the config.
 ///   This is what we do with constraint checker.
 /// * Modify the `Verifier` trait to pass along the block number.
-/// 
+///
 /// On the one hand the block number seems like a pretty fundamental and basic thing to add. On the other
 /// hand there could be many more things to pass. For example, the timestamp.
 /// However any more complex information would require coupling with Constraint Checkers and it is not
 /// easy to red state like in accounts.
-/// 
+///
 /// Decision: I will add block number to the signature. And remain open to adding more blockchain-level
 /// fundamental things. Especially if they are available in bitcoin script.
-/// 
+///
 /// Regarding the verifier constraint checker separation, perhaps the right line to be drawn is
 /// that verifiers are useful in a lot of places, but perhaps not expressive enough in others.
 /// When they are not expressive enough, just use `UpForGrabs` and rely on the constraint checker,
@@ -403,7 +403,11 @@ mod test {
             signatories: vec![],
         };
 
-        assert!(!threshold_multisig.verify(b"bogus_message".as_slice(), 0, bogus.encode().as_slice()))
+        assert!(!threshold_multisig.verify(
+            b"bogus_message".as_slice(),
+            0,
+            bogus.encode().as_slice()
+        ))
     }
 
     #[test]
