@@ -99,11 +99,11 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
     }
 }
 
-// We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
-// See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
+// We must implement this Extrinsic trait to use our Transaction type as the Block's associated Extrinsic type.
+// See https://paritytech.github.io/polkadot-sdk/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
 //
 // This trait's design has a preference for transactions that will have a single signature over the
-// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
+// entire transaction, so it is not very useful for us. We still need to implement it to satisfy the bound,
 // so we do a minimal implementation.
 impl<V, C> Extrinsic for Transaction<V, C>
 where
