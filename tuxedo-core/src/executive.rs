@@ -35,8 +35,12 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker<V>>
-    Executive<B, V, C>
+impl<B, V, C> Executive<B, V, C>
+where
+    B: BlockT<Extrinsic = Transaction<V, C>>,
+    B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
+    V: Verifier,
+    C: ConstraintChecker<V>,
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
@@ -78,7 +82,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
                 ensure!(
                     input_utxo
                         .verifier
-                        .verify(&stripped_encoded, &input.redeemer),
+                        .verify(&stripped_encoded, Self::block_height(), &input.redeemer),
                     UtxoError::VerifierError
                 );
                 input_utxos.push(input_utxo);
