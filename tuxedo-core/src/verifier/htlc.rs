@@ -46,9 +46,23 @@ impl Verifier for TimeLock {
 mod test {
     use super::*;
 
-    // Time lock too soon
-    // Timelock exactly equal to threshold
-    // Timelock past threshold
+    #[test]
+    fn time_lock_too_soon() {
+        let time_lock = TimeLock { unlock_block_height: 100 };
+        assert!(!time_lock.verify(&[], 10, &[]));
+    }
+
+    #[test]
+    fn time_lock_exactly_on_time() {
+        let time_lock = TimeLock { unlock_block_height: 100 };
+        assert!(time_lock.verify(&[], 100, &[]));
+    }
+
+    #[test]
+    fn time_lock_past_threshold() {
+        let time_lock = TimeLock { unlock_block_height: 100 };
+        assert!(time_lock.verify(&[], 200, &[]));
+    }
 
     // Hashlock wrong secret
     // Hashlock right secret
