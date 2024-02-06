@@ -16,6 +16,7 @@ mod simple_signature;
 
 pub use multi_signature::ThresholdMultiSignature;
 pub use simple_signature::Sr25519Signature;
+pub use htlc::{TimeLock, BlakeTwoHashLock};
 
 /// A means of checking that an output can be spent. This check is made on a
 /// per-output basis and neither knows nor cares anything about the validation logic that will
