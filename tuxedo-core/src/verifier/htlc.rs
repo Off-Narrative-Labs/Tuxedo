@@ -37,7 +37,7 @@ pub struct TimeLock {
 }
 
 impl Verifier for TimeLock {
-    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &[u8]) -> bool {
+    fn verify(&self, _: &[u8], block_height: u32, _: &[u8]) -> bool {
         block_height >= self.unlock_block_height
     }
 }
