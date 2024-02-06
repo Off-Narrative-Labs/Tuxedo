@@ -84,10 +84,10 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
         #original_code
 
         impl tuxedo_core::Verifier for #outer_type {
-            fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+            fn verify(&self, simplified_tx: &[u8], block_number: u32, redeemer: &[u8]) -> bool {
                 match self {
                     #(
-                        Self::#variants(inner) => inner.verify(simplified_tx, redeemer),
+                        Self::#variants(inner) => inner.verify(simplified_tx, block_number, redeemer),
                     )*
                 }
             }
