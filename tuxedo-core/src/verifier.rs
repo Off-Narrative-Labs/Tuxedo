@@ -40,7 +40,7 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 pub struct UpForGrabs;
 
 impl Verifier for UpForGrabs {
-    fn verify(&self, _simplified_tx: &[u8], __: u32, redeemer: &[u8]) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
         true
     }
 }
@@ -55,7 +55,7 @@ impl Verifier for UpForGrabs {
 pub struct Unspendable;
 
 impl Verifier for Unspendable {
-    fn verify(&self, _simplified_tx: &[u8], __: u32, redeemer: &[u8]) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
         false
     }
 }
@@ -85,7 +85,7 @@ pub struct TestVerifier {
 
 #[cfg(feature = "std")]
 impl Verifier for TestVerifier {
-    fn verify(&self, _simplified_tx: &[u8], __: u32, redeemer: &[u8]) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
         self.verifies
     }
 }
