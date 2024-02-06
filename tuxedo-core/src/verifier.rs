@@ -8,8 +8,6 @@
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_core::H256;
-use sp_runtime::traits::{BlakeTwo256, Hash};
 use sp_std::fmt::Debug;
 
 mod htlc;
@@ -57,20 +55,6 @@ pub struct Unspendable;
 impl Verifier for Unspendable {
     fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
         false
-    }
-}
-
-/// Allows UTXOs to be spent when a preimage to a recorded hash is provided.
-/// This could be used as a puzzle (although a partial preimage search would be better)
-/// or a means of sharing a password, or as part of a simple atomic swapping protocol.
-#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct BlakeTwoHashLock {
-    pub hash_lock: H256,
-}
-
-impl Verifier for BlakeTwoHashLock {
-    fn verify(&self, _: &[u8], _: u32, redeemer: &[u8]) -> bool {
-        BlakeTwo256::hash(redeemer) == self.hash_lock
     }
 }
 

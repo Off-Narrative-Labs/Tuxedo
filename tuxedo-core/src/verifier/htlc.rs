@@ -9,6 +9,8 @@ use super::Verifier;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
+use sp_core::H256;
+use sp_runtime::traits::{BlakeTwo256, Hash};
 
 /// Allows UTXOs to be spent after a certain block height has been reached.
 /// This is useful for locking up tokens as a future investment. Timelocking
@@ -42,6 +44,28 @@ impl Verifier for TimeLock {
     }
 }
 
+/// Allows UTXOs to be spent when a preimage to a recorded hash is provided.
+/// This could be used as a puzzle (although a partial preimage search would be better)
+/// or a means of sharing a password, or as part of a simple atomic swapping protocol.
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct BlakeTwoHashLock {
+    pub hash_lock: H256,
+}
+
+impl BlakeTwoHashLock {
+    pub fn new_from_secret<T: Encode>(secret: T) -> Self {
+        Self {
+            hash_lock: BlakeTwo256::hash(&secret.encode()),
+        }
+    }
+}
+
+impl Verifier for BlakeTwoHashLock {
+    fn verify(&self, _: &[u8], _: u32, redeemer: &[u8]) -> bool {
+        BlakeTwo256::hash(redeemer) == self.hash_lock
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -66,5 +90,13 @@ mod test {
 
     // Hashlock wrong secret
     // Hashlock right secret
+    #[test]
+    fn hash_lock_wrong_secret() {
+        let secret = "htlc ftw";
+        let incorrect = "there is no second best";
+
+        let hash_lock = BlakeTwoHashLock::new_from_secret(secret);
+        assert!(!hash_lock.verify(&[], 0, &incorrect.encode()));
+    }
 
 }
