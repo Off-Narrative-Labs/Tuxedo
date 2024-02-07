@@ -88,8 +88,14 @@ mod test {
         assert!(time_lock.verify(&[], 200, &[]));
     }
 
-    // Hashlock wrong secret
-    // Hashlock right secret
+    #[test]
+    fn hash_lock_correct_secret() {
+        let secret = "htlc ftw";
+
+        let hash_lock = BlakeTwoHashLock::new_from_secret(secret);
+        assert!(hash_lock.verify(&[], 0, &secret.encode()));
+    }
+
     #[test]
     fn hash_lock_wrong_secret() {
         let secret = "htlc ftw";
