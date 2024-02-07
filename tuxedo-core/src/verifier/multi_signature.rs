@@ -5,12 +5,14 @@
 /// guarded by this verifier. A valid redeemer must supply valid signatures by at least
 /// `threshold` of the signatories. If the threshold is greater than the number of signatories
 /// the input can never be consumed.
-
 use super::Verifier;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_core::{H256, sr25519::{Public, Signature}};
+use sp_core::{
+    sr25519::{Public, Signature},
+    H256,
+};
 use sp_std::collections::{btree_map::BTreeMap, btree_set::BTreeSet};
 
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]

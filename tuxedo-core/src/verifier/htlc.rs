@@ -1,6 +1,6 @@
 //! This module contains `Verifier` implementations related to Hash Time Lock Contracts.
 //! It contains a simple hash lock, a simple time lock, and a hash time lock.
-//! 
+//!
 //! These could be used as the base of an atomic swap protocol with a similarly expressive
 //! utxo chain like Bitcoin. For atomic swaps with less expressive counter party chains,
 //! such as Monero, see the Farcaster protocol.
@@ -72,19 +72,25 @@ mod test {
 
     #[test]
     fn time_lock_too_soon() {
-        let time_lock = TimeLock { unlock_block_height: 100 };
+        let time_lock = TimeLock {
+            unlock_block_height: 100,
+        };
         assert!(!time_lock.verify(&[], 10, &[]));
     }
 
     #[test]
     fn time_lock_exactly_on_time() {
-        let time_lock = TimeLock { unlock_block_height: 100 };
+        let time_lock = TimeLock {
+            unlock_block_height: 100,
+        };
         assert!(time_lock.verify(&[], 100, &[]));
     }
 
     #[test]
     fn time_lock_past_threshold() {
-        let time_lock = TimeLock { unlock_block_height: 100 };
+        let time_lock = TimeLock {
+            unlock_block_height: 100,
+        };
         assert!(time_lock.verify(&[], 200, &[]));
     }
 
@@ -104,5 +110,4 @@ mod test {
         let hash_lock = BlakeTwoHashLock::new_from_secret(secret);
         assert!(!hash_lock.verify(&[], 0, &incorrect.encode()));
     }
-
 }
