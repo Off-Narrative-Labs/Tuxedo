@@ -14,9 +14,9 @@ mod htlc;
 mod multi_signature;
 mod simple_signature;
 
+pub use htlc::{BlakeTwoHashLock, TimeLock};
 pub use multi_signature::ThresholdMultiSignature;
-pub use simple_signature::Sr25519Signature;
-pub use htlc::{TimeLock, BlakeTwoHashLock};
+pub use simple_signature::{Sr25519Signature, Sr25519P2PKH};
 
 /// A means of checking that an output can be spent. This check is made on a
 /// per-output basis and neither knows nor cares anything about the validation logic that will
@@ -45,7 +45,7 @@ impl Verifier for UpForGrabs {
 }
 
 /// A simple verifier that allows no one to consume an output ever.
-/// 
+///
 /// This is useful for UTXOs that are expected to only ever be consumed by evictions,
 /// such as inherents for example.
 #[derive(
