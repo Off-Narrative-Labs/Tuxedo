@@ -13,7 +13,10 @@ use sp_core::{
     sr25519::{Public, Signature},
     H256,
 };
-use sp_std::collections::{btree_map::BTreeMap, btree_set::BTreeSet};
+use sp_std::{
+    collections::{btree_map::BTreeMap, btree_set::BTreeSet},
+    vec::Vec,
+};
 
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct ThresholdMultiSignature {
