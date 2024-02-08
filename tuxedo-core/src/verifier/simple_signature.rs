@@ -77,6 +77,13 @@ mod test {
     use super::*;
     use sp_core::{crypto::Pair as _, sr25519::Pair};
 
+    fn bad_sig() -> Signature {
+        Signature::from_slice(
+            b"bogus_signature_bogus_signature_bogus_signature_bogus_signature!".as_slice(),
+        )
+        .expect("Should be able to create a bogus signature.")
+    }
+
     #[test]
     fn sr25519_signature_with_good_sig() {
         let pair = Pair::from_seed(&[0u8; 32]);
@@ -93,16 +100,11 @@ mod test {
     #[test]
     fn sr25519_signature_with_bad_sig() {
         let simplified_tx = b"hello world".as_slice();
-        let bad_sig = Signature::from_slice(
-            b"bogus_signature_bogus_signature_bogus_signature_bogus_signature!".as_slice(),
-        )
-        .expect("Should be able to create a bogus signature.");
-
         let sr25519_signature = Sr25519Signature {
             owner_pubkey: H256::zero(),
         };
 
-        assert!(!sr25519_signature.verify(simplified_tx, 0, &bad_sig));
+        assert!(!sr25519_signature.verify(simplified_tx, 0, &bad_sig()));
     }
 
     #[test]
@@ -117,7 +119,41 @@ mod test {
         assert!(p2pkh.verify(simplified_tx, 0, &(pair.public(), sig)));
     }
 
-    // Correct pubkey but bad sig
-    // Incorrect pubkey with valid sig (from provided pubkey)
-    // Incorrect pubkey and bogus sig
+    #[test]
+    fn p2pkh_correct_pubkey_bad_sig() {
+        let pair = Pair::from_seed(&[0u8; 32]);
+        let owner_pubkey_hash = BlakeTwo256::hash(&pair.public());
+        let simplified_tx = b"hello world".as_slice();
+
+        let p2pkh = P2PKH { owner_pubkey_hash };
+
+        assert!(!p2pkh.verify(simplified_tx, 0, &(pair.public(), bad_sig())));
+    }
+
+    #[test]
+    fn p2pkh_incorrect_pubkey_but_valid_sig_from_provided_pubkey() {
+        let owner_pair = Pair::from_seed(&[0u8; 32]);
+        let owner_pubkey_hash = BlakeTwo256::hash(&owner_pair.public());
+        let simplified_tx = b"hello world".as_slice();
+
+        let p2pkh = P2PKH { owner_pubkey_hash };
+
+        let attacker_pair = Pair::from_seed(&[1u8; 32]);
+        let attacker_sig = attacker_pair.sign(simplified_tx);
+
+        assert!(!p2pkh.verify(simplified_tx, 0, &(attacker_pair.public(), attacker_sig)));
+    }
+
+    #[test]
+    fn p2pkh_incorrect_pubkey_and_bogus_sig() {
+        let owner_pair = Pair::from_seed(&[0u8; 32]);
+        let owner_pubkey_hash = BlakeTwo256::hash(&owner_pair.public());
+        let simplified_tx = b"hello world".as_slice();
+
+        let p2pkh = P2PKH { owner_pubkey_hash };
+
+        let attacker_pair = Pair::from_seed(&[1u8; 32]);
+
+        assert!(!p2pkh.verify(simplified_tx, 0, &(attacker_pair.public(), bad_sig())));
+    }
 }
