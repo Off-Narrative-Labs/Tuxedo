@@ -86,11 +86,11 @@ pub struct HashTimeLockContract {
     /// The hash whose preimage must be revealed (along with the recipient's signature) to spend the UTXO.
     pub hash_lock: H256,
     /// The pubkey that is intended to receive and acknowledge receipt of the funds.
-    pub recipient_pubkey: H256,
+    pub recipient_pubkey: Public,
     /// The time (as a block height) when the refund path opens up.
     pub claim_period_end: u32,
     /// The address who can spend the coins without revealing the preimage after the claim period has ended.
-    pub refunder_pubkey: H256,
+    pub refunder_pubkey: Public,
 }
 
 ///
@@ -112,11 +112,11 @@ impl Verifier for HashTimeLockContract {
         match spend_path {
             HtlcSpendPath::Claim { secret, signature } => {
                 // Claims are valid as long as the secret is correct and the receiver signature is correct.
-                BlakeTwo256::hash(&secret) == self.hash_lock
+                BlakeTwo256::hash(secret) == self.hash_lock
                     && sp_io::crypto::sr25519_verify(
-                        &signature,
+                        signature,
                         simplified_tx,
-                        &Public::from_h256(self.recipient_pubkey),
+                        &self.recipient_pubkey,
                     )
             }
             HtlcSpendPath::Refund { signature } => {
@@ -127,9 +127,9 @@ impl Verifier for HashTimeLockContract {
 
                 // Check that the refunder has signed properly
                 sp_io::crypto::sr25519_verify(
-                    &signature,
+                    signature,
                     simplified_tx,
-                    &Public::from_h256(self.refunder_pubkey),
+                    &self.refunder_pubkey,
                 )
             }
         }
@@ -138,6 +138,8 @@ impl Verifier for HashTimeLockContract {
 
 #[cfg(test)]
 mod test {
+    use sp_core::{sr25519::Pair, Pair as _};
+
     use super::*;
 
     #[test]
@@ -181,9 +183,26 @@ mod test {
         assert!(!hash_lock.verify(&[], 0, &incorrect.encode()));
     }
 
-    //TODO HTLC Tests
+    #[test]
+    fn htlc_claim_success() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[0u8; 32]);
 
-    // Spend Success
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let recipient_sig = recipient_pair.sign(simplified_tx);
+        let redeemer = HtlcSpendPath::Claim { secret, signature: recipient_sig };
+
+        assert!(htlc.verify(&simplified_tx, 0, &redeemer));
+    }
     // Spend wrong secret
     // Spend bogus sig
     // Spend but sig is from refunder instead of recipient
