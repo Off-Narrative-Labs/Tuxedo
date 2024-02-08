@@ -22,6 +22,7 @@ use sp_core::{
     sr25519::{Public, Signature},
     H256,
 };
+use sp_runtime::traits::{BlakeTwo256, Hash};
 
 /// Require a signature from the private key corresponding to the given public key.
 /// This is the simplest way to require a signature. If you prefer not to expose the
@@ -56,19 +57,18 @@ impl Verifier for Sr25519Signature {
 /// This is the most common way to represent private ownership in UTXO networks like Bitcoin.
 /// It is more complex than providing the public key directly but does not reveal the public key until spend time.
 ///
-/// Uses the Sr25519 signature scheme and Substrate's host functions.
+/// Uses the Sr25519 signature scheme and BlakeTwo256 hashing algorithm via Substrate's host functions.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct Sr25519P2PKH {
+pub struct P2PKH {
     pub owner_pubkey_hash: H256,
 }
 
-impl Verifier for Sr25519P2PKH {
+impl Verifier for P2PKH {
     type Redeemer = (Public, Signature);
 
     fn verify(&self, simplified_tx: &[u8], _: u32, (pubkey, signature): &Self::Redeemer) -> bool {
-        // Check that the hash stored matches the pubkey given.
-        // Check that the signature given is valid over the tx from the pubkey given.
-        todo!()
+        BlakeTwo256::hash(pubkey) == self.owner_pubkey_hash
+            && sp_io::crypto::sr25519_verify(signature, simplified_tx, pubkey)
     }
 }
 
@@ -104,4 +104,10 @@ mod test {
 
         assert!(!sr25519_signature.verify(simplified_tx, 0, &bad_sig));
     }
+
+    // TODO P2PKH Tests
+    // Happy path
+    // Correct pubkey but bad sig
+    // Incorrect pubkey with valid sig (from provided pubkey)
+    // Incorrect pubkey and bogus sig
 }
