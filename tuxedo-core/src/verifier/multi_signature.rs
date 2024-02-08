@@ -50,15 +50,12 @@ pub struct SignatureAndIndex {
 }
 
 impl Verifier for ThresholdMultiSignature {
-    fn verify(&self, simplified_tx: &[u8], _: u32, redeemer: &[u8]) -> bool {
+    type Redeemer = Vec<SignatureAndIndex>;
+
+    fn verify(&self, simplified_tx: &[u8], _: u32, sigs: &Vec<SignatureAndIndex>) -> bool {
         if self.has_duplicate_signatories() {
             return false;
         }
-
-        let sigs = match Vec::<SignatureAndIndex>::decode(&mut &redeemer[..]) {
-            Ok(s) => s,
-            Err(_) => return false,
-        };
 
         if sigs.len() < self.threshold.into() {
             return false;
@@ -121,13 +118,12 @@ mod test {
             })
             .collect();
 
-        let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
             threshold,
             signatories,
         };
 
-        assert!(threshold_multisig.verify(simplified_tx, 0, redeemer));
+        assert!(threshold_multisig.verify(simplified_tx, 0, &sigs));
     }
 
     #[test]
@@ -148,13 +144,12 @@ mod test {
             })
             .collect();
 
-        let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
             threshold,
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, 0, redeemer));
+        assert!(!threshold_multisig.verify(simplified_tx, 0, &sigs));
     }
 
     #[test]
@@ -174,13 +169,12 @@ mod test {
             })
             .collect();
 
-        let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
             threshold,
             signatories,
         };
 
-        assert!(threshold_multisig.verify(simplified_tx, 0, redeemer));
+        assert!(threshold_multisig.verify(simplified_tx, 0, &sigs));
     }
 
     #[test]
@@ -203,13 +197,12 @@ mod test {
             },
         ];
 
-        let redeemer: &[u8] = &sigs.encode()[..];
         let threshold_multisig = ThresholdMultiSignature {
             threshold,
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, 0, redeemer));
+        assert!(!threshold_multisig.verify(simplified_tx, 0, &sigs));
     }
 
     #[test]
@@ -230,31 +223,12 @@ mod test {
                 index: i.try_into().unwrap(),
             })
             .collect();
-        let redeemer: &[u8] = &sigs.encode()[..];
 
         let threshold_multisig = ThresholdMultiSignature {
             threshold,
             signatories,
         };
 
-        assert!(!threshold_multisig.verify(simplified_tx, 0, redeemer));
-    }
-
-    #[test]
-    fn threshold_multisig_bogus_redeemer_encoding_fails() {
-        use crate::dynamic_typing::testing::Bogus;
-
-        let bogus = Bogus;
-
-        let threshold_multisig = ThresholdMultiSignature {
-            threshold: 3,
-            signatories: vec![],
-        };
-
-        assert!(!threshold_multisig.verify(
-            b"bogus_message".as_slice(),
-            0,
-            bogus.encode().as_slice()
-        ))
+        assert!(!threshold_multisig.verify(simplified_tx, 0, &sigs));
     }
 }

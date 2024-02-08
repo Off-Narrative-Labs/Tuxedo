@@ -43,13 +43,10 @@ impl Sr25519Signature {
 }
 
 impl Verifier for Sr25519Signature {
-    fn verify(&self, simplified_tx: &[u8], _: u32, redeemer: &[u8]) -> bool {
-        let sig = match Signature::try_from(redeemer) {
-            Ok(s) => s,
-            Err(_) => return false,
-        };
+    type Redeemer = Signature;
 
-        sp_io::crypto::sr25519_verify(&sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
+    fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Signature) -> bool {
+        sp_io::crypto::sr25519_verify(sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
     }
 }
 
@@ -66,9 +63,9 @@ pub struct Sr25519P2PKH {
 }
 
 impl Verifier for Sr25519P2PKH {
-    fn verify(&self, simplified_tx: &[u8], _: u32, redeemer: &[u8]) -> bool {
-        //TODO verifier trait should have associated type for decoding the redeemer. Otherwise each and every redeemer impl has to do it.
-        // Decode the redeemer and expect to find both a pubkey and a signature.
+    type Redeemer = (Public, Signature);
+
+    fn verify(&self, simplified_tx: &[u8], _: u32, (pubkey, signature): &Self::Redeemer) -> bool {
         // Check that the hash stored matches the pubkey given.
         // Check that the signature given is valid over the tx from the pubkey given.
         todo!()
@@ -85,24 +82,26 @@ mod test {
         let pair = Pair::from_seed(&[0u8; 32]);
         let simplified_tx = b"hello world".as_slice();
         let sig = pair.sign(simplified_tx);
-        let redeemer: &[u8] = sig.as_ref();
 
         let sr25519_signature = Sr25519Signature {
             owner_pubkey: pair.public().into(),
         };
 
-        assert!(sr25519_signature.verify(simplified_tx, 0, redeemer));
+        assert!(sr25519_signature.verify(simplified_tx, 0, &sig));
     }
 
     #[test]
     fn sr25519_signature_with_bad_sig() {
         let simplified_tx = b"hello world".as_slice();
-        let redeemer = b"bogus_signature".as_slice();
+        let bad_sig = Signature::from_slice(
+            b"bogus_signature_bogus_signature_bogus_signature_bogus_signature!".as_slice(),
+        )
+        .expect("Should be able to create a bogus signature.");
 
         let sr25519_signature = Sr25519Signature {
             owner_pubkey: H256::zero(),
         };
 
-        assert!(!sr25519_signature.verify(simplified_tx, 0, redeemer));
+        assert!(!sr25519_signature.verify(simplified_tx, 0, &bad_sig));
     }
 }

@@ -29,7 +29,11 @@ pub use simple_signature::{Sr25519P2PKH, Sr25519Signature};
 /// * An encoded redeemer supplied by the user attempting to spend the input.
 ///   The redeemer is opaque to the trait and must be interpreted by the implementation.
 pub trait Verifier: Debug + Encode + Decode + Clone {
-    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &[u8]) -> bool;
+    /// The type that will be supplied to satisfy the verifier and redeem the UTXO.
+    type Redeemer: Decode;
+
+    /// Main function in the trait. Does the checks to make sure an output can be spent.
+    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &Self::Redeemer) -> bool;
 }
 
 /// A simple verifier that allows anyone to consume an output at any time
@@ -39,7 +43,9 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 pub struct UpForGrabs;
 
 impl Verifier for UpForGrabs {
-    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
+    type Redeemer = ();
+
+    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &()) -> bool {
         true
     }
 }
@@ -54,11 +60,15 @@ impl Verifier for UpForGrabs {
 pub struct Unspendable;
 
 impl Verifier for Unspendable {
-    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
+    type Redeemer = ();
+
+    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &()) -> bool {
         false
     }
 }
 
+// Idea: It could be useful to allow delay deciding whether the redemption should succeed
+//       until spend-time. In that case you could pass it in as a verifier.
 /// A testing verifier that passes or depending on the enclosed
 /// boolean value.
 #[cfg(feature = "std")]
@@ -70,7 +80,9 @@ pub struct TestVerifier {
 
 #[cfg(feature = "std")]
 impl Verifier for TestVerifier {
-    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &[u8]) -> bool {
+    type Redeemer = ();
+
+    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &()) -> bool {
         self.verifies
     }
 }
@@ -98,18 +110,18 @@ mod test {
 
     #[test]
     fn up_for_grabs_always_verifies() {
-        assert!(UpForGrabs.verify(&[], 0, &[]))
+        assert!(UpForGrabs.verify(&[], 0, &()))
     }
 
     #[test]
     fn test_verifier_passes() {
-        let result = TestVerifier { verifies: true }.verify(&[], 0, &[]);
+        let result = TestVerifier { verifies: true }.verify(&[], 0, &());
         assert!(result);
     }
 
     #[test]
     fn test_verifier_fails() {
-        let result = TestVerifier { verifies: false }.verify(&[], 0, &[]);
+        let result = TestVerifier { verifies: false }.verify(&[], 0, &());
         assert!(!result);
     }
 }

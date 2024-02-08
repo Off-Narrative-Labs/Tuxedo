@@ -79,12 +79,12 @@ where
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
+                let redeemer = V::Redeemer::decode(&mut &input.redeemer[..])
+                    .map_err(|_| UtxoError::VerifierError)?;
                 ensure!(
-                    input_utxo.verifier.verify(
-                        &stripped_encoded,
-                        Self::block_height(),
-                        &input.redeemer
-                    ),
+                    input_utxo
+                        .verifier
+                        .verify(&stripped_encoded, Self::block_height(), &redeemer),
                     UtxoError::VerifierError
                 );
                 input_utxos.push(input_utxo);

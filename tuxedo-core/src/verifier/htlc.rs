@@ -42,7 +42,8 @@ pub struct TimeLock {
 }
 
 impl Verifier for TimeLock {
-    fn verify(&self, _: &[u8], block_height: u32, _: &[u8]) -> bool {
+    type Redeemer = ();
+    fn verify(&self, _: &[u8], block_height: u32, _: &()) -> bool {
         block_height >= self.unlock_block_height
     }
 }
@@ -64,8 +65,9 @@ impl BlakeTwoHashLock {
 }
 
 impl Verifier for BlakeTwoHashLock {
-    fn verify(&self, _: &[u8], _: u32, redeemer: &[u8]) -> bool {
-        BlakeTwo256::hash(redeemer) == self.hash_lock
+    type Redeemer = Vec<u8>;
+    fn verify(&self, _: &[u8], _: u32, secret: &Self::Redeemer) -> bool {
+        BlakeTwo256::hash(secret) == self.hash_lock
     }
 }
 
@@ -104,11 +106,9 @@ pub enum HtlcSpendPath {
 }
 
 impl Verifier for HashTimeLockContract {
-    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &[u8]) -> bool {
-        let Ok(spend_path) = HtlcSpendPath::decode(&mut &redeemer[..]) else {
-            return false;
-        };
+    type Redeemer = HtlcSpendPath;
 
+    fn verify(&self, simplified_tx: &[u8], block_height: u32, spend_path: &HtlcSpendPath) -> bool {
         match spend_path {
             HtlcSpendPath::Claim { secret, signature } => {
                 // Claims are valid as long as the secret is correct and the receiver signature is correct.
@@ -145,7 +145,7 @@ mod test {
         let time_lock = TimeLock {
             unlock_block_height: 100,
         };
-        assert!(!time_lock.verify(&[], 10, &[]));
+        assert!(!time_lock.verify(&[], 10, &()));
     }
 
     #[test]
@@ -153,7 +153,7 @@ mod test {
         let time_lock = TimeLock {
             unlock_block_height: 100,
         };
-        assert!(time_lock.verify(&[], 100, &[]));
+        assert!(time_lock.verify(&[], 100, &()));
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod test {
         let time_lock = TimeLock {
             unlock_block_height: 100,
         };
-        assert!(time_lock.verify(&[], 200, &[]));
+        assert!(time_lock.verify(&[], 200, &()));
     }
 
     #[test]
