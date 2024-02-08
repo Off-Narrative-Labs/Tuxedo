@@ -14,6 +14,7 @@ use sp_core::{
     H256,
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
+use sp_std::vec::Vec;
 
 /// Allows UTXOs to be spent after a certain block height has been reached.
 /// This is useful for locking up tokens as a future investment. Timelocking
