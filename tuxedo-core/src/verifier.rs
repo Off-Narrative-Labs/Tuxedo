@@ -45,7 +45,7 @@ pub struct UpForGrabs;
 impl Verifier for UpForGrabs {
     type Redeemer = ();
 
-    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &()) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], _: u32, _: &()) -> bool {
         true
     }
 }
@@ -62,7 +62,7 @@ pub struct Unspendable;
 impl Verifier for Unspendable {
     type Redeemer = ();
 
-    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &()) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], _: u32, _: &()) -> bool {
         false
     }
 }
@@ -82,7 +82,7 @@ pub struct TestVerifier {
 impl Verifier for TestVerifier {
     type Redeemer = ();
 
-    fn verify(&self, _simplified_tx: &[u8], __: u32, _: &()) -> bool {
+    fn verify(&self, _simplified_tx: &[u8], _: u32, _: &()) -> bool {
         self.verifies
     }
 }
