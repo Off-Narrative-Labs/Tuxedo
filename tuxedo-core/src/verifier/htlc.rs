@@ -9,7 +9,10 @@ use super::Verifier;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_core::H256;
+use sp_core::{
+    sr25519::{Public, Signature},
+    H256,
+};
 use sp_runtime::traits::{BlakeTwo256, Hash};
 
 /// Allows UTXOs to be spent after a certain block height has been reached.
@@ -66,6 +69,73 @@ impl Verifier for BlakeTwoHashLock {
     }
 }
 
+/// Allows a UTXO to be spent, and therefore acknowledged by an intended recipient by revealing
+/// a hash preimage. After an initial claim period elapses on chain, the UTXO can also be spent
+/// by the refunder. In practice, the refunder is often the same address initially funded the HTLC.
+///
+/// The receiver and refunder are specified as a simple public keys for simplicity. It would be
+/// interesting to use public key hash, or better yet, simply abstract this over some opaque
+/// inner verifier for maximum composability.
+///
+/// @lederstrumpf when the time expires, is the primary "happy" path supposed to remain open?
+/// Or is it that if the swap hasn't started on time, the refund is the only option.
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct HashTimeLockContract {
+    /// The hash whose preimage must be revealed (along with the recipient's signature) to spend the UTXO.
+    pub hash_lock: H256,
+    /// The pubkey that is intended to receive and acknowledge receipt of the funds.
+    pub recipient_pubkey: H256,
+    /// The time (as a block height) when the refund path opens up.
+    pub claim_period_end: u32,
+    /// The address who can spend the coins without revealing the preimage after the claim period has ended.
+    pub refunder_pubkey: H256,
+}
+
+///
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub enum HtlcSpendPath {
+    ///
+    Claim {
+        secret: Vec<u8>,
+        signature: Signature,
+    },
+    ///
+    Refund { signature: Signature },
+}
+
+impl Verifier for HashTimeLockContract {
+    fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &[u8]) -> bool {
+        let Ok(spend_path) = HtlcSpendPath::decode(&mut &redeemer[..]) else {
+            return false;
+        };
+
+        match spend_path {
+            HtlcSpendPath::Claim { secret, signature } => {
+                // Claims are valid as long as the secret is correct and the receiver signature is correct.
+                BlakeTwo256::hash(&secret) == self.hash_lock
+                    && sp_io::crypto::sr25519_verify(
+                        &signature,
+                        simplified_tx,
+                        &Public::from_h256(self.recipient_pubkey),
+                    )
+            }
+            HtlcSpendPath::Refund { signature } => {
+                // Check that the time has elapsed
+                block_height >= self.claim_period_end
+
+                &&
+
+                // Check that the refunder has signed properly
+                sp_io::crypto::sr25519_verify(
+                    &signature,
+                    simplified_tx,
+                    &Public::from_h256(self.refunder_pubkey),
+                )
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -110,4 +180,15 @@ mod test {
         let hash_lock = BlakeTwoHashLock::new_from_secret(secret);
         assert!(!hash_lock.verify(&[], 0, &incorrect.encode()));
     }
+
+    //TODO HTLC Tests
+
+    // Spend Success
+    // Spend wrong secret
+    // Spend bogus sig
+    // Spend but sig is from refunder instead of recipient
+    // Refund Success
+    // Refund too early
+    // Refund bogus sig
+    // Refund but sig is from recipient instead of refunder
 }
