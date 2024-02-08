@@ -105,8 +105,18 @@ mod test {
         assert!(!sr25519_signature.verify(simplified_tx, 0, &bad_sig));
     }
 
-    // TODO P2PKH Tests
-    // Happy path
+    #[test]
+    fn p2pkh_success() {
+        let pair = Pair::from_seed(&[0u8; 32]);
+        let owner_pubkey_hash = BlakeTwo256::hash(&pair.public());
+        let simplified_tx = b"hello world".as_slice();
+        let sig = pair.sign(simplified_tx);
+
+        let p2pkh = P2PKH { owner_pubkey_hash };
+
+        assert!(p2pkh.verify(simplified_tx, 0, &(pair.public(), sig)));
+    }
+
     // Correct pubkey but bad sig
     // Incorrect pubkey with valid sig (from provided pubkey)
     // Incorrect pubkey and bogus sig
