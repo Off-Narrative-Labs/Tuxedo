@@ -199,7 +199,10 @@ mod test {
 
         let simplified_tx = b"hello world".as_slice();
         let recipient_sig = recipient_pair.sign(simplified_tx);
-        let redeemer = HtlcSpendPath::Claim { secret, signature: recipient_sig };
+        let redeemer = HtlcSpendPath::Claim {
+            secret,
+            signature: recipient_sig,
+        };
 
         assert!(htlc.verify(&simplified_tx, 0, &redeemer));
     }
