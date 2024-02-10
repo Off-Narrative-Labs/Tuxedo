@@ -26,8 +26,7 @@ pub use simple_signature::{Sr25519Signature, P2PKH};
 /// Information available when verifying an input includes:
 /// * The simplified transaction - a stripped encoded version of the transaction
 /// * Some environmental information such as the block current block number
-/// * An encoded redeemer supplied by the user attempting to spend the input.
-///   The redeemer is opaque to the trait and must be interpreted by the implementation.
+/// * An redeemer supplied by the user attempting to spend the input.
 pub trait Verifier: Debug + Encode + Decode + Clone {
     /// The type that will be supplied to satisfy the verifier and redeem the UTXO.
     type Redeemer: Decode;
