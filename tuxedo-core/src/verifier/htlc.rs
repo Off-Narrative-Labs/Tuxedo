@@ -139,9 +139,15 @@ impl Verifier for HashTimeLockContract {
 
 #[cfg(test)]
 mod test {
+    use super::*;
     use sp_core::{sr25519::Pair, Pair as _};
 
-    use super::*;
+    fn bad_sig() -> Signature {
+        Signature::from_slice(
+            b"bogus_signature_bogus_signature_bogus_signature_bogus_signature!".as_slice(),
+        )
+        .expect("Should be able to create a bogus signature.")
+    }
 
     #[test]
     fn time_lock_too_soon() {
@@ -189,7 +195,7 @@ mod test {
         const THRESHOLD: u32 = 100;
         let secret = "htlc ftw".encode();
         let recipient_pair = Pair::from_seed(&[0u8; 32]);
-        let refunder_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
 
         let htlc = HashTimeLockContract {
             hash_lock: BlakeTwo256::hash(&secret),
@@ -207,11 +213,168 @@ mod test {
 
         assert!(htlc.verify(&simplified_tx, 0, &redeemer));
     }
-    // Spend wrong secret
-    // Spend bogus sig
-    // Spend but sig is from refunder instead of recipient
-    // Refund Success
-    // Refund too early
-    // Refund bogus sig
-    // Refund but sig is from recipient instead of refunder
+
+    #[test]
+    fn htlc_claim_wrong_secret() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let incorrect_secret = "there is no second best".encode();
+
+        let simplified_tx = b"hello world".as_slice();
+        let recipient_sig = recipient_pair.sign(simplified_tx);
+        let redeemer = HtlcSpendPath::Claim {
+            secret: incorrect_secret,
+            signature: recipient_sig,
+        };
+
+        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+    }
+
+    #[test]
+    fn htlc_claim_bogus_signature() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let redeemer = HtlcSpendPath::Claim {
+            secret,
+            signature: bad_sig(),
+        };
+
+        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+    }
+
+    #[test]
+    fn htlc_claim_fails_when_signature_is_from_refunder() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let refunder_sig = refunder_pair.sign(simplified_tx);
+        let redeemer = HtlcSpendPath::Claim {
+            secret,
+            signature: refunder_sig,
+        };
+
+        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+    }
+
+    #[test]
+    fn htlc_refund_success() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let refunder_sig = refunder_pair.sign(simplified_tx);
+        let redeemer = HtlcSpendPath::Refund {
+            signature: refunder_sig,
+        };
+
+        assert!(htlc.verify(&simplified_tx, 2 * THRESHOLD, &redeemer));
+    }
+
+    #[test]
+    fn htlc_refund_too_early() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let refunder_sig = refunder_pair.sign(simplified_tx);
+        let redeemer = HtlcSpendPath::Refund {
+            signature: refunder_sig,
+        };
+
+        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+    }
+
+    #[test]
+    fn htlc_refund_bogus_sig() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let redeemer = HtlcSpendPath::Refund {
+            signature: bad_sig(),
+        };
+
+        assert!(!htlc.verify(&simplified_tx, 2 * THRESHOLD, &redeemer));
+    }
+
+    #[test]
+    fn htlc_refund_fails_when_signature_is_from_recipient() {
+        const THRESHOLD: u32 = 100;
+        let secret = "htlc ftw".encode();
+        let recipient_pair = Pair::from_seed(&[0u8; 32]);
+        let refunder_pair = Pair::from_seed(&[1u8; 32]);
+
+        let htlc = HashTimeLockContract {
+            hash_lock: BlakeTwo256::hash(&secret),
+            recipient_pubkey: recipient_pair.public(),
+            claim_period_end: THRESHOLD,
+            refunder_pubkey: refunder_pair.public(),
+        };
+
+        let simplified_tx = b"hello world".as_slice();
+        let recipient_sig = recipient_pair.sign(simplified_tx);
+        let redeemer = HtlcSpendPath::Refund {
+            signature: recipient_sig,
+        };
+
+        assert!(!htlc.verify(&simplified_tx, 2 * THRESHOLD, &redeemer));
+    }
 }
