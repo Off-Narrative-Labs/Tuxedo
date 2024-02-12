@@ -50,7 +50,12 @@ mod tests;
     Debug,
     TypeInfo,
 )]
-pub struct FreeKittyConstraintChecker;
+pub enum FreeKittyConstraintChecker {
+    /// A mint transaction that creates kitty without parents.
+    Mint,
+    /// A typical Breed transaction where kitties are consumed and new family(Parents(mom,dad) and child) is created.
+    Breed,
+}
 
 #[derive(
     Serialize,
@@ -165,6 +170,7 @@ pub struct KittyData {
     pub free_breedings: u64, // Ignore in breed for money case
     pub dna: KittyDNA,
     pub num_breedings: u128,
+    pub name: [u8; 4],
 }
 
 impl KittyData {
@@ -187,7 +193,7 @@ impl KittyData {
                 v,
             )
                 .into()],
-            checker: FreeKittyConstraintChecker.into(),
+            checker: FreeKittyConstraintChecker::Mint.into(),
         }
     }
 }
@@ -199,6 +205,7 @@ impl Default for KittyData {
             free_breedings: 2,
             dna: KittyDNA(H256::from_slice(b"mom_kitty_1asdfasdfasdfasdfasdfa")),
             num_breedings: 3,
+            name: *b"kity",
         }
     }
 }
@@ -261,9 +268,15 @@ pub enum ConstraintCheckerError {
     TooManyBreedingsForKitty,
     /// Not enough free breedings available for these parents.
     NotEnoughFreeBreedings,
+    /// Incorrect number of outputs when it comes to Minting.
+    IncorrectNumberOfKittiesForMintOperation,
+    /// The transaction attempts to mint no Kitty.
+    MintingNothing,
+    /// Inputs(Parents) not required for mint.
+    MintingWithInputs,
 }
 
-trait Breed {
+pub trait Breed {
     /// The Cost to breed a kitty if it is not free.
     const COST: u128;
     /// Number of free breedings a kitty will have.
@@ -510,18 +523,39 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        // Input must be a Mom and a Dad
-        ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
+        match &self {
+            Self::Mint => {
+                // Make sure there are no inputs being consumed
+                ensure!(
+                    input_data.is_empty(),
+                    ConstraintCheckerError::MintingWithInputs
+                );
+                // Make sure there is at least one output being minted
+                ensure!(
+                    !output_data.is_empty(),
+                    ConstraintCheckerError::MintingNothing
+                );
+                // Make sure the outputs are the right type
+                for utxo in output_data {
+                    let _utxo_kitty = utxo
+                        .extract::<KittyData>()
+                        .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
+                }
+                Ok(0)
+            }
+            Self::Breed => {
+                ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
+                let mom = KittyData::try_from(&input_data[0])?;
+                let dad = KittyData::try_from(&input_data[1])?;
+                KittyHelpers::can_breed(&mom, &dad)?;
 
-        let mom = KittyData::try_from(&input_data[0])?;
-        let dad = KittyData::try_from(&input_data[1])?;
-        KittyHelpers::can_breed(&mom, &dad)?;
+                // Output must be Mom, Dad, Child
+                ensure!(output_data.len() == 3, Self::Error::NotEnoughFamilyMembers);
 
-        // Output must be Mom, Dad, Child
-        ensure!(output_data.len() == 3, Self::Error::NotEnoughFamilyMembers);
+                KittyHelpers::check_new_family(&mom, &dad, output_data)?;
 
-        KittyHelpers::check_new_family(&mom, &dad, output_data)?;
-
-        Ok(0)
+                Ok(0)
+            }
+        }
     }
 }
