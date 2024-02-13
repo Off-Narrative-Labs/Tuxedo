@@ -58,9 +58,9 @@ pub struct BlakeTwoHashLock {
 }
 
 impl BlakeTwoHashLock {
-    pub fn new_from_secret<T: Encode>(secret: T) -> Self {
+    pub fn new_from_secret(secret: Vec<u8>) -> Self {
         Self {
-            hash_lock: BlakeTwo256::hash(&secret.encode()),
+            hash_lock: BlakeTwo256::hash(&secret),
         }
     }
 }
@@ -183,7 +183,7 @@ mod test {
     fn hash_lock_correct_secret() {
         let secret = "htlc ftw";
 
-        let hash_lock = BlakeTwoHashLock::new_from_secret(secret);
+        let hash_lock = BlakeTwoHashLock::new_from_secret(secret.encode());
         assert!(hash_lock.verify(&[], 0, &secret.encode()));
     }
 
@@ -192,7 +192,7 @@ mod test {
         let secret = "htlc ftw";
         let incorrect = "there is no second best";
 
-        let hash_lock = BlakeTwoHashLock::new_from_secret(secret);
+        let hash_lock = BlakeTwoHashLock::new_from_secret(secret.encode());
         assert!(!hash_lock.verify(&[], 0, &incorrect.encode()));
     }
 
