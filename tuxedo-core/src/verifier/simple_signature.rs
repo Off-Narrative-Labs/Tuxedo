@@ -19,7 +19,8 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::{
-    sr25519::{Public, Signature}, Pair, H256
+    sr25519::{Public, Signature},
+    Pair, H256,
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
 
@@ -54,7 +55,7 @@ impl Verifier for Sr25519SignatureCheck {
 
 /// Require the signature from the private key corresponding to the given public key using the
 /// cryptographic signature algorithm provided in the generic type.
-/// 
+///
 /// If you prefer not to expose the public key until spend time, use P2PKH instead.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct SignatureCheck<P: Pair> {
