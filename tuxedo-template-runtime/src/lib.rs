@@ -36,7 +36,7 @@ use sp_version::RuntimeVersion;
 use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
-    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
+    verifier::{Sr25519SignatureCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
 pub use amoeba;
