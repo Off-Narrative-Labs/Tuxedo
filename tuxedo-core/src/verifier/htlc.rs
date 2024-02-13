@@ -95,7 +95,7 @@ pub struct HashTimeLockContract {
 }
 
 /// This is the redeemer information needed to spend a `HashTimeLockContract` verifier.
-/// 
+///
 /// The `HashTimeLockContract` has two spend paths, and therefore this enum has two variants.
 /// The variant selects the spend path and contains the corresponding witness data.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
