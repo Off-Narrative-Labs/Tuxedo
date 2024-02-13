@@ -94,15 +94,21 @@ pub struct HashTimeLockContract {
     pub refunder_pubkey: Public,
 }
 
-///
+/// This is the redeemer information needed to spend a `HashTimeLockContract` verifier.
+/// 
+/// The `HashTimeLockContract` has two spend paths, and therefore this enum has two variants.
+/// The variant selects the spend path and contains the corresponding witness data.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub enum HtlcSpendPath {
-    ///
+    /// The primary spend path is for the recipient to claim the UTXO by revealing the
+    /// hash preimage as well as a signature.
     Claim {
         secret: Vec<u8>,
         signature: Signature,
     },
-    ///
+    /// The secondary spend path is for the original owner to refund their money to their private
+    /// ownership. This path is not enabled until the enough time has elapsed. Once the time has
+    /// elapsed, only the refunder's signature is required.
     Refund { signature: Signature },
 }
 
