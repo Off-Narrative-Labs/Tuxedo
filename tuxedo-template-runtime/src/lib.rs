@@ -125,7 +125,7 @@ const BLOCK_TIME: u64 = 3000;
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_verifier]
 pub enum OuterVerifier {
-    Sr25519Signature(Sr25519Signature),
+    Sr25519Signature(Sr25519SignatureCheck),
     UpForGrabs(UpForGrabs),
     ThresholdMultiSignature(ThresholdMultiSignature),
 }

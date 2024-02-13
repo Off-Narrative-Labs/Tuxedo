@@ -19,31 +19,32 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::{
-    sr25519::{Public, Signature},
-    H256,
+    sr25519::{Public, Signature}, Pair, H256
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
 
-/// Require a signature from the private key corresponding to the given public key.
+/// Require a SR25519 signature from the private key corresponding to the given public key.
 /// This is the simplest way to require a signature. If you prefer not to expose the
 /// public key until spend time, use P2PKH instead.
 ///
-/// Uses the Sr25519 signature scheme and Substrate's host functions.
+/// This demonstrates just how simple it can be to write a useful verifier. If you want
+/// to support another signature type or multiple signature types, have a look at the more
+/// generic `SignatureCheck`.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct Sr25519Signature {
+pub struct Sr25519SignatureCheck {
     pub owner_pubkey: H256,
 }
 
-impl Sr25519Signature {
+impl Sr25519SignatureCheck {
     /// Create a new instance that requires a signature from the given public key
     pub fn new<T: Into<H256>>(owner_pubkey: T) -> Self {
-        Sr25519Signature {
+        Self {
             owner_pubkey: owner_pubkey.into(),
         }
     }
 }
 
-impl Verifier for Sr25519Signature {
+impl Verifier for Sr25519SignatureCheck {
     type Redeemer = Signature;
 
     fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Signature) -> bool {
@@ -51,6 +52,35 @@ impl Verifier for Sr25519Signature {
     }
 }
 
+/// Require the signature from the private key corresponding to the given public key using the
+/// cryptographic signature algorithm provided in the generic type.
+/// 
+/// If you prefer not to expose the public key until spend time, use P2PKH instead.
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub struct SignatureCheck<P: Pair> {
+    // Seems we need to use H256 as a workaround so this type is encodable.
+    /// The public key against which the signature will be checked.
+    pub owner_pubkey: H256,
+}
+
+impl<P: Pair> SignatureCheck<P> {
+    /// Create a new instance that requires a signature from the given public key
+    pub fn new(owner_pubkey: P::Public) -> Self {
+        Self {
+            owner_pubkey: owner_pubkey.into(),
+        }
+    }
+}
+
+impl<P: Pair> Verifier for SignatureCheck<P> {
+    type Redeemer = P::Signature;
+
+    fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Signature) -> bool {
+        P::verify(sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
+    }
+}
+
+//TODO Make it generic over the signature and hashing algorithm.
 /// Pay To Public Key Hash (P2PKH)
 ///
 /// Require a signature from the private key corresponding to the public key whose _hash_ is given.
@@ -90,7 +120,7 @@ mod test {
         let simplified_tx = b"hello world".as_slice();
         let sig = pair.sign(simplified_tx);
 
-        let sr25519_signature = Sr25519Signature {
+        let sr25519_signature = Sr25519SignatureCheck {
             owner_pubkey: pair.public().into(),
         };
 
@@ -100,7 +130,7 @@ mod test {
     #[test]
     fn sr25519_signature_with_bad_sig() {
         let simplified_tx = b"hello world".as_slice();
-        let sr25519_signature = Sr25519Signature {
+        let sr25519_signature = Sr25519SignatureCheck {
             owner_pubkey: H256::zero(),
         };
 
