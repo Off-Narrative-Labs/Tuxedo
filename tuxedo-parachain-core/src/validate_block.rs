@@ -71,6 +71,7 @@ pub fn validate_block<B, V, C>(
 ) -> ValidationResult
 where
     B: BlockT<Extrinsic = Transaction<V, C>>,
+    B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
     Transaction<V, C>: Extrinsic,
     V: TypeInfo + Verifier + 'static,
     C: TypeInfo + ConstraintChecker<V> + 'static, // + Into<SetParachainInfo<V>>,
