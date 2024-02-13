@@ -80,8 +80,8 @@ impl Verifier for BlakeTwoHashLock {
 /// interesting to use public key hash, or better yet, simply abstract this over some opaque
 /// inner verifier for maximum composability.
 ///
-/// @lederstrumpf when the time expires, is the primary "happy" path supposed to remain open?
-/// Or is it that if the swap hasn't started on time, the refund is the only option.
+/// After the time refund path opens, the happy path remains open. This is for compatibility with
+/// bitcoin, but may not be desired in all cases.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct HashTimeLockContract {
     /// The hash whose preimage must be revealed (along with the recipient's signature) to spend the UTXO.
