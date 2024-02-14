@@ -93,10 +93,6 @@ impl<const ID: u8> Coin<ID> {
     }
 }
 
-impl<const ID: u8> UtxoData for Coin<ID> {
-    const TYPE_ID: [u8; 4] = [b'c', b'o', b'i', ID];
-}
-
 /// Errors that can occur when checking money transactions.
 #[derive(
     Serialize,
@@ -137,6 +133,8 @@ pub enum ConstraintCheckerError {
 
 impl<const ID: u8> SimpleConstraintChecker for MoneyConstraintChecker<ID> {
     type Error = ConstraintCheckerError;
+
+    type UtxoData = Coin<ID>;
 
     fn check(
         &self,
