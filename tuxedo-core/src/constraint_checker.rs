@@ -5,7 +5,7 @@
 
 use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output};
+use crate::{dynamic_typing::{DynamicallyTypedData}, inherents::InherentInternal, types::Output};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -18,6 +18,10 @@ use sp_runtime::transaction_validity::TransactionPriority;
 pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
+
+    /// Storable type(s) introduced by this piece. Any data type that you plan to store in
+    /// a UTXO should be included here. If there are multiple such types, use an enum.
+    type UtxoData: Encode + Decode + Debug;
 
     /// The actual check validation logic
     fn check(
@@ -42,6 +46,10 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
+    /// Storable type(s) introduced by this piece. Any data type that you plan to store in
+    /// a UTXO should be included here. If there are multiple such types, use an enum.
+    type UtxoData: Encode + Decode + Debug;
+
     /// Optional Associated Inherent processing logic. If this transaction type is not an inherent, use ().
     /// If it is an inherent, use Self, and implement the TuxedoInherent trait.
     type InherentHooks: InherentInternal<V, Self>;
@@ -65,6 +73,10 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
 impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker>::Error;
+
+    /// Storable type(s) introduced by this piece. Any data type that you plan to store in
+    /// a UTXO should be included here. If there are multiple such types, use an enum.
+    type UtxoData = <T as SimpleConstraintChecker>::UtxoData;
 
     type InherentHooks = ();
 
@@ -116,6 +128,7 @@ pub mod testing {
 
     impl ConstraintChecker<TestVerifier> for TestConstraintChecker {
         type Error = ();
+        type UtxoData = ();
         type InherentHooks = ();
 
         fn check(
