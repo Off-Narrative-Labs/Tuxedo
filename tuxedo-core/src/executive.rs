@@ -35,7 +35,7 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker<V>>
+impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker>
     Executive<B, V, C>
 {
     /// Does pool-style validation of a tuxedo transaction.
@@ -69,7 +69,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         let stripped_encoded = stripped.encode();
 
         // Check that the verifiers of all inputs are satisfied
-        // Keep a Vec of the input utxos for passing to the constraint checker
+        // Keep a Vec of the input data for passing to the constraint checker
         // Keep track of any missing inputs for use in the tagged transaction pool
         let mut input_utxos = Vec::new();
         let mut missing_inputs = Vec::new();
@@ -81,23 +81,27 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
                         .verify(&stripped_encoded, &input.redeemer),
                     UtxoError::VerifierError
                 );
-                input_utxos.push(input_utxo);
+                input_utxos.push(input_utxo.payload);
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
             }
         }
 
-        // Make a Vec of the peek utxos for passing to the constraint checker
+        // Make a Vec of the peek data for passing to the constraint checker
         // Keep track of any missing peeks for use in the tagged transaction pool
         // Use the same vec as previously to keep track of missing peeks
         let mut peek_utxos = Vec::new();
         for output_ref in transaction.peeks.iter() {
             if let Some(peek_utxo) = TransparentUtxoSet::<V>::peek_utxo(output_ref) {
-                peek_utxos.push(peek_utxo);
+                peek_utxos.push(peek_utxo.payload);
             } else {
                 missing_inputs.push(output_ref.encode());
             }
         }
+
+        //TODO Seems like we are iterating the outputs three times here, and re-calculating the output refs twice.
+        // Make a Vec of the output data for passing to the constraint checker
+        let output_utxos = transaction.outputs.iter().map(|o| o.payload.clone()).collect::<Vec<_>>();
 
         // Make sure no outputs already exist in storage
         let tx_hash = BlakeTwo256::hash_of(&transaction.encode());
@@ -149,7 +153,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &peek_utxos, &transaction.outputs)
+            .check(&input_utxos, &peek_utxos, &output_utxos)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
