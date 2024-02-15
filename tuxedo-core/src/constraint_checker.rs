@@ -31,9 +31,9 @@
 //! `SimpleConstraintChecker` -> `ConstraintCheckerWithInherent` -> ConstraintChecker
 //! https://github.com/rust-lang/rust/issues/42721
 
-use sp_std::fmt::Debug;
+use sp_std::{fmt::Debug, vec::Vec};
 
-use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal};
+use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -43,13 +43,29 @@ use sp_runtime::transaction_validity::TransactionPriority;
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
+pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
 
-    /// Optional Associated Inherent processing logic. If this transaction type is not an inherent, use ().
-    /// If it is an inherent, use Self, and implement the TuxedoInherent trait.
-    type InherentHooks: InherentInternal<Self>;
+    /// The actual check validation logic
+    fn check(
+        &self,
+        input_data: &[DynamicallyTypedData],
+        peek_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
+    ) -> Result<TransactionPriority, Self::Error>;
+}
+
+/// Similar to the `SimpleConstraintChecker` but with extended field
+///
+/// This trait should only be implemented if you need to implement an inherent.
+///
+/// Additional transient information may be passed to the constraint checker by including it in the fields
+/// of the constraint checker struct itself. Information passed in this way does not come from state, nor
+/// is it stored in state.
+pub trait ConstraintCheckerWithInherent: Debug + Encode + Decode + Clone {
+    /// The error type that this constraint checker may return
+    type Error: Debug;
 
     /// The actual check validation logic
     fn check(
@@ -59,10 +75,33 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
         outputs: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 
-    //TODO move this to the inherent hooks
     /// Tells whether this extrinsic is an inherent or not.
     /// If you return true here, you must provide the correct inherent hooks above.
     fn is_inherent(&self) -> bool;
+}
+
+// This blanket implementation makes it so that any type that chooses to
+// implement the Simple trait also implements the more Powerful trait.
+// This way the executive can always just call the more Powerful trait.
+impl<T: SimpleConstraintChecker> ConstraintChecker for T {
+    // Use the same error type used in the simple implementation.
+    type Error = <T as SimpleConstraintChecker>::Error;
+
+    type InherentHooks = ();
+
+    fn check(
+        &self,
+        inputs: &[DynamicallyTypedData],
+        peeks: &[DynamicallyTypedData],
+        outputs: &[DynamicallyTypedData],
+    ) -> Result<TransactionPriority, Self::Error> {
+        // Call the simple constraint checker
+        SimpleConstraintChecker::check(self, inputs, peeks, outputs)
+    }
+
+    fn is_inherent(&self) -> bool {
+        false
+    }
 }
 
 /// Utilities for writing constraint-checker-related unit tests
@@ -72,6 +111,7 @@ pub mod testing {
     use serde::{Deserialize, Serialize};
 
     use super::*;
+    use crate::{types::Output, verifier::TestVerifier};
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
@@ -83,15 +123,15 @@ pub mod testing {
         pub inherent: bool,
     }
 
-    impl ConstraintChecker for TestConstraintChecker {
+    impl ConstraintChecker<TestVerifier> for TestConstraintChecker {
         type Error = ();
         type InherentHooks = ();
 
         fn check(
             &self,
-            _input_data: &[DynamicallyTypedData],
-            _peek_data: &[DynamicallyTypedData],
-            _output_data: &[DynamicallyTypedData],
+            _input_data: &[Output<TestVerifier>],
+            _peek_data: &[Output<TestVerifier>],
+            _output_data: &[Output<TestVerifier>],
         ) -> Result<TransactionPriority, ()> {
             if self.checks {
                 Ok(0)

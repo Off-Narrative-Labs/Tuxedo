@@ -107,8 +107,7 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
 // so we do a minimal implementation.
 impl<V, C> Extrinsic for Transaction<V, C>
 where
-    C: TypeInfo + ConstraintChecker + 'static,
-    //TODO Do we need the V:Verifier bound here?
+    C: TypeInfo + ConstraintChecker<V> + 'static,
     V: TypeInfo + Verifier + 'static,
 {
     type Call = Self;
