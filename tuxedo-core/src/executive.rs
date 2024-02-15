@@ -481,7 +481,7 @@ where
 mod tests {
     use sp_core::H256;
     use sp_io::TestExternalities;
-    use sp_runtime::transaction_validity::ValidTransactionBuilder;
+    use sp_runtime::{generic::Header, transaction_validity::ValidTransactionBuilder};
 
     use crate::{
         constraint_checker::testing::TestConstraintChecker,
@@ -625,10 +625,15 @@ mod tests {
                 ext.insert(output_ref.encode(), output.encode());
             }
 
-            // Write the pre-header
-            if let Some(pre_header) = self.pre_header {
-                ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
-            }
+            // Write a pre-header. If none was supplied, create a use a default one.
+            let pre_header = self.pre_header.unwrap_or(Header {
+                parent_hash: Default::default(),
+                number: 0,
+                state_root: H256::zero(),
+                extrinsics_root: H256::zero(),
+                digest: Default::default(),
+            });
+            ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
 
             // Write the noted extrinsics
             ext.insert(EXTRINSIC_KEY.to_vec(), self.noted_extrinsics.encode());

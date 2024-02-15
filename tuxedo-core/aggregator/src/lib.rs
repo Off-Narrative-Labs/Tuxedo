@@ -1,3 +1,4 @@
+use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Ident, ItemEnum};
@@ -105,7 +106,13 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
     let inner_types2 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
-    let variants4 = variants.clone();
+
+    let as_variants = variants.clone().map(|v| {
+        let s = format!("as_{}", v);
+        let s = s.to_case(Case::Snake);
+        Ident::new(&s, v.span())
+    });
+    let as_variants2 = as_variants.clone();
 
     let output = quote! {
 
@@ -129,12 +136,9 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
         // Might be that we should have a helper macro for this as well
         impl #redeemer_type {
             #(
-                //TODO I would rather the function be called as_variant2,
-                // but my macro n00b skills can't figure it out.
-                #[allow(non_snake_case)]
-                pub fn #variants2(&self) -> Option<&<#inner_types2 as tuxedo_core::Verifier>::Redeemer> {
+                pub fn #as_variants(&self) -> Option<&<#inner_types2 as tuxedo_core::Verifier>::Redeemer> {
                     match self {
-                        Self::#variants3(inner) => Some(inner),
+                        Self::#variants2(inner) => Some(inner),
                         _ => None,
                     }
                 }
@@ -148,7 +152,11 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
             fn verify(&self, simplified_tx: &[u8], block_number: u32, redeemer: &Self::Redeemer) -> bool {
                 match self {
                     #(
-                        Self::#variants4(inner) => inner.verify(simplified_tx, block_number, redeemer.#variants4().expect("redeemer variant exists because the macro constructed that type.")),
+                        Self::#variants3(inner) => inner.verify(
+                            simplified_tx,
+                            block_number,
+                            redeemer.#as_variants2().expect("redeemer variant exists because the macro constructed that type.")
+                        ),
                     )*
                 }
             }

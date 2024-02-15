@@ -167,18 +167,11 @@ The Tuxedo parachain node provides a convenient "dev service" that allows it to 
 
 When you do need, or want, a full relay-para network, it is convenient to use [zombienet](https://github.com/paritytech/zombienet) to start it. Tuxedo ships with a [zombienet config file](./zombienet.toml) to make this process easy.
 
-:warning: Because of a [bug in zombienet](https://github.com/paritytech/zombienet/issues/1519), you MUST purge your local data directory before starting zombienet.
-
 ```sh
-# Purge local data directory
-# This is necessary until https://github.com/paritytech/zombienet/issues/1519 is resolved
-docker run ghcr.io/off-narrative-labs/tuxedo-parachain:latest purge-chain --dev -y
-
-# Start Zombienet
 zombienet --provider podman spawn zombienet.toml
 ```
 
-Once your network is started, you can point the cli wallet to a local collator and perform the stame token transfers and balance checking as any other Tuxedo node.
+Once your network is started, you can point the cli wallet to a local collator and perform the same token transfers and balance checking as any other Tuxedo node.
 
 Be advised that zombienet is changing quickly, and podman has its own platform-specific issues. If you struggle with zombienet, please open an issue, or consider using the local backend instead.
 
