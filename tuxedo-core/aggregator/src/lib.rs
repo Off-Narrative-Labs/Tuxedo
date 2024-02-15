@@ -1,3 +1,4 @@
+use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Ident, ItemEnum};
@@ -106,9 +107,11 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
     let variants2 = variants.clone();
     let variants3 = variants.clone();
 
-    let as_variants = variants
-        .clone()
-        .map(|v| Ident::new(&format!("as_{}", v), v.span()));
+    let as_variants = variants.clone().map(|v| {
+        let s = format!("as_{}", v);
+        let s = s.to_case(Case::Snake);
+        Ident::new(&s, v.span())
+    });
     let as_variants2 = as_variants.clone();
 
     let output = quote! {
@@ -133,7 +136,6 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
         // Might be that we should have a helper macro for this as well
         impl #redeemer_type {
             #(
-                #[allow(non_snake_case)]
                 pub fn #as_variants(&self) -> Option<&<#inner_types2 as tuxedo_core::Verifier>::Redeemer> {
                     match self {
                         Self::#variants2(inner) => Some(inner),
