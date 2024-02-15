@@ -1,7 +1,35 @@
 //! A constraint checker is a piece of logic that determines whether a transaction as a whole is valid
 //! and should be committed. Most tuxedo pieces will provide one or more constraint checkers.
-//! Constraint Checkers do not typically calculate the correct final state, but rather determine whether the
+//! Constraint Checkers do not calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
+//! 
+//! Constraint Checkers can be used to codify the laws of a monetary system, a chemistry or physics simulation,
+//! NFT kitties, public elections and much more.
+//! 
+//! By far the most common and most important way to write a constraint checker is with the `SimpleConstraintChecker`
+//! trait. It provides a single method called `check` which determines whether the relationship between the inputs
+//! and outputs (and peeks) is valid. For example making sure no extra money was created, or making sure the chemical
+//! reaction balances.
+//! 
+//! ## Inherents
+//! 
+//! If you need to tap in to [Substrate's inherent system](https://docs.substrate.io/learn/transaction-types/#inherent-transactions)
+//! you may choose to implement the `ConstraintCheckerWithInherent` trait instead of the simple one. This trait is more complex
+//! but if you really need an inherent, it is required. Make sure you know what you are doing before
+//! you start writing an inherent.
+//! 
+//! ## Constraint Checker Internals
+//! 
+//! One of Tuxedo's killer features is its ability to aggregating pieces recursively.
+//! To achieve this we have to consider that many intermediate layers in the aggregation tree
+//! will have multiple inherent types. For this reason, we provide a much more flexible interface
+//! that the aggregation macro can use.
+//! 
+//! The current design is based on a chain of blanket implementations. Each trait has a blanket
+//! impl for the next more complex one.
+//! 
+//! `SimpleConstraintChecker` -> `ConstraintCheckerWithInherent` -> ConstraintChecker
+//! https://github.com/rust-lang/rust/issues/42721
 
 use sp_std::{fmt::Debug, vec::Vec};
 
@@ -9,7 +37,7 @@ use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, t
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
-/// A simplified constraint checker that a transaction can choose to call.
+/// A particular constraint checker that a transaction can choose to be checked by.
 /// Checks whether the input and output data from a transaction meets the codified constraints.
 ///
 /// Additional transient information may be passed to the constraint checker by including it in the fields
@@ -28,30 +56,23 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
-/// A single constraint checker that a transaction can choose to call. Checks whether the input
-/// and output data from a transaction meets the codified constraints.
+/// Similar to the `SimpleConstraintChecker` but with extended field
 ///
-/// This full ConstraintChecker should only be implemented if the piece logic cannot be expressed with
-/// the SimpleConstraintChecker. For example, if you need to enforce the verifier is a particular type
-/// or contains a certain value. Another reason would be if you need to implement an inherent.
+/// This trait should only be implemented if you need to implement an inherent.
 ///
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
+pub trait ConstraintCheckerWithInherent: Debug + Encode + Decode + Clone {
     /// The error type that this constraint checker may return
     type Error: Debug;
-
-    /// Optional Associated Inherent processing logic. If this transaction type is not an inherent, use ().
-    /// If it is an inherent, use Self, and implement the TuxedoInherent trait.
-    type InherentHooks: InherentInternal<V, Self>;
 
     /// The actual check validation logic
     fn check(
         &self,
-        inputs: &[Output<V>],
-        peeks: &[Output<V>],
-        outputs: &[Output<V>],
+        inputs: &[DynamicallyTypedData],
+        peeks: &[DynamicallyTypedData],
+        outputs: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 
     /// Tells whether this extrinsic is an inherent or not.
@@ -62,7 +83,7 @@ pub trait ConstraintChecker<V>: Debug + Encode + Decode + Clone {
 // This blanket implementation makes it so that any type that chooses to
 // implement the Simple trait also implements the more Powerful trait.
 // This way the executive can always just call the more Powerful trait.
-impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
+impl<T: SimpleConstraintChecker> ConstraintChecker for T {
     // Use the same error type used in the simple implementation.
     type Error = <T as SimpleConstraintChecker>::Error;
 
@@ -70,24 +91,12 @@ impl<T: SimpleConstraintChecker, V> ConstraintChecker<V> for T {
 
     fn check(
         &self,
-        inputs: &[Output<V>],
-        peeks: &[Output<V>],
-        outputs: &[Output<V>],
+        inputs: &[DynamicallyTypedData],
+        peeks: &[DynamicallyTypedData],
+        outputs: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        // Extract the input data
-        let input_data: Vec<DynamicallyTypedData> =
-            inputs.iter().map(|o| o.payload.clone()).collect();
-
-        // Extract the peek data
-        let peek_data: Vec<DynamicallyTypedData> =
-            peeks.iter().map(|o| o.payload.clone()).collect();
-
-        // Extract the output data
-        let output_data: Vec<DynamicallyTypedData> =
-            outputs.iter().map(|o| o.payload.clone()).collect();
-
         // Call the simple constraint checker
-        SimpleConstraintChecker::check(self, &input_data, &peek_data, &output_data)
+        SimpleConstraintChecker::check(self, inputs, peeks, outputs)
     }
 
     fn is_inherent(&self) -> bool {
