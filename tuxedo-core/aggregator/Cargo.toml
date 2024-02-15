@@ -4,6 +4,7 @@ name = "aggregator"
 version = "0.1.0"
 
 [dependencies]
+convert_case = { workspace = true }
 quote = { workspace = true }
 syn = { features = [ "extra-traits", "full" ], workspace = true }
 

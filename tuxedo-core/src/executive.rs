@@ -35,8 +35,12 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 /// in the proper generic types.
 pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker<V>>
-    Executive<B, V, C>
+impl<B, V, C> Executive<B, V, C>
+where
+    B: BlockT<Extrinsic = Transaction<V, C>>,
+    B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
+    V: Verifier,
+    C: ConstraintChecker<V>,
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
@@ -75,10 +79,12 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
+                let redeemer = V::Redeemer::decode(&mut &input.redeemer[..])
+                    .map_err(|_| UtxoError::VerifierError)?;
                 ensure!(
                     input_utxo
                         .verifier
-                        .verify(&stripped_encoded, &input.redeemer),
+                        .verify(&stripped_encoded, Self::block_height(), &redeemer),
                     UtxoError::VerifierError
                 );
                 input_utxos.push(input_utxo);
@@ -475,7 +481,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 mod tests {
     use sp_core::H256;
     use sp_io::TestExternalities;
-    use sp_runtime::transaction_validity::ValidTransactionBuilder;
+    use sp_runtime::{generic::Header, transaction_validity::ValidTransactionBuilder};
 
     use crate::{
         constraint_checker::testing::TestConstraintChecker,
@@ -619,10 +625,15 @@ mod tests {
                 ext.insert(output_ref.encode(), output.encode());
             }
 
-            // Write the pre-header
-            if let Some(pre_header) = self.pre_header {
-                ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
-            }
+            // Write a pre-header. If none was supplied, create a use a default one.
+            let pre_header = self.pre_header.unwrap_or(Header {
+                parent_hash: Default::default(),
+                number: 0,
+                state_root: H256::zero(),
+                extrinsics_root: H256::zero(),
+                digest: Default::default(),
+            });
+            ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
 
             // Write the noted extrinsics
             ext.insert(EXTRINSIC_KEY.to_vec(), self.noted_extrinsics.encode());
