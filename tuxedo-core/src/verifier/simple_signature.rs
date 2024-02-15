@@ -15,42 +15,79 @@
 /// This verifier relies on Substrate's host functions to perform the signature checking
 /// natively and gain performance.
 use super::Verifier;
+use derive_no_bound::{CloneNoBound, DebugNoBound};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::{
-    sr25519::{Public, Signature},
-    H256,
+    sr25519, Pair, Public, H256,
 };
-use sp_runtime::traits::{BlakeTwo256, Hash};
+use sp_runtime::traits::{BlakeTwo256, Hash, PhantomData};
 
-/// Require a signature from the private key corresponding to the given public key.
+/// Require a SR25519 signature from the private key corresponding to the given public key.
 /// This is the simplest way to require a signature. If you prefer not to expose the
 /// public key until spend time, use P2PKH instead.
 ///
-/// Uses the Sr25519 signature scheme and Substrate's host functions.
+/// This demonstrates just how simple it can be to write a useful verifier. If you want
+/// to support another signature type or multiple signature types, have a look at the more
+/// generic `SignatureCheck`.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub struct Sr25519Signature {
+pub struct Sr25519SignatureCheck {
     pub owner_pubkey: H256,
 }
 
-impl Sr25519Signature {
+impl Sr25519SignatureCheck {
     /// Create a new instance that requires a signature from the given public key
     pub fn new<T: Into<H256>>(owner_pubkey: T) -> Self {
-        Sr25519Signature {
+        Self {
             owner_pubkey: owner_pubkey.into(),
         }
     }
 }
 
-impl Verifier for Sr25519Signature {
-    type Redeemer = Signature;
+impl Verifier for Sr25519SignatureCheck {
+    type Redeemer = sr25519::Signature;
 
-    fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Signature) -> bool {
-        sp_io::crypto::sr25519_verify(sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
+    fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Self::Redeemer) -> bool {
+        sp_io::crypto::sr25519_verify(sig, simplified_tx, &sr25519::Public::from_h256(self.owner_pubkey))
     }
 }
 
+/// Require the signature from the private key corresponding to the given public key using the
+/// cryptographic signature algorithm provided in the generic type.
+///
+/// If you prefer not to expose the public key until spend time, use P2PKH instead.
+#[derive(Serialize, Deserialize, Encode, Decode, DebugNoBound, PartialEq, Eq, CloneNoBound, TypeInfo)]
+pub struct SignatureCheck<P: Pair> {
+    // Seems we need to use H256 as a workaround so this type is encodable.
+    /// The public key against which the signature will be checked.
+    owner_pubkey: [u8; 32],
+    _ph_data: PhantomData<P>,
+}
+
+impl<P: Pair> SignatureCheck<P> {
+    /// Create a new instance that requires a signature from the given public key
+    pub fn new<T: Into<[u8; 32]>>(owner_pubkey: T) -> Self {
+        Self {
+            owner_pubkey: owner_pubkey.into(),
+            _ph_data: Default::default(),
+        }
+    }
+}
+
+impl<P: Pair> Verifier for SignatureCheck<P> 
+where
+    P::Signature: Decode,
+    P::Public: From<[u8; 32]>,
+{
+    type Redeemer = P::Signature;
+
+    fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Self::Redeemer) -> bool {
+        P::verify(sig, simplified_tx, &<P as Pair>::Public::from(self.owner_pubkey))
+    }
+}
+
+//TODO Make it generic over the signature and hashing algorithm.
 /// Pay To Public Key Hash (P2PKH)
 ///
 /// Require a signature from the private key corresponding to the public key whose _hash_ is given.
@@ -64,7 +101,7 @@ pub struct P2PKH {
 }
 
 impl Verifier for P2PKH {
-    type Redeemer = (Public, Signature);
+    type Redeemer = (sr25519::Public, sr25519::Signature);
 
     fn verify(&self, simplified_tx: &[u8], _: u32, (pubkey, signature): &Self::Redeemer) -> bool {
         BlakeTwo256::hash(pubkey) == self.owner_pubkey_hash
@@ -77,8 +114,8 @@ mod test {
     use super::*;
     use sp_core::{crypto::Pair as _, sr25519::Pair};
 
-    fn bad_sig() -> Signature {
-        Signature::from_slice(
+    fn bad_sig() -> sr25519::Signature {
+        sr25519::Signature::from_slice(
             b"bogus_signature_bogus_signature_bogus_signature_bogus_signature!".as_slice(),
         )
         .expect("Should be able to create a bogus signature.")
@@ -90,7 +127,7 @@ mod test {
         let simplified_tx = b"hello world".as_slice();
         let sig = pair.sign(simplified_tx);
 
-        let sr25519_signature = Sr25519Signature {
+        let sr25519_signature = Sr25519SignatureCheck {
             owner_pubkey: pair.public().into(),
         };
 
@@ -100,7 +137,7 @@ mod test {
     #[test]
     fn sr25519_signature_with_bad_sig() {
         let simplified_tx = b"hello world".as_slice();
-        let sr25519_signature = Sr25519Signature {
+        let sr25519_signature = Sr25519SignatureCheck {
             owner_pubkey: H256::zero(),
         };
 

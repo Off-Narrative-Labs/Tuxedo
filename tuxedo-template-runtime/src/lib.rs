@@ -36,7 +36,7 @@ use sp_version::RuntimeVersion;
 use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
-    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
+    verifier::{Sr25519SignatureCheck, ThresholdMultiSignature, UpForGrabs},
 };
 
 pub use amoeba;
@@ -125,7 +125,7 @@ const BLOCK_TIME: u64 = 3000;
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_verifier]
 pub enum OuterVerifier {
-    Sr25519Signature(Sr25519Signature),
+    Sr25519Signature(Sr25519SignatureCheck),
     UpForGrabs(UpForGrabs),
     ThresholdMultiSignature(ThresholdMultiSignature),
 }
