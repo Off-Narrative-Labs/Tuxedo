@@ -31,9 +31,9 @@
 //! `SimpleConstraintChecker` -> `ConstraintCheckerWithInherent` -> ConstraintChecker
 //! https://github.com/rust-lang/rust/issues/42721
 
-use sp_std::{fmt::Debug, vec::Vec};
+use sp_std::fmt::Debug;
 
-use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output};
+use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -63,41 +63,29 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
 /// Additional transient information may be passed to the constraint checker by including it in the fields
 /// of the constraint checker struct itself. Information passed in this way does not come from state, nor
 /// is it stored in state.
-pub trait ConstraintCheckerWithInherent: Debug + Encode + Decode + Clone {
-    /// The error type that this constraint checker may return
-    type Error: Debug;
+pub trait ConstraintChecker: SimpleConstraintChecker {
 
-    /// The actual check validation logic
-    fn check(
-        &self,
-        inputs: &[DynamicallyTypedData],
-        peeks: &[DynamicallyTypedData],
-        outputs: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error>;
+    /// TODO Restore old docs
+    type InherentHooks: InherentInternal<Self>;
 
     /// Tells whether this extrinsic is an inherent or not.
-    /// If you return true here, you must provide the correct inherent hooks above.
-    fn is_inherent(&self) -> bool;
+    ///
+    /// You should never manually write a body to this function.
+    /// If you are:
+    /// * Working on an inherent constraint checker -> Rely on the default body.
+    /// * Working on a simple non-inherent constraint checker -> Use the `SimpleConstraintChecker` trait instead
+    ///   and rely on its blanket implementation.
+    /// * Considering an aggregate constraint checker which is part inherent, part not -> let the macro handle it for you.
+    fn is_inherent(&self) -> bool {
+        true
+    }
 }
 
 // This blanket implementation makes it so that any type that chooses to
 // implement the Simple trait also implements the more Powerful trait.
 // This way the executive can always just call the more Powerful trait.
 impl<T: SimpleConstraintChecker> ConstraintChecker for T {
-    // Use the same error type used in the simple implementation.
-    type Error = <T as SimpleConstraintChecker>::Error;
-
     type InherentHooks = ();
-
-    fn check(
-        &self,
-        inputs: &[DynamicallyTypedData],
-        peeks: &[DynamicallyTypedData],
-        outputs: &[DynamicallyTypedData],
-    ) -> Result<TransactionPriority, Self::Error> {
-        // Call the simple constraint checker
-        SimpleConstraintChecker::check(self, inputs, peeks, outputs)
-    }
 
     fn is_inherent(&self) -> bool {
         false
@@ -123,9 +111,8 @@ pub mod testing {
         pub inherent: bool,
     }
 
-    impl ConstraintChecker<TestVerifier> for TestConstraintChecker {
+    impl SimpleConstraintChecker for TestConstraintChecker {
         type Error = ();
-        type InherentHooks = ();
 
         fn check(
             &self,
@@ -138,10 +125,6 @@ pub mod testing {
             } else {
                 Err(())
             }
-        }
-
-        fn is_inherent(&self) -> bool {
-            self.inherent
         }
     }
 
