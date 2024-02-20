@@ -13209,17 +13209,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "734676eb262c623cec13c3155096e08d1f8f29adce39ba17948b18dad1e54142"
 
 [[package]]
-name = "sudo-token"
-version = "0.1.0"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-runtime",
- "tuxedo-core",
-]
-
-[[package]]
 name = "syn"
 version = "1.0.109"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14139,6 +14128,17 @@ dependencies = [
  "crunchy",
  "hex",
  "static_assertions",
+]
+
+[[package]]
+name = "unforgeable-access-tokens"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "tuxedo-core",
 ]
 
 [[package]]
