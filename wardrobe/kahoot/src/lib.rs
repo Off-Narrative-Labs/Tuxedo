@@ -37,6 +37,12 @@ pub const MIN_ANSWER_PERIOD: u32 = 20;
 pub struct GameDetails {
     /// A unique identifier for this game among all games of this type.
     pub id: u32,
+    /// The block number in which this game was created.
+    ///
+    /// This will be useful, potentially critical, information for the UI. It will need to scrape the chain
+    /// starting _somewhere_ and genesis is not a realistic place. This probably doesn't need stored on-chain
+    /// but let's keep all the data simple and together for now.
+    pub created_at: u32,
     /// Name of the game. Suggested 25 char max.
     pub name: Vec<u8>,
     /// Description of what content will be covered in this game and information that may entice users to play.
