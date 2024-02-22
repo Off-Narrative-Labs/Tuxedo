@@ -21,6 +21,10 @@ use sp_core::H256;
 /// This should be moved to a config trait.
 pub const MIN_DEPOSIT: u128 = 20;
 
+/// The minimum acceptable time to answer a question.
+/// This should be moved to a config trait.
+pub const MIN_ANSWER_PERIOD: u32 = 20;
+
 // #[cfg(test)]
 // mod tests;
 
@@ -31,11 +35,8 @@ pub const MIN_DEPOSIT: u128 = 20;
 /// revisited and replaced with IPFS pointers or something.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
 pub struct GameDetails {
-    //TODO I think we need some kind of game id.
-    // We need to make sure that all the downstream types like answer ticket and question commitment are
-    // associated with the correct game and cannot cross-pollinate.
-    // It needs to be unique like based on the transaction hash or something.
-
+    /// A unique identifier for this game among all games of this type.
+    pub id: u32,
     /// Name of the game. Suggested 25 char max.
     pub name: Vec<u8>,
     /// Description of what content will be covered in this game and information that may entice users to play.
@@ -46,10 +47,27 @@ pub struct GameDetails {
     pub question_commitments: Vec<H256>,
     /// The minimum number of block that must elapse before the questions can be closed.
     pub min_answer_period: u32,
+    /// The amount of money that should be deposited to create a new game, and also to join the game.
+    pub deposit_amount: u32,
 }
 
 impl UtxoData for GameDetails {
     const TYPE_ID: [u8; 4] = *b"kaht";
+}
+
+/// A universal piece of state that must be synchronized with in order
+/// to create a new game.
+///
+/// This pattern will be common and should be abstracted out evenetually.
+/// See my unforgeable-access-tokens branch for a braindump on that.
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub struct GameCreator {
+    /// The game id that will be given to the next game to be created.
+    pub next_id: u32,
+}
+
+impl UtxoData for GameCreator {
+    const TYPE_ID: [u8; 4] = *b"gmcr";
 }
 
 /// A simple token that represents a registered player's right to answer a question once it is revealed.
@@ -101,6 +119,9 @@ pub enum KahootError {
     BadlyTypedInput,
     /// An output data has the wrong type.
     BadlyTypedOutput,
+
+    /// TODO Figure out all the error variants.
+    Todo
 }
 
 /// Create a game by giving basic details like a name, description, and the number of questions.
@@ -121,7 +142,38 @@ impl SimpleConstraintChecker for GameCreation {
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        todo!()
+        // Universal game creator should be properly updated
+        let input_game_creator: GameCreator = input_data
+            .get(0)
+            .ok_or(KahootError::Todo)? //missing input
+            .extract()
+            .map_err(|_| KahootError::Todo)?; //badly typed
+        let output_game_creator: GameCreator = output_data
+            .get(0)
+            .ok_or(KahootError::Todo)?
+            .extract()
+            .map_err(|_| KahootError::Todo)?;
+        let id = input_game_creator.next_id;
+        ensure!(output_game_creator.next_id == id + 1, KahootError::Todo); // universal game creator misuse
+
+        // Game should have the right id specified by the universal game creator
+        let game: GameDetails = input_data
+            .get(1)
+            .ok_or(KahootError::Todo)?
+            .extract()
+            .map_err(|_| KahootError::Todo)?;
+        ensure!(game.id == id, KahootError::Todo); // wrong game id
+        
+        // Other simple game validation
+        ensure!(!game.question_commitments.is_empty(), KahootError::Todo); // no questions included
+        ensure!(game.min_answer_period < MIN_ANSWER_PERIOD, KahootError::Todo); // Answer period too short
+
+
+        // There should be a valid deposit. Assume all remaining inputs are coins.
+        // TODO: iterate through them and see what the input value is. Make sure it exceeds the specified deposit amount.
+        // If the input is more than the deposit amount then the rest can be specified as a priority tip.
+
+        Ok(0)
     }
 }
 
