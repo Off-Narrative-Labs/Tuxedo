@@ -1,5 +1,21 @@
 //! An NFT game inspired by cryptokitties.
-//! This is a game which allows for kitties to be bred based on a few factors
+//! This is a game which allows for kitties to be create,bred and update name of kitty.
+//!
+//! ## Features
+//!
+//! - **Create:** Generate a new kitty.
+//!   To submit a valid transaction for creating a kitty, adhere to the following structure:
+//!   1. Input must be empty.
+//!   2. Output must contain only the newly created kitty as a child.
+
+//! - **Update Name:** Modify the name of a kitty.
+//!   To submit a valid transaction for updating a kitty's name, adhere to the following structure:
+//!   1. Input must be the kitty to be updated.
+//!   2. Output must contain the kitty with the updated name.
+//!
+//!    **Note:** All other properties such as DNA, parents, free breedings, etc., must remain unaltered in the output.
+//!
+//! - **Breed:** Breeds a new kitty using mom and dad based on below factors
 //! 1.) Mom and Tired have to be in a state where they are ready to breed
 //! 2.) Each Mom and Dad have some DNA and the child will have unique DNA combined from the both of them
 //!     Linkable back to the Mom and Dad
@@ -25,6 +41,7 @@ use sp_runtime::{
     traits::{BlakeTwo256, Hash as HashT},
     transaction_validity::TransactionPriority,
 };
+use sp_std::collections::btree_map::BTreeMap;
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
@@ -51,9 +68,11 @@ mod tests;
     TypeInfo,
 )]
 pub enum FreeKittyConstraintChecker {
-    /// A mint transaction that creates kitty without parents.
-    Mint,
-    /// A typical Breed transaction where kitties are consumed and new family(Parents(mom,dad) and child) is created.
+    /// A transaction that creates kitty without parents.
+    Create,
+    /// A Transaction that updates kitty Name.
+    UpdateKittyName,
+    /// A transaction where kitties are consumed and new family(Parents(mom,dad) and child) is created.
     Breed,
 }
 
@@ -193,7 +212,7 @@ impl KittyData {
                 v,
             )
                 .into()],
-            checker: FreeKittyConstraintChecker::Mint.into(),
+            checker: FreeKittyConstraintChecker::Create.into(),
         }
     }
 }
@@ -268,12 +287,22 @@ pub enum ConstraintCheckerError {
     TooManyBreedingsForKitty,
     /// Not enough free breedings available for these parents.
     NotEnoughFreeBreedings,
-    /// Incorrect number of outputs when it comes to Minting.
-    IncorrectNumberOfKittiesForMintOperation,
-    /// The transaction attempts to mint no Kitty.
-    MintingNothing,
+    /// The transaction attempts to create no Kitty.
+    CreatingNothing,
     /// Inputs(Parents) not required for mint.
-    MintingWithInputs,
+    CreatingWithInputs,
+    /// No input for kitty Update.
+    InvalidNumberOfInputOutput,
+    /// Updating nothing
+    OutputUtxoMissingError,
+    /// Name is not updated
+    KittyNameUnAltered,
+    /// Kitty FreeBreeding cannot be updated.
+    FreeBreedingCannotBeUpdated,
+    /// Kitty NumOfBreeding cannot be updated.
+    NumOfBreedingCannotBeUpdated,
+    /// Gender cannot be updated
+    KittyGenderCannotBeUpdated,
 }
 
 pub trait Breed {
@@ -513,10 +542,7 @@ impl TryFrom<&DynamicallyTypedData> for KittyData {
 
 impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     type Error = ConstraintCheckerError;
-    /// Checks:
-    ///     - `input_data` is of length 2
-    ///     - `output_data` is of length 3
-    ///
+
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
@@ -524,17 +550,19 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {
-            Self::Mint => {
+            Self::Create => {
                 // Make sure there are no inputs being consumed
                 ensure!(
                     input_data.is_empty(),
-                    ConstraintCheckerError::MintingWithInputs
+                    ConstraintCheckerError::CreatingWithInputs
                 );
+
                 // Make sure there is at least one output being minted
                 ensure!(
                     !output_data.is_empty(),
-                    ConstraintCheckerError::MintingNothing
+                    ConstraintCheckerError::CreatingNothing
                 );
+
                 // Make sure the outputs are the right type
                 for utxo in output_data {
                     let _utxo_kitty = utxo
@@ -544,18 +572,85 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
                 Ok(0)
             }
             Self::Breed => {
+                // Check that we are consuming at least one input
                 ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
+
                 let mom = KittyData::try_from(&input_data[0])?;
                 let dad = KittyData::try_from(&input_data[1])?;
                 KittyHelpers::can_breed(&mom, &dad)?;
-
                 // Output must be Mom, Dad, Child
                 ensure!(output_data.len() == 3, Self::Error::NotEnoughFamilyMembers);
-
                 KittyHelpers::check_new_family(&mom, &dad, output_data)?;
-
+                Ok(0)
+            }
+            Self::UpdateKittyName => {
+                can_kitty_name_be_updated(input_data, output_data)?;
                 Ok(0)
             }
         }
     }
+}
+
+/// Checks:
+///     - Input and output is of kittyType
+///     - Only name is updated and ther basicproperties are not updated.
+///
+pub fn can_kitty_name_be_updated(
+    input_data: &[DynamicallyTypedData],
+    output_data: &[DynamicallyTypedData],
+) -> Result<TransactionPriority, ConstraintCheckerError> {
+    ensure!(
+        input_data.len() == output_data.len() && !input_data.is_empty(),
+        { ConstraintCheckerError::InvalidNumberOfInputOutput }
+    );
+
+    let mut map: BTreeMap<KittyDNA, KittyData> = BTreeMap::new();
+
+    for utxo in input_data {
+        let utxo_kitty = utxo
+            .extract::<KittyData>()
+            .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
+        map.insert(utxo_kitty.clone().dna, utxo_kitty);
+    }
+
+    for utxo in output_data {
+        let utxo_output_kitty = utxo
+            .extract::<KittyData>()
+            .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
+
+        if let Some(input_kitty) = map.remove(&utxo_output_kitty.dna) {
+            // Element found, access the value
+            check_kitty_name_update(&input_kitty, &utxo_output_kitty)?;
+        } else {
+            return Err(ConstraintCheckerError::OutputUtxoMissingError);
+        }
+    }
+    return Ok(0);
+}
+
+/// Checks:
+///     - Private function used by can_kitty_name_be_updated.
+///     - Only name is updated and ther basicproperties are not updated.
+///
+fn check_kitty_name_update(
+    original_kitty: &KittyData,
+    updated_kitty: &KittyData,
+) -> Result<TransactionPriority, ConstraintCheckerError> {
+    ensure!(
+        original_kitty != updated_kitty,
+        ConstraintCheckerError::KittyNameUnAltered
+    );
+    ensure!(
+        original_kitty.free_breedings == updated_kitty.free_breedings,
+        ConstraintCheckerError::FreeBreedingCannotBeUpdated
+    );
+    ensure!(
+        original_kitty.num_breedings == updated_kitty.num_breedings,
+        ConstraintCheckerError::NumOfBreedingCannotBeUpdated
+    );
+    ensure!(
+        original_kitty.parent == updated_kitty.parent,
+        ConstraintCheckerError::KittyGenderCannotBeUpdated
+    );
+    return Ok(0);
 }

@@ -26,4 +26,6 @@ std = [
 	"sp-std/std",
 	"sp-core/std",
 	"serde/std",
+	"money/std",
+	"kitties/std",
 ]

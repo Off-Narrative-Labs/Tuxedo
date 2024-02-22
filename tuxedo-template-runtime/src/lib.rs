@@ -171,7 +171,7 @@ pub enum OuterConstraintChecker {
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
     FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
-    /// Checks Paid Kitty transactions
+    /// Checks tradable Kitty transactions
     TradableKittyConstraintChecker(tradable_kitties::TradableKittyConstraintChecker<0>),
     /// Checks that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),

@@ -51,43 +51,44 @@ impl KittyData {
         Box::new(vec![new_mom, new_dad, child])
     }
 }
+
 #[test]
-fn mint_happy_path_works() {
+fn create_happy_path_works() {
     let result = FreeKittyConstraintChecker::check(
-        &FreeKittyConstraintChecker::Mint,
+        &FreeKittyConstraintChecker::Create,
         &[],
-        &[], // no peeks
+        &[], 
         &[KittyData::default().into(), KittyData::default_dad().into()],
     );
     assert!(result.is_ok());
 }
 
 #[test]
-fn mint_with_input_fails() {
+fn create_with_input_fails() {
     let result = FreeKittyConstraintChecker::check(
-        &FreeKittyConstraintChecker::Mint,
-        &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &FreeKittyConstraintChecker::Create,
+        &[KittyData::default().into()],
+        &[], 
         &[],
     );
-    assert_eq!(result, Err(ConstraintCheckerError::MintingWithInputs));
+    assert_eq!(result, Err(ConstraintCheckerError::CreatingWithInputs));
 }
 #[test]
-fn mint_without_output_fails() {
+fn create_without_output_fails() {
     let result = FreeKittyConstraintChecker::check(
-        &FreeKittyConstraintChecker::Mint,
+        &FreeKittyConstraintChecker::Create,
         &[],
-        &[], // no peeks
+        &[], 
         &[],
     );
-    assert_eq!(result, Err(ConstraintCheckerError::MintingNothing));
+    assert_eq!(result, Err(ConstraintCheckerError::CreatingNothing));
 }
 #[test]
-fn mint_with_wrong_output_type_fails() {
+fn create_with_wrong_output_type_fails() {
     let result = FreeKittyConstraintChecker::check(
-        &FreeKittyConstraintChecker::Mint,
+        &FreeKittyConstraintChecker::Create,
         &[],
-        &[], // no peeks
+        &[], 
         &[
             Bogus.into(),
             KittyData::default().into(),
@@ -103,7 +104,7 @@ fn breed_happy_path_works() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_family[1].clone().into(),
@@ -118,7 +119,7 @@ fn breed_wrong_input_type_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[Bogus.into(), Bogus.into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::BadlyTyped));
@@ -129,7 +130,7 @@ fn breed_wrong_output_type_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[Bogus.into(), Bogus.into(), Bogus.into()],
     );
     assert_eq!(result, Err(ConstraintCheckerError::BadlyTyped));
@@ -140,7 +141,7 @@ fn inputs_dont_contain_two_parents_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::TwoParentsDoNotExist));
@@ -151,7 +152,7 @@ fn outputs_dont_contain_all_family_members_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[KittyData::default().into()],
     );
     assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFamilyMembers));
@@ -165,7 +166,7 @@ fn breed_two_dads_fails() {
             KittyData::default_dad().into(),
             KittyData::default_dad().into(),
         ],
-        &[], // no peeks
+        &[],
         &[KittyData::default().into()],
     );
     assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid));
@@ -176,7 +177,7 @@ fn breed_two_moms_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default().into()],
-        &[], // no peeks
+        &[],
         &[KittyData::default().into()],
     );
     assert_eq!(result, Err(ConstraintCheckerError::TwoMomsNotValid));
@@ -187,7 +188,7 @@ fn first_input_not_mom_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default_dad().into(), KittyData::default().into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::TwoDadsNotValid))
@@ -198,7 +199,7 @@ fn first_output_not_mom_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             KittyData::default_dad().into(),
             KittyData::default().into(),
@@ -216,7 +217,7 @@ fn breed_mom_when_she_gave_birth_recently_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[new_momma.into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::MomNotReadyYet));
@@ -230,7 +231,7 @@ fn breed_dad_when_he_is_tired_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), tired_dadda.into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::DadTooTired));
@@ -244,7 +245,7 @@ fn check_mom_breedings_overflow_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[test_mom.into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(
@@ -261,7 +262,7 @@ fn check_dad_breedings_overflow_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), test_dad.into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(
@@ -278,7 +279,7 @@ fn check_mom_free_breedings_zero_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[test_mom.into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFreeBreedings));
@@ -292,7 +293,7 @@ fn check_dad_free_breedings_zero_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), test_dad.into()],
-        &[], // no peeks
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::NotEnoughFreeBreedings));
@@ -307,7 +308,7 @@ fn check_new_mom_free_breedings_incorrect_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_mom.into(),
             new_family[1].clone().into(),
@@ -329,7 +330,7 @@ fn check_new_dad_free_breedings_incorrect_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_dad.into(),
@@ -351,7 +352,7 @@ fn check_new_mom_num_breedings_incorrect_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_mom.into(),
             new_family[1].clone().into(),
@@ -373,7 +374,7 @@ fn check_new_dad_num_breedings_incorrect_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_dad.into(),
@@ -395,7 +396,7 @@ fn check_new_mom_dna_doesnt_match_old_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_mom.into(),
             new_family[1].clone().into(),
@@ -417,7 +418,7 @@ fn check_new_dad_dna_doesnt_match_old_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_dad.into(),
@@ -439,7 +440,7 @@ fn check_child_dna_incorrect_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_family[1].clone().into(),
@@ -458,7 +459,7 @@ fn check_child_dad_parent_tired_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_family[1].clone().into(),
@@ -480,7 +481,7 @@ fn check_child_mom_parent_recently_gave_birth_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_family[1].clone().into(),
@@ -502,7 +503,7 @@ fn check_child_free_breedings_incorrect_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_family[1].clone().into(),
@@ -524,7 +525,7 @@ fn check_child_num_breedings_non_zero_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Breed,
         &[KittyData::default().into(), KittyData::default_dad().into()],
-        &[], // no peeks
+        &[],
         &[
             new_family[0].clone().into(),
             new_family[1].clone().into(),
@@ -534,5 +535,177 @@ fn check_child_num_breedings_non_zero_fails() {
     assert_eq!(
         result,
         Err(ConstraintCheckerError::NewChildHasNonZeroBreedings)
+    );
+}
+
+#[test]
+fn update_name_happy_path_works() {
+    let input = KittyData::default_dad();
+    let mut output = KittyData::default_dad();
+    output.name = *b"kty1";
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input.into()],
+        &[], 
+        &[output.into()],
+    );
+    assert!(result.is_ok());
+}
+
+#[test]
+fn update_name_happy_path_with_multiple_input_sworks() {
+    let input1 = KittyData::default_dad();
+    let mut input2 = KittyData::default();
+    input2.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialaroci"));
+    let mut output1 = input1.clone();
+    let mut output2 = input2.clone();
+
+    output1.name = *b"kty1";
+    output2.name = *b"kty2";
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input1.into(), input2.into()],
+        &[], 
+        &[output1.into(), output2.into()],
+    );
+    assert!(result.is_ok());
+}
+
+#[test]
+fn update_name_inputs_and_outputs_number_mismatch_fails() {
+    let input1 = KittyData::default_dad();
+    let input2 = KittyData::default_dad();
+    let mut output1 = input1.clone();
+    let mut output2 = input2.clone();
+
+    output1.name = *b"kty1";
+    output2.name = *b"kty2";
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input1.into(), input2.into()],
+        &[], 
+        &[output1.into()],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::InvalidNumberOfInputOutput)
+    );
+}
+#[test]
+fn update_name_no_inputs_fails() {
+    let output = KittyData::default_dad();
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[],
+        &[], 
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::InvalidNumberOfInputOutput)
+    );
+}
+
+#[test]
+fn update_name_no_output_fails() {
+    let input = KittyData::default_dad();
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input.into()],
+        &[], 
+        &[],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::InvalidNumberOfInputOutput)
+    );
+}
+#[test]
+fn update_name_dna_update_fails() {
+    let input = KittyData::default_dad();
+    let mut output = input.clone();
+    output.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
+    output.name = *b"kty1";
+
+    let input1 = KittyData::default_dad();
+    let mut output1 = input1.clone();
+    output1.name = *b"kty2";
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input1.into(), input.into()],
+        &[], 
+        &[output1.into(), output.into()],
+    );
+    assert_eq!(result, Err(ConstraintCheckerError::OutputUtxoMissingError));
+}
+
+#[test]
+fn update_name_name_unupdated_path_fails() {
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[KittyData::default_dad().into()],
+        &[], 
+        &[KittyData::default_dad().into()],
+    );
+    assert_eq!(result, Err(ConstraintCheckerError::KittyNameUnAltered));
+}
+
+#[test]
+fn update_name_free_breeding_updated_path_fails() {
+    let mut output = KittyData::default_dad();
+    output.name = *b"kty1";
+    output.free_breedings += 1;
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[KittyData::default().into()],
+        &[], 
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::FreeBreedingCannotBeUpdated)
+    );
+}
+
+#[test]
+fn update_name_num_of_breeding_updated_path_fails() {
+    let mut output = KittyData::default_dad();
+    output.name = *b"kty1";
+    output.num_breedings += 1;
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[KittyData::default().into()],
+        &[], 
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::NumOfBreedingCannotBeUpdated)
+    );
+}
+
+#[test]
+fn update_name_gender_updated_path_fails() {
+    let input = KittyData::default();
+    let mut output = KittyData::default_dad();
+    output.name = *b"kty1";
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input.into()],
+        &[], 
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::KittyGenderCannotBeUpdated)
     );
 }
