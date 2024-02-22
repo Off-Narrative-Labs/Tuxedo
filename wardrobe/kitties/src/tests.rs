@@ -57,7 +57,7 @@ fn create_happy_path_works() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Create,
         &[],
-        &[], 
+        &[],
         &[KittyData::default().into(), KittyData::default_dad().into()],
     );
     assert!(result.is_ok());
@@ -68,19 +68,15 @@ fn create_with_input_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Create,
         &[KittyData::default().into()],
-        &[], 
+        &[],
         &[],
     );
     assert_eq!(result, Err(ConstraintCheckerError::CreatingWithInputs));
 }
 #[test]
 fn create_without_output_fails() {
-    let result = FreeKittyConstraintChecker::check(
-        &FreeKittyConstraintChecker::Create,
-        &[],
-        &[], 
-        &[],
-    );
+    let result =
+        FreeKittyConstraintChecker::check(&FreeKittyConstraintChecker::Create, &[], &[], &[]);
     assert_eq!(result, Err(ConstraintCheckerError::CreatingNothing));
 }
 #[test]
@@ -88,7 +84,7 @@ fn create_with_wrong_output_type_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::Create,
         &[],
-        &[], 
+        &[],
         &[
             Bogus.into(),
             KittyData::default().into(),
@@ -547,7 +543,7 @@ fn update_name_happy_path_works() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[input.into()],
-        &[], 
+        &[],
         &[output.into()],
     );
     assert!(result.is_ok());
@@ -567,7 +563,7 @@ fn update_name_happy_path_with_multiple_input_sworks() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[input1.into(), input2.into()],
-        &[], 
+        &[],
         &[output1.into(), output2.into()],
     );
     assert!(result.is_ok());
@@ -586,7 +582,7 @@ fn update_name_inputs_and_outputs_number_mismatch_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[input1.into(), input2.into()],
-        &[], 
+        &[],
         &[output1.into()],
     );
     assert_eq!(
@@ -601,7 +597,7 @@ fn update_name_no_inputs_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[],
-        &[], 
+        &[],
         &[output.into()],
     );
     assert_eq!(
@@ -617,7 +613,7 @@ fn update_name_no_output_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[input.into()],
-        &[], 
+        &[],
         &[],
     );
     assert_eq!(
@@ -639,7 +635,7 @@ fn update_name_dna_update_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[input1.into(), input.into()],
-        &[], 
+        &[],
         &[output1.into(), output.into()],
     );
     assert_eq!(result, Err(ConstraintCheckerError::OutputUtxoMissingError));
@@ -650,7 +646,7 @@ fn update_name_name_unupdated_path_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[KittyData::default_dad().into()],
-        &[], 
+        &[],
         &[KittyData::default_dad().into()],
     );
     assert_eq!(result, Err(ConstraintCheckerError::KittyNameUnAltered));
@@ -665,7 +661,7 @@ fn update_name_free_breeding_updated_path_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[KittyData::default().into()],
-        &[], 
+        &[],
         &[output.into()],
     );
     assert_eq!(
@@ -683,7 +679,7 @@ fn update_name_num_of_breeding_updated_path_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[KittyData::default().into()],
-        &[], 
+        &[],
         &[output.into()],
     );
     assert_eq!(
@@ -701,7 +697,7 @@ fn update_name_gender_updated_path_fails() {
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
         &[input.into()],
-        &[], 
+        &[],
         &[output.into()],
     );
     assert_eq!(
