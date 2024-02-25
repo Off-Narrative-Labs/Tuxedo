@@ -1,32 +1,38 @@
-//! This module defines `TradableKitty`, a specialized type of kitty designed for trading with unique features.
+//! # TradableKitty Module
+//!
+//! The `TradableKitty` module defines a specialized type of kitty tailored for trading with unique features.
 //!
 //! ## Features
+//!
+//! The module supports multiple tradable kitties in the same transactions. Note that the input and output kitties must follow the same order.
 //!
 //! - **ListKittyForSale:** Convert basic kitties into tradable kitties, adding a `Price` field.
 //! - **DelistKittyFromSale:** Transform tradable kitties back into regular kitties when owners decide not to sell.
 //! - **UpdateKittyPrice:** Allow owners to modify the price of TradableKitties.
 //! - **UpdateKittyName:** Permit owners to update the name of TradableKitties.
-//! - **Buy:** Enable users to securely purchase TradableKitties from others, ensuring fair exchanges.
 //!
+//!   *Note: Only one kitty can be traded at a time.*
+//!
+//! - **Buy:** Enable users to securely purchase TradableKitty from others, ensuring fair exchanges.
 //!
 //! TradableKitties enrich the user experience by introducing advanced trading capabilities.
+//!
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use kitties::{KittyDNA, KittyData};
+use money::ConstraintCheckerError as MoneyError;
+use money::{Coin, MoneyConstraintChecker};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_runtime::transaction_validity::TransactionPriority;
-use sp_std::collections::btree_map::BTreeMap;
+use sp_std::collections::btree_set::BTreeSet; // For checking the uniqueness of input and output based on dna.
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure, SimpleConstraintChecker,
 };
-
-use kitties::{KittyDNA, KittyData};
-use money::ConstraintCheckerError as MoneyError;
-use money::{Coin, MoneyConstraintChecker};
 
 #[cfg(test)]
 mod tests;
@@ -98,21 +104,25 @@ pub enum TradeableKittyError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
-    /// output missing updating nothing.
-    OutputUtxoMissingError,
     /// Input missing for the transaction.
     InputMissingError,
     /// Not enough amount to buy a kitty.
     InsufficientCollateralToBuyKitty,
     /// The number of input vs number of output doesn't match for a transaction.
     NumberOfInputOutputMismatch,
+    /// Can't buy more than one kitty at a time.
+    CannotBuyMoreThanOneKittyAtTime,
     /// Kitty basic properties such as DNA, free breeding, and a number of breedings, are altered error.
     KittyBasicPropertiesAltered,
     /// Kitty not available for sale.Occur when price is None.
     KittyNotForSale,
     /// Kitty price cant be none when it is available for sale.
     KittyPriceCantBeNone,
-    /// Kitty price is unaltered for kitty price update transactions.
+    /// Duplicate kitty foundi.e based on the DNA.
+    DuplicateKittyFound,
+    /// Duplicate tradable kitty foundi.e based on the DNA.
+    DuplicateTradableKittyFound,
+    /// Kitty price is unaltered is not allowed for kitty price update transactions.
     KittyPriceUnaltered,
 }
 
@@ -129,11 +139,11 @@ impl From<kitties::ConstraintCheckerError> for TradeableKittyError {
 }
 
 /// The main constraint checker for the trdable kitty piece. Allows below :
-/// Listing kitty for sale
-/// Delisting kitty from sale
-/// Update kitty price
-/// Update kitty name
-/// Buy tradable kitty
+/// Listing kitty for sale : multiple kiities are allowed, provided input and output in same order.
+/// Delisting kitty from sale : multiple tradable kiities are allowed, provided input and output in same order.
+/// Update kitty price : multiple tradable kiities are allowed, provided input and output in same order.
+/// Update kitty name : multiple tradable kiities are allowed, provided input and output in same order.
+/// Buy tradable kitty :  multiple tradable kiities are not allowed, Only single kiity operation is allowed.
 #[derive(
     Serialize,
     Deserialize,
@@ -176,23 +186,20 @@ fn extract_basic_kitty_list(
     Ok(())
 }
 
-/// checks if buying the kitty is possible of not. It depends on Money piece to validat spending of coins.
+/// Checks if buying the kitty is possible of not. It depends on Money piece to validate spending of coins.
 fn check_can_buy<const ID: u8>(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
 ) -> Result<(), TradeableKittyError> {
     let mut input_coin_data: Vec<DynamicallyTypedData> = Vec::new();
     let mut output_coin_data: Vec<DynamicallyTypedData> = Vec::new();
-    let mut input_kitty_data: Vec<DynamicallyTypedData> = Vec::new();
-    let mut output_kitty_data: Vec<DynamicallyTypedData> = Vec::new();
+    let mut input_ktty_to_be_traded: Option<TradableKittyData> = None;
+    let mut output_ktty_to_be_traded: Option<TradableKittyData> = None;
 
     let mut total_input_amount: u128 = 0;
     let mut total_price_of_kitty: u128 = 0;
 
-    // Map to verify that output_kitty is same as input_kitty based on the dna after buy operation
-    let mut dna_to_tdkitty_map: BTreeMap<KittyDNA, TradableKittyData> = BTreeMap::new();
-
-    // Seperate the coin and tdkitty in to seperate vecs from the input_data .
+    // Seperate the coin and tradable kitty in to seperate vecs from the input_data .
     for utxo in input_data {
         if let Ok(coin) = utxo.extract::<Coin<ID>>() {
             let utxo_value = coin.0;
@@ -205,24 +212,35 @@ fn check_can_buy<const ID: u8>(
             total_input_amount = total_input_amount
                 .checked_add(utxo_value)
                 .ok_or(TradeableKittyError::MoneyError(MoneyError::ValueOverflow))?;
-
-            // Process Kitty
         } else if let Ok(td_input_kitty) = utxo.extract::<TradableKittyData>() {
-            // Trying to buy kitty which is not listed for sale.
-            let price = match td_input_kitty.price {
-                None => return Err(TradeableKittyError::KittyNotForSale),
-                Some(p) => p,
+            // Process tradable kitty
+            // Checking if more than 1 kitty is sent for trading.
+            match input_ktty_to_be_traded {
+                None => {
+                    // 1st tradable kitty is received in the input.
+                    input_ktty_to_be_traded = Some(td_input_kitty.clone());
+                    let price = match td_input_kitty.price {
+                        None => return Err(TradeableKittyError::KittyNotForSale),
+                        Some(p) => p,
+                    };
+                    total_price_of_kitty = total_price_of_kitty
+                        .checked_add(price)
+                        .ok_or(TradeableKittyError::MoneyError(MoneyError::ValueOverflow))?;
+                }
+                Some(_) => {
+                    // More than 1 tradable kitty are sent for trading.
+                    return Err(TradeableKittyError::CannotBuyMoreThanOneKittyAtTime);
+                }
             };
-
-            input_kitty_data.push(utxo.clone());
-            dna_to_tdkitty_map.insert(td_input_kitty.clone().kitty_basic_data.dna, td_input_kitty);
-            total_price_of_kitty = total_price_of_kitty
-                .checked_add(price)
-                .ok_or(TradeableKittyError::MoneyError(MoneyError::ValueOverflow))?;
         } else {
             return Err(TradeableKittyError::BadlyTyped);
         }
     }
+
+    // Ensuring we found kitty in the input
+    ensure!(input_ktty_to_be_traded != None, {
+        TradeableKittyError::InputMissingError
+    });
 
     // Seperate the coin and tdkitty in to seperate vecs from the output_data .
     for utxo in output_data {
@@ -235,29 +253,33 @@ fn check_can_buy<const ID: u8>(
             output_coin_data.push(utxo.clone());
             // Process Coin
         } else if let Ok(td_output_kitty) = utxo.extract::<TradableKittyData>() {
-            match dna_to_tdkitty_map.remove(&td_output_kitty.kitty_basic_data.dna) {
-                Some(found_kitty) => {
-                    // During buy opertaion, basic kitty properties cant be updated in the same transaction.
+            // Checking if more than 1 kitty in output is sent for trading.
+            match output_ktty_to_be_traded {
+                None => {
+                    // 1st tradable kitty is received in the output.
+                    output_ktty_to_be_traded = Some(td_output_kitty.clone());
                     ensure!(
-                        found_kitty.kitty_basic_data == td_output_kitty.kitty_basic_data, // basic kitty data is unaltered
+                        input_ktty_to_be_traded.clone().unwrap().kitty_basic_data
+                            == td_output_kitty.kitty_basic_data, // basic kitty data is unaltered
                         TradeableKittyError::KittyBasicPropertiesAltered // this need to be chan
                     );
                 }
-                None => {
-                    return Err(TradeableKittyError::OutputUtxoMissingError);
+                Some(_) => {
+                    // More than 1 tradable kitty are sent in output for trading.
+                    return Err(TradeableKittyError::CannotBuyMoreThanOneKittyAtTime);
                 }
             };
-            output_kitty_data.push(utxo.clone());
         } else {
             return Err(TradeableKittyError::BadlyTyped);
         }
     }
 
-    ensure!(
-        input_kitty_data.len() == output_kitty_data.len() && !input_kitty_data.is_empty(),
-        { TradeableKittyError::NumberOfInputOutputMismatch }
-    );
+    // Ensuring we found kitty in the output
+    ensure!(output_ktty_to_be_traded != None, {
+        TradeableKittyError::InputMissingError
+    });
 
+    // Ensuring total money sent is enough to buy the kitty
     ensure!(
         total_price_of_kitty <= total_input_amount,
         TradeableKittyError::InsufficientCollateralToBuyKitty
@@ -268,8 +290,8 @@ fn check_can_buy<const ID: u8>(
     Ok(())
 }
 
-/// checks if kitty price updates is possible of not.
-/// Price of multiple kitties can be updated in the same txn.
+/// checks if tradable kitty price updates is possible of not.
+/// Price of multiple tradable kitties can be updated in the same txn.
 fn check_kitty_price_update(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
@@ -279,40 +301,39 @@ fn check_kitty_price_update(
         { TradeableKittyError::NumberOfInputOutputMismatch }
     );
 
-    let mut dna_to_tdkitty_map: BTreeMap<KittyDNA, TradableKittyData> = BTreeMap::new();
-
-    for utxo in input_data {
-        let td_input_kitty = utxo
-            .extract::<TradableKittyData>()
-            .map_err(|_| TradeableKittyError::BadlyTyped)?;
-        dna_to_tdkitty_map.insert(td_input_kitty.clone().kitty_basic_data.dna, td_input_kitty);
-    }
-
-    for utxo in output_data {
-        let td_output_kitty = utxo
+    let mut dna_to_tdkitty_set: BTreeSet<KittyDNA> = BTreeSet::new(); // to check the uniqueness in input
+                                                                      //input td-kitty and output td kitties need to be in same order.
+    for i in 0..input_data.len() {
+        let utxo_input_tradable_kitty = input_data[i]
             .extract::<TradableKittyData>()
             .map_err(|_| TradeableKittyError::BadlyTyped)?;
 
-        if let Some(found_kitty) = dna_to_tdkitty_map.remove(&td_output_kitty.kitty_basic_data.dna)
-        {
-            // Element found, access the value
-            ensure!(
-                found_kitty.kitty_basic_data == td_output_kitty.kitty_basic_data, // basic kitty data is unaltered
-                TradeableKittyError::KittyBasicPropertiesAltered // this need to be chan
-            );
-            match td_output_kitty.price {
-                Some(_) => {
-                    ensure!(
-                        found_kitty.price != td_output_kitty.price, // kitty ptice is unaltered
-                        TradeableKittyError::KittyPriceUnaltered    // this need to be chan
-                    );
-                }
-                None => return Err(TradeableKittyError::KittyPriceCantBeNone),
-            };
+        if dna_to_tdkitty_set.contains(&utxo_input_tradable_kitty.kitty_basic_data.dna) {
+            return Err(TradeableKittyError::DuplicateTradableKittyFound);
         } else {
-            return Err(TradeableKittyError::OutputUtxoMissingError);
+            dna_to_tdkitty_set.insert(utxo_input_tradable_kitty.clone().kitty_basic_data.dna);
         }
+
+        let utxo_output_tradable_kitty = output_data[i]
+            .extract::<TradableKittyData>()
+            .map_err(|_| TradeableKittyError::BadlyTyped)?;
+
+        ensure!(
+            utxo_input_tradable_kitty.kitty_basic_data
+                == utxo_output_tradable_kitty.kitty_basic_data,
+            TradeableKittyError::KittyBasicPropertiesAltered
+        );
+        match utxo_output_tradable_kitty.price {
+            Some(_) => {
+                ensure!(
+                    utxo_input_tradable_kitty.price != utxo_output_tradable_kitty.price, // kitty ptice is unaltered
+                    TradeableKittyError::KittyPriceUnaltered
+                );
+            }
+            None => return Err(TradeableKittyError::KittyPriceCantBeNone),
+        };
     }
+
     return Ok(0);
 }
 
@@ -348,36 +369,40 @@ fn check_kitty_tdkitty_interconversion(
         { TradeableKittyError::NumberOfInputOutputMismatch }
     );
 
-    let mut map: BTreeMap<KittyDNA, KittyData> = BTreeMap::new();
+    let mut dna_to_tdkitty_set: BTreeSet<KittyDNA> = BTreeSet::new();
+    let mut dna_to_kitty_set: BTreeSet<KittyDNA> = BTreeSet::new();
 
-    for utxo in kitty_data {
-        let utxo_kitty = utxo
+    for i in 0..kitty_data.len() {
+        let utxo_kitty = kitty_data[i]
             .extract::<KittyData>()
             .map_err(|_| TradeableKittyError::BadlyTyped)?;
-        map.insert(utxo_kitty.clone().dna, utxo_kitty);
-    }
 
-    for utxo in tradable_kitty_data {
-        let utxo_tradable_kitty = utxo
+        if dna_to_kitty_set.contains(&utxo_kitty.dna) {
+            return Err(TradeableKittyError::DuplicateKittyFound);
+        } else {
+            dna_to_kitty_set.insert(utxo_kitty.clone().dna);
+        }
+
+        let utxo_tradable_kitty = tradable_kitty_data[i]
             .extract::<TradableKittyData>()
             .map_err(|_| TradeableKittyError::BadlyTyped)?;
 
-        match map.remove(&utxo_tradable_kitty.kitty_basic_data.dna) {
-            Some(kitty) => {
-                ensure!(
-                    kitty == utxo_tradable_kitty.kitty_basic_data, // basic kitty data is unaltered
-                    TradeableKittyError::KittyBasicPropertiesAltered  // this need to be chan
-                );
-                let _ = match utxo_tradable_kitty.price {
-                    Some(_) => {}
-                    None => return Err(TradeableKittyError::KittyPriceCantBeNone),
-                };
-            }
-            None => {
-                return Err(TradeableKittyError::InputMissingError);
-            }
-        };
+        if dna_to_tdkitty_set.contains(&utxo_tradable_kitty.kitty_basic_data.dna) {
+            return Err(TradeableKittyError::DuplicateTradableKittyFound);
+        } else {
+            dna_to_tdkitty_set.insert(utxo_tradable_kitty.clone().kitty_basic_data.dna);
+        }
+
+        ensure!(
+            utxo_kitty == utxo_tradable_kitty.kitty_basic_data,
+            TradeableKittyError::KittyBasicPropertiesAltered
+        );
+        ensure!(
+            utxo_tradable_kitty.price != None, // basic kitty data is unaltered
+            TradeableKittyError::KittyPriceCantBeNone  // this need to be chan
+        );
     }
+
     return Ok(0);
 }
 

@@ -6,23 +6,26 @@
 //! - **Create:** Generate a new kitty.
 //!   To submit a valid transaction for creating a kitty, adhere to the following structure:
 //!   1. Input must be empty.
-//!   2. Output must contain only the newly created kitty as a child.
-
+//!   2. Output must contain only the newly created kittities as a child.
+//!
+//!    **Note 1:** Multiple kitties can be created at the same time in the same txn..
+//!
 //! - **Update Name:** Modify the name of a kitty.
 //!   To submit a valid transaction for updating a kitty's name, adhere to the following structure:
 //!   1. Input must be the kitty to be updated.
 //!   2. Output must contain the kitty with the updated name.
 //!
-//!    **Note:** All other properties such as DNA, parents, free breedings, etc., must remain unaltered in the output.
+//!    **Note 1:** All other properties such as DNA, parents, free breedings, etc., must remain unaltered in the output.
+//!    **Note 2:** The input and output kitties must follow same order.
 //!
 //! - **Breed:** Breeds a new kitty using mom and dad based on below factors
-//! 1.) Mom and Tired have to be in a state where they are ready to breed
+//! 1.) Mom and Dad have to be in a state where they are ready to breed
 //! 2.) Each Mom and Dad have some DNA and the child will have unique DNA combined from the both of them
 //!     Linkable back to the Mom and Dad
 //! 3.) The game also allows Kitties to have a cooling off period inbetween breeding before they can be bred again.
 //! 4.) A rest operation allows for a Mom Kitty and a Dad Kitty to be cooled off
 //!
-//! In order to submit a valid transaction you must strutucture it as follows:
+//! In order to submit a valid transaction you must structure it as follows:
 //! 1.) Input must contain 1 mom and 1 dad
 //! 2.) Output must contain Mom, Dad, and newly created Child
 //! 3.) A child's DNA is calculated by:
@@ -41,7 +44,7 @@ use sp_runtime::{
     traits::{BlakeTwo256, Hash as HashT},
     transaction_validity::TransactionPriority,
 };
-use sp_std::collections::btree_map::BTreeMap;
+use sp_std::collections::btree_set::BTreeSet; // For checking the uniqueness of input and output based on dna.
 use sp_std::prelude::*;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
@@ -53,6 +56,10 @@ use tuxedo_core::{
 #[cfg(test)]
 mod tests;
 
+/// The main constraint checker for the kitty piece. Allows below :
+/// Create : Allows creation of kitty without parents, Multiple kitties can be created in same txn.
+/// UpdateKittyName : Allows updating the name of the kitty s, Multiple kitty name can be updated in same txn.
+/// Breed : Allows breeding of kitty.
 #[derive(
     Serialize,
     Deserialize,
@@ -68,14 +75,15 @@ mod tests;
     TypeInfo,
 )]
 pub enum FreeKittyConstraintChecker {
-    /// A transaction that creates kitty without parents.
+    /// Txn that creates kitty without parents.Multiple kitties can be created  at the same time.
     Create,
-    /// A Transaction that updates kitty Name.
+    /// Txn that updates kitty Name. Multiple kitty names can be updated. input & output must follow the same order.
     UpdateKittyName,
-    /// A transaction where kitties are consumed and new family(Parents(mom,dad) and child) is created.
+    /// Txn where kitties are consumed and new family(Parents(mom,dad) and child) is created.
     Breed,
 }
 
+/// Dad kitty status with respect to breeding.
 #[derive(
     Serialize,
     Deserialize,
@@ -93,10 +101,13 @@ pub enum FreeKittyConstraintChecker {
 )]
 pub enum DadKittyStatus {
     #[default]
+    /// Can breed.
     RearinToGo,
+    /// Can't breed due to tired.
     Tired,
 }
 
+/// Mad kitty status with respect to breeding.
 #[derive(
     Serialize,
     Deserialize,
@@ -114,10 +125,13 @@ pub enum DadKittyStatus {
 )]
 pub enum MomKittyStatus {
     #[default]
+    /// Can breed.
     RearinToGo,
+    /// Can't breed due to recent child kitty delivery.
     HadBirthRecently,
 }
 
+/// Parent stuct contains 1 mom kitty and 1 dad kitty.
 #[derive(
     Serialize,
     Deserialize,
@@ -170,6 +184,12 @@ impl Default for Parent {
 )]
 pub struct KittyDNA(pub H256);
 
+/// Kitty data contains basic informationsuch as below :
+/// parent: 1 mom kitty and 1 dad kitty.
+/// free_breedings: Free breeding allowed on a kitty.
+/// dna :Its a unique per kitty.
+/// num_breedings: number of free breedings are remaining.
+/// name: Name of kitty.
 #[derive(
     Serialize,
     Deserialize,
@@ -233,6 +253,7 @@ impl UtxoData for KittyData {
     const TYPE_ID: [u8; 4] = *b"Kitt";
 }
 
+/// Reasons that kitty opertaion may go wrong.
 #[derive(
     Serialize,
     Deserialize,
@@ -293,8 +314,10 @@ pub enum ConstraintCheckerError {
     CreatingWithInputs,
     /// No input for kitty Update.
     InvalidNumberOfInputOutput,
-    /// Updating nothing
-    OutputUtxoMissingError,
+    /// Duplicate kitty found i.e based on the DNA.
+    DuplicateKittyFound,
+    /// Dna mismatch between input and output.
+    DnaMismatchBetweenInputAndOutput,
     /// Name is not updated
     KittyNameUnAltered,
     /// Kitty FreeBreeding cannot be updated.
@@ -593,8 +616,8 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
 
 /// Checks:
 ///     - Input and output is of kittyType
-///     - Only name is updated and ther basicproperties are not updated.
-///
+///     - Only name is updated and ther basic properties are not updated.
+///     - Order between input and output must be same.
 pub fn can_kitty_name_be_updated(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
@@ -603,34 +626,35 @@ pub fn can_kitty_name_be_updated(
         input_data.len() == output_data.len() && !input_data.is_empty(),
         { ConstraintCheckerError::InvalidNumberOfInputOutput }
     );
+    let mut dna_to_kitty_set: BTreeSet<KittyDNA> = BTreeSet::new();
 
-    let mut map: BTreeMap<KittyDNA, KittyData> = BTreeMap::new();
-
-    for utxo in input_data {
-        let utxo_kitty = utxo
-            .extract::<KittyData>()
-            .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
-        map.insert(utxo_kitty.clone().dna, utxo_kitty);
-    }
-
-    for utxo in output_data {
-        let utxo_output_kitty = utxo
+    for i in 0..input_data.len() {
+        let utxo_input_kitty = input_data[i]
+            .clone()
             .extract::<KittyData>()
             .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
 
-        if let Some(input_kitty) = map.remove(&utxo_output_kitty.dna) {
-            // Element found, access the value
-            check_kitty_name_update(&input_kitty, &utxo_output_kitty)?;
+        if dna_to_kitty_set.contains(&utxo_input_kitty.dna) {
+            return Err(ConstraintCheckerError::DuplicateKittyFound);
         } else {
-            return Err(ConstraintCheckerError::OutputUtxoMissingError);
+            dna_to_kitty_set.insert(utxo_input_kitty.clone().dna);
         }
+
+        let utxo_output_kitty = output_data[i]
+            .clone()
+            .extract::<KittyData>()
+            .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
+        if utxo_input_kitty.dna != utxo_output_kitty.dna {
+            return Err(ConstraintCheckerError::DnaMismatchBetweenInputAndOutput);
+        }
+        check_kitty_name_update(&utxo_input_kitty, &utxo_output_kitty)?;
     }
     return Ok(0);
 }
 
 /// Checks:
 ///     - Private function used by can_kitty_name_be_updated.
-///     - Only name is updated and ther basicproperties are not updated.
+///     - Only name is updated and ther basic properties are not updated.
 ///
 fn check_kitty_name_update(
     original_kitty: &KittyData,

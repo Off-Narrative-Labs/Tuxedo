@@ -628,17 +628,54 @@ fn update_name_dna_update_fails() {
     output.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
     output.name = *b"kty1";
 
-    let input1 = KittyData::default_dad();
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input.into()],
+        &[],
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::DnaMismatchBetweenInputAndOutput)
+    );
+}
+
+#[test]
+fn update_name_duplicate_dna_update_fails() {
+    let input = KittyData::default_dad();
+    let mut output = input.clone();
+    output.name = *b"kty1";
+
+    let result = FreeKittyConstraintChecker::check(
+        &FreeKittyConstraintChecker::UpdateKittyName,
+        &[input.clone().into(), input.into()],
+        &[],
+        &[output.clone().into(), output.into()],
+    );
+    assert_eq!(result, Err(ConstraintCheckerError::DuplicateKittyFound));
+}
+
+#[test]
+fn update_name_out_of_order_input_and_output_fails() {
+    let input = KittyData::default_dad();
+    let mut output = input.clone();
+    output.name = *b"kty1";
+
+    let mut input1 = KittyData::default_dad();
+    input1.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
     let mut output1 = input1.clone();
     output1.name = *b"kty2";
 
     let result = FreeKittyConstraintChecker::check(
         &FreeKittyConstraintChecker::UpdateKittyName,
-        &[input1.into(), input.into()],
+        &[input.clone().into(), input1.into()],
         &[],
-        &[output1.into(), output.into()],
+        &[output1.clone().into(), output.into()],
     );
-    assert_eq!(result, Err(ConstraintCheckerError::OutputUtxoMissingError));
+    assert_eq!(
+        result,
+        Err(ConstraintCheckerError::DnaMismatchBetweenInputAndOutput)
+    );
 }
 
 #[test]
