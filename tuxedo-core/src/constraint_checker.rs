@@ -131,8 +131,8 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
     }
 
     fn create_inherents<V>(
-        authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<(Transaction<V, Self>, H256)>,
+        _authoring_inherent_data: &InherentData,
+        _previous_inherents: Vec<(Transaction<V, Self>, H256)>,
     ) -> Vec<Transaction<V, Self>> {
         Vec::new()
     }
