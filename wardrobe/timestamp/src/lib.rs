@@ -146,9 +146,7 @@ pub enum TimestampError {
 #[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(PhantomData<T>);
 
-impl<T: TimestampConfig + 'static> SimpleConstraintChecker
-    for SetTimestamp<T>
-{
+impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
     type Error = TimestampError;
 
     fn check(
@@ -207,9 +205,7 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker
     }
 }
 
-impl<T: TimestampConfig + 'static> InherentHooks
-    for SetTimestamp<T>
-{
+impl<T: TimestampConfig + 'static> InherentHooks for SetTimestamp<T> {
     type Error = sp_timestamp::InherentError;
     const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = sp_timestamp::INHERENT_IDENTIFIER;
 
@@ -241,7 +237,8 @@ impl<T: TimestampConfig + 'static> InherentHooks
 
         let new_output = Output {
             payload: new_timestamp.into(),
-            verifier: V::new_unspendable().expect("Must be able to create unspendable verifier to use timestamp inherent."),
+            verifier: V::new_unspendable()
+                .expect("Must be able to create unspendable verifier to use timestamp inherent."),
         };
 
         Transaction {
@@ -308,7 +305,9 @@ impl<T: TimestampConfig + 'static> InherentHooks
             peeks: Vec::new(),
             outputs: vec![Output {
                 payload: Timestamp::new(time, 0).into(),
-                verifier: V::new_unspendable().expect("Must be able to create unspendable verifier to use timestamp inherent."),
+                verifier: V::new_unspendable().expect(
+                    "Must be able to create unspendable verifier to use timestamp inherent.",
+                ),
             }],
             checker: Self::default(),
         }]

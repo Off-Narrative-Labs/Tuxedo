@@ -54,7 +54,10 @@ fn update_timestamp_no_peek() {
 
     let new: DynamicallyTypedData = Timestamp::new(3_000, 2).into();
 
-    assert_eq!(checker.check(&[], &[], &[new]), Err(MissingPreviousTimestamp));
+    assert_eq!(
+        checker.check(&[], &[], &[new]),
+        Err(MissingPreviousTimestamp)
+    );
 }
 
 #[test]
