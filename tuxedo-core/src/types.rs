@@ -1,6 +1,6 @@
 //! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
-use crate::{dynamic_typing::DynamicallyTypedData, ConstraintChecker, Verifier};
+use crate::{dynamic_typing::DynamicallyTypedData, SimpleConstraintChecker, Verifier};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
@@ -107,7 +107,7 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
 // so we do a minimal implementation.
 impl<V, C> Extrinsic for Transaction<V, C>
 where
-    C: TypeInfo + ConstraintChecker + 'static,
+    C: TypeInfo + SimpleConstraintChecker + 'static,
     V: TypeInfo + Verifier + 'static,
 {
     type Call = Self;

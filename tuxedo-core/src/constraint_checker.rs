@@ -33,7 +33,7 @@
 
 use sp_std::fmt::Debug;
 
-use crate::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal};
+use crate::dynamic_typing::DynamicallyTypedData;
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -54,42 +54,6 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
-}
-
-/// Similar to the `SimpleConstraintChecker` but with extended field
-///
-/// This trait should only be implemented if you need to implement an inherent.
-///
-/// Additional transient information may be passed to the constraint checker by including it in the fields
-/// of the constraint checker struct itself. Information passed in this way does not come from state, nor
-/// is it stored in state.
-pub trait ConstraintChecker: SimpleConstraintChecker {
-
-    /// TODO Restore old docs
-    type InherentHooks: InherentInternal<Self>;
-
-    /// Tells whether this extrinsic is an inherent or not.
-    ///
-    /// You should never manually write a body to this function.
-    /// If you are:
-    /// * Working on an inherent constraint checker -> Rely on the default body.
-    /// * Working on a simple non-inherent constraint checker -> Use the `SimpleConstraintChecker` trait instead
-    ///   and rely on its blanket implementation.
-    /// * Considering an aggregate constraint checker which is part inherent, part not -> let the macro handle it for you.
-    fn is_inherent(&self) -> bool {
-        true
-    }
-}
-
-// This blanket implementation makes it so that any type that chooses to
-// implement the Simple trait also implements the more Powerful trait.
-// This way the executive can always just call the more Powerful trait.
-impl<T: SimpleConstraintChecker> ConstraintChecker for T {
-    type InherentHooks = ();
-
-    fn is_inherent(&self) -> bool {
-        false
-    }
 }
 
 /// Utilities for writing constraint-checker-related unit tests
