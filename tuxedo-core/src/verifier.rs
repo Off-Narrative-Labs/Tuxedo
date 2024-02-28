@@ -31,6 +31,16 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
 
     /// Main function in the trait. Does the checks to make sure an output can be spent.
     fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &Self::Redeemer) -> bool;
+
+    /// A way to create a new instance of the verifier whose semantics cannot be spent.
+    /// This may be a signature check with a pubkey of 0 or a hashlock with a hash o 0
+    /// or a bitcoin script that directly returns false, etc.
+    ///
+    /// This is only required in chains that use inherents, and thus a default implementation
+    /// is provided.
+    fn new_unspendable() -> Option<Self> {
+        None
+    }
 }
 
 /// A simple verifier that allows anyone to consume an output at any time

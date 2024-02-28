@@ -35,7 +35,7 @@ use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_std::fmt::Debug;
 
-use crate::{dynamic_typing::DynamicallyTypedData, types::Transaction};
+use crate::{dynamic_typing::DynamicallyTypedData, types::Transaction, Verifier};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
 
@@ -90,7 +90,7 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
 
     /// Create the inherent extrinsics to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    fn create_inherents<V: Clone>(
+    fn create_inherents<V: Verifier>(
         authoring_inherent_data: &InherentData,
         previous_inherents: Vec<(Transaction<V, Self>, H256)>,
     ) -> Vec<Transaction<V, Self>>;
@@ -99,7 +99,7 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not necessarily the
     /// same as what is available at authoring time.
-    fn check_inherents<V: Clone>(
+    fn check_inherents<V: Verifier>(
         importing_inherent_data: &InherentData,
         inherents: Vec<Transaction<V, Self>>,
         results: &mut CheckInherentsResult,
@@ -107,7 +107,7 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
 
     /// Return the genesis transactions that are required for the inherents.
     #[cfg(feature = "std")]
-    fn genesis_transactions<V>() -> Vec<Transaction<V, Self>>;
+    fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>>;
 }
 
 // We automatically supply every single simple constraint checker with a dummy set

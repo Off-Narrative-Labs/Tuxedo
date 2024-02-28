@@ -24,11 +24,10 @@ use sp_timestamp::InherentError::TooFarInFuture;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
-    inherents::{TuxedoInherent, TuxedoInherentAdapter},
+    inherents::InherentHooks,
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Output, OutputRef, Transaction},
-    verifier::UpForGrabs,
-    ConstraintChecker, SimpleConstraintChecker, Verifier,
+    SimpleConstraintChecker, Verifier,
 };
 
 #[cfg(test)]
@@ -147,17 +146,16 @@ pub enum TimestampError {
 #[scale_info(skip_type_params(T))]
 pub struct SetTimestamp<T>(PhantomData<T>);
 
-impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChecker<V>
+impl<T: TimestampConfig + 'static> SimpleConstraintChecker
     for SetTimestamp<T>
 {
     type Error = TimestampError;
-    type InherentHooks = TuxedoInherentAdapter<Self>;
 
     fn check(
         &self,
-        input_data: &[tuxedo_core::types::Output<V>],
-        peek_data: &[tuxedo_core::types::Output<V>],
-        output_data: &[tuxedo_core::types::Output<V>],
+        input_data: &[DynamicallyTypedData],
+        peek_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         log::debug!(
             target: LOG_TARGET,
@@ -173,7 +171,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
         // Make sure the only output is a new best timestamp
         ensure!(!output_data.is_empty(), Self::Error::MissingNewTimestamp);
         let new_timestamp = output_data[0]
-            .payload
             .extract::<Timestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?;
         ensure!(
@@ -191,7 +188,6 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
         // We don't expect any additional peeks typically, but they are harmless.
         ensure!(!peek_data.is_empty(), Self::Error::MissingPreviousTimestamp);
         let old_timestamp = peek_data[0]
-            .payload
             .extract::<Timestamp>()
             .map_err(|_| Self::Error::BadlyTyped)?;
 
@@ -209,19 +205,15 @@ impl<T: TimestampConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChe
 
         Ok(0)
     }
-
-    fn is_inherent(&self) -> bool {
-        true
-    }
 }
 
-impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInherent<V, Self>
+impl<T: TimestampConfig + 'static> InherentHooks
     for SetTimestamp<T>
 {
     type Error = sp_timestamp::InherentError;
     const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = sp_timestamp::INHERENT_IDENTIFIER;
 
-    fn create_inherent(
+    fn create_inherent<V: Verifier>(
         authoring_inherent_data: &InherentData,
         previous_inherent: (Transaction<V, Self>, H256),
     ) -> tuxedo_core::types::Transaction<V, Self> {
@@ -249,7 +241,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
 
         let new_output = Output {
             payload: new_timestamp.into(),
-            verifier: UpForGrabs.into(),
+            verifier: V::new_unspendable().expect("Must be able to create unspendable verifier to use timestamp inherent."),
         };
 
         Transaction {
@@ -260,7 +252,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
         }
     }
 
-    fn check_inherent(
+    fn check_inherent<V>(
         importing_inherent_data: &InherentData,
         inherent: Transaction<V, Self>,
         result: &mut CheckInherentsResult,
@@ -303,7 +295,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
     }
 
     #[cfg(feature = "std")]
-    fn genesis_transactions() -> Vec<Transaction<V, Self>> {
+    fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         use std::time::{Duration, SystemTime};
         let time = SystemTime::UNIX_EPOCH
             .elapsed()
@@ -316,7 +308,7 @@ impl<V: Verifier + From<UpForGrabs>, T: TimestampConfig + 'static> TuxedoInheren
             peeks: Vec::new(),
             outputs: vec![Output {
                 payload: Timestamp::new(time, 0).into(),
-                verifier: UpForGrabs.into(),
+                verifier: V::new_unspendable().expect("Must be able to create unspendable verifier to use timestamp inherent."),
             }],
             checker: Self::default(),
         }]

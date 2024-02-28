@@ -38,7 +38,7 @@ use sp_inherents::{
 };
 use sp_std::{vec, vec::Vec};
 
-use crate::{types::Transaction, ConstraintChecker, SimpleConstraintChecker};
+use crate::{types::Transaction, ConstraintChecker, SimpleConstraintChecker, Verifier};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
@@ -101,7 +101,7 @@ pub trait InherentHooks: SimpleConstraintChecker + Sized {
 
     /// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    fn create_inherent<V>(
+    fn create_inherent<V: Verifier>(
         authoring_inherent_data: &InherentData,
         previous_inherent: (Transaction<V, Self>, H256),
     ) -> Transaction<V, Self>;
@@ -118,7 +118,7 @@ pub trait InherentHooks: SimpleConstraintChecker + Sized {
 
     /// Return the genesis transactions that are required for this inherent.
     #[cfg(feature = "std")]
-    fn genesis_transactions<V>() -> Vec<Transaction<V, Self>> {
+    fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         Vec::new()
     }
 }
@@ -173,7 +173,7 @@ impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
         true
     }
 
-    fn create_inherents<V: Clone>(
+    fn create_inherents<V: Verifier>(
         authoring_inherent_data: &InherentData,
         previous_inherents: Vec<(Transaction<V, Self>, H256)>,
     ) -> Vec<Transaction<V, Self>> {
@@ -226,7 +226,7 @@ impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
     }
 
     #[cfg(feature = "std")]
-    fn genesis_transactions<V>() -> Vec<Transaction<V, Self>> {
+    fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         <C as InherentHooks>::genesis_transactions()
             .into_iter()
             .map(|gtx| wrap_transaction(gtx))
