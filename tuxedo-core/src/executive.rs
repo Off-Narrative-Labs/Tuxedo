@@ -7,9 +7,9 @@
 //! are no duplicate inputs, and that the verifiers are satisfied.
 
 use crate::{
-    constraint_checker::SimpleConstraintChecker,
+    constraint_checker::ConstraintChecker,
     ensure,
-    inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
+    inherents::{PARENT_INHERENT_IDENTIFIER},
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
@@ -40,7 +40,7 @@ where
     B: BlockT<Extrinsic = Transaction<V, C>>,
     B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
     V: Verifier,
-    C: SimpleConstraintChecker + InherentInternal,
+    C: ConstraintChecker,
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.

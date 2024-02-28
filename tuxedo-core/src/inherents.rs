@@ -30,7 +30,7 @@
 //! that update environmental data), needs to include this foundational previous block inherent data provider
 //! so that the Tuxedo executive can scrape it to find the output references of the previous inherent transactions.
 
-use parity_scale_codec::Encode;
+use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_inherents::{
@@ -38,7 +38,7 @@ use sp_inherents::{
 };
 use sp_std::{vec, vec::Vec};
 
-use crate::{types::Transaction, SimpleConstraintChecker};
+use crate::{types::Transaction, ConstraintChecker, SimpleConstraintChecker};
 
 /// An inherent identifier for the Tuxedo parent block inherent
 pub const PARENT_INHERENT_IDENTIFIER: InherentIdentifier = *b"prnt_blk";
@@ -94,7 +94,7 @@ impl<B: sp_runtime::traits::Block> sp_inherents::InherentDataProvider
 /// understand exactly how Substrate's block authoring and Tuxedo's piece aggregation works
 /// (which you probably don't) you can directly implement the `InherentInternal` trait
 /// which is more powerful (and dangerous).
-pub trait TuxedoInherent: SimpleConstraintChecker + Sized {
+pub trait InherentHooks: SimpleConstraintChecker + Sized {
     type Error: Encode + IsFatalError;
 
     const INHERENT_IDENTIFIER: InherentIdentifier;
@@ -123,94 +123,40 @@ pub trait TuxedoInherent: SimpleConstraintChecker + Sized {
     }
 }
 
-/// Almost identical to TuxedoInherent, but allows returning multiple extrinsics
-/// (as aggregate runtimes  will need to) and removes the requirement that the generic
-/// outer constraint checker be buildable from `Self` so we can implement it for ().
-///
-/// If you are trying to implement some complex inherent logic that requires the interaction of
-/// multiple inherents, or features a variable number of inherents in each block, you might be
-/// able to express it by implementing this trait, but such designs are probably too complicated.
-/// Think long and hard before implementing this trait directly.
-pub trait InherentInternal: SimpleConstraintChecker + Sized {
-    /// Create the inherent extrinsic to insert into a block that is being authored locally.
-    /// The inherent data is supplied by the authoring node.
-    fn create_inherents<V>(
-        authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<(Transaction<V, Self>, H256)>,
-    ) -> Vec<Transaction<V, Self>>;
-
-    /// Perform off-chain pre-execution checks on the inherents.
-    /// The inherent data is supplied by the importing node.
-    /// The inherent data available here is not guaranteed to be the
-    /// same as what is available at authoring time.
-    fn check_inherents<V>(
-        importing_inherent_data: &InherentData,
-        inherents: Vec<Transaction<V, Self>>,
-        results: &mut CheckInherentsResult,
-    );
-
-    /// Tells whether this extrinsic is an inherent or not.
-    ///
-    /// You should never manually write a body to this function.
-    /// If you are:
-    /// * Working on an inherent constraint checker -> Rely on the default body.
-    /// * Working on a simple non-inherent constraint checker -> Use the `SimpleConstraintChecker` trait instead
-    ///   and rely on its blanket implementation.
-    /// * Considering an aggregate constraint checker which is part inherent, part not -> let the macro handle it for you.
-    fn is_inherent(&self) -> bool {
-        true
-    }
-
-    /// Return the genesis transactions that are required for the inherents.
-    #[cfg(feature = "std")]
-    fn genesis_transactions<V>() -> Vec<Transaction<V, Self>>;
-}
-
-// We automatically supply every single simple constraint checker with a dummy set
-// of inherent hooks. This allows "normal" non-inherent constraint checkers to satisfy the
-// executive's expected interfaces without the piece author worrying about inherents.
-//
-// When a piece _is_ to be used as an inherent, this impl is not used. Rather
-// the one for the adapter type below is used.
-impl<C: SimpleConstraintChecker> InherentInternal for C {
-
-    fn create_inherents<V>(
-        authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<(Transaction<V, Self>, H256)>,
-    ) -> Vec<Transaction<V, Self>> {
-        Vec::new()
-    }
-
-    fn check_inherents<V>(
-        _: &InherentData,
-        inherents: Vec<Transaction<V, Self>>,
-        _: &mut CheckInherentsResult,
-    ) {
-        // Inherents should always be empty for this stub implementation. Not just in valid blocks, but as an invariant.
-        // The way we determined which inherents got here is by matching on the constraint checker.
-        assert!(
-            inherents.is_empty(),
-            "inherent extrinsic was passed to check inherents stub implementation."
-        )
-    }
-
-    #[cfg(feature = "std")]
-    fn genesis_transactions<V>() -> Vec<Transaction<V, Self>> {
-        Vec::new()
-    }
-}
-
 /// An adapter type to declare, at the runtime level, that Tuxedo pieces provide custom inherent hooks.
 ///
 /// This adapter type satisfies the executive's expectations by implementing both `SimpleConstraintChecker`,
 /// and `InherentInternal`. The constraint checker just plumbs straight through to the underlying type.
 /// The inherent logic checks to be sure that exactly one inherent is present before plumbing through to
 /// the underlying `Tuxedo Inherent` implementation.
-#[derive(Debug, Default, TypeInfo, Clone, Copy)]
-pub struct TuxedoInherentAdapter<C>(C);
+///
+/// This type should encode exactly like the inner type.
+#[derive(Debug, Decode, Default, Encode, TypeInfo, Clone, Copy)]
+pub struct InherentAdapter<C>(C);
 
-impl<C: SimpleConstraintChecker + TuxedoInherent + 'static> SimpleConstraintChecker
-    for TuxedoInherentAdapter<C>
+/// Helper to transform an entire transaction by wrapping the constraint checker.
+fn wrap_transaction<V, C>(unwrapped: Transaction<V, C>) -> Transaction<V, InherentAdapter<C>> {
+    Transaction {
+        inputs: unwrapped.inputs,
+        peeks: unwrapped.peeks,
+        outputs: unwrapped.outputs,
+        checker: InherentAdapter(unwrapped.checker),
+    }
+}
+
+// I wonder if this should be a deref impl instead?
+/// Helper to transform an entire transaction by unwrapping the constraint checker.
+fn unwrap_transaction<V, C>(wrapped: Transaction<V, InherentAdapter<C>>) -> Transaction<V, C> {
+    Transaction {
+        inputs: wrapped.inputs,
+        peeks: wrapped.peeks,
+        outputs: wrapped.outputs,
+        checker: wrapped.checker.0,
+    }
+}
+
+impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
+    for InherentAdapter<C>
 {
     type Error = <C as SimpleConstraintChecker>::Error;
 
@@ -220,32 +166,42 @@ impl<C: SimpleConstraintChecker + TuxedoInherent + 'static> SimpleConstraintChec
         peek_data: &[crate::dynamic_typing::DynamicallyTypedData],
         output_data: &[crate::dynamic_typing::DynamicallyTypedData],
     ) -> Result<sp_runtime::transaction_validity::TransactionPriority, Self::Error> {
-        self.0.check(input_data, peek_data, output_data)
+        SimpleConstraintChecker::check(&self.0, input_data, peek_data, output_data)
     }
-}
 
-impl<C: SimpleConstraintChecker + TuxedoInherent + 'static> InherentInternal
-    for TuxedoInherentAdapter<C>
-{
-    fn create_inherents<V>(
+    fn is_inherent(&self) -> bool {
+        true
+    }
+
+    fn create_inherents<V: Clone>(
         authoring_inherent_data: &InherentData,
-        previous_inherents: Vec<(Transaction<V, C>, H256)>,
-    ) -> Vec<Transaction<V, C>> {
+        previous_inherents: Vec<(Transaction<V, Self>, H256)>,
+    ) -> Vec<Transaction<V, Self>> {
         if previous_inherents.len() > 1 {
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
 
-        let previous_inherent = previous_inherents.first().cloned();
+        let (previous_inherent, hash) = previous_inherents.first().cloned().expect("Previous inherent exists.");
+        let prev_no_adapter = Transaction {
+            inputs: previous_inherent.inputs,
+            peeks: previous_inherent.peeks,
+            outputs: previous_inherent.outputs,
+            // TODO consider some deref impl for the adapter.
+            // And maybe even for the entire transaction type
+            checker: previous_inherent.checker.0,
+        };
 
-        vec![<C as TuxedoInherent<V, C>>::create_inherent(
+        let current_inherent = wrap_transaction(<C as InherentHooks>::create_inherent(
             authoring_inherent_data,
-            previous_inherent.expect("Previous inherent exists."),
-        )]
+            (unwrap_transaction(previous_inherent), hash),
+        ));
+
+        vec![current_inherent]
     }
 
     fn check_inherents<V>(
         importing_inherent_data: &InherentData,
-        inherents: Vec<Transaction<V, C>>,
+        inherents: Vec<Transaction<V, Self>>,
         results: &mut CheckInherentsResult,
     ) {
         if inherents.is_empty() {
@@ -268,11 +224,11 @@ impl<C: SimpleConstraintChecker + TuxedoInherent + 'static> InherentInternal
             .first()
             .expect("Previous inherent exists.")
             .clone();
-        <C as TuxedoInherent<V, C>>::check_inherent(importing_inherent_data, inherent, results)
+        <C as InherentHooks>::check_inherent(importing_inherent_data, inherent, results)
     }
 
     #[cfg(feature = "std")]
-    fn genesis_transactions<V>() -> Vec<Transaction<V, C>> {
-        <C as TuxedoInherent<V, C>>::genesis_transactions()
+    fn genesis_transactions<V>() -> Vec<Transaction<V, Self>> {
+        <C as InherentHooks>::genesis_transactions()
     }
 }
