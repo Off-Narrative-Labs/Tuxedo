@@ -6,10 +6,7 @@ use super::{
     OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier, WASM_BINARY,
 };
 use hex_literal::hex;
-use tuxedo_core::{
-    inherents::InherentInternal,
-    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
-};
+use tuxedo_core::verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs};
 
 /// Helper type for the ChainSpec.
 pub type RuntimeGenesisConfig =
@@ -57,7 +54,6 @@ mod tests {
     use std::sync::Arc;
     use tuxedo_core::{
         dynamic_typing::{DynamicallyTypedData, UtxoData},
-        inherents::InherentInternal,
         types::{Output, OutputRef},
     };
 
