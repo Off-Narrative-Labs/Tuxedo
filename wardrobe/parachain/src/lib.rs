@@ -29,16 +29,17 @@ use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::transaction_validity::TransactionPriority;
 use sp_std::{vec, vec::Vec};
+use tuxedo_parachain_core::tuxedo_core::dynamic_typing::DynamicallyTypedData;
+use tuxedo_parachain_core::tuxedo_core::SimpleConstraintChecker;
 // We get all the Tuxedo core stuff through the re-export so we don't risk crossed versions.
 use tuxedo_parachain_core::ParachainInherentDataUtxo;
 use tuxedo_parachain_core::{
     tuxedo_core::{
         ensure,
-        inherents::{TuxedoInherent, TuxedoInherentAdapter},
+        inherents::InherentHooks,
         support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
         types::{Input, Output, OutputRef, Transaction},
-        verifier::UpForGrabs,
-        ConstraintChecker, Verifier,
+        Verifier,
     },
     SetRelayParentNumberStorage,
 };
@@ -106,17 +107,14 @@ pub enum ParachainError {
 #[scale_info(skip_type_params(T))]
 pub struct SetParachainInfo<T>(PhantomData<T>);
 
-impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> ConstraintChecker<V>
-    for SetParachainInfo<T>
-{
+impl<T: ParachainPieceConfig + 'static> SimpleConstraintChecker for SetParachainInfo<T> {
     type Error = ParachainError;
-    type InherentHooks = TuxedoInherentAdapter<Self>;
 
     fn check(
         &self,
-        input_data: &[Output<V>],
-        _peek_data: &[Output<V>],
-        output_data: &[Output<V>],
+        input_data: &[DynamicallyTypedData],
+        _peek_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         log::debug!(
             target: LOG_TARGET,
@@ -127,7 +125,6 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         ensure!(!output_data.is_empty(), Self::Error::MissingNewInfo);
         ensure!(output_data.len() == 1, Self::Error::ExtraOutputs);
         let current: ParachainInherentData = output_data[0]
-            .payload
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .into();
@@ -139,7 +136,6 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
         ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo);
         ensure!(input_data.len() == 1, Self::Error::ExtraInputs);
         let previous: ParachainInherentData = input_data[0]
-            .payload
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .into();
@@ -163,20 +159,14 @@ impl<T: ParachainPieceConfig + 'static, V: Verifier + From<UpForGrabs>> Constrai
 
         Ok(0)
     }
-
-    fn is_inherent(&self) -> bool {
-        true
-    }
 }
 
-impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoInherent<V, Self>
-    for SetParachainInfo<T>
-{
+impl<T: ParachainPieceConfig + 'static> InherentHooks for SetParachainInfo<T> {
     // Same error type as in frame
     type Error = sp_inherents::MakeFatalError<()>;
     const INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = INHERENT_IDENTIFIER;
 
-    fn create_inherent(
+    fn create_inherent<V: Verifier>(
         authoring_inherent_data: &InherentData,
         (_previous_inherent, previous_id): (Transaction<V, Self>, H256),
     ) -> Transaction<V, Self> {
@@ -206,7 +196,8 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
 
         let new_output = Output {
             payload: ParachainInherentDataUtxo::from(current_info).into(),
-            verifier: UpForGrabs.into(),
+            verifier: V::new_unspendable()
+                .expect("Must be able to create unspendable verifier to use parachain inherent."),
         };
 
         let t = Transaction {
@@ -224,7 +215,7 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
         t
     }
 
-    fn check_inherent(
+    fn check_inherent<V>(
         _importing_inherent_data: &InherentData,
         _inherent: Transaction<V, Self>,
         _result: &mut CheckInherentsResult,
@@ -239,7 +230,7 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
     }
 
     #[cfg(feature = "std")]
-    fn genesis_transactions() -> Vec<Transaction<V, Self>> {
+    fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         let payload = new_data_from_relay_parent_number(0).into();
 
         vec![Transaction {
@@ -247,7 +238,9 @@ impl<V: Verifier + From<UpForGrabs>, T: ParachainPieceConfig + 'static> TuxedoIn
             peeks: Vec::new(),
             outputs: vec![Output {
                 payload,
-                verifier: UpForGrabs.into(),
+                verifier: V::new_unspendable().expect(
+                    "Must be able to create unspendable verifier to use timestamp inherent.",
+                ),
             }],
             checker: Self::default(),
         }]
