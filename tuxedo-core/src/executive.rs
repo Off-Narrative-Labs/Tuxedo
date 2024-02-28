@@ -7,7 +7,14 @@
 //! are no duplicate inputs, and that the verifiers are satisfied.
 
 use crate::{
-    constraint_checker::ConstraintChecker, dynamic_typing::DynamicallyTypedData, ensure, inherents::PARENT_INHERENT_IDENTIFIER, types::{DispatchResult, OutputRef, Transaction, UtxoError}, utxo_set::TransparentUtxoSet, verifier::Verifier, EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET
+    constraint_checker::ConstraintChecker,
+    dynamic_typing::DynamicallyTypedData,
+    ensure,
+    inherents::PARENT_INHERENT_IDENTIFIER,
+    types::{DispatchResult, OutputRef, Transaction, UtxoError},
+    utxo_set::TransparentUtxoSet,
+    verifier::Verifier,
+    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
