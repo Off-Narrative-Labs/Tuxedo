@@ -7,13 +7,7 @@
 //! are no duplicate inputs, and that the verifiers are satisfied.
 
 use crate::{
-    constraint_checker::ConstraintChecker,
-    ensure,
-    inherents::PARENT_INHERENT_IDENTIFIER,
-    types::{DispatchResult, OutputRef, Transaction, UtxoError},
-    utxo_set::TransparentUtxoSet,
-    verifier::Verifier,
-    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
+    constraint_checker::ConstraintChecker, dynamic_typing::DynamicallyTypedData, ensure, inherents::PARENT_INHERENT_IDENTIFIER, types::{DispatchResult, OutputRef, Transaction, UtxoError}, utxo_set::TransparentUtxoSet, verifier::Verifier, EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
@@ -73,9 +67,9 @@ where
         let stripped_encoded = stripped.encode();
 
         // Check that the verifiers of all inputs are satisfied
-        // Keep a Vec of the input utxos for passing to the constraint checker
+        // Keep a Vec of the input data for passing to the constraint checker
         // Keep track of any missing inputs for use in the tagged transaction pool
-        let mut input_utxos = Vec::new();
+        let mut input_data = Vec::new();
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
@@ -87,19 +81,19 @@ where
                         .verify(&stripped_encoded, Self::block_height(), &redeemer),
                     UtxoError::VerifierError
                 );
-                input_utxos.push(input_utxo);
+                input_data.push(input_utxo.payload);
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
             }
         }
 
-        // Make a Vec of the peek utxos for passing to the constraint checker
+        // Make a Vec of the peek data for passing to the constraint checker
         // Keep track of any missing peeks for use in the tagged transaction pool
         // Use the same vec as previously to keep track of missing peeks
-        let mut peek_utxos = Vec::new();
+        let mut peek_data = Vec::new();
         for output_ref in transaction.peeks.iter() {
             if let Some(peek_utxo) = TransparentUtxoSet::<V>::peek_utxo(output_ref) {
-                peek_utxos.push(peek_utxo);
+                peek_data.push(peek_utxo.payload);
             } else {
                 missing_inputs.push(output_ref.encode());
             }
@@ -152,10 +146,17 @@ where
             });
         }
 
+        // Extract the payload data from each output
+        let output_data: Vec<DynamicallyTypedData> = transaction
+            .outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &peek_utxos, &transaction.outputs)
+            .check(&input_data, &peek_data, &output_data)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
@@ -448,7 +449,7 @@ where
         );
 
         // Call into constraint checker's own inherent hooks to create the actual transactions
-        C::InherentHooks::create_inherents(&data, previous_blocks_inherents)
+        C::create_inherents(&data, previous_blocks_inherents)
     }
 
     pub fn check_inherents(block: B, data: InherentData) -> sp_inherents::CheckInherentsResult {
@@ -471,7 +472,7 @@ where
             .take_while(|tx| tx.checker.is_inherent())
             .collect();
 
-        C::InherentHooks::check_inherents(&data, inherents, &mut result);
+        C::check_inherents(&data, inherents, &mut result);
 
         result
     }
