@@ -99,7 +99,7 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not necessarily the
     /// same as what is available at authoring time.
-    fn check_inherents<V>(
+    fn check_inherents<V: Clone>(
         importing_inherent_data: &InherentData,
         inherents: Vec<Transaction<V, Self>>,
         results: &mut CheckInherentsResult,
