@@ -181,7 +181,7 @@ impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
             panic!("Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied.")
         }
 
-        let (previous_inherent, hash) = previous_inherents.first().cloned().expect("Previous inherent exists.");
+        let (previous_inherent, hash) = *previous_inherents.first().expect("Previous inherent exists.");
         let prev_no_adapter = Transaction {
             inputs: previous_inherent.inputs,
             peeks: previous_inherent.peeks,
@@ -220,15 +220,17 @@ impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
                 .expect("Should be able to put an error.");
             return;
         }
-        let inherent = inherents
+        let inherent = *inherents
             .first()
-            .expect("Previous inherent exists.")
-            .clone();
-        <C as InherentHooks>::check_inherent(importing_inherent_data, inherent, results)
+            .expect("Previous inherent exists.");
+        <C as InherentHooks>::check_inherent(importing_inherent_data, unwrap_transaction(inherent), results)
     }
 
     #[cfg(feature = "std")]
     fn genesis_transactions<V>() -> Vec<Transaction<V, Self>> {
         <C as InherentHooks>::genesis_transactions()
+        .into_iter()
+        .map(|gtx| wrap_transaction(gtx))
+        .collect()
     }
 }

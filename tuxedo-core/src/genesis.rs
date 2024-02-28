@@ -3,7 +3,7 @@
 use crate::{
     ensure,
     types::{Output, OutputRef, Transaction},
-    SimpleConstraintChecker, Verifier, EXTRINSIC_KEY, LOG_TARGET,
+    ConstraintChecker, Verifier, EXTRINSIC_KEY, LOG_TARGET,
 };
 use parity_scale_codec::{Decode, Encode};
 use sc_chain_spec::BuildGenesisBlock;
@@ -131,7 +131,7 @@ impl<V, C> TuxedoGenesisConfig<V, C> {
 impl<V, C> BuildStorage for TuxedoGenesisConfig<V, C>
 where
     V: Verifier,
-    C: SimpleConstraintChecker,
+    C: ConstraintChecker,
     Transaction<V, C>: Encode,
     Output<V>: Encode,
 {
