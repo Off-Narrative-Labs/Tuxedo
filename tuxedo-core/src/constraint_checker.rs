@@ -2,32 +2,32 @@
 //! and should be committed. Most tuxedo pieces will provide one or more constraint checkers.
 //! Constraint Checkers do not calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
-//! 
+//!
 //! Constraint Checkers can be used to codify the laws of a monetary system, a chemistry or physics simulation,
 //! NFT kitties, public elections and much more.
-//! 
+//!
 //! By far the most common and most important way to write a constraint checker is with the `SimpleConstraintChecker`
 //! trait. It provides a single method called `check` which determines whether the relationship between the inputs
 //! and outputs (and peeks) is valid. For example making sure no extra money was created, or making sure the chemical
 //! reaction balances.
-//! 
+//!
 //! ## Inherents
-//! 
+//!
 //! If you need to tap in to [Substrate's inherent system](https://docs.substrate.io/learn/transaction-types/#inherent-transactions)
 //! you may choose to implement the `ConstraintCheckerWithInherent` trait instead of the simple one. This trait is more complex
 //! but if you really need an inherent, it is required. Make sure you know what you are doing before
 //! you start writing an inherent.
-//! 
+//!
 //! ## Constraint Checker Internals
-//! 
+//!
 //! One of Tuxedo's killer features is its ability to aggregating pieces recursively.
 //! To achieve this we have to consider that many intermediate layers in the aggregation tree
 //! will have multiple inherent types. For this reason, we provide a much more flexible interface
 //! that the aggregation macro can use.
-//! 
+//!
 //! The current design is based on a chain of blanket implementations. Each trait has a blanket
 //! impl for the next more complex one.
-//! 
+//!
 //! `SimpleConstraintChecker` -> `ConstraintCheckerWithInherent` -> ConstraintChecker
 //! https://github.com/rust-lang/rust/issues/42721
 
@@ -159,11 +159,11 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
 /// Utilities for writing constraint-checker-related unit tests
 #[cfg(test)]
 pub mod testing {
+    use parity_scale_codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use serde::{Deserialize, Serialize};
-    use parity_scale_codec::{Encode, Decode};
 
-    use super::{SimpleConstraintChecker, DynamicallyTypedData, TransactionPriority};
+    use super::{DynamicallyTypedData, SimpleConstraintChecker, TransactionPriority};
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.

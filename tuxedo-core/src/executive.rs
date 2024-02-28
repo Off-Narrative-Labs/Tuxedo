@@ -9,7 +9,7 @@
 use crate::{
     constraint_checker::ConstraintChecker,
     ensure,
-    inherents::{PARENT_INHERENT_IDENTIFIER},
+    inherents::PARENT_INHERENT_IDENTIFIER,
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
