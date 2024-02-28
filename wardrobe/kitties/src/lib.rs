@@ -173,7 +173,7 @@ impl KittyData {
     where
         V: Verifier,
         OV: Verifier + From<V>,
-        OC: tuxedo_core::ConstraintChecker<OV> + From<FreeKittyConstraintChecker>,
+        OC: tuxedo_core::ConstraintChecker + From<FreeKittyConstraintChecker>,
     {
         Transaction {
             inputs: vec![],
