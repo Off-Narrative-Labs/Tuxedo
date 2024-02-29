@@ -6,7 +6,10 @@ use super::{
     OuterConstraintChecker, OuterVerifier, WASM_BINARY,
 };
 use hex_literal::hex;
-use tuxedo_core::{ConstraintChecker, verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs}};
+use tuxedo_core::{
+    verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
+    ConstraintChecker,
+};
 
 /// Helper type for the ChainSpec.
 pub type RuntimeGenesisConfig =
@@ -78,7 +81,7 @@ mod tests {
 
         let signatories = vec![shawn_pub_key_bytes.into(), andrew_pub_key_bytes.into()];
 
-        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+        let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
         genesis_transactions.extend([
             // Money Transactions
             Coin::<0>::mint(100, Sr25519Signature::new(shawn_pub_key_bytes)),
@@ -123,7 +126,7 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len = OuterConstraintChecker::genesis_transactions().len();
 
             let tx = default_runtime_genesis_config()
                 .get_transaction(inherents_len)
@@ -167,7 +170,7 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len = OuterConstraintChecker::genesis_transactions().len();
 
             let tx = default_runtime_genesis_config()
                 .get_transaction(1 + inherents_len)
