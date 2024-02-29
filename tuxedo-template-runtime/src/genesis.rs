@@ -3,7 +3,7 @@
 use super::{
     kitties::{KittyData, Parent},
     money::Coin,
-    OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier, WASM_BINARY,
+    OuterConstraintChecker, OuterVerifier, WASM_BINARY,
 };
 use hex_literal::hex;
 use tuxedo_core::verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs};
