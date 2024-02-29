@@ -6,7 +6,7 @@ use super::{
     OuterConstraintChecker, OuterVerifier, WASM_BINARY,
 };
 use hex_literal::hex;
-use tuxedo_core::verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs};
+use tuxedo_core::{ConstraintChecker, verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs}};
 
 /// Helper type for the ChainSpec.
 pub type RuntimeGenesisConfig =
@@ -21,7 +21,7 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
     let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
     // The inherents are computed using the appropriate method, and placed before the extrinsics.
-    let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+    let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
 
     genesis_transactions.extend([
         // Money Transactions

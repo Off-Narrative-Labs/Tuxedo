@@ -205,23 +205,16 @@ pub fn tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -> Toke
     error_type_name.push_str("Error");
     let error_type = Ident::new(&error_type_name, outer_type.span());
 
-    // let mut inherent_hooks_name = outer_type.to_string();
-    // inherent_hooks_name.push_str("InherentHooks");
-    // let inherent_hooks = Ident::new(&inherent_hooks_name, outer_type.span());
-
     let vis = ast.vis;
 
     // TODO there must be a better way to do this, right?
     let inner_types2 = inner_types.clone();
     let inner_types3 = inner_types.clone();
     let inner_types4 = inner_types.clone();
-    let inner_types6 = inner_types.clone();
-    let inner_types7 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
     let variants4 = variants.clone();
     let variants5 = variants.clone();
-    let variants6 = variants.clone();
 
     let output = quote! {
         // Preserve the original enum, and write the From impls
@@ -243,8 +236,6 @@ pub fn tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -> Toke
         impl tuxedo_core::ConstraintChecker for #outer_type {
             type Error = #error_type;
 
-            // type InherentHooks = #inherent_hooks;
-
             fn check (
                 &self,
                 inputs: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
@@ -261,13 +252,13 @@ pub fn tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -> Toke
             fn is_inherent(&self) -> bool {
                 match self {
                     #(
-                        Self::#variants6(inner) => <#inner_types7 as tuxedo_core::ConstraintChecker::is_inherent(inner),
+                        Self::#variants2(inner) => inner.is_inherent(),
                     )*
                 }
 
             }
 
-            fn create_inherents<V: Verifier>(
+            fn create_inherents<V: tuxedo_core::Verifier>(
                 authoring_inherent_data: &InherentData,
                 previous_inherents: Vec<(tuxedo_core::types::Transaction<V, #outer_type>, sp_core::H256)>,
             ) -> Vec<tuxedo_core::types::Transaction<V, #outer_type>>  {
@@ -299,13 +290,13 @@ pub fn tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -> Toke
                 all_inherents
             }
 
-            fn check_inherents<V: Verifier>(
+            fn check_inherents<V: tuxedo_core::Verifier>(
                 importing_inherent_data: &sp_inherents::InherentData,
                 inherents: Vec<tuxedo_core::types::Transaction<V, #outer_type>>,
                 result: &mut sp_inherents::CheckInherentsResult,
             ) {
                 #(
-                    let relevant_inherents: Vec<tuxedo_core::types::Transaction<(), #inner_types4>> = inherents
+                    let relevant_inherents: Vec<tuxedo_core::types::Transaction<V, #inner_types4>> = inherents
                         .iter()
                         .filter_map(|tx| {
                             match tx.checker {
@@ -326,12 +317,12 @@ pub fn tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -> Toke
             }
 
             #[cfg(feature = "std")]
-            fn genesis_transactions<V: Verifier>() -> Vec<tuxedo_core::types::Transaction<V, #outer_type>> {
+            fn genesis_transactions<V: tuxedo_core::Verifier>() -> Vec<tuxedo_core::types::Transaction<V, #outer_type>> {
                 let mut all_transactions: Vec<tuxedo_core::types::Transaction<V, #outer_type>> = Vec::new();
 
                 #(
                     let transactions =
-                        <#inner_types6 as tuxedo_core::ConstraintChecker>::genesis_transactions();
+                        <#inner_types2 as tuxedo_core::ConstraintChecker>::genesis_transactions();
                     all_transactions.extend(
                         transactions
                             .into_iter()

@@ -198,7 +198,7 @@ pub enum OuterConstraintChecker {
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-#[tuxedo_constraint_checker(OuterVerifier)]
+#[tuxedo_constraint_checker]
 #[cfg(not(feature = "parachain"))]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
