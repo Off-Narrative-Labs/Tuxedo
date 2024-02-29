@@ -160,6 +160,8 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
                     )*
                 }
             }
+
+            //TODO implement the new_unspendable function as well.
         }
     };
     output.into()
