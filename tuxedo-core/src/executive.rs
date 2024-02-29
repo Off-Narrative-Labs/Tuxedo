@@ -479,7 +479,7 @@ where
             .take_while(|tx| tx.checker.is_inherent())
             .collect();
 
-        C::check_inherents(&data, inherents, &mut result);
+        C::check_inherents::<V>(&data, inherents, &mut result);
 
         result
     }

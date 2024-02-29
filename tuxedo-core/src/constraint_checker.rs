@@ -33,7 +33,7 @@
 
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
-use sp_std::fmt::Debug;
+use sp_std::{fmt::Debug, vec::Vec};
 
 use crate::{dynamic_typing::DynamicallyTypedData, types::Transaction, Verifier};
 use parity_scale_codec::{Decode, Encode};
