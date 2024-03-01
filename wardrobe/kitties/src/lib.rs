@@ -649,7 +649,7 @@ pub fn can_kitty_name_be_updated(
         }
         check_kitty_name_update(&utxo_input_kitty, &utxo_output_kitty)?;
     }
-    return Ok(0);
+    Ok(0)
 }
 
 /// Checks:
@@ -676,5 +676,5 @@ fn check_kitty_name_update(
         original_kitty.parent == updated_kitty.parent,
         ConstraintCheckerError::KittyGenderCannotBeUpdated
     );
-    return Ok(0);
+    Ok(0)
 }

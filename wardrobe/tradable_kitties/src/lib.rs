@@ -334,7 +334,7 @@ fn check_kitty_price_update(
         };
     }
 
-    return Ok(0);
+    Ok(0)
 }
 
 /// Wrapper function for checking conversion from basic kitty to tradable kitty.
@@ -344,7 +344,7 @@ fn check_can_list_kitty_for_sale(
     output_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
     check_kitty_tdkitty_interconversion(&input_data, &output_data)?;
-    return Ok(0);
+    Ok(0)
 }
 
 /// Wrapper function for checking conversion from  tradable kitty to basic kitty.
@@ -356,7 +356,7 @@ fn check_can_delist_kitty_from_sale(
     // Below is conversion from tradable kitty to kitty, reverse of the ListKittyForSale,
     // hence input params are rebversed
     check_kitty_tdkitty_interconversion(&output_data, &input_data)?;
-    return Ok(0);
+    Ok(0)
 }
 
 /// Validaes inter-conversion b/w both kitty & tradable kitty.Used by listForSale & delistFromSale functions.
@@ -403,7 +403,7 @@ fn check_kitty_tdkitty_interconversion(
         );
     }
 
-    return Ok(0);
+    Ok(0)
 }
 
 impl<const ID: u8> SimpleConstraintChecker for TradableKittyConstraintChecker<ID> {
