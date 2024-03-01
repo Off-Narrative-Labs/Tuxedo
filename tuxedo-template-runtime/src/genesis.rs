@@ -126,7 +126,8 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
+            let inherents_len =
+                OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
 
             let tx = default_runtime_genesis_config()
                 .get_transaction(inherents_len)
@@ -170,7 +171,8 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
+            let inherents_len =
+                OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
 
             let tx = default_runtime_genesis_config()
                 .get_transaction(1 + inherents_len)
