@@ -1,13 +1,7 @@
 //! Tests for the Crypto Kitties Piece
 
 use super::*;
-/// A bogus data type used in tests for type validation
-#[derive(Encode, Decode)]
-struct Bogus;
-
-impl UtxoData for Bogus {
-    const TYPE_ID: [u8; 4] = *b"bogs";
-}
+use tuxedo_core::dynamic_typing::testing::Bogus;
 
 impl KittyData {
     pub fn default_dad() -> Self {
@@ -587,9 +581,10 @@ fn update_name_inputs_and_outputs_number_mismatch_fails() {
     );
     assert_eq!(
         result,
-        Err(ConstraintCheckerError::InvalidNumberOfInputOutput)
+        Err(ConstraintCheckerError::NumberOfInputOutputMismatch)
     );
 }
+
 #[test]
 fn update_name_no_inputs_fails() {
     let output = KittyData::default_dad();
@@ -602,7 +597,7 @@ fn update_name_no_inputs_fails() {
     );
     assert_eq!(
         result,
-        Err(ConstraintCheckerError::InvalidNumberOfInputOutput)
+        Err(ConstraintCheckerError::NumberOfInputOutputMismatch)
     );
 }
 
@@ -618,9 +613,10 @@ fn update_name_no_output_fails() {
     );
     assert_eq!(
         result,
-        Err(ConstraintCheckerError::InvalidNumberOfInputOutput)
+        Err(ConstraintCheckerError::NumberOfInputOutputMismatch)
     );
 }
+
 #[test]
 fn update_name_dna_update_fails() {
     let input = KittyData::default_dad();
@@ -638,21 +634,6 @@ fn update_name_dna_update_fails() {
         result,
         Err(ConstraintCheckerError::DnaMismatchBetweenInputAndOutput)
     );
-}
-
-#[test]
-fn update_name_duplicate_dna_update_fails() {
-    let input = KittyData::default_dad();
-    let mut output = input.clone();
-    output.name = *b"kty1";
-
-    let result = FreeKittyConstraintChecker::check(
-        &FreeKittyConstraintChecker::UpdateKittyName,
-        &[input.clone().into(), input.into()],
-        &[],
-        &[output.clone().into(), output.into()],
-    );
-    assert_eq!(result, Err(ConstraintCheckerError::DuplicateKittyFound));
 }
 
 #[test]

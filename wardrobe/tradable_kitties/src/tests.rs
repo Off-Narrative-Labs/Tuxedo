@@ -1,18 +1,12 @@
-//! Tests for the Crypto Kitties Piece
+//! Tests for the Tradable Kitty Piece
 
 use super::*;
 use kitties::DadKittyStatus;
 use kitties::KittyDNA;
+use kitties::MomKittyStatus;
 use kitties::Parent;
 use sp_runtime::testing::H256;
-
-/// A bogus data type used in tests for type validation
-#[derive(Encode, Decode)]
-struct Bogus;
-
-impl UtxoData for Bogus {
-    const TYPE_ID: [u8; 4] = *b"bogs";
-}
+use tuxedo_core::dynamic_typing::testing::Bogus;
 
 impl TradableKittyData {
     pub fn default_kitty() -> KittyData {
@@ -29,12 +23,12 @@ impl TradableKittyData {
         };
         TradableKittyData {
             kitty_basic_data: kitty_basic,
-            price: Some(100),
+            price: 100,
             ..Default::default()
         }
     }
 }
-// List kitty UT startes from here
+// listKittyForSale UT startes from here.
 #[test]
 fn list_kitty_for_sale_happy_path_works() {
     let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
@@ -127,6 +121,25 @@ fn list_kitty_for_sale_out_put_missing_path_fails() {
 }
 
 #[test]
+fn list_kitty_for_sale_with_input_missing_fails() {
+    let input1 = TradableKittyData::default_kitty();
+
+    let mut output1 = TradableKittyData::default_tradable_kitty();
+    output1.kitty_basic_data = input1.clone();
+    let mut output2 = TradableKittyData::default_tradable_kitty();
+    output2.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
+    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+        &[],
+        &[],
+        &[output1.into(), output2.into()],
+    );
+    assert_eq!(
+        result,
+        Err(TradeableKittyError::NumberOfInputOutputMismatch)
+    );
+}
+
+#[test]
 fn list_for_sale_with_wrong_output_type_amoung_valid_output_fails() {
     let input1 = TradableKittyData::default_kitty();
     let mut output1 = TradableKittyData::default_tradable_kitty();
@@ -150,56 +163,23 @@ fn list_kitty_for_sale_with_wrong_input_type_fails() {
 }
 
 #[test]
-fn list_kitty_for_sale_with_input_missing_fails() {
+fn list_for_sale_multiple_inputs_with_basic_property_changed_fails() {
     let input1 = TradableKittyData::default_kitty();
+    let input2 = TradableKittyData::default_kitty();
 
     let mut output1 = TradableKittyData::default_tradable_kitty();
     output1.kitty_basic_data = input1.clone();
     let mut output2 = TradableKittyData::default_tradable_kitty();
     output2.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
     let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+        &[input1.into(), input2.into()],
         &[],
-        &[],
-        &[output1.into(), output2.into()],
+        &[output1.clone().into(), output2.into()],
     );
     assert_eq!(
         result,
-        Err(TradeableKittyError::NumberOfInputOutputMismatch)
+        Err(TradeableKittyError::KittyBasicPropertiesAltered)
     );
-}
-
-#[test]
-fn list_kitty_for_sale_with_duplicate_input_fails() {
-    let input1 = TradableKittyData::default_kitty();
-    let input2 = TradableKittyData::default_kitty();
-
-    let mut output1 = TradableKittyData::default_tradable_kitty();
-    output1.kitty_basic_data = input1.clone();
-    let mut output2 = TradableKittyData::default_tradable_kitty();
-    output2.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
-        &[input1.into(), input2.into()],
-        &[],
-        &[output1.into(), output2.into()],
-    );
-    assert_eq!(result, Err(TradeableKittyError::DuplicateKittyFound));
-}
-
-#[test]
-fn list_kitty_for_sale_with_duplicate_output_fails() {
-    let input1 = TradableKittyData::default_kitty();
-    let input2 = TradableKittyData::default_kitty();
-
-    let mut output1 = TradableKittyData::default_tradable_kitty();
-    output1.kitty_basic_data = input1.clone();
-    let mut output2 = TradableKittyData::default_tradable_kitty();
-    output2.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
-        &[input1.into(), input2.into()],
-        &[],
-        &[output1.clone().into(), output1.into()],
-    );
-    assert_eq!(result, Err(TradeableKittyError::DuplicateKittyFound));
 }
 
 #[test]
@@ -220,21 +200,20 @@ fn list_for_sale_with_basic_property_changed_fails() {
 }
 
 #[test]
-fn list_for_sale_with_price_none_fails() {
+fn list_for_sale_with_price_zero_fails() {
     let input1 = TradableKittyData::default_kitty();
     let mut output1 = TradableKittyData::default_tradable_kitty();
     output1.kitty_basic_data = input1.clone();
-    output1.price = None;
+    output1.price = 0;
     let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
         &[input1.into()],
         &[],
         &[output1.into()],
     );
-    assert_eq!(result, Err(TradeableKittyError::KittyPriceCantBeNone));
+    assert_eq!(result, Err(TradeableKittyError::KittyPriceCantBeZero));
 }
 
-// From below delist tradable kitty test cases start.
-
+// delistKittyFromSale UT starts from here.
 #[test]
 fn delist_kitty_from_sale_happy_path_works() {
     let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
@@ -354,27 +333,7 @@ fn delist_from_sale_with_wrong_input_type_fails() {
 }
 
 #[test]
-fn delist_from_sale_with_duplicate_input_fails() {
-    let output1 = TradableKittyData::default_kitty();
-    let mut output2 = TradableKittyData::default_kitty();
-    output2.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadocz"));
-    let mut input1 = TradableKittyData::default_tradable_kitty();
-    let mut input2 = TradableKittyData::default_tradable_kitty();
-    input1.kitty_basic_data = output1.clone();
-    input2.kitty_basic_data = output2.clone();
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
-        &[input1.clone().into(), input1.into()],
-        &[],
-        &[output1.into(), output2.into()],
-    );
-    assert_eq!(
-        result,
-        Err(TradeableKittyError::DuplicateTradableKittyFound)
-    );
-}
-
-#[test]
-fn delist_from_sale_with_duplicate_output_fails() {
+fn delist_from_sale_with_basic_property_update_fails() {
     let output1 = TradableKittyData::default_kitty();
     let mut output2 = TradableKittyData::default_kitty();
     output2.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadocz"));
@@ -387,7 +346,10 @@ fn delist_from_sale_with_duplicate_output_fails() {
         &[],
         &[output1.clone().into(), output1.into()],
     );
-    assert_eq!(result, Err(TradeableKittyError::DuplicateKittyFound));
+    assert_eq!(
+        result,
+        Err(TradeableKittyError::KittyBasicPropertiesAltered)
+    );
 }
 
 // From below update tradable kitty name test cases starts
@@ -418,6 +380,7 @@ fn update_name_invalid_type_in_input_fails() {
     );
     assert_eq!(result, Err(TradeableKittyError::BadlyTyped));
 }
+
 #[test]
 fn update_name_invalid_type_in_output_fails() {
     let input = TradableKittyData::default_tradable_kitty();
@@ -431,12 +394,93 @@ fn update_name_invalid_type_in_output_fails() {
     );
     assert_eq!(result, Err(TradeableKittyError::BadlyTyped));
 }
-//// Price update test cases
+
+#[test]
+fn update_name_dna_update_fails() {
+    let input = TradableKittyData::default_tradable_kitty();
+    let mut output = input.clone();
+    output.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
+    output.kitty_basic_data.name = *b"tdkt";
+
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+        &[input.into()],
+        &[],
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(TradeableKittyError::KittyError(
+            kitties::ConstraintCheckerError::DnaMismatchBetweenInputAndOutput
+        ))
+    );
+}
+
+#[test]
+fn update_name_free_breeding_update_fails() {
+    let input = TradableKittyData::default_tradable_kitty();
+    let mut output = input.clone();
+    output.kitty_basic_data.name = *b"kty1";
+    output.kitty_basic_data.free_breedings += 1;
+
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+        &[input.into()],
+        &[],
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(TradeableKittyError::KittyError(
+            kitties::ConstraintCheckerError::FreeBreedingCannotBeUpdated
+        ))
+    );
+}
+
+#[test]
+fn update_name_num_of_breeding_updated_path_fails() {
+    let input = TradableKittyData::default_tradable_kitty();
+    let mut output = input.clone();
+    output.kitty_basic_data.name = *b"kty1";
+    output.kitty_basic_data.num_breedings += 1;
+
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+        &[input.into()],
+        &[],
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(TradeableKittyError::KittyError(
+            kitties::ConstraintCheckerError::NumOfBreedingCannotBeUpdated
+        ))
+    );
+}
+
+#[test]
+fn update_name_gender_updated_path_fails() {
+    let input = TradableKittyData::default_tradable_kitty();
+    let mut output = TradableKittyData::default_tradable_kitty();
+    output.kitty_basic_data.name = *b"tdk1";
+    output.kitty_basic_data.parent = Parent::Mom(MomKittyStatus::RearinToGo);
+
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+        &[input.into()],
+        &[],
+        &[output.into()],
+    );
+    assert_eq!(
+        result,
+        Err(TradeableKittyError::KittyError(
+            kitties::ConstraintCheckerError::KittyGenderCannotBeUpdated
+        ))
+    );
+}
+
+//// Price update UT starts from here.
 #[test]
 fn update_price_happy_path_works() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
         &[input.into()],
@@ -450,11 +494,11 @@ fn update_price_happy_path_works() {
 fn update_price_multiple_input_happy_path_works() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
     let mut output1 = input1.clone();
-    output1.price = Some(700);
+    output1.price = 700;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
         &[input.into(), input1.into()],
@@ -468,11 +512,11 @@ fn update_price_multiple_input_happy_path_works() {
 fn update_price_multiple_input_out_of_order_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
     let mut output1 = input1.clone();
-    output1.price = Some(700);
+    output1.price = 700;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
         &[input.into(), input1.into()],
@@ -489,7 +533,7 @@ fn update_price_multiple_input_out_of_order_fails() {
 fn update_price_output_missing_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
 
@@ -508,11 +552,11 @@ fn update_price_output_missing_path_fails() {
 fn update_price_input_missing_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
     let mut output1 = input1.clone();
-    output1.price = Some(700);
+    output1.price = 700;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
         &[input.into()],
@@ -529,7 +573,7 @@ fn update_price_input_missing_path_fails() {
 fn update_price_bad_input_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
         &[Bogus.into()],
@@ -543,7 +587,7 @@ fn update_price_bad_input_path_fails() {
 fn update_price_bad_output_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
 
@@ -559,7 +603,7 @@ fn update_price_bad_output_path_fails() {
 fn update_price_different_dna_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
 
     output.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
 
@@ -575,27 +619,10 @@ fn update_price_different_dna_path_fails() {
 }
 
 #[test]
-fn update_price_duplicate_input_path_fails() {
-    let input = TradableKittyData::default_tradable_kitty();
-    let mut output = input.clone();
-    output.price = Some(500);
-    // check that only 1 instance with duplicate dna is inserted and when 1st is removed , 2nd one fails.
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
-        &[input.clone().into(), input.into()],
-        &[],
-        &[output.clone().into(), output.into()],
-    );
-    assert_eq!(
-        result,
-        Err(TradeableKittyError::DuplicateTradableKittyFound)
-    );
-}
-
-#[test]
 fn update_price_basic_properties_updated_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = Some(500);
+    output.price = 500;
     output.kitty_basic_data.free_breedings += 1;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
@@ -623,25 +650,25 @@ fn update_price_not_updated_path_fails() {
 }
 
 #[test]
-fn update_price_to_null_updated_path_fails() {
+fn update_price_to_zero_updated_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let mut output = input.clone();
-    output.price = None;
+    output.price = 0;
 
     let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
         &[input.into()],
         &[],
         &[output.into()],
     );
-    assert_eq!(result, Err(TradeableKittyError::KittyPriceCantBeNone));
+    assert_eq!(result, Err(TradeableKittyError::KittyPriceCantBeZero));
 }
 
-// From below buy tradable kitty test cases start.
+// Buy tradable Kitty UT starts from here.
 
 #[test]
 fn buy_happy_path_single_input_coinworks() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(100);
+    input_kitty.price = 100;
     let output_kitty = input_kitty.clone();
 
     let input_coin = Coin::<0>(100);
@@ -658,7 +685,7 @@ fn buy_happy_path_single_input_coinworks() {
 #[test]
 fn buy_happy_path_multiple_input_coinworks() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(100);
+    input_kitty.price = 100;
     let output_kitty = input_kitty.clone();
 
     let input_coin1 = Coin::<0>(10);
@@ -672,16 +699,17 @@ fn buy_happy_path_multiple_input_coinworks() {
     );
     assert!(result.is_ok());
 }
+
 #[test]
 fn buy_path_multiple_kitty_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(100);
+    input_kitty.price = 100;
     let output_kitty = input_kitty.clone();
 
     let mut input_kitty1 = TradableKittyData::default_tradable_kitty();
     input_kitty1.kitty_basic_data.dna =
         KittyDNA(H256::from_slice(b"superkalifragislisticexpialadolx"));
-    input_kitty1.price = Some(1);
+    input_kitty1.price = 1;
     let output_kitty1 = input_kitty1.clone();
 
     let input_coin1 = Coin::<0>(10);
@@ -702,16 +730,13 @@ fn buy_path_multiple_kitty_fails() {
             output_coin.into(),
         ],
     );
-    assert_eq!(
-        result,
-        Err(TradeableKittyError::CannotBuyMoreThanOneKittyAtTime)
-    );
+    assert_eq!(result, Err(TradeableKittyError::BadlyTyped));
 }
 
 #[test]
 fn buy_kityy_with_price_none_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = None;
+    input_kitty.price = 0;
     let output_kitty = input_kitty.clone();
 
     let input_coin = Coin::<0>(100);
@@ -722,14 +747,14 @@ fn buy_kityy_with_price_none_fails() {
         &[],
         &[output_kitty.into(), output_coin.into()],
     );
-    assert_eq!(result, Err(TradeableKittyError::KittyNotForSale));
+    assert_eq!(result, Err(TradeableKittyError::KittyPriceCantBeZero));
 }
 
 #[test]
 fn buy_kityy_wrong_input_type_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
 
-    input_kitty.price = Some(101);
+    input_kitty.price = 101;
     let output_kitty = input_kitty.clone();
 
     let input_coin = Coin::<0>(100);
@@ -746,7 +771,7 @@ fn buy_kityy_wrong_input_type_fails() {
 #[test]
 fn buy_kityy_wrong_output_type_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(101);
+    input_kitty.price = 101;
     let output_kitty = input_kitty.clone();
 
     let input_coin = Coin::<0>(100);
@@ -763,11 +788,10 @@ fn buy_kityy_wrong_output_type_fails() {
 #[test]
 fn buy_kitty_less_money_than_price_of_kityy_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(101);
+    input_kitty.price = 101;
     let output_kitty = input_kitty.clone();
 
     let input_coin1 = Coin::<0>(100);
-    //  let input_coin2 = Coin::<0>(90);
     let output_coin = Coin::<0>(100);
 
     let result = TradableKittyConstraintChecker::<0>::Buy.check(
@@ -784,7 +808,7 @@ fn buy_kitty_less_money_than_price_of_kityy_fails() {
 #[test]
 fn buy_kitty_coin_output_value_exceeds_input_coin_value_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(101);
+    input_kitty.price = 101;
     let output_kitty = input_kitty.clone();
 
     let input_coin1 = Coin::<0>(100);
@@ -807,7 +831,7 @@ fn buy_kitty_coin_output_value_exceeds_input_coin_value_fails() {
 #[test]
 fn buy_kitty_input_zero_coin_value_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(101);
+    input_kitty.price = 101;
     let output_kitty = input_kitty.clone();
 
     let input_coin1 = Coin::<0>(0);
@@ -828,7 +852,7 @@ fn buy_kitty_input_zero_coin_value_fails() {
 #[test]
 fn buy_kitty_output_zero_coin_value_fails() {
     let mut input_kitty = TradableKittyData::default_tradable_kitty();
-    input_kitty.price = Some(101);
+    input_kitty.price = 101;
     let output_kitty = input_kitty.clone();
 
     let input_coin1 = Coin::<0>(100);
