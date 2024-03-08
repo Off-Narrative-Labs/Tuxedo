@@ -610,10 +610,8 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     }
 }
 
-/// Checks:
-///     - Input and output are of kittyType.
-///     - Only the name is updated, and other basic properties are not modified.
-///     - The order between input and output must be the same.
+/// Checks if input and output contain a list of KittyData in the same order. 
+/// The KittyData in the output list can have different names from the inputs, but other properties must be unmodified.
 pub fn can_kitty_name_be_updated(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
@@ -639,10 +637,7 @@ pub fn can_kitty_name_be_updated(
     Ok(0)
 }
 
-/// Checks:
-///     - This is a private function used by can_kitty_name_be_updated.
-///     - Only the name is updated, and other basic properties are not updated.
-///
+/// Checks if only the name is updated, and other basic properties remain the same.
 fn check_kitty_name_update(
     original_kitty: &KittyData,
     updated_kitty: &KittyData,

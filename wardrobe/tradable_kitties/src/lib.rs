@@ -1,11 +1,8 @@
 //! # TradableKitty Module
 //!
 //! This Tuxedo piece codifies additional features that work with the Kitties piece.
-//! This piece should not and cannot be used without that piece.
-//! The `TradableKitty` module defines a specialized type of kitty tailored for trading with unique features.
-//!
-//! TradableKitties enrich the user experience by introducing trading/selling capabilities.
-//! The following are features supported:
+//! This piece should not and cannot be used without the Kitties and Money pieces.
+//! The introduced features are:
 //!
 //! - **ListKittyForSale:** Convert basic kitties into tradable kitties, adding a `price` field.
 //! - **DelistKittyFromSale:** Transform tradable kitties back into regular kitties when owners decide not to sell.
@@ -39,8 +36,8 @@ mod tests;
 /// The default price of a kitten is 10.
 const DEFAULT_KITTY_PRICE: u128 = 10;
 
-/// A `TradableKittyData` is required for trading the kitty.
-/// It includes the `price` of the kitty, in addition to the basic `KittyData`.
+/// A `TradableKittyData` is required for trading the Kitty.
+/// It includes the `price` of the Kitty, in addition to the basic `KittyData` provided by the Kitties piece.
 #[derive(
     Serialize,
     Deserialize,
@@ -155,7 +152,7 @@ impl From<kitties::ConstraintCheckerError> for TradeableKittyError {
     TypeInfo,
 )]
 pub enum TradableKittyConstraintChecker<const ID: u8> {
-    /// List the kitty for sale. This means the kitty will be converted to a tradable kitty once the transaction is executed..
+    /// List the kitty for sale. This means the kitty will be converted to a tradable kitty once the transaction is executed.
     ListKittyForSale,
     /// Delist the kitty from sale, This means tradable kitty will converted back to kitty.
     DelistKittyFromSale,
