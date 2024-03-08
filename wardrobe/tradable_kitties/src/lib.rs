@@ -216,8 +216,8 @@ fn check_can_buy<const ID: u8>(
         return Err(TradeableKittyError::BadlyTyped);
     }
 
-    for i in 1..input_data.len() {
-        let coin = input_data[i]
+    for coin_data in input_data.iter().skip(1) {
+        let coin = coin_data
             .clone()
             .extract::<Coin<ID>>()
             .map_err(|_| TradeableKittyError::BadlyTyped)?;
@@ -227,14 +227,14 @@ fn check_can_buy<const ID: u8>(
             utxo_value > 0,
             TradeableKittyError::MoneyError(MoneyError::ZeroValueCoin)
         );
-        input_coin_data.push(input_data[i].clone());
+        input_coin_data.push(coin_data.clone());
         total_input_amount = total_input_amount
             .checked_add(utxo_value)
             .ok_or(TradeableKittyError::MoneyError(MoneyError::ValueOverflow))?;
     }
 
-    for i in 1..output_data.len() {
-        let coin = output_data[i]
+    for coin_data in output_data.iter().skip(1) {
+        let coin = coin_data
             .clone()
             .extract::<Coin<ID>>()
             .map_err(|_| TradeableKittyError::BadlyTyped)?;
@@ -248,7 +248,7 @@ fn check_can_buy<const ID: u8>(
             utxo_value > 0,
             TradeableKittyError::MoneyError(MoneyError::ZeroValueCoin)
         );
-        output_coin_data.push(output_data[i].clone());
+        output_coin_data.push(coin_data.clone());
     }
     ensure!(
         total_price_of_kitty <= total_input_amount,
@@ -302,7 +302,7 @@ fn check_can_list_kitty_for_sale(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
-    check_kitty_tdkitty_interconversion(&input_data, &output_data)?;
+    check_kitty_tdkitty_interconversion(input_data, output_data)?;
     Ok(0)
 }
 
@@ -314,7 +314,7 @@ fn check_can_delist_kitty_from_sale(
 ) -> Result<TransactionPriority, TradeableKittyError> {
     // Below is the conversion from tradable kitty to regular kitty, the reverse of the ListKittyForSale.
     // Hence, input parameters are reversed.
-    check_kitty_tdkitty_interconversion(&output_data, &input_data)?;
+    check_kitty_tdkitty_interconversion(output_data, input_data)?;
     Ok(0)
 }
 
@@ -361,10 +361,10 @@ impl<const ID: u8> SimpleConstraintChecker for TradableKittyConstraintChecker<ID
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {
             Self::ListKittyForSale => {
-                check_can_list_kitty_for_sale(&input_data, &output_data)?;
+                check_can_list_kitty_for_sale(input_data, output_data)?;
             }
             Self::DelistKittyFromSale => {
-                check_can_delist_kitty_from_sale(&input_data, &output_data)?;
+                check_can_delist_kitty_from_sale(input_data, output_data)?;
             }
             Self::UpdateKittyPrice => {
                 check_kitty_price_update(input_data, output_data)?;
@@ -372,8 +372,8 @@ impl<const ID: u8> SimpleConstraintChecker for TradableKittyConstraintChecker<ID
             Self::UpdateKittyName => {
                 let mut input_basic_kitty_data: Vec<DynamicallyTypedData> = Vec::new();
                 let mut output_basic_kitty_data: Vec<DynamicallyTypedData> = Vec::new();
-                let _ = extract_basic_kitty_list(&input_data, &mut input_basic_kitty_data)?;
-                let _ = extract_basic_kitty_list(&output_data, &mut output_basic_kitty_data)?;
+                extract_basic_kitty_list(input_data, &mut input_basic_kitty_data)?;
+                extract_basic_kitty_list(output_data, &mut output_basic_kitty_data)?;
                 kitties::can_kitty_name_be_updated(
                     &input_basic_kitty_data,
                     &output_basic_kitty_data,

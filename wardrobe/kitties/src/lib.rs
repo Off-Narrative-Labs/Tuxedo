@@ -623,16 +623,17 @@ pub fn can_kitty_name_be_updated(
         { ConstraintCheckerError::NumberOfInputOutputMismatch }
     );
 
-    for i in 0..input_data.len() {
-        let utxo_input_kitty = input_data[i]
+    for (input, output) in input_data.iter().zip(output_data.iter()) {
+        let utxo_input_kitty = input
             .clone()
             .extract::<KittyData>()
             .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
 
-        let utxo_output_kitty = output_data[i]
+        let utxo_output_kitty = output
             .clone()
             .extract::<KittyData>()
             .map_err(|_| ConstraintCheckerError::BadlyTyped)?;
+
         check_kitty_name_update(&utxo_input_kitty, &utxo_output_kitty)?;
     }
     Ok(0)
