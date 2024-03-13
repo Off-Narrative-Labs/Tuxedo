@@ -28,10 +28,10 @@ impl TradableKittyData {
         }
     }
 }
-// listKittyForSale UT startes from here.
+// ListKittiesForSale UT startes from here.
 #[test]
 fn list_kitty_for_sale_happy_path_works() {
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[TradableKittyData::default_kitty().into()],
         &[],
         &[TradableKittyData::default_tradable_kitty().into()],
@@ -49,7 +49,7 @@ fn list_kitty_for_sale_multiple_input_happy_path_works() {
     output1.kitty_basic_data = input1.clone();
     output2.kitty_basic_data = input2.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output1.into(), output2.into()],
@@ -67,7 +67,7 @@ fn list_kitty_for_sale_multiple_out_of_order_input_fails() {
     output1.kitty_basic_data = input1.clone();
     output2.kitty_basic_data = input2.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output2.into(), output1.into()],
@@ -86,7 +86,7 @@ fn list_kitty_for_sale_different_num_of_input_output_path_fails() {
     let mut output1 = TradableKittyData::default_tradable_kitty();
     output1.kitty_basic_data = input2.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output1.into()],
@@ -102,7 +102,7 @@ fn list_kitty_for_sale_input_missing_path_fails() {
     let output = TradableKittyData::default_tradable_kitty();
 
     let result =
-        TradableKittyConstraintChecker::<0>::ListKittyForSale.check(&[], &[], &[output.into()]);
+        TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(&[], &[], &[output.into()]);
     assert_eq!(
         result,
         Err(TradeableKittyError::NumberOfInputOutputMismatch)
@@ -113,7 +113,7 @@ fn list_kitty_for_sale_input_missing_path_fails() {
 fn list_kitty_for_sale_out_put_missing_path_fails() {
     let input1 = TradableKittyData::default_kitty();
     let result =
-        TradableKittyConstraintChecker::<0>::ListKittyForSale.check(&[input1.into()], &[], &[]);
+        TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(&[input1.into()], &[], &[]);
     assert_eq!(
         result,
         Err(TradeableKittyError::NumberOfInputOutputMismatch)
@@ -128,7 +128,7 @@ fn list_kitty_for_sale_with_input_missing_fails() {
     output1.kitty_basic_data = input1.clone();
     let mut output2 = TradableKittyData::default_tradable_kitty();
     output2.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[],
         &[],
         &[output1.into(), output2.into()],
@@ -144,7 +144,7 @@ fn list_for_sale_with_wrong_output_type_amoung_valid_output_fails() {
     let input1 = TradableKittyData::default_kitty();
     let mut output1 = TradableKittyData::default_tradable_kitty();
     output1.kitty_basic_data = input1.clone();
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input1.into()],
         &[],
         &[Bogus.into()],
@@ -154,7 +154,7 @@ fn list_for_sale_with_wrong_output_type_amoung_valid_output_fails() {
 
 #[test]
 fn list_kitty_for_sale_with_wrong_input_type_fails() {
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[Bogus.into()],
         &[],
         &[TradableKittyData::default_tradable_kitty().into()],
@@ -171,7 +171,7 @@ fn list_for_sale_multiple_inputs_with_basic_property_changed_fails() {
     output1.kitty_basic_data = input1.clone();
     let mut output2 = TradableKittyData::default_tradable_kitty();
     output2.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output1.clone().into(), output2.into()],
@@ -188,7 +188,7 @@ fn list_for_sale_with_basic_property_changed_fails() {
     let mut output = TradableKittyData::default_tradable_kitty();
     output.kitty_basic_data = input.clone();
     output.kitty_basic_data.free_breedings += 1;
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -205,7 +205,7 @@ fn list_for_sale_with_price_zero_fails() {
     let mut output1 = TradableKittyData::default_tradable_kitty();
     output1.kitty_basic_data = input1.clone();
     output1.price = 0;
-    let result = TradableKittyConstraintChecker::<0>::ListKittyForSale.check(
+    let result = TradableKittyConstraintChecker::<0>::ListKittiesForSale.check(
         &[input1.into()],
         &[],
         &[output1.into()],
@@ -213,10 +213,10 @@ fn list_for_sale_with_price_zero_fails() {
     assert_eq!(result, Err(TradeableKittyError::KittyPriceCantBeZero));
 }
 
-// delistKittyFromSale UT starts from here.
+// DelistKittiesFromSale UT starts from here.
 #[test]
 fn delist_kitty_from_sale_happy_path_works() {
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[TradableKittyData::default_tradable_kitty().into()],
         &[],
         &[TradableKittyData::default_kitty().into()],
@@ -233,7 +233,7 @@ fn delist_kitty_from_sale_multiple_input_happy_path_works() {
     let mut input2 = TradableKittyData::default_tradable_kitty();
     input2.kitty_basic_data = output2.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output1.into(), output2.into()],
@@ -250,7 +250,7 @@ fn delist_kitty_from_sale_multiple_input_out_of_order_path_fails() {
     let mut input2 = TradableKittyData::default_tradable_kitty();
     input2.kitty_basic_data = output2.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output2.into(), output1.into()],
@@ -270,7 +270,7 @@ fn delist_kitty_from_sale_different_num_of_input_output_fails() {
     let mut input2 = TradableKittyData::default_tradable_kitty();
     input2.kitty_basic_data = output2;
 
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output1.into()],
@@ -284,8 +284,11 @@ fn delist_kitty_from_sale_different_num_of_input_output_fails() {
 #[test]
 fn delist_kitty_from_sale_input_missing_fails() {
     let output = TradableKittyData::default_kitty();
-    let result =
-        TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(&[], &[], &[output.into()]);
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
+        &[],
+        &[],
+        &[output.into()],
+    );
     assert_eq!(
         result,
         Err(TradeableKittyError::NumberOfInputOutputMismatch)
@@ -293,7 +296,7 @@ fn delist_kitty_from_sale_input_missing_fails() {
 }
 #[test]
 fn delist_kitty_from_sale_out_put_missing_path_fails() {
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[TradableKittyData::default_tradable_kitty().into()],
         &[],
         &[],
@@ -314,7 +317,7 @@ fn delist_kitty_from_sale_with_wrong_output_type_ampoung_valid_output_fails() {
     input1.kitty_basic_data = output1.clone();
     input2.kitty_basic_data = output2.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[input1.into(), input2.into()],
         &[],
         &[output1.into(), Bogus.into()],
@@ -324,7 +327,7 @@ fn delist_kitty_from_sale_with_wrong_output_type_ampoung_valid_output_fails() {
 
 #[test]
 fn delist_from_sale_with_wrong_input_type_fails() {
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[Bogus.into()],
         &[],
         &[TradableKittyData::default_kitty().into()],
@@ -341,7 +344,7 @@ fn delist_from_sale_with_basic_property_update_fails() {
     let mut input2 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data = output1.clone();
     input2.kitty_basic_data = output2.clone();
-    let result = TradableKittyConstraintChecker::<0>::DelistKittyFromSale.check(
+    let result = TradableKittyConstraintChecker::<0>::DelistKittiesFromSale.check(
         &[input1.clone().into(), input2.into()],
         &[],
         &[output1.clone().into(), output1.into()],
@@ -359,7 +362,7 @@ fn update_name_happy_path_works() {
     let mut output = input.clone();
     output.kitty_basic_data.name = *b"tdkt";
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -373,7 +376,7 @@ fn update_name_invalid_type_in_input_fails() {
     let mut output = input.clone();
     output.kitty_basic_data.name = *b"tdkt";
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.into(), Bogus.into()],
         &[],
         &[output.clone().into(), output.into()],
@@ -387,7 +390,7 @@ fn update_name_invalid_type_in_output_fails() {
     let mut output = input.clone();
     output.kitty_basic_data.name = *b"tdkt";
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.clone().into(), input.into()],
         &[],
         &[output.into(), Bogus.into()],
@@ -402,7 +405,7 @@ fn update_name_dna_update_fails() {
     output.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoca"));
     output.kitty_basic_data.name = *b"tdkt";
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -422,7 +425,7 @@ fn update_name_free_breeding_update_fails() {
     output.kitty_basic_data.name = *b"kty1";
     output.kitty_basic_data.free_breedings += 1;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -442,7 +445,7 @@ fn update_name_num_of_breeding_updated_path_fails() {
     output.kitty_basic_data.name = *b"kty1";
     output.kitty_basic_data.num_breedings += 1;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -462,7 +465,7 @@ fn update_name_gender_updated_path_fails() {
     output.kitty_basic_data.name = *b"tdk1";
     output.kitty_basic_data.parent = Parent::Mom(MomKittyStatus::RearinToGo);
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyName.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesName.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -482,7 +485,7 @@ fn update_price_happy_path_works() {
     let mut output = input.clone();
     output.price = 500;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -500,7 +503,7 @@ fn update_price_multiple_input_happy_path_works() {
     let mut output1 = input1.clone();
     output1.price = 700;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into(), input1.into()],
         &[],
         &[output.into(), output1.into()],
@@ -518,7 +521,7 @@ fn update_price_multiple_input_out_of_order_fails() {
     let mut output1 = input1.clone();
     output1.price = 700;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into(), input1.into()],
         &[],
         &[output1.into(), output.into()],
@@ -537,7 +540,7 @@ fn update_price_output_missing_path_fails() {
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into(), input1.into()],
         &[],
         &[output.into()],
@@ -558,7 +561,7 @@ fn update_price_input_missing_path_fails() {
     let mut output1 = input1.clone();
     output1.price = 700;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into()],
         &[],
         &[output.into(), output1.into()],
@@ -575,7 +578,7 @@ fn update_price_bad_input_path_fails() {
     let mut output = input.clone();
     output.price = 500;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[Bogus.into()],
         &[],
         &[output.into()],
@@ -591,7 +594,7 @@ fn update_price_bad_output_path_fails() {
     let mut input1 = TradableKittyData::default_tradable_kitty();
     input1.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into(), input1.into()],
         &[],
         &[output.into(), Bogus.into()],
@@ -607,7 +610,7 @@ fn update_price_different_dna_path_fails() {
 
     output.kitty_basic_data.dna = KittyDNA(H256::from_slice(b"superkalifragislisticexpialadoai"));
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.clone().into()],
         &[],
         &[output.into()],
@@ -625,7 +628,7 @@ fn update_price_basic_properties_updated_path_fails() {
     output.price = 500;
     output.kitty_basic_data.free_breedings += 1;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -641,7 +644,7 @@ fn update_price_not_updated_path_fails() {
     let input = TradableKittyData::default_tradable_kitty();
     let output = input.clone();
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into()],
         &[],
         &[output.into()],
@@ -655,7 +658,7 @@ fn update_price_to_zero_updated_path_fails() {
     let mut output = input.clone();
     output.price = 0;
 
-    let result = TradableKittyConstraintChecker::<0>::UpdateKittyPrice.check(
+    let result = TradableKittyConstraintChecker::<0>::UpdateKittiesPrice.check(
         &[input.into()],
         &[],
         &[output.into()],

@@ -1,22 +1,18 @@
 //! # TradableKitty Module
 //!
 //! This Tuxedo piece codifies additional features that work with the Kitties piece.
-//! This piece should not and cannot be used without that piece.
-//! The `TradableKitty` module defines a specialized type of kitty tailored for trading with unique features.
+//! This piece should not and cannot be used without the Kitties and Money pieces.
+//! The introduced features are:
 //!
-//! TradableKitties enrich the user experience by introducing trading/selling capabilities.
-//! The following are features supported:
-//!
-//! - **ListKittyForSale:** Convert basic kitties into tradable kitties, adding a `price` field.
-//! - **DelistKittyFromSale:** Transform tradable kitties back into regular kitties when owners decide not to sell.
-//! - **UpdateKittyPrice:** Allow owners to modify the `price` of TradableKitties.
-//! - **UpdateKittyName:** Permit owners to update the `name` of TradableKitties.
-//!
-//!   *Note: Only one kitty can be traded at a time.*
+//! - **ListKittiesForSale:** Convert basic kitties into tradable kitties, adding a `price` field.
+//! - **DelistKittiesFromSale:** Transform tradable kitties back into regular kitties when owners decide not to sell.
+//! - **UpdateKittiesPrice:** Allow owners to modify the `price` of TradableKitties.
+//! - **UpdateKittiesName:** Permit owners to update the `name` of TradableKitties.
 //!
 //! - **Buy:** Enable users to securely purchase TradableKitty from others, ensuring fair exchanges.
 //!   Make sure to place the kitty first and then coins in the inputs and outputs.
 //!
+//!   *Note: Only one kitty can be bought at a time.*
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -39,8 +35,8 @@ mod tests;
 /// The default price of a kitten is 10.
 const DEFAULT_KITTY_PRICE: u128 = 10;
 
-/// A `TradableKittyData` is required for trading the kitty.
-/// It includes the `price` of the kitty, in addition to the basic `KittyData`.
+/// A `TradableKittyData` is required for trading the Kitty.
+/// It includes the `price` of the Kitty, in addition to the basic `KittyData` provided by the Kitties piece.
 #[derive(
     Serialize,
     Deserialize,
@@ -108,6 +104,8 @@ pub enum TradeableKittyError {
     BadlyTyped,
     /// Input missing for the transaction.
     InputMissingError,
+    /// Output missing for the transaction.
+    OutputMissingError,
     /// Not enough amount to buy a `kitty`.
     InsufficientCollateralToBuyKitty,
     /// The number of input vs number of output doesn't match for a transaction.
@@ -155,31 +153,16 @@ impl From<kitties::ConstraintCheckerError> for TradeableKittyError {
     TypeInfo,
 )]
 pub enum TradableKittyConstraintChecker<const ID: u8> {
-    /// List the kitty for sale. This means the kitty will be converted to a tradable kitty once the transaction is executed..
-    ListKittyForSale,
-    /// Delist the kitty from sale, This means tradable kitty will converted back to kitty.
-    DelistKittyFromSale,
-    /// Update the `price` of tradable kitty.
-    UpdateKittyPrice,
-    // Update the name of the kitty.
-    UpdateKittyName,
+    /// List the kitties for sale. This means the kitties will be converted to a tradable kitties once the transaction is executed.
+    ListKittiesForSale,
+    /// Delist the kitties from sale, This means tradable kitties will converted back to kitties.
+    DelistKittiesFromSale,
+    /// Update the `price` of tradable kitties.
+    UpdateKittiesPrice,
+    // Update the name of the kitties.
+    UpdateKittiesName,
     /// For buying a new kitty from other owners.
     Buy,
-}
-
-/// Extract basic kitty data from a list of dynamically typed `TradableKitty` data, populating a list with basic kitty data.
-fn extract_basic_kitty_list(
-    tradable_kitty_data: &[DynamicallyTypedData],
-    kitty_data_list: &mut Vec<DynamicallyTypedData>,
-) -> Result<(), TradeableKittyError> {
-    for utxo in tradable_kitty_data {
-        if let Ok(tradable_kitty) = utxo.extract::<TradableKittyData>() {
-            kitty_data_list.push(tradable_kitty.kitty_basic_data.clone().into());
-        } else {
-            return Err(TradeableKittyError::BadlyTyped);
-        }
-    }
-    Ok(())
 }
 
 /// Checks if buying the kitty is possible or not. It depends on the Money variable to validate the spending of coins.
@@ -188,6 +171,14 @@ fn check_can_buy<const ID: u8>(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
+    ensure!(!input_data.is_empty(), {
+        TradeableKittyError::InputMissingError
+    });
+
+    ensure!(!output_data.is_empty(), {
+        TradeableKittyError::OutputMissingError
+    });
+
     let mut input_coin_data: Vec<DynamicallyTypedData> = Vec::new();
     let mut output_coin_data: Vec<DynamicallyTypedData> = Vec::new();
     let input_kitty_to_be_traded: Option<TradableKittyData>;
@@ -261,14 +252,13 @@ fn check_can_buy<const ID: u8>(
 
 /// Checks if updates to the prices of tradable kitties are possible or not.
 /// Prices of multiple tradable kitties can be updated in the same transaction.
-fn check_kitty_price_update(
+fn check_kitties_price_update(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
-    ensure!(
-        input_data.len() == output_data.len() && !input_data.is_empty(),
-        { TradeableKittyError::NumberOfInputOutputMismatch }
-    );
+    ensure!(input_data.len() == output_data.len(), {
+        TradeableKittyError::NumberOfInputOutputMismatch
+    });
     for i in 0..input_data.len() {
         let utxo_input_tradable_kitty = input_data[i]
             .extract::<TradableKittyData>()
@@ -298,35 +288,34 @@ fn check_kitty_price_update(
 
 /// Wrapper function for verifying the conversion from basic kitties to tradable kitties.
 /// Multiple kitties can be converted in a single transaction.
-fn check_can_list_kitty_for_sale(
+fn check_can_list_kitties_for_sale(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
-    check_kitty_tdkitty_interconversion(input_data, output_data)?;
+    check_kitties_tdkitties_interconversion(input_data, output_data)?;
     Ok(0)
 }
 
 /// Wrapper function for verifying the conversion from tradable kitties to basic kitties.
 /// Multiple tradable kitties can be converted in a single transaction.
-fn check_can_delist_kitty_from_sale(
+fn check_can_delist_kitties_from_sale(
     input_data: &[DynamicallyTypedData],
     output_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
-    // Below is the conversion from tradable kitty to regular kitty, the reverse of the ListKittyForSale.
+    // Below is the conversion from tradable kitty to regular kitty, the reverse of the ListKittiesForSale.
     // Hence, input parameters are reversed.
-    check_kitty_tdkitty_interconversion(output_data, input_data)?;
+    check_kitties_tdkitties_interconversion(output_data, input_data)?;
     Ok(0)
 }
 
 /// Validates inter-conversion between both regular kitties and tradable kitties, as used by the `listForSale` and `delistFromSale` functions.
-fn check_kitty_tdkitty_interconversion(
+fn check_kitties_tdkitties_interconversion(
     kitty_data: &[DynamicallyTypedData],
     tradable_kitty_data: &[DynamicallyTypedData],
 ) -> Result<TransactionPriority, TradeableKittyError> {
-    ensure!(
-        kitty_data.len() == tradable_kitty_data.len() && !kitty_data.is_empty(),
-        { TradeableKittyError::NumberOfInputOutputMismatch }
-    );
+    ensure!(kitty_data.len() == tradable_kitty_data.len(), {
+        TradeableKittyError::NumberOfInputOutputMismatch
+    });
 
     for i in 0..kitty_data.len() {
         let utxo_kitty = kitty_data[i]
@@ -360,21 +349,42 @@ impl<const ID: u8> SimpleConstraintChecker for TradableKittyConstraintChecker<ID
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
         match &self {
-            Self::ListKittyForSale => {
-                check_can_list_kitty_for_sale(input_data, output_data)?;
+            Self::ListKittiesForSale => {
+                check_can_list_kitties_for_sale(input_data, output_data)?;
             }
-            Self::DelistKittyFromSale => {
-                check_can_delist_kitty_from_sale(input_data, output_data)?;
+            Self::DelistKittiesFromSale => {
+                check_can_delist_kitties_from_sale(input_data, output_data)?;
             }
-            Self::UpdateKittyPrice => {
-                check_kitty_price_update(input_data, output_data)?;
+            Self::UpdateKittiesPrice => {
+                check_kitties_price_update(input_data, output_data)?;
             }
-            Self::UpdateKittyName => {
-                let mut input_basic_kitty_data: Vec<DynamicallyTypedData> = Vec::new();
-                let mut output_basic_kitty_data: Vec<DynamicallyTypedData> = Vec::new();
-                extract_basic_kitty_list(input_data, &mut input_basic_kitty_data)?;
-                extract_basic_kitty_list(output_data, &mut output_basic_kitty_data)?;
-                kitties::can_kitty_name_be_updated(
+            Self::UpdateKittiesName => {
+                let result: Result<Vec<DynamicallyTypedData>, _> = input_data
+                    .iter()
+                    .map(|utxo| utxo.extract::<TradableKittyData>())
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(|vec| {
+                        vec.into_iter()
+                            .map(|tdkitty| tdkitty.kitty_basic_data.clone().into())
+                            .collect()
+                    });
+
+                let input_basic_kitty_data = result.map_err(|_| TradeableKittyError::BadlyTyped)?;
+
+                let result: Result<Vec<DynamicallyTypedData>, _> = output_data
+                    .iter()
+                    .map(|utxo| utxo.extract::<TradableKittyData>())
+                    .collect::<Result<Vec<_>, _>>()
+                    .map(|vec| {
+                        vec.into_iter()
+                            .map(|tdkitty| tdkitty.kitty_basic_data.clone().into())
+                            .collect()
+                    });
+
+                let output_basic_kitty_data =
+                    result.map_err(|_| TradeableKittyError::BadlyTyped)?;
+
+                kitties::can_kitties_name_be_updated(
                     &input_basic_kitty_data,
                     &output_basic_kitty_data,
                 )?;
