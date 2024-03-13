@@ -3,6 +3,8 @@
 //! This Tuxedo piece codifies additional features that work with the Kitties piece.
 //! This piece should not and cannot be used without the Kitties and Money pieces.
 //! The introduced features are:
+//! This piece should not and cannot be used without the Kitties and Money pieces.
+//! The introduced features are:
 //!
 //! - **ListKittiesForSale:** Convert basic kitties into tradable kitties, adding a `price` field.
 //! - **DelistKittiesFromSale:** Transform tradable kitties back into regular kitties when owners decide not to sell.
@@ -35,6 +37,8 @@ mod tests;
 /// The default price of a kitten is 10.
 const DEFAULT_KITTY_PRICE: u128 = 10;
 
+/// A `TradableKittyData` is required for trading the Kitty.
+/// It includes the `price` of the Kitty, in addition to the basic `KittyData` provided by the Kitties piece.
 /// A `TradableKittyData` is required for trading the Kitty.
 /// It includes the `price` of the Kitty, in addition to the basic `KittyData` provided by the Kitties piece.
 #[derive(

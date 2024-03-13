@@ -1,15 +1,23 @@
 //! An NFT game inspired by Cryptokitties.
 //! In this game, Kitties can be created, bred or renamed.
+//! In this game, Kitties can be created, bred or renamed.
 //!
 //! ## Features
 //!
 //! - **Create:** Generate new kitties from scratch.
 //!   To submit a valid transaction for creating kitties, adhere to the following structure:
+//! - **Create:** Generate new kitties from scratch.
+//!   To submit a valid transaction for creating kitties, adhere to the following structure:
 //!   1. The input must be empty.
+//!   2. The output must contain only the newly created kitties.
 //!   2. The output must contain only the newly created kitties.
 //!
 //!    **Note 1:** Multiple kitties can be created at the same time in the same transaction.
 //!
+//! - **Update Name:** Modify the name of one or more kitties.
+//!   To submit a valid transaction for updating some kitties' names, adhere to the following structure:
+//!   1. The input must be the kitties to update.
+//!   2. The output must contain the kitties with the updated names.
 //! - **Update Name:** Modify the name of one or more kitties.
 //!   To submit a valid transaction for updating some kitties' names, adhere to the following structure:
 //!   1. The input must be the kitties to update.
@@ -19,12 +27,16 @@
 //!    **Note 2:** The input and output kitties must follow the same order.
 //!
 //! - **Breed:** Breed a new kitty using Mom and Dad based on the factors below:
+//! - **Breed:** Breed a new kitty using Mom and Dad based on the factors below:
 //!   1. Mom and Dad have to be in a state where they are ready to breed.
+//!   2. The child's unique DNA combined from Mom's and Dad's, linkable back to them.
 //!   2. The child's unique DNA combined from Mom's and Dad's, linkable back to them.
 //!   3. The game also allows kitties to have a cooling-off period in between breeding before they can be bred again.
 //!   4. A rest operation allows for a Mom Kitty and a Dad Kitty to cool off.
 //!
 //! In order to submit a valid breed transaction, you must structure it as follows:
+//!   1. The input must contain 1 Mom and 1 Dad, in a `RearinToGo` state.
+//!   2. The output must contain Mom, Dad, and the newly created Child. Mom and Dad's state must be updated to `HadBirthRecently` and `Tired`.
 //!   1. The input must contain 1 Mom and 1 Dad, in a `RearinToGo` state.
 //!   2. The output must contain Mom, Dad, and the newly created Child. Mom and Dad's state must be updated to `HadBirthRecently` and `Tired`.
 //!   3. A child's DNA is calculated by:
@@ -102,6 +114,7 @@ pub enum DadKittyStatus {
     /// Can breed.
     RearinToGo,
     /// Can't breed due to tiredness.
+    /// Can't breed due to tiredness.
     Tired,
 }
 
@@ -129,6 +142,7 @@ pub enum MomKittyStatus {
     HadBirthRecently,
 }
 
+/// The parent structure contains 1 Mom Kitty and 1 Dad Kitty.
 /// The parent structure contains 1 Mom Kitty and 1 Dad Kitty.
 #[derive(
     Serialize,
@@ -635,6 +649,7 @@ pub fn can_kitties_name_be_updated(
     Ok(0)
 }
 
+/// Checks if only the name is updated, and other basic properties remain the same.
 /// Checks if only the name is updated, and other basic properties remain the same.
 fn check_kitty_name_update(
     original_kitty: &KittyData,
