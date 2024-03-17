@@ -39,6 +39,10 @@ pub trait Verifier: Debug + Encode + Decode + Clone {
     /// This is only required in chains that use inherents, and thus a default implementation
     /// is provided.
     fn new_unspendable() -> Option<Self> {
+        log::debug!(
+            target: crate::LOG_TARGET,
+            "In new_unspendable default function implementation. About to return hardcoded `None`."
+        );
         None
     }
 }

@@ -22,6 +22,7 @@ pub mod genesis;
 pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
+pub use inherents::{InherentAdapter, InherentHooks};
 pub use verifier::Verifier;
 
 /// A Tuxedo-specific target for diagnostic node log messages

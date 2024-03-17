@@ -37,6 +37,7 @@ use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
+    InherentAdapter,
 };
 
 pub use amoeba;
@@ -184,14 +185,14 @@ pub enum OuterConstraintChecker {
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
     /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    SetTimestamp(InherentAdapter<timestamp::SetTimestamp<Runtime>>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 
     // TODO This one is last for now so that I can write a hacky algorithm to scrape
     // the inherent data and assume it is last.
     /// Set some parachain related information via an inherent extrinsic.
-    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
+    ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<Runtime>>),
 }
 
 /// A constraint checker is a piece of logic that can be used to check a transaction.
@@ -219,7 +220,7 @@ pub enum OuterConstraintChecker {
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
     /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    SetTimestamp(InherentAdapter<timestamp::SetTimestamp<Runtime>>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 

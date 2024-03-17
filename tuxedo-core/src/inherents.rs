@@ -32,6 +32,7 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
+use serde::{Deserialize, Serialize};
 use sp_core::H256;
 use sp_inherents::{
     CheckInherentsResult, InherentData, InherentIdentifier, IsFatalError, MakeFatalError,
@@ -131,7 +132,9 @@ pub trait InherentHooks: SimpleConstraintChecker + Sized {
 /// the underlying `Tuxedo Inherent` implementation.
 ///
 /// This type should encode exactly like the inner type.
-#[derive(Debug, Decode, Default, Encode, TypeInfo, Clone, Copy)]
+#[derive(
+    Serialize, Deserialize, Eq, PartialEq, Debug, Decode, Default, Encode, TypeInfo, Clone, Copy,
+)]
 pub struct InherentAdapter<C>(C);
 
 /// Helper to transform an entire transaction by wrapping the constraint checker.
