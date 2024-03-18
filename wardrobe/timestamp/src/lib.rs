@@ -334,6 +334,9 @@ pub struct CleanUpTimestamp<T>(PhantomData<T>);
 impl<T: TimestampConfig> SimpleConstraintChecker for CleanUpTimestamp<T> {
     type Error = TimestampError;
 
+    // Cleaning up timestamps will not work until evictions are available because
+    // the timestamps stored on-chain are unspendable.
+    // FIXME: https://github.com/Off-Narrative-Labs/Tuxedo/issues/98
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
