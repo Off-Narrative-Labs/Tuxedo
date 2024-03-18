@@ -230,7 +230,7 @@ where
     // Consider an alternative way to express the bounds here:
     // Transaction<V, C>: Extrinsic
     V: TypeInfo + Verifier + 'static,
-    C: TypeInfo + ConstraintChecker<V> + 'static,
+    C: TypeInfo + ConstraintChecker + 'static,
 {
     // The commented stuff is Basti's algo.
     // It is nicer than my hack because it searches the transactions,
