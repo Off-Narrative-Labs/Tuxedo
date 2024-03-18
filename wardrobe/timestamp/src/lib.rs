@@ -1,13 +1,10 @@
 //! Allow block authors to include a timestamp via an inherent transaction.
 //!
 //! This is roughly analogous to FRAME's pallet timestamp. It relies on the same client-side inherent data provider,
-//! as well as Tuxedo's own previous block inehrent data provider.
+//! as well as Tuxedo's own previous block inherent data provider.
 //!
 //! In each block, the block author must include a single `SetTimestamp` transaction that peeks at the
 //! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
-//!
-//! This piece currently features a prominent hack which will need to be cleaned up in due course.
-//! It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
