@@ -10,9 +10,11 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_std::fmt::Debug;
 
+mod htlc;
 mod multi_signature;
 mod simple_signature;
 
+pub use htlc::{BlakeTwoHashLock, TimeLock};
 pub use multi_signature::ThresholdMultiSignature;
 pub use simple_signature::{Sr25519Signature, P2PKH};
 
