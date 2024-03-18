@@ -6,30 +6,25 @@
 //! Constraint Checkers can be used to codify the laws of a monetary system, a chemistry or physics simulation,
 //! NFT kitties, public elections and much more.
 //!
-//! By far the most common and most important way to write a constraint checker is with the `SimpleConstraintChecker`
-//! trait. It provides a single method called `check` which determines whether the relationship between the inputs
+//! The primary way for developers to write a constraint checker is with the `SimpleConstraintChecker`
+//! trait. It provides a method called `check` which determines whether the relationship between the inputs
 //! and outputs (and peeks) is valid. For example making sure no extra money was created, or making sure the chemical
 //! reaction balances.
 //!
 //! ## Inherents
 //!
 //! If you need to tap in to [Substrate's inherent system](https://docs.substrate.io/learn/transaction-types/#inherent-transactions)
-//! you may choose to implement the `ConstraintCheckerWithInherent` trait instead of the simple one. This trait is more complex
-//! but if you really need an inherent, it is required. Make sure you know what you are doing before
-//! you start writing an inherent.
+//! you may choose to also implement the `InherentHooks` trait for the same type that implements `SimpleConstraintChecker`.
+//! When installing a constraint checker in your runtime, make sure to wrap it with the `InherentAdapter` type.
+//! See the `inherents` module for more details.
 //!
 //! ## Constraint Checker Internals
 //!
 //! One of Tuxedo's killer features is its ability to aggregating pieces recursively.
 //! To achieve this we have to consider that many intermediate layers in the aggregation tree
 //! will have multiple inherent types. For this reason, we provide a much more flexible interface
-//! that the aggregation macro can use.
-//!
-//! The current design is based on a chain of blanket implementations. Each trait has a blanket
-//! impl for the next more complex one.
-//!
-//! `SimpleConstraintChecker` -> `ConstraintCheckerWithInherent` -> ConstraintChecker
-//! https://github.com/rust-lang/rust/issues/42721
+//! that the aggregation macro can use called `ConstraintChecker`. Do not implement `ConstraintChecker`
+//! directly.
 
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
@@ -58,15 +53,16 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     ) -> Result<TransactionPriority, Self::Error>;
 }
 
-/// A single constraint checker that a transaction can choose to call. Checks whether the input
-/// and output data from a transaction meets the codified constraints.
+/// The raw and fully powerful `ConstraintChecker` interface used by the
+/// Tuxedo Executive.
 ///
-/// You should never manually write a body to this function.
+/// You should never manually manually implement this trait.
 /// If you are:
-/// * Working on an inherent constraint checker -> Rely on the default body.
 /// * Working on a simple non-inherent constraint checker -> Use the `SimpleConstraintChecker` trait instead
 ///   and rely on its blanket implementation.
-/// * Considering an aggregate constraint checker which is part inherent, part not -> let the macro handle it for you.
+/// * Working on an inherent constraint checker -> Implement `SimpleConstraintChecker` and `InherentHooks` and use the
+/// `InherentAdapter` wrapper type.
+/// * Considering an aggregate constraint checker that is part inherent, part not -> let the macro handle it for you.
 ///
 /// If you are trying to implement some complex inherent logic that requires the interaction of
 /// multiple inherents, or features a variable number of inherents in each block, you might be

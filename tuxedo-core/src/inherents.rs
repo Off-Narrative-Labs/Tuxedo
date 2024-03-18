@@ -126,10 +126,9 @@ pub trait InherentHooks: SimpleConstraintChecker + Sized {
 
 /// An adapter type to declare, at the runtime level, that Tuxedo pieces provide custom inherent hooks.
 ///
-/// This adapter type satisfies the executive's expectations by implementing both `SimpleConstraintChecker`,
-/// and `InherentInternal`. The constraint checker just plumbs straight through to the underlying type.
+/// This adapter type satisfies the executive's expectations by implementing both `ConstraintChecker`.
 /// The inherent logic checks to be sure that exactly one inherent is present before plumbing through to
-/// the underlying `Tuxedo Inherent` implementation.
+/// the underlying `TuxedoInherent` implementation.
 ///
 /// This type should encode exactly like the inner type.
 #[derive(
