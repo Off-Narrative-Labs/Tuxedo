@@ -101,11 +101,19 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
     let mut redeemer_type_name = outer_type.to_string();
     redeemer_type_name.push_str("Redeemer");
     let redeemer_type = Ident::new(&redeemer_type_name, outer_type.span());
+    let type_for_new_unspendable = inner_types
+        .clone()
+        .next()
+        .expect("At least one verifier variant expected.");
 
     // TODO there must be a better way to do this, right?
     let inner_types2 = inner_types.clone();
     let variants2 = variants.clone();
     let variants3 = variants.clone();
+    let variant_for_new_unspendable = variants
+        .clone()
+        .next()
+        .expect("At least one verifier variant expected.");
 
     let as_variants = variants.clone().map(|v| {
         let s = format!("as_{}", v);
@@ -161,10 +169,13 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
                 }
             }
 
-            //TODO implement the new_unspendable function as well.
-            // fn new_unspendable() -> Option<Self> {
-            //     todo!()
-            // }
+            // The aggregation macro assumes that the first variant is able to produce a new unspendable instance.
+            // In the future this could be made nicer (but maybe not worth the complexity) by allowing an additional
+            // annotation to the one that can be used as unspendable eg `#[unspendable]`
+            // If this ever becomes a challenge just add an explicit `Unspendable` variant first.
+            fn new_unspendable() -> Option<Self> {
+                #type_for_new_unspendable::new_unspendable().map(|inner| Self::#variant_for_new_unspendable(inner))
+            }
         }
     };
     output.into()
