@@ -163,7 +163,7 @@ pub mod testing {
     use scale_info::TypeInfo;
     use serde::{Deserialize, Serialize};
 
-    use super::{DynamicallyTypedData, SimpleConstraintChecker, TransactionPriority};
+    use super::{ConstraintChecker, DynamicallyTypedData, TransactionPriority};
 
     /// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
@@ -175,7 +175,7 @@ pub mod testing {
         pub inherent: bool,
     }
 
-    impl SimpleConstraintChecker for TestConstraintChecker {
+    impl ConstraintChecker for TestConstraintChecker {
         type Error = ();
 
         fn check(
@@ -189,6 +189,29 @@ pub mod testing {
             } else {
                 Err(())
             }
+        }
+
+        fn is_inherent(&self) -> bool {
+            self.inherent
+        }
+
+        fn create_inherents<V: crate::Verifier>(
+            _: &sp_inherents::InherentData,
+            _: Vec<(crate::types::Transaction<V, Self>, sp_core::H256)>,
+        ) -> Vec<crate::types::Transaction<V, Self>> {
+            unimplemented!()
+        }
+
+        fn check_inherents<V: crate::Verifier>(
+            _: &sp_inherents::InherentData,
+            _: Vec<crate::types::Transaction<V, Self>>,
+            _: &mut sp_inherents::CheckInherentsResult,
+        ) {
+            unimplemented!()
+        }
+
+        fn genesis_transactions<V: crate::Verifier>() -> Vec<crate::types::Transaction<V, Self>> {
+            unimplemented!()
         }
     }
 
