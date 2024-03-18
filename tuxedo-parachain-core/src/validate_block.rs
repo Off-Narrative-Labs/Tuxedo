@@ -74,7 +74,7 @@ where
     B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
     Transaction<V, C>: Extrinsic,
     V: TypeInfo + Verifier + 'static,
-    C: TypeInfo + ConstraintChecker<V> + 'static, // + Into<SetParachainInfo<V>>,
+    C: TypeInfo + ConstraintChecker + 'static, // + Into<SetParachainInfo<V>>,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
