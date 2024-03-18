@@ -96,6 +96,13 @@ impl Verifier for ThresholdMultiSignature {
 
         valid_sigs.len() >= self.threshold.into()
     }
+
+    fn new_unspendable() -> Option<Self> {
+        Some(Self {
+            threshold: 1,
+            signatories: Vec::new(),
+        })
+    }
 }
 
 #[cfg(test)]

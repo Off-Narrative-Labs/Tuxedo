@@ -49,6 +49,10 @@ impl Verifier for Sr25519Signature {
     fn verify(&self, simplified_tx: &[u8], _: u32, sig: &Signature) -> bool {
         sp_io::crypto::sr25519_verify(sig, simplified_tx, &Public::from_h256(self.owner_pubkey))
     }
+
+    fn new_unspendable() -> Option<Self> {
+        Some(Self::new(H256::zero()))
+    }
 }
 
 /// Pay To Public Key Hash (P2PKH)
@@ -69,6 +73,12 @@ impl Verifier for P2PKH {
     fn verify(&self, simplified_tx: &[u8], _: u32, (pubkey, signature): &Self::Redeemer) -> bool {
         BlakeTwo256::hash(pubkey) == self.owner_pubkey_hash
             && sp_io::crypto::sr25519_verify(signature, simplified_tx, pubkey)
+    }
+
+    fn new_unspendable() -> Option<Self> {
+        Some(Self {
+            owner_pubkey_hash: H256::zero(),
+        })
     }
 }
 

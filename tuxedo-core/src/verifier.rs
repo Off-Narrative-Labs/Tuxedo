@@ -76,6 +76,10 @@ impl Verifier for Unspendable {
     fn verify(&self, _simplified_tx: &[u8], _: u32, _: &()) -> bool {
         false
     }
+
+    fn new_unspendable() -> Option<Self> {
+        Some(Self)
+    }
 }
 
 // Idea: It could be useful to allow delay deciding whether the redemption should succeed
@@ -95,6 +99,10 @@ impl Verifier for TestVerifier {
 
     fn verify(&self, _simplified_tx: &[u8], _: u32, _: &()) -> bool {
         self.verifies
+    }
+
+    fn new_unspendable() -> Option<Self> {
+        Some(Self { verifies: false })
     }
 }
 
