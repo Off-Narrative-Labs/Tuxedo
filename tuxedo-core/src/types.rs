@@ -145,17 +145,26 @@ pub struct Input {
     pub output_ref: OutputRef,
     /// A means of showing that this input data can be used.
     /// It is most often a proof such as a signature, but could also be a forceful eviction.
-    pub redeemer: Redeemer,
+    pub redeemer: RedemptionStrategy,
 }
 
+//TODO Consider making this enum generic over the redeemer type so there is not an additional decoding necessary.
+// This would percolate up though. For example input would also have to be generic over the redeemer type.
+// IDK if it is appropriate to be making so many types non-opaque??
 /// An input can be consumed in two way. It can be redeemed normally (probably with some signature, or proof) or it
 /// can be evicted. This enum is isomorphic to `Option<Vec<u8>>` but has more meaningful names.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-pub enum Redeemer {
+pub enum RedemptionStrategy {
     /// The input is being consumed in the normal way with a signature or other proof provided by the spender.
     Redemption(Vec<u8>),
     /// The input is being forcefully evicted without satisfying its Verifier.
     Eviction,
+}
+
+impl Default for RedemptionStrategy {
+    fn default() -> Self {
+        Self::Redemption(Vec::new())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
