@@ -147,7 +147,7 @@ impl SimpleConstraintChecker for PoeRevoke {
         for untyped_input in input_data {
             let _ = untyped_input
                 .extract::<ClaimData>()
-                .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+                .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
         }
 
         Ok(0)
