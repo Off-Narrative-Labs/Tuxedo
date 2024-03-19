@@ -507,6 +507,7 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        _evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
