@@ -148,7 +148,7 @@ pub struct Input {
     pub redeemer: Redeemer,
 }
 
-/// An input can be consumed in two way. It can be redeemed normally (probably with some signature, or proof) or it 
+/// An input can be consumed in two way. It can be redeemed normally (probably with some signature, or proof) or it
 /// can be evicted. This enum is isomorphic to `Option<Vec<u8>>` but has more meaningful names.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub enum Redeemer {
@@ -156,7 +156,7 @@ pub enum Redeemer {
     Redemption(Vec<u8>),
     /// The input is being forcefully evicted without satisfying its Verifier.
     Eviction,
-  }
+}
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum UtxoError<ConstraintCheckerError> {
