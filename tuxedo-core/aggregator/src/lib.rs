@@ -253,12 +253,13 @@ pub fn tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -> Toke
             fn check (
                 &self,
                 inputs: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+                evicted_inputs: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
                 peeks: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
                 outputs: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
             ) -> Result<TransactionPriority, Self::Error> {
                 match self {
                     #(
-                        Self::#variants5(inner) => inner.check(inputs, peeks, outputs).map_err(|e| Self::Error::#variants5(e)),
+                        Self::#variants5(inner) => inner.check(inputs, evicted_inputs, peeks, outputs).map_err(|e| Self::Error::#variants5(e)),
                     )*
                 }
             }
