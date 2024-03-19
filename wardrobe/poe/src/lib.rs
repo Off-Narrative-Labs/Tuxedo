@@ -172,7 +172,7 @@ impl SimpleConstraintChecker for PoeRevoke {
 }
 
 /// A constraint checker that resolves claim disputes by keeping whichever claim came first.
-/// 
+///
 /// Any user may submit a transaction reporting conflicting claims, and the oldest one will be kept.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeDispute;
@@ -198,11 +198,11 @@ impl SimpleConstraintChecker for PoeDispute {
         );
 
         // Make sure there is exactly one peek (the oldest, winning claim)
-       let winner = peek_data
-                .first()
-                .ok_or(ConstraintCheckerError::WrongNumberInputs)?
-                .extract::<ClaimData>()
-                .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
+        let winner = peek_data
+            .first()
+            .ok_or(ConstraintCheckerError::WrongNumberInputs)?
+            .extract::<ClaimData>()
+            .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
 
         // Make sure that all evicted inputs, claim the same hash as the winner
         // and have block heights strictly greater than the winner.
@@ -210,8 +210,14 @@ impl SimpleConstraintChecker for PoeDispute {
             let loser = untyped_loser
                 .extract::<ClaimData>()
                 .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
-            ensure!(winner.claim == loser.claim, Self::Error::DisputingMismatchedClaims);
-            ensure!(winner.effective_height < loser.effective_height, Self::Error::IncorrectDisputeWinner);
+            ensure!(
+                winner.claim == loser.claim,
+                Self::Error::DisputingMismatchedClaims
+            );
+            ensure!(
+                winner.effective_height < loser.effective_height,
+                Self::Error::IncorrectDisputeWinner
+            );
         }
 
         Ok(0)

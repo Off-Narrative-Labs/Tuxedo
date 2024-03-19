@@ -209,7 +209,7 @@ impl SimpleConstraintChecker for AmoebaCreation {
             evicted_input_data.is_empty(),
             ConstraintCheckerError::NoEvictionsAllowed
         );
-        
+
         // Make sure there is a single created amoeba
         ensure!(
             !output_data.is_empty(),

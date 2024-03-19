@@ -152,7 +152,7 @@ impl<const ID: u8> SimpleConstraintChecker for MoneyConstraintChecker<ID> {
             evicted_input_data.is_empty(),
             ConstraintCheckerError::NoEvictionsAllowed
         );
-        
+
         match &self {
             Self::Spend => {
                 // Check that we are consuming at least one input
