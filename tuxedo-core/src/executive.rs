@@ -82,7 +82,7 @@ where
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
                 match input.redeemer {
-                    RedemptionStrategy::Redemption(redeemer) => {
+                    RedemptionStrategy::Redemption(ref redeemer) => {
                         let redeemer = V::Redeemer::decode(&mut &redeemer[..])
                             .map_err(|_| UtxoError::VerifierError)?;
                         ensure!(
