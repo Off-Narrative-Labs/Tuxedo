@@ -48,7 +48,9 @@ pub trait SimpleConstraintChecker: Debug + Encode + Decode + Clone {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
+        evicted_peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 }
@@ -76,7 +78,9 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
+        evicted_peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error>;
 
@@ -116,10 +120,19 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
+        evicted_peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        SimpleConstraintChecker::check(self, input_data, peek_data, output_data)
+        SimpleConstraintChecker::check(
+            self,
+            input_data,
+            evicted_input_data,
+            peek_data,
+            evicted_peek_data,
+            output_data,
+        )
     }
 
     fn is_inherent(&self) -> bool {
@@ -177,7 +190,9 @@ pub mod testing {
         fn check(
             &self,
             _input_data: &[DynamicallyTypedData],
+            _evicted_input_data: &[DynamicallyTypedData],
             _peek_data: &[DynamicallyTypedData],
+            _evicted_peek_data: &[DynamicallyTypedData],
             _output_data: &[DynamicallyTypedData],
         ) -> Result<TransactionPriority, ()> {
             if self.checks {
@@ -217,7 +232,7 @@ pub mod testing {
             checks: true,
             inherent: false,
         }
-        .check(&[], &[], &[]);
+        .check(&[], &[], &[], &[], &[]);
         assert_eq!(result, Ok(0));
     }
 
@@ -227,7 +242,7 @@ pub mod testing {
             checks: false,
             inherent: false,
         }
-        .check(&[], &[], &[]);
+        .check(&[], &[], &[], &[], &[]);
         assert_eq!(result, Err(()));
     }
 }
