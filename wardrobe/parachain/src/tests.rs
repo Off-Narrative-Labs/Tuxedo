@@ -22,7 +22,7 @@ fn update_parachain_info_happy_path() {
     let outputs = vec![new];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Ok(0),
     );
 }
@@ -35,7 +35,7 @@ fn update_parachain_info_relay_block_not_increasing() {
     let outputs = vec![new];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(RelayBlockNotIncreasing),
     );
 }
@@ -49,7 +49,7 @@ fn update_parachain_info_extra_inputs() {
     let outputs = vec![new];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(ExtraInputs)
     );
 }
@@ -61,7 +61,7 @@ fn update_parachain_info_missing_input() {
     let outputs = vec![new];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(MissingPreviousInfo)
     );
 }
@@ -74,7 +74,7 @@ fn update_parachain_info_bogus_input() {
     let outputs = vec![new];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(BadlyTyped)
     );
 }
@@ -88,7 +88,7 @@ fn update_parachain_info_extra_outputs() {
     let outputs = vec![new1.into(), new2.into()];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(ExtraOutputs)
     );
 }
@@ -100,7 +100,7 @@ fn update_parachain_info_missing_output() {
     let outputs = vec![];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(MissingNewInfo)
     );
 }
@@ -113,7 +113,7 @@ fn update_parachain_info_bogus_output() {
     let outputs = vec![new];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
         Err(BadlyTyped)
     );
 }
