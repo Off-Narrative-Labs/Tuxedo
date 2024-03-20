@@ -131,7 +131,7 @@ impl<V, C> TuxedoGenesisConfig<V, C> {
 impl<V, C> BuildStorage for TuxedoGenesisConfig<V, C>
 where
     V: Verifier,
-    C: ConstraintChecker<V>,
+    C: ConstraintChecker,
     Transaction<V, C>: Encode,
     Output<V>: Encode,
 {

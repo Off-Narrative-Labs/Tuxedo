@@ -107,7 +107,7 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
 // so we do a minimal implementation.
 impl<V, C> Extrinsic for Transaction<V, C>
 where
-    C: TypeInfo + ConstraintChecker<V> + 'static,
+    C: TypeInfo + ConstraintChecker + 'static,
     V: TypeInfo + Verifier + 'static,
 {
     type Call = Self;

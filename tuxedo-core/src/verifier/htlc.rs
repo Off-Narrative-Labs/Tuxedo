@@ -70,6 +70,12 @@ impl Verifier for BlakeTwoHashLock {
     fn verify(&self, _: &[u8], _: u32, secret: &Self::Redeemer) -> bool {
         BlakeTwo256::hash(secret) == self.hash_lock
     }
+
+    fn new_unspendable() -> Option<Self> {
+        Some(BlakeTwoHashLock {
+            hash_lock: H256::zero(),
+        })
+    }
 }
 
 /// Allows a UTXO to be spent, and therefore acknowledged by an intended recipient by revealing

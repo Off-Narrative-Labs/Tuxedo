@@ -37,6 +37,7 @@ use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
+    InherentAdapter,
 };
 
 pub use amoeba;
@@ -163,7 +164,7 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-#[tuxedo_constraint_checker(OuterVerifier)]
+#[tuxedo_constraint_checker]
 #[cfg(feature = "parachain")]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
@@ -184,21 +185,21 @@ pub enum OuterConstraintChecker {
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
     /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    SetTimestamp(InherentAdapter<timestamp::SetTimestamp<Runtime>>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 
     // TODO This one is last for now so that I can write a hacky algorithm to scrape
     // the inherent data and assume it is last.
     /// Set some parachain related information via an inherent extrinsic.
-    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
+    ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<Runtime>>),
 }
 
 /// A constraint checker is a piece of logic that can be used to check a transaction.
 /// For any given Tuxedo runtime there is a finite set of such constraint checkers.
 /// For example, this may check that input token values exceed output token values.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-#[tuxedo_constraint_checker(OuterVerifier)]
+#[tuxedo_constraint_checker]
 #[cfg(not(feature = "parachain"))]
 pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
@@ -219,7 +220,7 @@ pub enum OuterConstraintChecker {
     /// the losing claims can be removed from storage.
     PoeDispute(poe::PoeDispute),
     /// Set the block's timestamp via an inherent extrinsic.
-    SetTimestamp(timestamp::SetTimestamp<Runtime>),
+    SetTimestamp(InherentAdapter<timestamp::SetTimestamp<Runtime>>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 

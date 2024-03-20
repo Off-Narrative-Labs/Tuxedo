@@ -82,7 +82,7 @@ impl<const ID: u8> Coin<ID> {
     where
         V: Verifier,
         OV: Verifier + From<V>,
-        OC: tuxedo_core::ConstraintChecker<OV> + From<MoneyConstraintChecker<ID>>,
+        OC: tuxedo_core::ConstraintChecker + From<MoneyConstraintChecker<ID>>,
     {
         Transaction {
             inputs: vec![],
