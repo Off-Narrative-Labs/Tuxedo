@@ -184,7 +184,7 @@ pub enum UtxoError<ConstraintCheckerError> {
 }
 
 /// The Result of dispatching a UTXO transaction.
-pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
+pub type DispatchResult<ConstraintCheckerError> = Result<(), UtxoError<ConstraintCheckerError>>;
 
 /// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
 /// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.
