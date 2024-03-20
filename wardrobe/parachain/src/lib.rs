@@ -140,8 +140,8 @@ impl<T: ParachainPieceConfig + 'static> SimpleConstraintChecker for SetParachain
             !evicted_input_data.is_empty(),
             Self::Error::MissingPreviousInfo
         );
-        ensure!(input_data.len() == 1, Self::Error::ExtraInputs);
-        let previous: ParachainInherentData = input_data[0]
+        ensure!(evicted_input_data.len() == 1, Self::Error::ExtraInputs);
+        let previous: ParachainInherentData = evicted_input_data[0]
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .into();
