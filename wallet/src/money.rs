@@ -14,7 +14,7 @@ use sled::Db;
 use sp_core::sr25519::Public;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    types::{Input, Output, OutputRef},
+    types::{Input, Output, OutputRef, RedemptionStrategy},
     verifier::Sr25519Signature,
 };
 
@@ -120,7 +120,7 @@ pub async fn spend_coins(
         get_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
             output_ref: output_ref.clone(),
-            redeemer: vec![], // We will sign the total transaction so this should be empty
+            redeemer: Default::default(), // We will sign the total transaction so this should be empty
         });
     }
 
@@ -143,7 +143,7 @@ pub async fn spend_coins(
         };
 
         // insert the proof
-        input.redeemer = redeemer;
+        input.redeemer = RedemptionStrategy::Redemption(redeemer);
     }
 
     // Send the transaction

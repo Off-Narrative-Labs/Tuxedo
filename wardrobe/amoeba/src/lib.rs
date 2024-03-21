@@ -44,6 +44,8 @@ pub enum ConstraintCheckerError {
     BadlyTypedInput,
     /// An output data has the wrong type.
     BadlyTypedOutput,
+    /// The Amoeba piece does not allow any evictions at all.
+    NoEvictionsAllowed,
 
     /// Amoeba creation requires a new amoeba to be created, but none was provided.
     CreatedNothing,
@@ -87,9 +89,16 @@ impl SimpleConstraintChecker for AmoebaMitosis {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, ConstraintCheckerError> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::NoEvictionsAllowed
+        );
+
         // Make sure there is exactly one mother.
         ensure!(
             input_data.len() == 1,
@@ -145,9 +154,16 @@ impl SimpleConstraintChecker for AmoebaDeath {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::NoEvictionsAllowed
+        );
+
         // Make sure there is a single victim
         ensure!(!input_data.is_empty(), ConstraintCheckerError::NoVictim);
         ensure!(
@@ -184,9 +200,16 @@ impl SimpleConstraintChecker for AmoebaCreation {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::NoEvictionsAllowed
+        );
+
         // Make sure there is a single created amoeba
         ensure!(
             !output_data.is_empty(),

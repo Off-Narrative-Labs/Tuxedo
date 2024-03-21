@@ -12,7 +12,10 @@ fn creation_valid_transaction_works() {
     let input_data = Vec::new();
     let output_data = vec![to_spawn.into()];
 
-    assert_eq!(AmoebaCreation.check(&input_data, &[], &output_data), Ok(0));
+    assert_eq!(
+        AmoebaCreation.check(&input_data, &[], &[], &output_data),
+        Ok(0)
+    );
 }
 
 #[test]
@@ -25,7 +28,7 @@ fn creation_invalid_generation_fails() {
     let output_data = vec![to_spawn.into()];
 
     assert_eq!(
-        AmoebaCreation.check(&input_data, &[], &output_data),
+        AmoebaCreation.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::WrongGeneration),
     );
 }
@@ -40,7 +43,7 @@ fn creation_with_inputs_fails() {
     let output_data = vec![example.into()];
 
     assert_eq!(
-        AmoebaCreation.check(&input_data, &[], &output_data),
+        AmoebaCreation.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::CreationMayNotConsume),
     );
 }
@@ -51,7 +54,7 @@ fn creation_with_badly_typed_output_fails() {
     let output_data = vec![Bogus.into()];
 
     assert_eq!(
-        AmoebaCreation.check(&input_data, &[], &output_data),
+        AmoebaCreation.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::BadlyTypedOutput),
     );
 }
@@ -66,7 +69,7 @@ fn creation_multiple_fails() {
     let output_data = vec![to_spawn.clone().into(), to_spawn.into()];
 
     assert_eq!(
-        AmoebaCreation.check(&input_data, &[], &output_data),
+        AmoebaCreation.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::CreatedTooMany),
     );
 }
@@ -77,7 +80,7 @@ fn creation_with_no_output_fails() {
     let output_data = Vec::new();
 
     assert_eq!(
-        AmoebaCreation.check(&input_data, &[], &output_data),
+        AmoebaCreation.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::CreatedNothing),
     );
 }
@@ -99,7 +102,10 @@ fn mitosis_valid_transaction_works() {
     let input_data = vec![mother.into()];
     let output_data = vec![d1.into(), d2.into()];
 
-    assert_eq!(AmoebaMitosis.check(&input_data, &[], &output_data), Ok(0));
+    assert_eq!(
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
+        Ok(0)
+    );
 }
 
 #[test]
@@ -120,7 +126,7 @@ fn mitosis_wrong_generation() {
     let output_data = vec![d1.into(), d2.into()];
 
     assert_eq!(
-        AmoebaMitosis.check(&input_data, &[], &output_data),
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::WrongGeneration),
     );
 }
@@ -140,7 +146,7 @@ fn mitosis_badly_typed_input() {
     let output_data = vec![d1.into(), d2.into()];
 
     assert_eq!(
-        AmoebaMitosis.check(&input_data, &[], &output_data),
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::BadlyTypedInput),
     );
 }
@@ -159,7 +165,7 @@ fn mitosis_no_input() {
     let output_data = vec![d1.into(), d2.into()];
 
     assert_eq!(
-        AmoebaMitosis.check(&input_data, &[], &output_data),
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::WrongNumberOfMothers),
     );
 }
@@ -179,7 +185,7 @@ fn mitosis_badly_typed_output() {
     let output_data = vec![d1.into(), d2.into()];
 
     assert_eq!(
-        AmoebaMitosis.check(&input_data, &[], &output_data),
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::BadlyTypedOutput),
     );
 }
@@ -199,7 +205,7 @@ fn mitosis_only_one_output() {
     let output_data = vec![d1.into()];
 
     assert_eq!(
-        AmoebaMitosis.check(&input_data, &[], &output_data),
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::WrongNumberOfDaughters),
     );
 }
@@ -227,7 +233,7 @@ fn mitosis_too_many_outputs() {
     let output_data = vec![d1.into(), d2.into(), d3.into()];
 
     assert_eq!(
-        AmoebaMitosis.check(&input_data, &[], &output_data),
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::WrongNumberOfDaughters),
     );
 }
@@ -241,7 +247,10 @@ fn death_valid_transaction_works() {
     let input_data = vec![example.into()];
     let output_data = vec![];
 
-    assert_eq!(AmoebaDeath.check(&input_data, &[], &output_data), Ok(0));
+    assert_eq!(
+        AmoebaDeath.check(&input_data, &[], &[], &output_data),
+        Ok(0)
+    );
 }
 
 #[test]
@@ -250,7 +259,7 @@ fn death_no_input() {
     let output_data = vec![];
 
     assert_eq!(
-        AmoebaDeath.check(&input_data, &[], &output_data),
+        AmoebaDeath.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::NoVictim),
     );
 }
@@ -269,7 +278,7 @@ fn death_multiple_inputs() {
     let output_data = vec![];
 
     assert_eq!(
-        AmoebaDeath.check(&input_data, &[], &output_data),
+        AmoebaDeath.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::TooManyVictims),
     );
 }
@@ -284,7 +293,7 @@ fn death_with_output() {
     let output_data = vec![example.into()];
 
     assert_eq!(
-        AmoebaDeath.check(&input_data, &[], &output_data),
+        AmoebaDeath.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::DeathMayNotCreate),
     );
 }
@@ -296,7 +305,7 @@ fn death_badly_typed_input() {
     let output_data = vec![];
 
     assert_eq!(
-        AmoebaDeath.check(&input_data, &[], &output_data),
+        AmoebaDeath.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::BadlyTypedInput),
     );
 }

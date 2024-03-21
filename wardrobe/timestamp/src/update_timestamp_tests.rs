@@ -21,7 +21,7 @@ fn update_timestamp_happy_path() {
     let old: DynamicallyTypedData = Timestamp::new(1_000, 1).into();
     let new: DynamicallyTypedData = Timestamp::new(3_000, 2).into();
 
-    assert_eq!(checker.check(&[], &[old], &[new]), Ok(0));
+    assert_eq!(checker.check(&[], &[], &[old], &[new]), Ok(0));
 }
 
 #[test]
@@ -33,7 +33,21 @@ fn update_timestamp_with_input() {
     let new: DynamicallyTypedData = Timestamp::new(3_000, 2).into();
 
     assert_eq!(
-        checker.check(&[bogus], &[old], &[new]),
+        checker.check(&[bogus], &[], &[old], &[new]),
+        Err(InputsWhileSettingTimestamp)
+    );
+}
+
+#[test]
+fn update_timestamp_with_peek() {
+    let checker = SetTimestamp::<AlwaysBlockTwo>(Default::default());
+
+    let bogus: DynamicallyTypedData = Bogus.into();
+    let old: DynamicallyTypedData = Timestamp::new(1_000, 1).into();
+    let new: DynamicallyTypedData = Timestamp::new(3_000, 2).into();
+
+    assert_eq!(
+        checker.check(&[], &[bogus], &[old], &[new]),
         Err(InputsWhileSettingTimestamp)
     );
 }
@@ -45,7 +59,7 @@ fn update_timestamp_bogus_peek() {
     let old: DynamicallyTypedData = Bogus.into();
     let new: DynamicallyTypedData = Timestamp::new(3_000, 2).into();
 
-    assert_eq!(checker.check(&[], &[old], &[new]), Err(BadlyTyped));
+    assert_eq!(checker.check(&[], &[], &[old], &[new]), Err(BadlyTyped));
 }
 
 #[test]
@@ -55,7 +69,7 @@ fn update_timestamp_no_peek() {
     let new: DynamicallyTypedData = Timestamp::new(3_000, 2).into();
 
     assert_eq!(
-        checker.check(&[], &[], &[new]),
+        checker.check(&[], &[], &[], &[new]),
         Err(MissingPreviousTimestamp)
     );
 }
@@ -66,7 +80,10 @@ fn update_timestamp_no_output() {
 
     let old: DynamicallyTypedData = Timestamp::new(1_000, 1).into();
 
-    assert_eq!(checker.check(&[], &[old], &[]), Err(MissingNewTimestamp));
+    assert_eq!(
+        checker.check(&[], &[], &[old], &[]),
+        Err(MissingNewTimestamp)
+    );
 }
 
 #[test]
@@ -78,7 +95,7 @@ fn update_timestamp_too_many_outputs() {
     let bogus: DynamicallyTypedData = Bogus.into();
 
     assert_eq!(
-        checker.check(&[], &[old], &[new, bogus]),
+        checker.check(&[], &[], &[old], &[new, bogus]),
         Err(TooManyOutputsWhileSettingTimestamp)
     );
 }
@@ -91,7 +108,7 @@ fn update_timestamp_wrong_height() {
     let new: DynamicallyTypedData = Timestamp::new(5_000, 3).into();
 
     assert_eq!(
-        checker.check(&[], &[old], &[new]),
+        checker.check(&[], &[], &[old], &[new]),
         Err(NewTimestampWrongHeight)
     );
 }
@@ -103,7 +120,10 @@ fn update_timestamp_output_earlier_than_input() {
     let old: DynamicallyTypedData = Timestamp::new(2_000, 1).into();
     let new: DynamicallyTypedData = Timestamp::new(1_000, 2).into();
 
-    assert_eq!(checker.check(&[], &[old], &[new]), Err(TimestampTooOld));
+    assert_eq!(
+        checker.check(&[], &[], &[old], &[new]),
+        Err(TimestampTooOld)
+    );
 }
 
 #[test]
@@ -113,7 +133,10 @@ fn update_timestamp_output_newer_than_previous_best_nut_not_enough_to_meet_thres
     let old: DynamicallyTypedData = Timestamp::new(1_000, 1).into();
     let new: DynamicallyTypedData = Timestamp::new(2_000, 2).into();
 
-    assert_eq!(checker.check(&[], &[old], &[new]), Err(TimestampTooOld));
+    assert_eq!(
+        checker.check(&[], &[], &[old], &[new]),
+        Err(TimestampTooOld)
+    );
 }
 
 #[test]
@@ -124,7 +147,7 @@ fn update_timestamp_previous_timestamp_wrong_height() {
     let new: DynamicallyTypedData = Timestamp::new(2_000, 2).into();
 
     assert_eq!(
-        checker.check(&[], &[old], &[new]),
+        checker.check(&[], &[], &[old], &[new]),
         Err(PreviousTimestampWrongHeight)
     );
 }

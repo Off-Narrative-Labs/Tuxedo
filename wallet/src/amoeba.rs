@@ -66,7 +66,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
     let mitosis_tx = Transaction {
         inputs: vec![Input {
             output_ref: eve_ref,
-            redeemer: Vec::new(),
+            redeemer: Default::default(),
         }],
         peeks: Vec::new(),
         outputs: vec![

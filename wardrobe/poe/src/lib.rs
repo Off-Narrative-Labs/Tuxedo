@@ -41,7 +41,7 @@ struct ClaimData {
     /// The hash of the data whose existence is being proven.
     claim: H256,
     /// The time (in block height) at which the claim becomes valid.
-    effective_height: u32, //TODO get the generic block height type
+    effective_height: u32,
 }
 
 impl UtxoData for ClaimData {
@@ -65,6 +65,11 @@ pub enum ConstraintCheckerError {
     /// The effective height of this claim is in the past,
     /// So the claim cannot be created.
     EffectiveHeightInPast,
+
+    /// Claims under dispute do not have the same hash, but they must.
+    DisputingMismatchedClaims,
+    /// The winner of a dispute must be the oldest claim (the lowest block number)
+    IncorrectDisputeWinner,
 }
 
 /// Configuration items for the Proof of Existence piece when it is
@@ -91,12 +96,17 @@ impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        // Make sure there are no inputs
+        // Make sure there are no inputs or evictions
         ensure!(
             input_data.is_empty(),
+            ConstraintCheckerError::WrongNumberInputs
+        );
+        ensure!(
+            evicted_input_data.is_empty(),
             ConstraintCheckerError::WrongNumberInputs
         );
 
@@ -134,9 +144,16 @@ impl SimpleConstraintChecker for PoeRevoke {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::WrongNumberInputs
+        );
+
         // Make sure there are no outputs
         ensure!(
             output_data.is_empty(),
@@ -147,7 +164,7 @@ impl SimpleConstraintChecker for PoeRevoke {
         for untyped_input in input_data {
             let _ = untyped_input
                 .extract::<ClaimData>()
-                .map_err(|_| ConstraintCheckerError::BadlyTypedInput);
+                .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
         }
 
         Ok(0)
@@ -156,14 +173,7 @@ impl SimpleConstraintChecker for PoeRevoke {
 
 /// A constraint checker that resolves claim disputes by keeping whichever claim came first.
 ///
-/// TODO this will work much more elegantly once peek is implemented. We only need to peek at the
-/// older winning claim because it will remain in state afterwards.
-///
-/// TODO what shall we do about the verifier? Each claimer may have given their claim a verifier
-/// such that their own private signature. Perhaps there should be a way for a constraint checker to override
-/// the verifier logic? This is a concrete case where the constraint checker verifier separation is not ideal.
-/// Another, weaker example, is when trying o implement something like sudo. Where we want a signature,
-/// but we want to authorized signer to come from the a different part of state.
+/// Any user may submit a transaction reporting conflicting claims, and the oldest one will be kept.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 pub struct PoeDispute;
 
@@ -172,42 +182,44 @@ impl SimpleConstraintChecker for PoeDispute {
 
     fn check(
         &self,
-        _input_data: &[DynamicallyTypedData],
-        _peeks: &[DynamicallyTypedData],
-        _output_data: &[DynamicallyTypedData],
+        input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
+        peek_data: &[DynamicallyTypedData],
+        output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
-        todo!("implement this once we have at least peeks and maybe evictions")
+        // Make sure there are no normal inputs or outputs
+        ensure!(
+            input_data.is_empty(),
+            ConstraintCheckerError::WrongNumberInputs
+        );
+        ensure!(
+            output_data.is_empty(),
+            ConstraintCheckerError::WrongNumberOutputs
+        );
 
-        // Make sure there is at least one input (once peek is ready, it will become a peek)
-        // This first input (or only peek) is the claim that will be retained.
+        // Make sure there is exactly one peek (the oldest, winning claim)
+        let winner = peek_data
+            .first()
+            .ok_or(ConstraintCheckerError::WrongNumberInputs)?
+            .extract::<ClaimData>()
+            .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
 
-        // Make sure that all other inputs, claim the same hash as the winner.
+        // Make sure that all evicted inputs, claim the same hash as the winner
+        // and have block heights strictly greater than the winner.
+        for untyped_loser in evicted_input_data {
+            let loser = untyped_loser
+                .extract::<ClaimData>()
+                .map_err(|_| ConstraintCheckerError::BadlyTypedInput)?;
+            ensure!(
+                winner.claim == loser.claim,
+                Self::Error::DisputingMismatchedClaims
+            );
+            ensure!(
+                winner.effective_height < loser.effective_height,
+                Self::Error::IncorrectDisputeWinner
+            );
+        }
 
-        // Make sure that all other claims have block heights strictly greater than the winner.
-
-        //TODO what to do about the verifiers on those losing claims.
+        Ok(0)
     }
-}
-
-#[allow(dead_code)]
-mod brainstorm {
-    /// One workable solution to the problem above is modifying the core transaction structure to something like this
-    struct Transaction {
-        /// A classic input that is consumed from the utxo set. Its verifier must be satisfied for the tx to be valid
-        redemptions: Vec<InputRef>,
-        /// Similar to a redemption, this is an input that is consumed from the utxo set, but its verifier need not be satisfied
-        /// In the Poe case above, the losing claims that came later would be evictions.
-        evictions: Vec<InputRef>,
-        /// Similar to an input, but it is not consumed. This is a way to read pre-existing state without removing it from the utxo set
-        /// this also indicates when transaction are not competing for state despite reading the same state, and thus commute.
-        /// TBD whether it makes sense to have a verifier check. My gut instinct is no verifier check, but it needs more careful thought.
-        peeks: Vec<InputRef>,
-        /// Newly created pieces of state to be added to the utxo set.
-        outputs: Vec<Output>,
-    }
-
-    // Aliases so my sketch above compiles
-    type InputRef = ();
-    type Output = ();
-    use sp_std::vec::Vec;
 }

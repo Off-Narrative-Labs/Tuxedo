@@ -116,6 +116,8 @@ pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
+    /// The Money piece does not allow any evictions at all.
+    NoEvictionsAllowed,
     /// The transaction attempts to consume inputs while minting. This is not allowed.
     MintingWithInputs,
     /// The transaction attempts to mint zero coins. This is not allowed.
@@ -141,9 +143,16 @@ impl<const ID: u8> SimpleConstraintChecker for MoneyConstraintChecker<ID> {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::NoEvictionsAllowed
+        );
+
         match &self {
             Self::Spend => {
                 // Check that we are consuming at least one input

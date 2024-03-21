@@ -115,6 +115,8 @@ pub enum TimestampError {
     /// You may not clean up old timestamps until they are at least the CLEANUP_AGE older than another
     /// noted timestamp on-chain.
     DontBeSoHasty,
+    /// When cleaning up old timestamps, you must evict them. You may not use normal inputs.
+    CleanupEvictionsOnly,
 }
 
 /// A constraint checker for the simple act of setting a new best timetamp.
@@ -149,6 +151,7 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
@@ -157,9 +160,13 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
             "🕰️🖴 Checking constraints for SetTimestamp."
         );
 
-        // Make sure there are no inputs. Setting a new timestamp does not consume anything.
+        // Make sure there are no inputs or evictions. Setting a new timestamp does not consume anything.
         ensure!(
             input_data.is_empty(),
+            Self::Error::InputsWhileSettingTimestamp
+        );
+        ensure!(
+            evicted_input_data.is_empty(),
             Self::Error::InputsWhileSettingTimestamp
         );
 
@@ -334,15 +341,17 @@ pub struct CleanUpTimestamp<T>(PhantomData<T>);
 impl<T: TimestampConfig> SimpleConstraintChecker for CleanUpTimestamp<T> {
     type Error = TimestampError;
 
-    // Cleaning up timestamps will not work until evictions are available because
-    // the timestamps stored on-chain are unspendable.
-    // FIXME: https://github.com/Off-Narrative-Labs/Tuxedo/issues/98
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Make sure there are no normal inputs. Timestamps are unspendable,
+        // so they must be evicted.
+        ensure!(input_data.is_empty(), Self::Error::CleanupEvictionsOnly);
+
         // Make sure there at least one peek that is the new reference time.
         // We don't expect any additional peeks typically, but as above, they are harmless.
         ensure!(
@@ -359,10 +368,10 @@ impl<T: TimestampConfig> SimpleConstraintChecker for CleanUpTimestamp<T> {
             Self::Error::CleanupCannotCreateState
         );
 
-        // Make sure each input is old enough to be cleaned up
+        // Make sure each eviction is old enough to be cleaned up
         // in terms of both time and block height.
-        for input_datum in input_data {
-            let old_timestamp = input_datum
+        for eviction_datum in evicted_input_data {
+            let old_timestamp = eviction_datum
                 .extract::<Timestamp>()
                 .map_err(|_| Self::Error::BadlyTyped)?;
 

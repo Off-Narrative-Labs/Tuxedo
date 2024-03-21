@@ -242,10 +242,11 @@ impl tuxedo_core::SimpleConstraintChecker for DummyParachainInfo {
     fn check(
         &self,
         _input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+        _evicted_input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
         _peeks: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
         _output_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
     ) -> Result<TransactionPriority, ()> {
-        Ok(0)
+        panic!("Transactions should not be sent to the dummy parachain info piece.")
     }
 }
 

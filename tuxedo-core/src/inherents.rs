@@ -165,10 +165,17 @@ impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
     fn check(
         &self,
         input_data: &[crate::dynamic_typing::DynamicallyTypedData],
+        evicted_input_data: &[crate::dynamic_typing::DynamicallyTypedData],
         peek_data: &[crate::dynamic_typing::DynamicallyTypedData],
         output_data: &[crate::dynamic_typing::DynamicallyTypedData],
     ) -> Result<sp_runtime::transaction_validity::TransactionPriority, Self::Error> {
-        SimpleConstraintChecker::check(&self.0, input_data, peek_data, output_data)
+        SimpleConstraintChecker::check(
+            &self.0,
+            input_data,
+            evicted_input_data,
+            peek_data,
+            output_data,
+        )
     }
 
     fn is_inherent(&self) -> bool {

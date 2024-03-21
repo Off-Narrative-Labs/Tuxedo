@@ -11,7 +11,7 @@ use crate::{
     dynamic_typing::DynamicallyTypedData,
     ensure,
     inherents::PARENT_INHERENT_IDENTIFIER,
-    types::{DispatchResult, OutputRef, Transaction, UtxoError},
+    types::{DispatchResult, OutputRef, RedemptionStrategy, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
     EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
@@ -69,7 +69,7 @@ where
         // This will be passed to the verifiers
         let mut stripped = transaction.clone();
         for input in stripped.inputs.iter_mut() {
-            input.redeemer = Vec::new();
+            input.redeemer = Default::default();
         }
         let stripped_encoded = stripped.encode();
 
@@ -77,18 +77,26 @@ where
         // Keep a Vec of the input data for passing to the constraint checker
         // Keep track of any missing inputs for use in the tagged transaction pool
         let mut input_data = Vec::new();
+        let mut evicted_input_data = Vec::new();
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
-                let redeemer = V::Redeemer::decode(&mut &input.redeemer[..])
-                    .map_err(|_| UtxoError::VerifierError)?;
-                ensure!(
-                    input_utxo
-                        .verifier
-                        .verify(&stripped_encoded, Self::block_height(), &redeemer),
-                    UtxoError::VerifierError
-                );
-                input_data.push(input_utxo.payload);
+                match input.redeemer {
+                    RedemptionStrategy::Redemption(ref redeemer) => {
+                        let redeemer = V::Redeemer::decode(&mut &redeemer[..])
+                            .map_err(|_| UtxoError::VerifierError)?;
+                        ensure!(
+                            input_utxo.verifier.verify(
+                                &stripped_encoded,
+                                Self::block_height(),
+                                &redeemer
+                            ),
+                            UtxoError::VerifierError
+                        );
+                        input_data.push(input_utxo.payload);
+                    }
+                    RedemptionStrategy::Eviction => evicted_input_data.push(input_utxo.payload),
+                }
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
             }
@@ -163,7 +171,7 @@ where
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_data, &peek_data, &output_data)
+            .check(&input_data, &evicted_input_data, &peek_data, &output_data)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
@@ -671,7 +679,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -737,7 +745,7 @@ mod tests {
             let output_ref = mock_output_ref(0, 0);
             let input = Input {
                 output_ref: output_ref.clone(),
-                redeemer: Vec::new(),
+                redeemer: Default::default(),
             };
 
             let tx = TestTransactionBuilder::default()
@@ -783,7 +791,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -831,7 +839,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -901,7 +909,7 @@ mod tests {
             let output_ref = mock_output_ref(0, 0);
             let input = Input {
                 output_ref: output_ref.clone(),
-                redeemer: Vec::new(),
+                redeemer: Default::default(),
             };
 
             let tx = TestTransactionBuilder::default()
@@ -939,7 +947,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref: output_ref.clone(),
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()

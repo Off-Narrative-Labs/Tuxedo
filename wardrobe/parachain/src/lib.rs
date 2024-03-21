@@ -38,7 +38,7 @@ use tuxedo_parachain_core::{
         ensure,
         inherents::InherentHooks,
         support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
-        types::{Input, Output, OutputRef, Transaction},
+        types::{Input, Output, OutputRef, RedemptionStrategy, Transaction},
         Verifier,
     },
     SetRelayParentNumberStorage,
@@ -113,6 +113,7 @@ impl<T: ParachainPieceConfig + 'static> SimpleConstraintChecker for SetParachain
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peek_data: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
@@ -132,10 +133,15 @@ impl<T: ParachainPieceConfig + 'static> SimpleConstraintChecker for SetParachain
         // SIDE EFFECT: Write the relay parent block number to storage to use later in the collation info api
         T::SetRelayParentNumberStorage::set(current.validation_data.relay_parent_number);
 
-        // Make sure there is exactly one input which is the previous parachain info
-        ensure!(!input_data.is_empty(), Self::Error::MissingPreviousInfo);
-        ensure!(input_data.len() == 1, Self::Error::ExtraInputs);
-        let previous: ParachainInherentData = input_data[0]
+        // Make sure there is exactly one EVICTED input which is the previous parachain info,
+        // and no normal inputs
+        ensure!(input_data.is_empty(), Self::Error::ExtraInputs);
+        ensure!(
+            !evicted_input_data.is_empty(),
+            Self::Error::MissingPreviousInfo
+        );
+        ensure!(evicted_input_data.len() == 1, Self::Error::ExtraInputs);
+        let previous: ParachainInherentData = evicted_input_data[0]
             .extract::<ParachainInherentDataUtxo>()
             .map_err(|_| Self::Error::BadlyTyped)?
             .into();
@@ -191,7 +197,7 @@ impl<T: ParachainPieceConfig + 'static> InherentHooks for SetParachainInfo<T> {
 
         let input = Input {
             output_ref,
-            redeemer: Vec::new(),
+            redeemer: RedemptionStrategy::Eviction,
         };
 
         let new_output = Output {
