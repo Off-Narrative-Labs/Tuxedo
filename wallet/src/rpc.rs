@@ -5,11 +5,12 @@ use crate::strip_0x_prefix;
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
-use runtime::{opaque::Block as OpaqueBlock};
+use runtime::opaque::Block as OpaqueBlock;
 use sp_core::H256;
 use sp_runtime::generic::Block;
 use tuxedo_core::{
-    types::{Output, OutputRef, Transaction}, ConstraintChecker, Verifier
+    types::{Output, OutputRef, Transaction},
+    ConstraintChecker, Verifier,
 };
 
 /// Typed helper to get the Node's block hash at a particular height
@@ -21,7 +22,10 @@ pub async fn node_get_block_hash(height: u32, client: &HttpClient) -> anyhow::Re
 }
 
 /// Typed helper to get the node's full block at a particular hash
-pub async fn node_get_block<Block: Decode>(hash: H256, client: &HttpClient) -> anyhow::Result<Option<Block>> {
+pub async fn node_get_block<Block: Decode>(
+    hash: H256,
+    client: &HttpClient,
+) -> anyhow::Result<Option<Block>> {
     let s = hex::encode(hash.0);
     let params = rpc_params![s];
 

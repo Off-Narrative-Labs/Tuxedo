@@ -4,9 +4,16 @@ use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
 use runtime::{OuterConstraintChecker, OuterVerifier};
-use sp_runtime::{generic::{Block, Header}, traits::BlakeTwo256};
+use sp_runtime::{
+    generic::{Block, Header},
+    traits::BlakeTwo256,
+};
 use std::path::PathBuf;
-use tuxedo_core::{types::{OutputRef, Transaction}, verifier::*, SimpleConstraintChecker};
+use tuxedo_core::{
+    types::{OutputRef, Transaction},
+    verifier::*,
+    SimpleConstraintChecker,
+};
 
 use sp_core::H256;
 
@@ -94,9 +101,14 @@ async fn main() -> anyhow::Result<()> {
     let node_genesis_hash = rpc::node_get_block_hash(0, &client)
         .await?
         .expect("node should be able to return some genesis hash");
-    let node_genesis_block = rpc::node_get_block::<Block<Header<u32, BlakeTwo256>, Transaction<OuterVerifier, ParachainConstraintChecker<OuterConstraintChecker>>>>(node_genesis_hash, &client)
-        .await?
-        .expect("node should be able to return some genesis block");
+    let node_genesis_block = rpc::node_get_block::<
+        Block<
+            Header<u32, BlakeTwo256>,
+            Transaction<OuterVerifier, ParachainConstraintChecker<OuterConstraintChecker>>,
+        >,
+    >(node_genesis_hash, &client)
+    .await?
+    .expect("node should be able to return some genesis block");
     log::debug!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
