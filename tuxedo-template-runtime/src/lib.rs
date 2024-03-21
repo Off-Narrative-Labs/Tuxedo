@@ -46,6 +46,7 @@ pub use money;
 pub use poe;
 pub use runtime_upgrade;
 pub use timestamp;
+pub use tradable_kitties;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -170,7 +171,9 @@ pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
-    FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
+    FreeKitty(kitties::FreeKittyConstraintChecker),
+    /// Checks tradable Kitty transactions
+    TradableKitty(tradable_kitties::TradableKittyConstraintChecker<0>),
     /// Checks that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Checks that a single amoeba is simply removed from the state
@@ -205,7 +208,9 @@ pub enum OuterConstraintChecker {
     /// Checks monetary transactions in a basic fungible cryptocurrency
     Money(money::MoneyConstraintChecker<0>),
     /// Checks Free Kitty transactions
-    FreeKittyConstraintChecker(kitties::FreeKittyConstraintChecker),
+    FreeKitty(kitties::FreeKittyConstraintChecker),
+    /// Checks Paid Kitty transactions
+    TradableKitty(tradable_kitties::TradableKittyConstraintChecker<0>),
     /// Checks that an amoeba can split into two new amoebas
     AmoebaMitosis(amoeba::AmoebaMitosis),
     /// Checks that a single amoeba is simply removed from the state

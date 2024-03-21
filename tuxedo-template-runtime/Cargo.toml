@@ -40,6 +40,7 @@ money = { default-features = false, path = "../wardrobe/money" }
 poe = { default-features = false, path = "../wardrobe/poe" }
 runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
 timestamp = { default-features = false, path = "../wardrobe/timestamp" }
+tradable-kitties = { default-features = false, path = "../wardrobe/tradable_kitties" }
 tuxedo-core = { default-features = false, path = "../tuxedo-core" }
 
 # Parachain related ones
