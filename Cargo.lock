@@ -7588,7 +7588,7 @@ dependencies = [
  "substrate-build-script-utils",
  "substrate-prometheus-endpoint",
  "tuxedo-core",
- "tuxedo-template-runtime",
+ "tuxedo-parachain-runtime",
 ]
 
 [[package]]
