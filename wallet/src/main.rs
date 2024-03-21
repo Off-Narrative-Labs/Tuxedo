@@ -20,6 +20,10 @@ mod timestamp;
 
 use cli::{Cli, Command};
 
+// TODO, for now I've made the functions generic, but hardcoded the call sites to always use the
+// parachain constraint checker. Eventually we will need a cli flag or ideally metadata to determine
+// whether to use the parachain or regular one.
+
 /// Same structure as the parachain outer constraint checker.
 /// 
 /// We don't want the wallet to depend on the huge parachain codebase,
