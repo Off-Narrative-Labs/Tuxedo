@@ -1,8 +1,5 @@
 //! The Tuxedo Template Runtime is an example runtime that uses
 //! most of the pieces provided in the wardrobe.
-//!
-//! Runtime developers wishing to get started with Tuxedo should
-//! consider copying this template.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -116,9 +113,9 @@ impl sp_runtime::traits::GetRuntimeBlockType for Runtime {
 const BLOCK_TIME: u64 = 3000;
 
 impl parachain_piece::ParachainPieceConfig for Runtime {
-    //TODO decide what to do about this para id
-    // This is in the trait, but I don't think it is currently used.
-    // const PARA_ID: u32 = 2_000;
+    // Use the para ID 2_000 which is the first available in the rococo-local runtime.
+    // This is the default value, so this could be omitted, but explicit is better.
+    const PARA_ID: u32 = 2_000;
 
     type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
 }
@@ -137,12 +134,13 @@ impl parachain_piece::ParachainPieceConfig for Runtime {
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
 #[tuxedo_constraint_checker(OuterVerifier)]
 pub enum OuterConstraintChecker {
-    // Parachain Info must be first for now. FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/146
-    /// Set some parachain related information via an inherent extrinsic.
-    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
-
     /// All other calls are delegated to the normal Tuxedo Template Runtime.
     Inner(inner_runtime::OuterConstraintChecker),
+
+    // TODO This one is last for now so that I can write a hacky algorithm to scrape
+    // the inherent data and assume it is last.
+    /// Set some parachain related information via an inherent extrinsic.
+    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
 }
 
 /// The main struct in this module.

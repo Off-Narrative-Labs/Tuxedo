@@ -1,17 +1,14 @@
 //! Helper module to build a genesis configuration for the template runtime.
 
-use super::{
-    OuterConstraintChecker, OuterConstraintCheckerInherentHooks, OuterVerifier, WASM_BINARY,
-};
+use super::{OuterConstraintChecker, OuterVerifier, WASM_BINARY};
 use hex_literal::hex;
 use inner_runtime::{money::Coin, OuterConstraintChecker as InnerConstraintChecker};
-use tuxedo_core::{
+use tuxedo_parachain_core::tuxedo_core::{
     genesis::TuxedoGenesisConfig,
-    inherents::InherentInternal,
     types::Transaction,
-    verifier::{SigCheck, ThresholdMultiSignature},
+    verifier::{Sr25519Signature, ThresholdMultiSignature},
+    ConstraintChecker,
 };
-use tuxedo_parachain_core::tuxedo_core;
 
 /// Helper type for the ChainSpec.
 pub type RuntimeGenesisConfig = TuxedoGenesisConfig<OuterVerifier, OuterConstraintChecker>;
@@ -26,7 +23,10 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
 
     let user_genesis_transactions = [
         // Money Transactions
-        wrap_transaction(Coin::<0>::mint(100, SigCheck::new(SHAWN_PUB_KEY_BYTES))),
+        wrap_transaction(Coin::<0>::mint(
+            100,
+            Sr25519Signature::new(SHAWN_PUB_KEY_BYTES),
+        )),
         wrap_transaction(Coin::<0>::mint(
             100,
             ThresholdMultiSignature::new(1, signatories),
@@ -39,7 +39,7 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
     //TODO Handling the inherents manually is error-prone. This should ideally be done somewhere
     // in Tuxedo Core so it can't be missed by runtime developers (some of whom will be n00bs).
     // The inherents are computed using the appropriate method, and placed before the user transactions.
-    let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+    let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
     genesis_transactions.extend(user_genesis_transactions);
 
     RuntimeGenesisConfig::new(
@@ -73,9 +73,8 @@ mod tests {
     use sp_keystore::{testing::MemoryKeystore, Keystore, KeystoreExt};
     use sp_runtime::{traits::BlakeTwo256, BuildStorage};
     use std::sync::Arc;
-    use tuxedo_core::{
+    use tuxedo_parachain_core::tuxedo_core::{
         dynamic_typing::{DynamicallyTypedData, UtxoData},
-        inherents::InherentInternal,
         types::{Output, OutputRef},
     };
 
@@ -100,10 +99,10 @@ mod tests {
 
         let signatories = vec![shawn_pub_key_bytes.into(), andrew_pub_key_bytes.into()];
 
-        let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+        let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
         genesis_transactions.extend([
             // Money Transactions
-            Coin::<0>::mint(100, SigCheck::new(shawn_pub_key_bytes)),
+            Coin::<0>::mint(100, Sr25519Signature::new(shawn_pub_key_bytes)),
             Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
         ]);
 
@@ -136,7 +135,7 @@ mod tests {
 
             // Grab genesis value from storage and assert it is correct
             let genesis_utxo = Output {
-                verifier: OuterVerifier::SigCheck(SigCheck {
+                verifier: OuterVerifier::Sr25519Signature(Sr25519Signature {
                     owner_pubkey: shawn_pub_key.into(),
                 }),
                 payload: DynamicallyTypedData {
@@ -145,7 +144,8 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len =
+                OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
 
             let tx = default_runtime_genesis_config()
                 .get_transaction(inherents_len)
@@ -189,7 +189,8 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len =
+                OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
 
             let tx = default_runtime_genesis_config()
                 .get_transaction(1 + inherents_len)

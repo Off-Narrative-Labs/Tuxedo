@@ -14023,17 +14023,12 @@ dependencies = [
 name = "tuxedo-parachain-runtime"
 version = "1.0.0-dev"
 dependencies = [
- "amoeba",
  "cumulus-primitives-core",
  "hex-literal",
- "kitties",
  "log",
- "money",
  "parachain-piece",
  "parity-scale-codec",
  "parity-util-mem",
- "poe",
- "runtime-upgrade",
  "scale-info",
  "serde",
  "sp-api",
@@ -14054,7 +14049,6 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
- "timestamp",
  "tuxedo-parachain-core",
  "tuxedo-template-runtime",
 ]

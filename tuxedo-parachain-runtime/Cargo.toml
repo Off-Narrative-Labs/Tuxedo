@@ -36,14 +36,6 @@ sp-application-crypto = { default_features = false, workspace = true }
 sp-consensus-aura = { default_features = false, workspace = true }
 sp-consensus-grandpa = { default_features = false, workspace = true }
 
-# Tuxedo Core and Pieces
-amoeba = { default-features = false, path = "../wardrobe/amoeba" }
-kitties = { default-features = false, path = "../wardrobe/kitties" }
-money = { default-features = false, path = "../wardrobe/money" }
-poe = { default-features = false, path = "../wardrobe/poe" }
-runtime-upgrade = { default-features = false, path = "../wardrobe/runtime_upgrade" }
-timestamp = { default-features = false, path = "../wardrobe/timestamp" }
-
 # Parachain related ones
 cumulus-primitives-core = { default-features = false, workspace = true }
 parachain-piece = { default-features = false, path = "../wardrobe/parachain" }
@@ -76,12 +68,6 @@ std = [
 	"sp-consensus-aura/std",
 	"sp-application-crypto/std",
 	"sp-consensus-grandpa/std",
-	"amoeba/std",
-	"money/std",
-	"poe/std",
-	"kitties/std",
-	"timestamp/std",
-	"runtime-upgrade/std",
 	"inner-runtime/std",
 	"cumulus-primitives-core/std",
 	"parachain-piece/std",
