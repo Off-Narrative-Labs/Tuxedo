@@ -102,8 +102,8 @@ mod tests {
         let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
         genesis_transactions.extend([
             // Money Transactions
-            Coin::<0>::mint(100, Sr25519Signature::new(shawn_pub_key_bytes)),
-            Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
+            wrap_transaction(Coin::<0>::mint(100, Sr25519Signature::new(shawn_pub_key_bytes))),
+            wrap_transaction(Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories))),
         ]);
 
         RuntimeGenesisConfig::new(
@@ -140,7 +140,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
+                    type_id: <Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
@@ -185,7 +185,7 @@ mod tests {
                 }),
                 payload: DynamicallyTypedData {
                     data: 100u128.encode(),
-                    type_id: <money::Coin<0> as UtxoData>::TYPE_ID,
+                    type_id: <Coin<0> as UtxoData>::TYPE_ID,
                 },
             };
 
