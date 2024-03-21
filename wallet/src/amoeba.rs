@@ -7,29 +7,28 @@ use std::{thread::sleep, time::Duration};
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
-    amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
-    OuterVerifier, Transaction,
+    amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis}, OuterConstraintChecker, OuterVerifier
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    types::{Input, Output, OutputRef},
-    verifier::UpForGrabs,
+    types::{Input, Output, OutputRef, Transaction},
+    verifier::UpForGrabs, ConstraintChecker,
 };
 
-pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
+pub async fn amoeba_demo<Checker: ConstraintChecker + From<OuterConstraintChecker>>(client: &HttpClient) -> anyhow::Result<()> {
     // Construct a simple amoeba spawning transaction (no signature required)
     let eve = AmoebaDetails {
         generation: 0,
         four_bytes: *b"eve_",
     };
-    let spawn_tx = Transaction {
+    let spawn_tx: Transaction<OuterVerifier, Checker> = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
         outputs: vec![Output {
             payload: eve.into(),
             verifier: UpForGrabs.into(),
         }],
-        checker: AmoebaCreation.into(),
+        checker: OuterConstraintChecker::AmoebaCreation(AmoebaCreation).into(),
     };
 
     // Calculate the OutputRef which also serves as the storage location
@@ -63,7 +62,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
         generation: 1,
         four_bytes: *b"able",
     };
-    let mitosis_tx = Transaction {
+    let mitosis_tx: Transaction<OuterVerifier, Checker> = Transaction {
         inputs: vec![Input {
             output_ref: eve_ref,
             redeemer: Default::default(),
@@ -79,7 +78,7 @@ pub async fn amoeba_demo(client: &HttpClient) -> anyhow::Result<()> {
                 verifier: UpForGrabs.into(),
             },
         ],
-        checker: AmoebaMitosis.into(),
+        checker: OuterConstraintChecker::AmoebaMitosis(AmoebaMitosis).into(),
     };
 
     // Calculate the two OutputRefs for the daughters

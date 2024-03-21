@@ -7,22 +7,22 @@ use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
-    OuterConstraintChecker, OuterVerifier, Transaction,
+    OuterConstraintChecker, OuterVerifier
 };
 use sc_keystore::LocalKeystore;
 use sled::Db;
 use sp_core::sr25519::Public;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    types::{Input, Output, OutputRef, RedemptionStrategy},
-    verifier::Sr25519Signature,
+    types::{Input, Output, OutputRef, RedemptionStrategy, Transaction},
+    verifier::Sr25519Signature, ConstraintChecker,
 };
 
 /// Create and send a transaction that mints the coins on the network
-pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
+pub async fn mint_coins<Checker: ConstraintChecker + From<OuterConstraintChecker>>(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
     log::debug!("The args are:: {:?}", args);
 
-    let transaction = Transaction {
+    let transaction: tuxedo_core::types::Transaction<OuterVerifier, Checker> = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
         outputs: vec![(
@@ -32,11 +32,11 @@ pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Resu
             }),
         )
             .into()],
-        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Mint),
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Mint).into(),
     };
 
-    let spawn_hex = hex::encode(transaction.encode());
-    let params = rpc_params![spawn_hex];
+    let encoded_tx = hex::encode(transaction.encode());
+    let params = rpc_params![encoded_tx];
     let _spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
 
     log::info!(
@@ -60,7 +60,7 @@ pub async fn mint_coins(client: &HttpClient, args: MintCoinArgs) -> anyhow::Resu
 }
 
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins(
+pub async fn spend_coins<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
     db: &Db,
     client: &HttpClient,
     keystore: &LocalKeystore,
@@ -68,12 +68,13 @@ pub async fn spend_coins(
 ) -> anyhow::Result<()> {
     log::debug!("The args are:: {:?}", args);
 
+    // Construct
     // Construct a template Transaction to push coins into later
-    let mut transaction = Transaction {
+    let mut transaction: Transaction<OuterVerifier, Checker> = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
         outputs: Vec::new(),
-        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend).into(),
     };
 
     // Construct each output and then push to the transactions

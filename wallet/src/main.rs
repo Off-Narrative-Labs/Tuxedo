@@ -3,9 +3,9 @@
 use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
-use runtime::OuterVerifier;
+use runtime::{OuterConstraintChecker, OuterVerifier};
 use std::path::PathBuf;
-use tuxedo_core::{types::OutputRef, verifier::*};
+use tuxedo_core::{types::OutputRef, verifier::*, ConstraintChecker, SimpleConstraintChecker};
 
 use sp_core::H256;
 
@@ -19,6 +19,36 @@ mod sync;
 mod timestamp;
 
 use cli::{Cli, Command};
+
+/// Same structure as the parachain outer constraint checker.
+/// 
+/// We don't want the wallet to depend on the huge parachain codebase,
+/// So we just recreate this one little type here.
+#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
+pub enum ParachainConstraintChecker<C> {
+    Normal(C),
+    Parachain,
+}
+
+impl<C: Clone + std::fmt::Debug + Encode + Decode> SimpleConstraintChecker for ParachainConstraintChecker<C> {
+    type Error = ();
+
+    fn check(
+        &self,
+        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+    ) -> Result<sp_runtime::transaction_validity::TransactionPriority, Self::Error> {
+        todo!()
+    }
+}
+
+impl<C> From<C> for ParachainConstraintChecker<C> {
+    fn from(c: C) -> Self {
+        ParachainConstraintChecker::Normal(c)
+    }
+}
 
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9944";
@@ -97,9 +127,9 @@ async fn main() -> anyhow::Result<()> {
 
     // Dispatch to proper subcommand
     match cli.command {
-        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(&client).await,
+        Some(Command::AmoebaDemo) => amoeba::amoeba_demo::<ParachainConstraintChecker<OuterConstraintChecker>>(&client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
-        Some(Command::MintCoins(args)) => money::mint_coins(&client, args).await,
+        Some(Command::MintCoins(args)) => money::mint_coins::<ParachainConstraintChecker<OuterConstraintChecker>>(&client, args).await,
         Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
@@ -121,7 +151,7 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Some(Command::SpendCoins(args)) => money::spend_coins(&db, &client, &keystore, args).await,
+        Some(Command::SpendCoins(args)) => money::spend_coins::<ParachainConstraintChecker<OuterConstraintChecker>>(&db, &client, &keystore, args).await,
         Some(Command::InsertKey { seed }) => crate::keystore::insert_key(&keystore, &seed),
         Some(Command::GenerateKey { password }) => {
             crate::keystore::generate_key(&keystore, password)?;
