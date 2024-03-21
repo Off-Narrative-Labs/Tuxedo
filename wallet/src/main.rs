@@ -5,7 +5,7 @@ use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
 use runtime::{OuterConstraintChecker, OuterVerifier};
 use std::path::PathBuf;
-use tuxedo_core::{types::OutputRef, verifier::*, ConstraintChecker, SimpleConstraintChecker};
+use tuxedo_core::{types::OutputRef, verifier::*, SimpleConstraintChecker};
 
 use sp_core::H256;
 
