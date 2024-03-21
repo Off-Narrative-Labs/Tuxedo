@@ -25,7 +25,7 @@ use cli::{Cli, Command};
 // whether to use the parachain or regular one.
 
 /// Same structure as the parachain outer constraint checker.
-/// 
+///
 /// We don't want the wallet to depend on the huge parachain codebase,
 /// So we just recreate this one little type here.
 #[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
@@ -34,7 +34,9 @@ pub enum ParachainConstraintChecker<C> {
     Parachain,
 }
 
-impl<C: Clone + std::fmt::Debug + Encode + Decode> SimpleConstraintChecker for ParachainConstraintChecker<C> {
+impl<C: Clone + std::fmt::Debug + Encode + Decode> SimpleConstraintChecker
+    for ParachainConstraintChecker<C>
+{
     type Error = ();
 
     fn check(
@@ -131,9 +133,14 @@ async fn main() -> anyhow::Result<()> {
 
     // Dispatch to proper subcommand
     match cli.command {
-        Some(Command::AmoebaDemo) => amoeba::amoeba_demo::<ParachainConstraintChecker<OuterConstraintChecker>>(&client).await,
+        Some(Command::AmoebaDemo) => {
+            amoeba::amoeba_demo::<ParachainConstraintChecker<OuterConstraintChecker>>(&client).await
+        }
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
-        Some(Command::MintCoins(args)) => money::mint_coins::<ParachainConstraintChecker<OuterConstraintChecker>>(&client, args).await,
+        Some(Command::MintCoins(args)) => {
+            money::mint_coins::<ParachainConstraintChecker<OuterConstraintChecker>>(&client, args)
+                .await
+        }
         Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
@@ -155,7 +162,12 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Some(Command::SpendCoins(args)) => money::spend_coins::<ParachainConstraintChecker<OuterConstraintChecker>>(&db, &client, &keystore, args).await,
+        Some(Command::SpendCoins(args)) => {
+            money::spend_coins::<ParachainConstraintChecker<OuterConstraintChecker>>(
+                &db, &client, &keystore, args,
+            )
+            .await
+        }
         Some(Command::InsertKey { seed }) => crate::keystore::insert_key(&keystore, &seed),
         Some(Command::GenerateKey { password }) => {
             crate::keystore::generate_key(&keystore, password)?;

@@ -7,15 +7,19 @@ use std::{thread::sleep, time::Duration};
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
-    amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis}, OuterConstraintChecker, OuterVerifier
+    amoeba::{AmoebaCreation, AmoebaDetails, AmoebaMitosis},
+    OuterConstraintChecker, OuterVerifier,
 };
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef, Transaction},
-    verifier::UpForGrabs, ConstraintChecker,
+    verifier::UpForGrabs,
+    ConstraintChecker,
 };
 
-pub async fn amoeba_demo<Checker: ConstraintChecker + From<OuterConstraintChecker>>(client: &HttpClient) -> anyhow::Result<()> {
+pub async fn amoeba_demo<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
+    client: &HttpClient,
+) -> anyhow::Result<()> {
     // Construct a simple amoeba spawning transaction (no signature required)
     let eve = AmoebaDetails {
         generation: 0,

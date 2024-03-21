@@ -7,7 +7,7 @@ use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
-    OuterConstraintChecker, OuterVerifier
+    OuterConstraintChecker, OuterVerifier,
 };
 use sc_keystore::LocalKeystore;
 use sled::Db;
@@ -15,11 +15,15 @@ use sp_core::sr25519::Public;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
     types::{Input, Output, OutputRef, RedemptionStrategy, Transaction},
-    verifier::Sr25519Signature, ConstraintChecker,
+    verifier::Sr25519Signature,
+    ConstraintChecker,
 };
 
 /// Create and send a transaction that mints the coins on the network
-pub async fn mint_coins<Checker: ConstraintChecker + From<OuterConstraintChecker>>(client: &HttpClient, args: MintCoinArgs) -> anyhow::Result<()> {
+pub async fn mint_coins<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
+    client: &HttpClient,
+    args: MintCoinArgs,
+) -> anyhow::Result<()> {
     log::debug!("The args are:: {:?}", args);
 
     let transaction: tuxedo_core::types::Transaction<OuterVerifier, Checker> = Transaction {
