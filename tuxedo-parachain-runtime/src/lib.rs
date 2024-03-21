@@ -30,7 +30,9 @@ use sp_std::prelude::*;
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
-use tuxedo_core::{tuxedo_constraint_checker, types::Transaction as TuxedoTransaction};
+use tuxedo_core::{
+    tuxedo_constraint_checker, types::Transaction as TuxedoTransaction, InherentAdapter,
+};
 use tuxedo_parachain_core::tuxedo_core;
 
 // We use the same aggregate verifier from the inner_runtime.
@@ -140,7 +142,7 @@ pub enum OuterConstraintChecker {
     // TODO This one is last for now so that I can write a hacky algorithm to scrape
     // the inherent data and assume it is last.
     /// Set some parachain related information via an inherent extrinsic.
-    ParachainInfo(parachain_piece::SetParachainInfo<Runtime>),
+    ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<Runtime>>),
 }
 
 /// The main struct in this module.
