@@ -4,16 +4,8 @@ use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
 use runtime::{OuterConstraintChecker, OuterVerifier};
-use sp_runtime::{
-    generic::{Block, Header},
-    traits::BlakeTwo256,
-};
 use std::path::PathBuf;
-use tuxedo_core::{
-    types::{OutputRef, Transaction},
-    verifier::*,
-    SimpleConstraintChecker,
-};
+use tuxedo_core::{types::OutputRef, verifier::*, SimpleConstraintChecker};
 
 use sp_core::H256;
 
@@ -32,6 +24,7 @@ use cli::{Cli, Command};
 // parachain constraint checker. Eventually we will need a cli flag or ideally metadata to determine
 // whether to use the parachain or regular one.
 
+// TODO move this to a parachain compatability module or something.
 /// Same structure as the parachain outer constraint checker.
 ///
 /// We don't want the wallet to depend on the huge parachain codebase,
@@ -101,14 +94,9 @@ async fn main() -> anyhow::Result<()> {
     let node_genesis_hash = rpc::node_get_block_hash(0, &client)
         .await?
         .expect("node should be able to return some genesis hash");
-    let node_genesis_block = rpc::node_get_block::<
-        Block<
-            Header<u32, BlakeTwo256>,
-            Transaction<OuterVerifier, ParachainConstraintChecker<OuterConstraintChecker>>,
-        >,
-    >(node_genesis_hash, &client)
-    .await?
-    .expect("node should be able to return some genesis block");
+    let node_genesis_block = rpc::node_get_block(node_genesis_hash, &client)
+        .await?
+        .expect("node should be able to return some genesis block");
     log::debug!("Node's Genesis block::{:?}", node_genesis_hash);
 
     // Open the local database
@@ -129,14 +117,25 @@ async fn main() -> anyhow::Result<()> {
 
     if !sled::Db::was_recovered(&db) {
         // This is a new instance, so we need to apply the genesis block to the database.
-        sync::apply_block(&db, node_genesis_block, node_genesis_hash, &keystore_filter).await?;
+        sync::apply_block::<_, ParachainConstraintChecker<OuterConstraintChecker>>(
+            &db,
+            node_genesis_block,
+            node_genesis_hash,
+            &keystore_filter,
+        )
+        .await?;
     }
 
     // Synchronize the wallet with attached node unless instructed otherwise.
     if cli.no_sync {
         log::warn!("Skipping sync with node. Using previously synced information.")
     } else {
-        sync::synchronize(&db, &client, &keystore_filter).await?;
+        sync::synchronize::<_, ParachainConstraintChecker<OuterConstraintChecker>>(
+            &db,
+            &client,
+            &keystore_filter,
+        )
+        .await?;
 
         log::info!(
             "Wallet database synchronized with node to height {:?}",
