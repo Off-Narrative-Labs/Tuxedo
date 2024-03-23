@@ -20,7 +20,19 @@ use tuxedo_core::{
 };
 
 /// Create and send a transaction that mints the coins on the network
-pub async fn mint_coins<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
+pub async fn mint_coins(
+    parachain: bool,
+    client: &HttpClient,
+    args: MintCoinArgs,
+) -> anyhow::Result<()> {
+    if parachain {
+        mint_coins_helper::<crate::ParachainConstraintChecker>(client, args).await
+    } else {
+        mint_coins_helper::<crate::OuterConstraintChecker>(client, args).await
+    }
+}
+
+pub async fn mint_coins_helper<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
     client: &HttpClient,
     args: MintCoinArgs,
 ) -> anyhow::Result<()> {
@@ -63,8 +75,23 @@ pub async fn mint_coins<Checker: ConstraintChecker + From<OuterConstraintChecker
     Ok(())
 }
 
+//TODO Could I use a macro or a higher-order function to write all of these?
 /// Create and send a transaction that spends coins on the network
-pub async fn spend_coins<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
+pub async fn spend_coins(
+    parachain: bool,
+    db: &Db,
+    client: &HttpClient,
+    keystore: &LocalKeystore,
+    args: SpendArgs,
+) -> anyhow::Result<()> {
+    if parachain {
+        spend_coins_helper::<crate::ParachainConstraintChecker>(db, client, keystore, args).await
+    } else {
+        spend_coins_helper::<crate::OuterConstraintChecker>(db, client, keystore, args).await
+    }
+}
+
+pub async fn spend_coins_helper<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
     db: &Db,
     client: &HttpClient,
     keystore: &LocalKeystore,

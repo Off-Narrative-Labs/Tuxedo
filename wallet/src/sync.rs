@@ -97,10 +97,23 @@ pub(crate) fn open_db(
     Ok(db)
 }
 
+pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
+    parachain: bool,
+    db: &Db,
+    client: &HttpClient,
+    filter: &F,
+) -> anyhow::Result<()> {
+    if parachain {
+        synchronize_helper::<F, crate::ParachainConstraintChecker>(db, client, filter).await
+    } else {
+        synchronize_helper::<F, crate::OuterConstraintChecker>(db, client, filter).await
+    }
+}
+
 /// Synchronize the local database to the database of the running node.
 /// The wallet entirely trusts the data the node feeds it. In the bigger
 /// picture, that means run your own (light) node.
-pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool, C: ConstraintChecker>(
+pub(crate) async fn synchronize_helper<F: Fn(&OuterVerifier) -> bool, C: ConstraintChecker>(
     db: &Db,
     client: &HttpClient,
     filter: &F,

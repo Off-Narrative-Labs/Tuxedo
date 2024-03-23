@@ -17,7 +17,15 @@ use tuxedo_core::{
     ConstraintChecker,
 };
 
-pub async fn amoeba_demo<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
+pub async fn amoeba_demo(parachain: bool, client: &HttpClient) -> anyhow::Result<()> {
+    if parachain {
+        amoeba_demo_helper::<crate::ParachainConstraintChecker>(client).await
+    } else {
+        amoeba_demo_helper::<crate::OuterConstraintChecker>(client).await
+    }
+}
+
+pub async fn amoeba_demo_helper<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
     client: &HttpClient,
 ) -> anyhow::Result<()> {
     // Construct a simple amoeba spawning transaction (no signature required)
