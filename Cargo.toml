@@ -11,6 +11,7 @@ members = [
 	"tuxedo-core/no_bound",
 	"tuxedo-parachain-core/register_validate_block",
 	"tuxedo-parachain-core",
+	"tuxedo-parachain-runtime",
 	"wallet",
 	"wardrobe/amoeba",
 	"wardrobe/money",

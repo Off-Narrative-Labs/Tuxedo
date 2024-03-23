@@ -21,9 +21,9 @@ pub struct Cli {
     /// RPC endpoint of the node that this wallet will connect to.
     pub endpoint: String,
 
-    #[arg(long, short)]
+    #[arg(long, short('d'))]
     /// Path where the wallet data is stored. Default value is platform specific.
-    pub path: Option<PathBuf>,
+    pub base_path: Option<PathBuf>,
 
     #[arg(long, verbatim_doc_comment)]
     /// Skip the initial sync that the wallet typically performs with the node.
@@ -39,6 +39,10 @@ pub struct Cli {
     /// Specify a development wallet instance, using a temporary directory (like --tmp).
     /// The keystore will contain the development key Shawn.
     pub dev: bool,
+
+    /// Use the Parachain template encoding instead of the regular node template encoding.
+    #[arg(long, short, verbatim_doc_comment)]
+    pub parachain: bool,
 
     #[command(subcommand)]
     pub command: Option<Command>,
