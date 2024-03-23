@@ -13,6 +13,7 @@ members = [
 	"tuxedo-parachain-core",
 	"wallet",
 	"wardrobe/amoeba",
+	"wardrobe/kahoot",
 	"wardrobe/money",
 	"wardrobe/parachain",
 	"wardrobe/poe",
