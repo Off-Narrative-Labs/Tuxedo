@@ -45,7 +45,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     pub fn validate_tuxedo_transaction(
         transaction: &Transaction<V, C>,
     ) -> Result<ValidTransaction, UtxoError<C::Error>> {
-        debug!(
+        log::info!(
             target: LOG_TARGET,
             "validating tuxedo transaction",
         );
@@ -54,6 +54,11 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Duplicate peeks are allowed, although they are inefficient and wallets should not create such transactions
         {
             let input_set: BTreeSet<_> = transaction.inputs.iter().map(|o| o.encode()).collect();
+            log::info!(
+                target: LOG_TARGET,
+                "input_set.len() {} and transaction.inputs.len()  {}",input_set.len(),
+                transaction.inputs.len()
+            );
             ensure!(
                 input_set.len() == transaction.inputs.len(),
                 UtxoError::DuplicateInput
@@ -107,7 +112,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
                 index: index as u32,
             };
 
-            debug!(
+            log::info!(
                 target: LOG_TARGET,
                 "Checking for pre-existing output {:?}", output_ref
             );
@@ -133,7 +138,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // If any of the inputs are missing, we cannot make any more progress
         // If they are all present, we may proceed to call the constraint checker
         if !missing_inputs.is_empty() {
-            debug!(
+            log::info!(
                 target: LOG_TARGET,
                 "Transaction is valid but still has missing inputs. Returning early.",
             );
