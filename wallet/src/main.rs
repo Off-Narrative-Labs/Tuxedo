@@ -20,10 +20,6 @@ mod timestamp;
 
 use cli::{Cli, Command};
 
-// TODO, for now I've made the functions generic, but hardcoded the call sites to always use the
-// parachain constraint checker. Eventually we will need a cli flag or ideally metadata to determine
-// whether to use the parachain or regular one.
-
 // TODO move this to a parachain compatability module or something.
 /// Same structure as the parachain outer constraint checker.
 ///
