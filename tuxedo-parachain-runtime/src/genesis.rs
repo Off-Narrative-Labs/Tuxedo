@@ -36,9 +36,8 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
     .into_iter()
     .map(Into::into);
 
-    //TODO Handling the inherents manually is error-prone. This should ideally be done somewhere
-    // in Tuxedo Core so it can't be missed by runtime developers (some of whom will be n00bs).
     // The inherents are computed using the appropriate method, and placed before the user transactions.
+    // Ideally this will get better upstream eventually.
     let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
     genesis_transactions.extend(user_genesis_transactions);
 
