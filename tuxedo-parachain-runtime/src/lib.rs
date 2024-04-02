@@ -14,7 +14,6 @@ use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_consensus_grandpa::AuthorityId as GrandpaId;
 use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
@@ -96,36 +95,6 @@ impl Runtime {
         ]
         .iter()
         .map(|hex| AuraId::from_slice(hex.as_ref()).expect("Valid Aura authority hex was provided"))
-        .collect()
-    }
-
-    ///Grandpa Authority IDs - All equally weighted
-    fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-        use hex_literal::hex;
-        use sp_application_crypto::ByteArray;
-
-        [
-            // Alice
-            hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"),
-            // Bob
-            // hex!("d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69"),
-            // Charlie
-            // hex!("439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f"),
-            // Dave
-            // hex!("5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9"),
-            // Eve
-            // hex!("1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5"),
-            // Ferdie
-            // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
-        ]
-        .iter()
-        .map(|hex| {
-            (
-                GrandpaId::from_slice(hex.as_ref())
-                    .expect("Valid Grandpa authority hex was provided"),
-                1,
-            )
-        })
         .collect()
     }
 }
@@ -212,33 +181,6 @@ impl_runtime_apis! {
 
         fn authorities() -> Vec<AuraId> {
             Self::aura_authorities()
-        }
-    }
-
-    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-            Self::grandpa_authorities()
-        }
-
-        fn current_set_id() -> sp_consensus_grandpa::SetId {
-            0u64
-        }
-
-        fn submit_report_equivocation_unsigned_extrinsic(
-            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
-                <Block as BlockT>::Hash,
-                sp_runtime::traits::NumberFor<Block>,
-            >,
-            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
-        ) -> Option<()> {
-            None
-        }
-
-        fn generate_key_ownership_proof(
-            _set_id: sp_consensus_grandpa::SetId,
-            _authority_id: sp_consensus_grandpa::AuthorityId,
-        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
-            None
         }
     }
 
