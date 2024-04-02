@@ -46,6 +46,7 @@ impl Parse for RegisterValidateBlockInput {
     }
 }
 
+//TODO rename the macro
 #[proc_macro]
 pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Extract the paths to the parts from the runtime developer's input
@@ -80,7 +81,7 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                     // It is basically a wrapper around the validate block implementation
                     // that handles extracting params and returning results via shared memory.
 
-                    // Setp 1. Extract the arguments from shared memory
+                    // Step 1. Extract the arguments from shared memory
                     // We convert the `arguments` into a boxed slice and then into `Bytes`.
                     let args = #crate_::sp_std::boxed::Box::from_raw(
                         #crate_::sp_std::slice::from_raw_parts_mut(
