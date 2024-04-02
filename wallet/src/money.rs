@@ -75,7 +75,6 @@ pub async fn mint_coins_helper<Checker: ConstraintChecker + From<OuterConstraint
     Ok(())
 }
 
-//TODO Could I use a macro or a higher-order function to write all of these?
 /// Create and send a transaction that spends coins on the network
 pub async fn spend_coins(
     parachain: bool,
@@ -84,6 +83,8 @@ pub async fn spend_coins(
     keystore: &LocalKeystore,
     args: SpendArgs,
 ) -> anyhow::Result<()> {
+    // Depending how the parachain and metadata support shapes up, it may make sense to have a
+    // macro that writes all of these helpers and ifs.
     if parachain {
         spend_coins_helper::<crate::ParachainConstraintChecker>(db, client, keystore, args).await
     } else {
@@ -99,7 +100,6 @@ pub async fn spend_coins_helper<Checker: ConstraintChecker + From<OuterConstrain
 ) -> anyhow::Result<()> {
     log::debug!("The args are:: {:?}", args);
 
-    // Construct
     // Construct a template Transaction to push coins into later
     let mut transaction: Transaction<OuterVerifier, Checker> = Transaction {
         inputs: Vec::new(),
