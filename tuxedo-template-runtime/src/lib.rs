@@ -163,27 +163,6 @@ pub enum OuterConstraintChecker {
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
 }
 
-#[derive(
-    Serialize, Deserialize, Encode, Decode, Debug, Default, PartialEq, Eq, Clone, TypeInfo,
-)]
-/// A Dummy constraint checker that does nothing. It is only present to make the
-/// Parachain and non-parahcain OuterConstraintCheckers scale compatible
-pub struct DummyParachainInfo;
-
-impl tuxedo_core::SimpleConstraintChecker for DummyParachainInfo {
-    type Error = ();
-
-    fn check(
-        &self,
-        _input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _evicted_input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _peeks: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _output_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-    ) -> Result<TransactionPriority, ()> {
-        panic!("Transactions should not be sent to the dummy parachain info piece.")
-    }
-}
-
 /// The main struct in this module.
 #[derive(Encode, Decode, PartialEq, Eq, Clone, TypeInfo)]
 pub struct Runtime;
