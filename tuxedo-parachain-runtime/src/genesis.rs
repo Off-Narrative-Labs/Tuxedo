@@ -5,7 +5,6 @@ use hex_literal::hex;
 use inner_runtime::{money::Coin, OuterConstraintChecker as InnerConstraintChecker};
 use tuxedo_parachain_core::tuxedo_core::{
     genesis::TuxedoGenesisConfig,
-    types::Transaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature},
     ConstraintChecker,
 };
@@ -23,14 +22,16 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
 
     let user_genesis_transactions = [
         // Money Transactions
-        wrap_transaction(Coin::<0>::mint(
+        Coin::<0>::mint::<_, _, InnerConstraintChecker>(
             100,
             Sr25519Signature::new(SHAWN_PUB_KEY_BYTES),
-        )),
-        wrap_transaction(Coin::<0>::mint(
+        )
+        .transform(),
+        Coin::<0>::mint::<_, _, InnerConstraintChecker>(
             100,
             ThresholdMultiSignature::new(1, signatories),
-        )),
+        )
+        .transform(),
         // No Kitty or anything else in this one. Keep it simple.
     ]
     .into_iter()
@@ -47,16 +48,4 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
             .to_vec(),
         genesis_transactions,
     )
-}
-
-// TODO this part is ugly. We need to make this work better for the runtime dev eventually.
-fn wrap_transaction<V>(
-    t: Transaction<V, InnerConstraintChecker>,
-) -> Transaction<V, OuterConstraintChecker> {
-    Transaction {
-        inputs: t.inputs,
-        peeks: t.peeks,
-        outputs: t.outputs,
-        checker: OuterConstraintChecker::Inner(t.checker),
-    }
 }
