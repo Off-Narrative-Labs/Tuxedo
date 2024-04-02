@@ -19,10 +19,10 @@ use sp_api::impl_runtime_apis;
 use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
-    create_runtime_str, impl_opaque_keys,
+    create_runtime_str,
     traits::{BlakeTwo256, Block as BlockT},
     transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, BoundToRuntimeAppPublic,
+    ApplyExtrinsicResult,
 };
 use sp_std::prelude::*;
 
@@ -39,40 +39,8 @@ use tuxedo_parachain_core::tuxedo_core;
 // The verifier does not contain anything parachain specific.
 use inner_runtime::OuterVerifier;
 
-//TODO Can / Should we re-use any of the opaque types from the inner runtime?
-/// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
-/// the specifics of the runtime. They can then be made to be agnostic over specific formats
-/// of data like extrinsics, allowing for them to continue syncing the network through upgrades
-/// to even the core data structures.
-pub mod opaque {
-    use super::*;
-
-    /// Opaque block type.
-    pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
-    /// Opaque block hash type.
-    pub type Hash = <BlakeTwo256 as sp_api::HashT>::Output;
-
-    // This part is necessary for generating session keys in the runtime
-    impl_opaque_keys! {
-        pub struct SessionKeys {
-            pub aura: AuraAppPublic,
-            pub grandpa: GrandpaAppPublic,
-        }
-    }
-
-    // Typically these are not implemented manually, but rather for the pallet associated with the
-    // keys. Here we are not using the pallets, and these implementations are trivial, so we just
-    // re-write them.
-    pub struct AuraAppPublic;
-    impl BoundToRuntimeAppPublic for AuraAppPublic {
-        type Public = AuraId;
-    }
-
-    pub struct GrandpaAppPublic;
-    impl BoundToRuntimeAppPublic for GrandpaAppPublic {
-        type Public = sp_consensus_grandpa::AuthorityId;
-    }
-}
+// Reuse all the same opaque types from the inner runtime.
+pub use inner_runtime::opaque;
 
 /// This runtime version.
 #[sp_version::runtime_version]
