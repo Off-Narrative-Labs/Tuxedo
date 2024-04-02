@@ -221,48 +221,31 @@ where
 /// I want the runtime to expose a method to do this, and I also want it to
 /// be nice and flexible by searching for the right transactions.
 /// For now I have a hacky implementation that assumes the parachain inherent is last
-fn extract_parachain_inherent_data<V, C>(
+fn extract_parachain_inherent_data<ParachainConfig, V, C>(
     block: &Block<Header, Transaction<V, C>>,
 ) -> ParachainInherentData
 where
     Block<Header, Transaction<V, C>>: BlockT<Extrinsic = Transaction<V, C>>,
-    Transaction<V, C>: Extrinsic, // V: TypeInfo + Verifier + 'static,
-                                  // C: TypeInfo + ConstraintChecker + 'static,
+    Transaction<V, C>: Extrinsic,
+    // Here we require that the constraint checker at least reports to be parachain friendly.
+    // This allows us to identify the inherent later on.
+    // TODO I expect this bound to be copied higher up the call chain to `validate_block`. Confirm that is the case before merging.
+    C: TryInto<InherentAdapter<ParachainInfo<ParachainConfig>>>,
 {
-    // The commented stuff is Basti's algo.
-    // It is nicer than my hack because it searches the transactions,
-    // But it is still not good enough because it lived right here in this file as
-    // opposed to with the runtime.
-    // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/146
-
-    // block
-    // 	.extrinsics()
-    // 	.iter()
-    // 	// Inherents are at the front of the block and are unsigned.
-    // 	//
-    // 	// If `is_signed` is returning `None`, we keep it safe and assume that it is "signed".
-    // 	// We are searching for unsigned transactions anyway.
-    // 	.take_while(|e| !e.is_signed().unwrap_or(true))
-    // 	.filter_map(|e| e.call().is_sub_type())
-    // 	.find_map(|c| match c {
-    // 		crate::Call::set_validation_data { data: validation_data } => Some(validation_data),
-    // 		_ => None,
-    // 	})
-    // 	.expect("Could not find `set_validation_data` inherent")
-
     block
         .extrinsics()
         .iter()
-        .take_while(|&e| !e.is_signed().unwrap_or(true))
-        .collect::<Vec<_>>()
-        .last()
-        .expect("There should be at least one inherent extrinsic which is the parachain inherent.")
+        //TODO What is the deal with this & here and why is it not in basti's?
+        .take_while(|e| !e.is_signed().unwrap_or(true))
+        .find_map(|e| <C as TryInto<InherentAdapter<ParachainInfo<ParachainConfig>>>>::try_into(&e.checker))
+        .expedct("There should be at least one beginning-of-block inherent extrinsic which is the parachain inherent.")//: Transaction
+        //TODO, maybe this could also move into the runtime or the piece? But it's already pretty good tbh.
         .outputs
         .get(0)
-        .expect("Parachain inherent should be first and should have exactly one output.")
+        .expect("Parachain inherent should have exactly one output.")
         .payload
         .extract::<ParachainInherentDataUtxo>()
-        .expect("Should decode to proper type based on the position in the block.")
+        .expect("Should decode to proper type because the constraint checker returned this one.")
         .into()
 }
 
