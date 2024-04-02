@@ -110,14 +110,6 @@ pub type Block = sp_runtime::generic::Block<Header, Transaction>;
 pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
 pub type Output = tuxedo_core::types::Output<OuterVerifier>;
 
-impl sp_runtime::traits::GetNodeBlockType for Runtime {
-    type NodeBlock = opaque::Block;
-}
-
-impl sp_runtime::traits::GetRuntimeBlockType for Runtime {
-    type RuntimeBlock = Block;
-}
-
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
 
