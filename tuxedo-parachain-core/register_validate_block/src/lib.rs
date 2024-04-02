@@ -1,7 +1,7 @@
 //! This macro is copied from cumulus-pallet-parachain-system-proc-macro crate
 //! and modified slightly to fit Tuxedo's needs.
 
-use proc_macro2::Span;
+use proc_macro2::{Literal, Span};
 use proc_macro_crate::{crate_name, FoundCrate};
 use syn::{
     parse::{Parse, ParseStream},
@@ -18,27 +18,27 @@ fn crate_() -> Result<Ident, Error> {
 }
 
 struct RegisterValidateBlockInput {
-    pub block: Ident,
-    _comma1: Token![,],
     pub verifier: Ident,
+    _comma1: Token![,],
+    pub inner_constraint_checker: Ident,
     _comma2: Token![,],
-    pub constraint_checker: Ident,
+    pub para_id: Literal,
 }
 
 impl Parse for RegisterValidateBlockInput {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let parsed = Self {
-            block: input.parse()?,
-            _comma1: input.parse()?,
             verifier: input.parse()?,
+            _comma1: input.parse()?,
+            inner_constraint_checker: input.parse()?,
             _comma2: input.parse()?,
-            constraint_checker: input.parse()?,
+            para_id: input.parse()?,
         };
 
         if !input.is_empty() {
             return Err(Error::new(
                 input.span(),
-                "Expected exactly three parameters: Block, Verifier, ConstraintChecker.",
+                "Expected exactly three parameters: Verifier, InnerConstraintChecker, ParaId.",
             ));
         }
 
@@ -56,9 +56,9 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
         Err(e) => return e.into_compile_error().into(),
     };
 
-    let block = input.block.clone();
     let verifier = input.verifier.clone();
-    let constraint_checker = input.constraint_checker.clone();
+    let inner_constraint_checker = input.inner_constraint_checker.clone();
+    let para_id = input.para_id.clone();
 
     // A way to refer to the tuxedo_parachain_core crate from within the macro.
     let crate_ = match crate_() {
@@ -66,22 +66,9 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
         Err(e) => return e.into_compile_error().into(),
     };
 
-    //TODO We need to check inherents. At least the timestamp one, and maybe also the parachain one?
-    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/144
-    // But I think the parachain one is handled already.
-    // To start the hack, we will just not check them at all. Fewer places to panic XD
-    // let check_inherents = match check_inherents {
-    // 	Some(_check_inherents) => {
-    // 		quote::quote! { #_check_inherents }
-    // 	},
-    // 	None => {
-    // 		quote::quote! {
-    // 			#crate_::DummyCheckInherents<<#runtime as #crate_::validate_block::GetRuntimeBlockType>::RuntimeBlock>
-    // 		}
-    // 	},
-    // };
-
-    if cfg!(not(feature = "std")) {
+    // Implementation of Polkadot's validate_block function. Inspired by Basti's frame version:
+    // https://github.com/paritytech/polkadot-sdk/blob/0becc45b/cumulus/pallets/parachain-system/proc-macro/src/lib.rs#L93-L153
+    let validate_block_func = if cfg!(not(feature = "std")) {
         quote::quote! {
             #[doc(hidden)]
             mod parachain_validate_block {
@@ -94,7 +81,6 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                     // that handles extracting params and returning results via shared memory.
 
                     // Setp 1. Extract the arguments from shared memory
-
                     // We convert the `arguments` into a boxed slice and then into `Bytes`.
                     let args = #crate_::sp_std::boxed::Box::from_raw(
                         #crate_::sp_std::slice::from_raw_parts_mut(
@@ -111,9 +97,8 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
 
                     // Step 2: Call the actual validate_block implementation
                     let res = #crate_::validate_block::validate_block::<
-                        #block,
                         #verifier,
-                        #constraint_checker,
+                        #inner_constraint_checker,
                     >(params);
 
                     // Step 3: Write the return value back into the shared memory
@@ -126,6 +111,50 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
     } else {
         // If we are building to std, we don't include this validate_block entry point at all
         quote::quote!()
+    };
+
+    // Write the piece config and the `ParachainConstraintChecker` enum.
+    let parachain_constraint_checker_enum = quote::quote! {
+        #[derive(PartialEq, Eq, Clone)]
+        pub struct RuntimeParachainConfig;
+        impl parachain_piece::ParachainPieceConfig for RuntimeParachainConfig {
+            // Use the para ID 2_000 which is the first available in the rococo-local runtime.
+            // This is the default value, so this could be omitted, but explicit is better.
+            const PARA_ID: u32 = #para_id;
+
+            type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
+        }
+
+        /// The Outer / Aggregate Constraint Checker for the Parachain runtime.
+        ///
+        /// It is comprized of two individual checkers:
+        ///   First, the parachain inherent piece
+        ///   Second, the constraint checker from the normal Tuxedo Template Runtime.
+        ///
+        /// That second checker, the normal tuxedo template runtime, is itself an aggregate
+        /// constraint checker aggregated from individual pieces such as money, amoeba, and others.
+        /// Therefore, this crate shows:
+        ///   Generally, how to perform recursive aggregation of constraint checkers.
+        ///   Specifically, how to elegantly transform a sovereign runtime into a parachain runtime by wrapping.
+        #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+        #[tuxedo_constraint_checker]
+        pub enum ParachainConstraintChecker {
+            /// All other calls are delegated to the normal Tuxedo Template Runtime.
+            Inner(#inner_constraint_checker),
+
+            // TODO This one is last for now so that I can write a hacky algorithm to scrape
+            // the inherent data and assume it is last.
+            /// Set some parachain related information via an inherent extrinsic.
+            ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<RuntimeParachainConfig>>),
+        }
+    };
+
+    // The final output is the `ParachainConstraintChecker` plus the `validate_block` function.
+
+    quote::quote! {
+        #validate_block_func
+
+        #parachain_constraint_checker_enum
     }
     .into()
 }

@@ -12,35 +12,27 @@ pub mod genesis;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
+use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_consensus_grandpa::AuthorityId as GrandpaId;
-
-use sp_api::impl_runtime_apis;
 use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str,
-    traits::{BlakeTwo256, Block as BlockT},
+    traits::Block as BlockT,
     transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult,
 };
 use sp_std::prelude::*;
-
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-
-use tuxedo_core::{
-    tuxedo_constraint_checker, types::Transaction as TuxedoTransaction, InherentAdapter,
-};
+use tuxedo_core::{tuxedo_constraint_checker, types::Block as TuxedoBlock, InherentAdapter};
 use tuxedo_parachain_core::tuxedo_core;
 
-// We use the same aggregate verifier from the inner_runtime.
-// The verifier does not contain anything parachain specific.
-use inner_runtime::OuterVerifier;
-
-// Reuse all the same opaque types from the inner runtime.
-pub use inner_runtime::opaque;
+// We use the same aggregate verifier and opaque types from the inner_runtime.
+// They do not contain anything parachain specific.
+pub use inner_runtime::{opaque, OuterConstraintChecker as InnerConstraintChecker, OuterVerifier};
 
 /// This runtime version.
 #[sp_version::runtime_version]
@@ -64,46 +56,15 @@ pub fn native_version() -> NativeVersion {
     }
 }
 
-pub type Transaction = TuxedoTransaction<OuterVerifier, OuterConstraintChecker>;
-pub type BlockNumber = u32;
-pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
-pub type Block = sp_runtime::generic::Block<Header, Transaction>;
-pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
-pub type Output = tuxedo_core::types::Output<OuterVerifier>;
-
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
 
-impl parachain_piece::ParachainPieceConfig for Runtime {
-    // Use the para ID 2_000 which is the first available in the rococo-local runtime.
-    // This is the default value, so this could be omitted, but explicit is better.
-    const PARA_ID: u32 = 2_000;
+//TODO Maybe rename the macro to eg tuxedo_parachain_runtime!.
+// This creates an enum `ParachainConstraintChecker`
+tuxedo_parachain_core::register_validate_block!(OuterVerifier, InnerConstraintChecker, 2000);
 
-    type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
-}
-
-/// The Outer / Aggregate Constraint Checker for the Parachain runtime.
-///
-/// It is comprized of two individual chekers:
-///   First, the parachain inherent piece
-///   Second, the constraint checker from the normal Tuxedo Template Runtime.
-///
-/// That second checker, the normal tuxedo template runtime, is itself an aggregate
-/// constraint checker aggregated from idividual pieces such as money, amoeba, and others.
-/// Therefore, this crate shows:
-///   Generally, how to perform recursive aggregation of constraint checkers.
-///   Specifically, how to elegantly transform a sovereign runtime into a parachain runtime by wrapping.
-#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-#[tuxedo_constraint_checker(OuterVerifier)]
-pub enum OuterConstraintChecker {
-    /// All other calls are delegated to the normal Tuxedo Template Runtime.
-    Inner(inner_runtime::OuterConstraintChecker),
-
-    // TODO This one is last for now so that I can write a hacky algorithm to scrape
-    // the inherent data and assume it is last.
-    /// Set some parachain related information via an inherent extrinsic.
-    ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<Runtime>>),
-}
+pub type Block = TuxedoBlock<OuterVerifier, ParachainConstraintChecker>;
+pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, ParachainConstraintChecker>;
 
 /// The main struct in this module.
 #[derive(Encode, Decode, PartialEq, Eq, Clone, TypeInfo)]
@@ -288,6 +249,3 @@ impl_runtime_apis! {
         }
     }
 }
-
-// Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
-tuxedo_parachain_core::register_validate_block!(Block, OuterVerifier, OuterConstraintChecker);

@@ -5,10 +5,9 @@ use crate::strip_0x_prefix;
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::{Decode, Encode};
-use runtime::opaque::Block as OpaqueBlock;
 use sp_core::H256;
 use tuxedo_core::{
-    types::{Output, OutputRef},
+    types::{OpaqueBlock, Output, OutputRef},
     Verifier,
 };
 

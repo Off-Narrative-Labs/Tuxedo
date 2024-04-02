@@ -25,14 +25,12 @@ use sp_runtime::{
 use tuxedo_core::{
     dynamic_typing::UtxoData,
     types::Transaction,
-    types::{Input, OutputRef},
+    types::{Input, OpaqueBlock, OutputRef},
     ConstraintChecker,
 };
 
 use jsonrpsee::http_client::HttpClient;
-use runtime::{
-    money::Coin, opaque::Block as OpaqueBlock, timestamp::Timestamp, Block, OuterVerifier,
-};
+use runtime::{money::Coin, timestamp::Timestamp, Block, OuterVerifier};
 
 /// The identifier for the blocks tree in the db.
 const BLOCKS: &str = "blocks";

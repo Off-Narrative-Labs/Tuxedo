@@ -8,12 +8,12 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use parachain_template_runtime::opaque::Block;
 pub use sc_rpc::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
+use tuxedo_core::types::OpaqueBlock as Block;
 
 /// A type representing all RPC extensions.
 pub type RpcExtension = jsonrpsee::RpcModule<()>;

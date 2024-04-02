@@ -8,11 +8,11 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use node_template_runtime::opaque::Block;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
+use tuxedo_core::types::OpaqueBlock as Block;
 
 pub use sc_rpc_api::DenyUnsafe;
 

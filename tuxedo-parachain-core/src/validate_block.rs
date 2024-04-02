@@ -61,7 +61,7 @@ fn with_externalities<F: FnOnce(&mut dyn Externalities) -> R, R>(f: F) -> R {
 /// ensuring that the final storage root matches the storage root in the header of the block. In the
 /// end we return back the [`ValidationResult`] with all the required information for the validator.
 #[doc(hidden)]
-pub fn validate_block<B, V, C>(
+pub fn validate_block<V, C>(
     MemoryOptimizedValidationParams {
         block_data,
         parent_head,
@@ -70,11 +70,8 @@ pub fn validate_block<B, V, C>(
     }: MemoryOptimizedValidationParams,
 ) -> ValidationResult
 where
-    B: BlockT<Extrinsic = Transaction<V, C>>,
-    B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
+    Block<Header, Transaction<V, C>>: BlockT<Extrinsic = Transaction<V, C>>,
     Transaction<V, C>: Extrinsic,
-    V: TypeInfo + Verifier + 'static,
-    C: TypeInfo + ConstraintChecker + 'static, // + Into<SetParachainInfo<V>>,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
@@ -224,24 +221,19 @@ where
 /// I want the runtime to expose a method to do this, and I also want it to
 /// be nice and flexible by searching for the right transactions.
 /// For now I have a hacky implementation that assumes the parachain inherent is last
-fn extract_parachain_inherent_data<B, V, C>(block: &B) -> ParachainInherentData
+fn extract_parachain_inherent_data<V, C>(
+    block: &Block<Header, Transaction<V, C>>,
+) -> ParachainInherentData
 where
-    B: BlockT<Extrinsic = Transaction<V, C>>,
-    // Consider an alternative way to express the bounds here:
-    // Transaction<V, C>: Extrinsic
-    V: TypeInfo + Verifier + 'static,
-    C: TypeInfo + ConstraintChecker + 'static,
+    Block<Header, Transaction<V, C>>: BlockT<Extrinsic = Transaction<V, C>>,
+    Transaction<V, C>: Extrinsic, // V: TypeInfo + Verifier + 'static,
+                                  // C: TypeInfo + ConstraintChecker + 'static,
 {
     // The commented stuff is Basti's algo.
     // It is nicer than my hack because it searches the transactions,
     // But it is still not good enough because it lived right here in this file as
     // opposed to with the runtime.
     // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/146
-
-    // One idea from github.com/Off-Narrative-Labs/Tuxedo/pull/130#discussion_r1408250978
-    // is to find the inehrent based o nthe dynamic type of the output.
-    // This is a reason to keep dynamic typing which is discussed in
-    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/153
 
     // block
     // 	.extrinsics()
