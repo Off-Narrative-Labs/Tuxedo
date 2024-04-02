@@ -3,22 +3,23 @@
 use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
-use runtime::OuterVerifier;
+use runtime::{OuterConstraintChecker, OuterVerifier};
+use sp_core::H256;
 use std::path::PathBuf;
 use tuxedo_core::{types::OutputRef, verifier::*};
-
-use sp_core::H256;
 
 mod amoeba;
 mod cli;
 mod keystore;
 mod money;
 mod output_filter;
+mod parachain;
 mod rpc;
 mod sync;
 mod timestamp;
 
 use cli::{Cli, Command};
+use parachain::ParachainConstraintChecker;
 
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9944";
@@ -36,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
     // Setup the data paths.
     let data_path = match tmp {
         true => temp_dir(),
-        _ => cli.path.unwrap_or_else(default_data_path),
+        _ => cli.base_path.unwrap_or_else(default_data_path),
     };
     let keystore_path = data_path.join("keystore");
     let db_path = data_path.join("wallet_database");
@@ -80,14 +81,30 @@ async fn main() -> anyhow::Result<()> {
 
     if !sled::Db::was_recovered(&db) {
         // This is a new instance, so we need to apply the genesis block to the database.
-        sync::apply_block(&db, node_genesis_block, node_genesis_hash, &keystore_filter).await?;
+        if cli.parachain {
+            sync::apply_block::<_, ParachainConstraintChecker>(
+                &db,
+                node_genesis_block,
+                node_genesis_hash,
+                &keystore_filter,
+            )
+            .await?;
+        } else {
+            sync::apply_block::<_, OuterConstraintChecker>(
+                &db,
+                node_genesis_block,
+                node_genesis_hash,
+                &keystore_filter,
+            )
+            .await?;
+        }
     }
 
     // Synchronize the wallet with attached node unless instructed otherwise.
     if cli.no_sync {
         log::warn!("Skipping sync with node. Using previously synced information.")
     } else {
-        sync::synchronize(&db, &client, &keystore_filter).await?;
+        sync::synchronize(cli.parachain, &db, &client, &keystore_filter).await?;
 
         log::info!(
             "Wallet database synchronized with node to height {:?}",
@@ -97,9 +114,9 @@ async fn main() -> anyhow::Result<()> {
 
     // Dispatch to proper subcommand
     match cli.command {
-        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(&client).await,
+        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(cli.parachain, &client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
-        Some(Command::MintCoins(args)) => money::mint_coins(&client, args).await,
+        Some(Command::MintCoins(args)) => money::mint_coins(cli.parachain, &client, args).await,
         Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
@@ -121,7 +138,9 @@ async fn main() -> anyhow::Result<()> {
 
             Ok(())
         }
-        Some(Command::SpendCoins(args)) => money::spend_coins(&db, &client, &keystore, args).await,
+        Some(Command::SpendCoins(args)) => {
+            money::spend_coins(cli.parachain, &db, &client, &keystore, args).await
+        }
         Some(Command::InsertKey { seed }) => crate::keystore::insert_key(&keystore, &seed),
         Some(Command::GenerateKey { password }) => {
             crate::keystore::generate_key(&keystore, password)?;
