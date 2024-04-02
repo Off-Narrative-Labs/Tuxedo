@@ -4,52 +4,22 @@ use clap::Parser;
 use jsonrpsee::http_client::HttpClientBuilder;
 use parity_scale_codec::{Decode, Encode};
 use runtime::{OuterConstraintChecker, OuterVerifier};
-use std::path::PathBuf;
-use tuxedo_core::{types::OutputRef, verifier::*, SimpleConstraintChecker};
-
 use sp_core::H256;
+use std::path::PathBuf;
+use tuxedo_core::{types::OutputRef, verifier::*};
 
 mod amoeba;
 mod cli;
 mod keystore;
 mod money;
 mod output_filter;
+mod parachain;
 mod rpc;
 mod sync;
 mod timestamp;
 
 use cli::{Cli, Command};
-
-// TODO move this to a parachain compatability module or something.
-/// Same structure as the parachain outer constraint checker.
-///
-/// We don't want the wallet to depend on the huge parachain codebase,
-/// So we just recreate this one little type here.
-#[derive(Encode, Decode, Debug, PartialEq, Eq, Clone)]
-pub enum ParachainConstraintChecker {
-    Normal(OuterConstraintChecker),
-    Parachain,
-}
-
-impl SimpleConstraintChecker for ParachainConstraintChecker {
-    type Error = ();
-
-    fn check(
-        &self,
-        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-    ) -> Result<sp_runtime::transaction_validity::TransactionPriority, Self::Error> {
-        todo!()
-    }
-}
-
-impl From<OuterConstraintChecker> for ParachainConstraintChecker {
-    fn from(c: OuterConstraintChecker) -> Self {
-        ParachainConstraintChecker::Normal(c)
-    }
-}
+use parachain::ParachainConstraintChecker;
 
 /// The default RPC endpoint for the wallet to connect to
 const DEFAULT_ENDPOINT: &str = "http://localhost:9944";
