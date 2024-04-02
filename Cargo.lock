@@ -14040,7 +14040,6 @@ dependencies = [
  "sp-debug-derive",
  "sp-inherents",
  "sp-io",
- "sp-keystore",
  "sp-runtime",
  "sp-session",
  "sp-std",

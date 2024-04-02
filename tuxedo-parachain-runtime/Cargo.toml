@@ -44,9 +44,6 @@ tuxedo-parachain-core = { default-features = false, path = "../tuxedo-parachain-
 [build-dependencies]
 substrate-wasm-builder = { workspace = true }
 
-[dev-dependencies]
-sp-keystore = { default_features = false, workspace = true }
-
 [features]
 default = [ "std" ]
 std = [
