@@ -3,7 +3,7 @@ use crate::{
     cli::{Cli, Subcommand},
     service,
 };
-use node_template_runtime::Runtime;
+use node_template_runtime::opaque::Block as OpaqueBlock;
 use sc_cli::SubstrateCli;
 use sc_service::PartialComponents;
 
@@ -121,11 +121,7 @@ pub fn run() -> sc_cli::Result<()> {
         }
         Some(Subcommand::ChainInfo(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.sync_run(|config| {
-                cmd.run::<<Runtime as sp_runtime::traits::GetRuntimeBlockType>::RuntimeBlock>(
-                    &config,
-                )
-            })
+            runner.sync_run(|config| cmd.run::<OpaqueBlock>(&config))
         }
         Some(Subcommand::Custom(_)) => {
             todo!()
