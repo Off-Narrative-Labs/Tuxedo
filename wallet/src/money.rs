@@ -4,10 +4,10 @@ use crate::{cli::MintCoinArgs, cli::SpendArgs, rpc::fetch_storage, sync};
 
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
-use parity_scale_codec::Encode;
+use parity_scale_codec::{Decode, Encode};
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
-    OuterConstraintChecker, OuterVerifier,
+    OuterConstraintChecker, OuterVerifier, OuterVerifierRedeemer,
 };
 use sc_keystore::LocalKeystore;
 use sled::Db;
@@ -168,15 +168,22 @@ pub async fn spend_coins_helper<Checker: ConstraintChecker + From<OuterConstrain
         let redeemer = match utxo.verifier {
             OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
                 let public = Public::from_h256(owner_pubkey);
-                crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?
+                let signature =
+                    crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?;
+                OuterVerifierRedeemer::Sr25519Signature(signature)
             }
-            OuterVerifier::UpForGrabs(_) => Vec::new(),
+            OuterVerifier::UpForGrabs(_) => OuterVerifierRedeemer::UpForGrabs(()),
             OuterVerifier::ThresholdMultiSignature(_) => todo!(),
         };
 
         // insert the proof
-        input.redeemer = RedemptionStrategy::Redemption(redeemer);
+        let encoded_redeemer = redeemer.encode();
+        log::debug!("encoded redeemer is: {:?}", encoded_redeemer);
+
+        input.redeemer = RedemptionStrategy::Redemption(encoded_redeemer);
     }
+
+    log::debug!("signed transactions is: {:#?}", transaction);
 
     // Send the transaction
     let genesis_spend_hex = hex::encode(transaction.encode());
