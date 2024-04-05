@@ -134,7 +134,7 @@ mod tests {
                 .unwrap()
                 .clone();
 
-            assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
+            assert_eq!(tx.outputs.first(), Some(&genesis_utxo));
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
@@ -179,7 +179,7 @@ mod tests {
                 .unwrap()
                 .clone();
 
-            assert_eq!(tx.outputs.get(0), Some(&genesis_multi_sig_utxo));
+            assert_eq!(tx.outputs.first(), Some(&genesis_multi_sig_utxo));
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {

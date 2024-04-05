@@ -95,13 +95,11 @@ fn update_parachain_info_with_otherwise_valid_old_info_as_normal_input() {
 #[test]
 fn update_parachain_info_extra_outputs() {
     let old: DynamicallyTypedData = new_data_from_relay_parent_number(3).into();
-    let inputs = vec![old];
     let new1: DynamicallyTypedData = new_data_from_relay_parent_number(4).into();
     let new2: DynamicallyTypedData = Bogus.into();
-    let outputs = vec![new1.into(), new2.into()];
 
     assert_eq!(
-        SetParachainInfo::<MockConfig>(Default::default()).check(&inputs, &[], &[], &outputs),
+        SetParachainInfo::<MockConfig>(Default::default()).check(&[old], &[], &[], &[new1, new2]),
         Err(ExtraOutputs)
     );
 }

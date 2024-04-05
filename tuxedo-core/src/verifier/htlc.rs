@@ -223,7 +223,7 @@ mod test {
             signature: recipient_sig,
         };
 
-        assert!(htlc.verify(&simplified_tx, 0, &redeemer));
+        assert!(htlc.verify(simplified_tx, 0, &redeemer));
     }
 
     #[test]
@@ -249,7 +249,7 @@ mod test {
             signature: recipient_sig,
         };
 
-        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+        assert!(!htlc.verify(simplified_tx, 0, &redeemer));
     }
 
     #[test]
@@ -272,7 +272,7 @@ mod test {
             signature: bad_sig(),
         };
 
-        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+        assert!(!htlc.verify(simplified_tx, 0, &redeemer));
     }
 
     #[test]
@@ -296,7 +296,7 @@ mod test {
             signature: refunder_sig,
         };
 
-        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+        assert!(!htlc.verify(simplified_tx, 0, &redeemer));
     }
 
     #[test]
@@ -319,7 +319,7 @@ mod test {
             signature: refunder_sig,
         };
 
-        assert!(htlc.verify(&simplified_tx, 2 * THRESHOLD, &redeemer));
+        assert!(htlc.verify(simplified_tx, 2 * THRESHOLD, &redeemer));
     }
 
     #[test]
@@ -342,7 +342,7 @@ mod test {
             signature: refunder_sig,
         };
 
-        assert!(!htlc.verify(&simplified_tx, 0, &redeemer));
+        assert!(!htlc.verify(simplified_tx, 0, &redeemer));
     }
 
     #[test]
@@ -364,7 +364,7 @@ mod test {
             signature: bad_sig(),
         };
 
-        assert!(!htlc.verify(&simplified_tx, 2 * THRESHOLD, &redeemer));
+        assert!(!htlc.verify(simplified_tx, 2 * THRESHOLD, &redeemer));
     }
 
     #[test]
@@ -387,6 +387,6 @@ mod test {
             signature: recipient_sig,
         };
 
-        assert!(!htlc.verify(&simplified_tx, 2 * THRESHOLD, &redeemer));
+        assert!(!htlc.verify(simplified_tx, 2 * THRESHOLD, &redeemer));
     }
 }
