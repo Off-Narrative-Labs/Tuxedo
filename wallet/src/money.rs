@@ -4,7 +4,7 @@ use crate::{cli::MintCoinArgs, cli::SpendArgs, rpc::fetch_storage, sync};
 
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
-use parity_scale_codec::{Decode, Encode};
+use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
     OuterConstraintChecker, OuterVerifier, OuterVerifierRedeemer,
