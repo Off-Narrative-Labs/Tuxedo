@@ -88,7 +88,7 @@ where
                         ensure!(
                             input_utxo.verifier.verify(
                                 &stripped_encoded,
-                                0, //IS THIS IT!?!? Is it because block number is not set this early? Why was this not a problem before??
+                                Self::block_height(),
                                 &redeemer
                             ),
                             UtxoError::VerifierError
