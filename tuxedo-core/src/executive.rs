@@ -14,7 +14,7 @@ use crate::{
     types::{DispatchResult, OutputRef, RedemptionStrategy, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
-    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
+    EXTRINSIC_KEY, HEADER_KEY, HEIGHT_KEY, LOG_TARGET,
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
@@ -239,10 +239,9 @@ where
     where
         B::Header: HeaderT,
     {
-        *sp_io::storage::get(HEADER_KEY)
-            .and_then(|d| B::Header::decode(&mut &*d).ok())
-            .expect("A header is always stored at the beginning of the block")
-            .number()
+        sp_io::storage::get(HEIGHT_KEY)
+            .and_then(|d| <<B as BlockT>::Header as HeaderT>::Number::decode(&mut &*d).ok())
+            .expect("A header is stored at the beginning of block one and never cleared.")
     }
 
     // These next three methods are for the block authoring workflow.
@@ -257,6 +256,10 @@ where
         // Store the transient partial header for updating at the end of the block.
         // This will be removed from storage before the end of the block.
         sp_io::storage::set(HEADER_KEY, &header.encode());
+
+        // Also store the height persistently so it is available when
+        // performing pool validations and other off-chain runtime calls.
+        sp_io::storage::set(HEIGHT_KEY, &header.number().encode());
     }
 
     pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
