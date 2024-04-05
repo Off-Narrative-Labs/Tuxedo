@@ -436,7 +436,7 @@ where
             "Entering `inherent_extrinsics`."
         );
 
-        // Extract the complete parent block from the inheret data
+        // Extract the complete parent block from the inherent data
         let parent: B = data
             .get_data(&PARENT_INHERENT_IDENTIFIER)
             .expect("Parent block inherent data should be able to decode.")
