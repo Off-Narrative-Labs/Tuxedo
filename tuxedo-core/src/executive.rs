@@ -654,6 +654,9 @@ mod tests {
             });
             ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
 
+            // Write a block height.
+            ext.insert(HEIGHT_KEY.to_vec(), pre_header.number.encode());
+
             // Write the noted extrinsics
             ext.insert(EXTRINSIC_KEY.to_vec(), self.noted_extrinsics.encode());
 
@@ -682,7 +685,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Default::default(),
+                    redeemer: RedemptionStrategy::Redemption(Vec::new()),
                 };
 
                 let tx = TestTransactionBuilder::default()
