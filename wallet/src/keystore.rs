@@ -7,7 +7,7 @@ use parity_scale_codec::Encode;
 use sc_keystore::LocalKeystore;
 use sp_core::{
     crypto::Pair as PairT,
-    sr25519::{Pair, Public},
+    sr25519::{Pair, Public, Signature},
     H256,
 };
 use sp_keystore::Keystore;
@@ -39,12 +39,10 @@ pub fn sign_with(
     keystore: &LocalKeystore,
     public: &Public,
     message: &[u8],
-) -> anyhow::Result<Vec<u8>> {
-    let sig = keystore
+) -> anyhow::Result<Signature> {
+    keystore
         .sr25519_sign(KEY_TYPE, public, message)?
-        .ok_or(anyhow!("Key doesn't exist in keystore"))?;
-
-    Ok(sig.encode())
+        .ok_or(anyhow!("Key doesn't exist in keystore"))
 }
 
 /// Insert the private key associated with the given seed into the keystore for later use.
