@@ -132,7 +132,7 @@ pub fn tuxedo_verifier(_: TokenStream, body: TokenStream) -> TokenStream {
         /// It is a combined redeemer type for the redeemers of each individual verifier.
         ///
         /// This type is accessible downstream as `<OuterVerifier as Verifier>::Redeemer`
-        #[derive(Debug, Decode)]
+        #[derive(Debug, Encode, Decode)]
         #vis enum #redeemer_type {
             #(
                 #variants(<#inner_types as tuxedo_core::Verifier>::Redeemer),

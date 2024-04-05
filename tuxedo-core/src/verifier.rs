@@ -29,7 +29,7 @@ pub use simple_signature::{Sr25519Signature, P2PKH};
 /// * An redeemer supplied by the user attempting to spend the input.
 pub trait Verifier: Debug + Encode + Decode + Clone {
     /// The type that will be supplied to satisfy the verifier and redeem the UTXO.
-    type Redeemer: Decode;
+    type Redeemer: Debug + Encode + Decode;
 
     /// Main function in the trait. Does the checks to make sure an output can be spent.
     fn verify(&self, simplified_tx: &[u8], block_height: u32, redeemer: &Self::Redeemer) -> bool;
