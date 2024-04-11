@@ -241,7 +241,7 @@ where
     pub fn block_height() -> BlockNumber {
         sp_io::storage::get(HEIGHT_KEY)
             .and_then(|d| BlockNumber::decode(&mut &*d).ok())
-            .expect("A header is stored at the beginning of block one and never cleared.")
+            .expect("A height is stored at the beginning of block one and never cleared.")
     }
 
     // These next three methods are for the block authoring workflow.
@@ -320,6 +320,10 @@ where
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
         sp_io::storage::set(HEADER_KEY, &block.header().encode());
+
+        // Also store the height persistently so it is available when
+        // performing pool validations and other off-chain runtime calls.
+        sp_io::storage::set(HEIGHT_KEY, &block.header().number().encode());
 
         // Tuxedo requires that inherents are at the beginning (and soon end) of the
         // block and not scattered throughout. We use this flag to enforce that.
