@@ -1086,7 +1086,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
@@ -1108,7 +1108,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca",
@@ -1131,7 +1131,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
@@ -1175,7 +1175,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: H256::zero(),
                     digest: Default::default(),
@@ -1195,7 +1195,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c",
@@ -1217,7 +1217,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9",
@@ -1245,7 +1245,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984",
@@ -1273,7 +1273,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f",
