@@ -143,8 +143,6 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
             /// All other calls are delegated to the normal Tuxedo Template Runtime.
             Inner(#inner_constraint_checker),
 
-            // TODO This one is last for now so that I can write a hacky algorithm to scrape
-            // the inherent data and assume it is last.
             /// Set some parachain related information via an inherent extrinsic.
             ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<RuntimeParachainConfig>>),
         }
