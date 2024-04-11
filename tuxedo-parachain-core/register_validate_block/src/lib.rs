@@ -99,7 +99,7 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
                     // Step 2: Call the actual validate_block implementation
                     let res = #crate_::validate_block::validate_block::<
                         #verifier,
-                        #inner_constraint_checker,
+                        ParachainConstraintChecker,
                     >(params);
 
                     // Step 3: Write the return value back into the shared memory
@@ -151,23 +151,11 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
 
         // We provide a way for the relay chain validators to extract the parachain inherent data from
         // a raw transaction.
-        impl TryFrom<#crate_::tuxedo_core::types::Transaction<#verifier, ParachainConstraintChecker>> for parachain_piece::ParachainInherentData {
-            type Error = ();
+        impl #crate_::ParachainConstraintChecker for ParachainConstraintChecker {
 
-            fn try_from(tx: #crate_::tuxedo_core::types::Transaction<#verifier, ParachainConstraintChecker>) -> Result<Self, Self::Error> {
-                // We just check that it is the right variant.
-                // And if it is, we can extract from the outputs.
-                let Self::ParachainInfo(_) = tx else { return Err(());};
-
-                Ok(tx
-                    .outputs
-                    .get(0)
-                    .expect("Parachain inherent should have exactly one output.")
-                    .payload
-                    .extract::<#crate_::ParachainInherentDataUtxo>()
-                    .expect("All valid parachain info transactions have this typed output. This is verified by the constraint checker.")
-                    .into()
-                )
+            fn is_parachain(&self) -> bool {
+                // TODO does this still match as expected when self is a reference?
+                matches!(self, Self::ParachainInfo(_))
             }
         }
     };

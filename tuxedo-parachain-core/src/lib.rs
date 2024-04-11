@@ -157,3 +157,10 @@ impl From<ParachainInherentData> for ParachainInherentDataUtxo {
         Self(value)
     }
 }
+
+/// A way for the relay chain validators to determine whether a particular parachain
+/// extrinsic is the parachain inherent and whether the parachain inherent data can
+/// be extracted from it.
+pub trait ParachainConstraintChecker {
+    fn is_parachain(&self) -> bool;
+}

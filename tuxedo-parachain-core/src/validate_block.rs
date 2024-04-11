@@ -2,7 +2,7 @@
 
 use super::{
     trie_cache, GetRelayParentNumberStorage, MemoryOptimizedValidationParams,
-    RelayParentNumberStorage,
+    ParachainConstraintChecker, ParachainInherentDataUtxo, RelayParentNumberStorage,
 };
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
@@ -75,15 +75,12 @@ where
     // Kind of feels like I'm repeating all the requirements that
     // should have been taken care of by the type aliases.
     V: Verifier,
-    C: ConstraintChecker,
+    C: ConstraintChecker + ParachainConstraintChecker,
     Block<V, C>: BlockT<Extrinsic = Transaction<V, C>, Hash = sp_core::H256>,
     Transaction<V, C>: Extrinsic,
 
     // Why does this one have to be explicit?
     ParachainBlockData<Block<V, C>>: parity_scale_codec::Decode,
-
-    // One I actually expected
-    ParachainInherentData: TryFrom<Transaction<V, C>>,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
@@ -105,12 +102,19 @@ where
         "Invalid parent hash"
     );
 
-    let inherent_data = block
+    let inherent_data: ParachainInherentData = block
         .extrinsics()
         .iter()
         .take_while(|e| !e.is_signed().unwrap_or(true))
-        .find_map(|e| ParachainInherentData::try_from(e.clone()).ok())
-        .expect("There should be at least one beginning-of-block inherent extrinsic which is the parachain inherent.");
+        .find(|e| e.checker.is_parachain())
+        .expect("There should be at least one beginning-of-block inherent extrinsic which is the parachain inherent.")
+        .outputs
+        .get(0)
+        .expect("Parachain inherent should have exactly one output.")
+        .payload
+        .extract::<ParachainInherentDataUtxo>()
+        .expect("All valid parachain info transactions have this typed output. This is verified by the constraint checker.")
+        .into();
 
     validate_validation_data(
         &inherent_data.validation_data,
