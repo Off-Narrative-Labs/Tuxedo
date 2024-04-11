@@ -23,7 +23,7 @@ use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
-    traits::{BlakeTwo256, Block as BlockT},
+    traits::Block as BlockT,
     transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
@@ -99,10 +99,8 @@ pub fn native_version() -> NativeVersion {
 }
 
 pub type Transaction = TuxedoTransaction<OuterVerifier, OuterConstraintChecker>;
-pub type BlockNumber = u32;
-pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
-pub type Block = sp_runtime::generic::Block<Header, Transaction>;
-pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
+pub type Block = tuxedo_core::types::Block<OuterVerifier, OuterConstraintChecker>;
+pub type Executive = tuxedo_core::Executive<OuterVerifier, OuterConstraintChecker>;
 pub type Output = tuxedo_core::types::Output<OuterVerifier>;
 
 /// The Aura slot duration. When things are working well, this will also be the block time.

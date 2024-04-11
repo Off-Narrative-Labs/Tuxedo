@@ -63,7 +63,7 @@ const BLOCK_TIME: u64 = 3000;
 tuxedo_parachain_core::register_validate_block!(OuterVerifier, InnerConstraintChecker, 2000);
 
 pub type Block = TuxedoBlock<OuterVerifier, ParachainConstraintChecker>;
-pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, ParachainConstraintChecker>;
+pub type Executive = tuxedo_core::Executive<OuterVerifier, ParachainConstraintChecker>;
 
 /// The main struct in this module.
 #[derive(Encode, Decode, PartialEq, Eq, Clone, TypeInfo)]

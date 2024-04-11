@@ -8,7 +8,7 @@ use syn::{
     Error, Ident, Token,
 };
 
-/// Provides an identifier that is a safe way to refer to the crate tuxedo_core within the macro
+/// Provides an identifier that is a safe way to refer to the crate tuxedo_parachain_core within the macro
 fn crate_() -> Result<Ident, Error> {
     match crate_name("tuxedo-parachain-core") {
         Ok(FoundCrate::Itself) => Ok(syn::Ident::new("tuxedo_parachain_core", Span::call_site())),
@@ -147,6 +147,28 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
             // the inherent data and assume it is last.
             /// Set some parachain related information via an inherent extrinsic.
             ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<RuntimeParachainConfig>>),
+        }
+
+        // We provide a way for the relay chain validators to extract the parachain inherent data from
+        // a raw transaction.
+        impl TryFrom<#crate_::tuxedo_core::types::Transaction<#verifier, ParachainConstraintChecker>> for parachain_piece::ParachainInherentData {
+            type Error = ();
+
+            fn try_from(tx: #crate_::tuxedo_core::types::Transaction<#verifier, ParachainConstraintChecker>) -> Result<Self, Self::Error> {
+                // We just check that it is the right variant.
+                // And if it is, we can extract from the outputs.
+                let Self::ParachainInfo(_) = tx else { return Err(());};
+
+                Ok(tx
+                    .outputs
+                    .get(0)
+                    .expect("Parachain inherent should have exactly one output.")
+                    .payload
+                    .extract::<#crate_::ParachainInherentDataUtxo>()
+                    .expect("All valid parachain info transactions have this typed output. This is verified by the constraint checker.")
+                    .into()
+                )
+            }
         }
     };
 

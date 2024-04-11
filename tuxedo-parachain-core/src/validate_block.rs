@@ -2,7 +2,7 @@
 
 use super::{
     trie_cache, GetRelayParentNumberStorage, MemoryOptimizedValidationParams,
-    ParachainInherentDataUtxo, RelayParentNumberStorage,
+    RelayParentNumberStorage,
 };
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
@@ -11,10 +11,12 @@ use cumulus_primitives_parachain_inherent::ParachainInherentData;
 use polkadot_parachain_primitives::primitives::{
     HeadData, RelayChainBlockNumber, ValidationResult,
 };
-use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
+use tuxedo_core::{
+    types::{Block, Header, Transaction},
+    ConstraintChecker, Executive, Verifier,
+};
 
 use parity_scale_codec::Encode;
-use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
 use sp_io::KillStorageResult;
@@ -70,29 +72,45 @@ pub fn validate_block<V, C>(
     }: MemoryOptimizedValidationParams,
 ) -> ValidationResult
 where
-    Block<Header, Transaction<V, C>>: BlockT<Extrinsic = Transaction<V, C>>,
+    // Kind of feels like I'm repeating all the requirements that
+    // should have been taken care of by the type aliases.
+    V: Verifier,
+    C: ConstraintChecker,
+    Block<V, C>: BlockT<Extrinsic = Transaction<V, C>, Hash = sp_core::H256>,
     Transaction<V, C>: Extrinsic,
+
+    // Why does this one have to be explicit?
+    ParachainBlockData<Block<V, C>>: parity_scale_codec::Decode,
+
+    // One I actually expected
+    ParachainInherentData: TryFrom<Transaction<V, C>>,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
     // Step 1: Decode block data
-    let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
-        .expect("Invalid parachain block data");
+    let block_data =
+        parity_scale_codec::decode_from_bytes::<ParachainBlockData<Block<V, C>>>(block_data)
+            .expect("Invalid parachain block data");
 
     // Step 2: Security Checks
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 2");
-    let parent_header = parity_scale_codec::decode_from_bytes::<B::Header>(parent_head.clone())
+    let parent_header = parity_scale_codec::decode_from_bytes::<Header>(parent_head.clone())
         .expect("Invalid parent head");
 
     let (header, extrinsics, storage_proof) = block_data.deconstruct();
 
-    let block = B::new(header, extrinsics);
+    let block = Block::<V, C>::new(header, extrinsics);
     assert!(
         parent_header.hash() == *block.header().parent_hash(),
         "Invalid parent hash"
     );
 
-    let inherent_data = extract_parachain_inherent_data(&block);
+    let inherent_data = block
+        .extrinsics()
+        .iter()
+        .take_while(|e| !e.is_signed().unwrap_or(true))
+        .find_map(|e| ParachainInherentData::try_from(e.clone()).ok())
+        .expect("There should be at least one beginning-of-block inherent extrinsic which is the parachain inherent.");
 
     validate_validation_data(
         &inherent_data.validation_data,
@@ -189,15 +207,15 @@ where
     // 	}
     // });
 
-    run_with_externalities::<B, _, _>(&backend, || {
+    run_with_externalities::<Block<V, C>, _, _>(&backend, || {
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ In the run_with_externalities closure");
         let head_data = HeadData(block.header().encode());
 
-        Executive::<B, V, C>::execute_block(block);
+        Executive::<V, C>::execute_block(block);
 
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ returned from execute block");
 
-        // TODO Once we support XCM, we will need to gather some messaging state stuff here
+        // In order to support XCM, we will need to gather some messaging state stuff here
         // Seems like we could call the existing collect_collation_info api to get this information here
         // instead of FRAME's approach of tightly coupling to pallet parachain system.
         // That would mean less duplicated code as well as a more flexible validate block macro.
@@ -214,39 +232,6 @@ where
             hrmp_watermark,
         }
     })
-}
-
-/// Extract the [`ParachainInherentData`] from a parachain block.
-/// The data has to be extracted from the extrinsics themselves.
-/// I want the runtime to expose a method to do this, and I also want it to
-/// be nice and flexible by searching for the right transactions.
-/// For now I have a hacky implementation that assumes the parachain inherent is last
-fn extract_parachain_inherent_data<ParachainConfig, V, C>(
-    block: &Block<Header, Transaction<V, C>>,
-) -> ParachainInherentData
-where
-    Block<Header, Transaction<V, C>>: BlockT<Extrinsic = Transaction<V, C>>,
-    Transaction<V, C>: Extrinsic,
-    // Here we require that the constraint checker at least reports to be parachain friendly.
-    // This allows us to identify the inherent later on.
-    // TODO I expect this bound to be copied higher up the call chain to `validate_block`. Confirm that is the case before merging.
-    C: TryInto<InherentAdapter<ParachainInfo<ParachainConfig>>>,
-{
-    block
-        .extrinsics()
-        .iter()
-        //TODO What is the deal with this & here and why is it not in basti's?
-        .take_while(|e| !e.is_signed().unwrap_or(true))
-        .find_map(|e| <C as TryInto<InherentAdapter<ParachainInfo<ParachainConfig>>>>::try_into(&e.checker))
-        .expedct("There should be at least one beginning-of-block inherent extrinsic which is the parachain inherent.")//: Transaction
-        //TODO, maybe this could also move into the runtime or the piece? But it's already pretty good tbh.
-        .outputs
-        .get(0)
-        .expect("Parachain inherent should have exactly one output.")
-        .payload
-        .extract::<ParachainInherentDataUtxo>()
-        .expect("Should decode to proper type because the constraint checker returned this one.")
-        .into()
 }
 
 /// Validate the given [`PersistedValidationData`] against the [`MemoryOptimizedValidationParams`].
