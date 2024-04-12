@@ -5,8 +5,22 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_runtime::traits::Extrinsic;
+use sp_runtime::traits::{BlakeTwo256, Extrinsic};
 use sp_std::vec::Vec;
+
+// All Tuxedo chains use the same BlakeTwo256 hash.
+pub type Hash = BlakeTwo256;
+/// Opaque block hash type.
+pub type OpaqueHash = <Hash as sp_api::HashT>::Output;
+/// All Tuxedo chains use the same u32 BlockNumber.
+pub type BlockNumber = u32;
+/// Because all tuxedo chains use the same Blocknumber and Hash types,
+/// they also use the same concrete header type.
+pub type Header = sp_runtime::generic::Header<BlockNumber, Hash>;
+/// An alias for a Tuxedo block with all the common parts filled in.
+pub type Block<V, C> = sp_runtime::generic::Block<Header, Transaction<V, C>>;
+/// Opaque block type. It has a Standard Tuxedo header, and opaque transactions.
+pub type OpaqueBlock = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
 
 /// A reference to a output that is expected to exist in the state.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]

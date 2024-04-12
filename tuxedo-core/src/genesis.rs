@@ -3,7 +3,7 @@
 use crate::{
     ensure,
     types::{Output, OutputRef, Transaction},
-    ConstraintChecker, Verifier, EXTRINSIC_KEY, LOG_TARGET,
+    ConstraintChecker, Verifier, EXTRINSIC_KEY, HEIGHT_KEY, LOG_TARGET,
 };
 use parity_scale_codec::{Decode, Encode};
 use sc_chain_spec::BuildGenesisBlock;
@@ -143,6 +143,9 @@ where
             sp_storage::well_known_keys::CODE.into(),
             self.wasm_binary.clone(),
         );
+
+        // Initialize the stored block number to 0
+        storage.top.insert(HEIGHT_KEY.to_vec(), 0u32.encode());
 
         // The transactions are stored under a special key.
         storage

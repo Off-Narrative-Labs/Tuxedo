@@ -1,7 +1,7 @@
 [package]
-description = "Proc macro to register Polkadot's validate_block entrypoint in your Tuxedo Runtime. Inspired by cumulus-pallet-parachain-system-proc-macro"
+description = "Proc macro to make a Tuxedo tuntime Parachain Compatible. Inspired by cumulus-pallet-parachain-system-proc-macro"
 edition = "2021"
-name = "tuxedo-register-validate-block"
+name = "tuxedo-parachainify"
 version = "0.1.0"
 
 [dependencies]

@@ -23,7 +23,7 @@ use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str, impl_opaque_keys,
-    traits::{BlakeTwo256, Block as BlockT},
+    traits::Block as BlockT,
     transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, BoundToRuntimeAppPublic,
 };
@@ -53,11 +53,6 @@ pub use timestamp;
 /// to even the core data structures.
 pub mod opaque {
     use super::*;
-
-    /// Opaque block type.
-    pub type Block = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
-    /// Opaque block hash type.
-    pub type Hash = <BlakeTwo256 as sp_api::HashT>::Output;
 
     // This part is necessary for generating session keys in the runtime
     impl_opaque_keys! {
@@ -104,10 +99,8 @@ pub fn native_version() -> NativeVersion {
 }
 
 pub type Transaction = TuxedoTransaction<OuterVerifier, OuterConstraintChecker>;
-pub type BlockNumber = u32;
-pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
-pub type Block = sp_runtime::generic::Block<Header, Transaction>;
-pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
+pub type Block = tuxedo_core::types::Block<OuterVerifier, OuterConstraintChecker>;
+pub type Executive = tuxedo_core::Executive<OuterVerifier, OuterConstraintChecker>;
 pub type Output = tuxedo_core::types::Output<OuterVerifier>;
 
 /// The Aura slot duration. When things are working well, this will also be the block time.
@@ -166,27 +159,6 @@ pub enum OuterConstraintChecker {
     SetTimestamp(InherentAdapter<timestamp::SetTimestamp<Runtime>>),
     /// Upgrade the Wasm Runtime
     RuntimeUpgrade(runtime_upgrade::RuntimeUpgrade),
-}
-
-#[derive(
-    Serialize, Deserialize, Encode, Decode, Debug, Default, PartialEq, Eq, Clone, TypeInfo,
-)]
-/// A Dummy constraint checker that does nothing. It is only present to make the
-/// Parachain and non-parahcain OuterConstraintCheckers scale compatible
-pub struct DummyParachainInfo;
-
-impl tuxedo_core::SimpleConstraintChecker for DummyParachainInfo {
-    type Error = ();
-
-    fn check(
-        &self,
-        _input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _evicted_input_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _peeks: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-        _output_data: &[tuxedo_core::dynamic_typing::DynamicallyTypedData],
-    ) -> Result<TransactionPriority, ()> {
-        panic!("Transactions should not be sent to the dummy parachain info piece.")
-    }
 }
 
 /// The main struct in this module.

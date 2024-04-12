@@ -1,6 +1,6 @@
 //! Helper module to build a genesis configuration for the template runtime.
 
-use super::{OuterConstraintChecker, OuterVerifier, WASM_BINARY};
+use super::{OuterVerifier, ParachainConstraintChecker, WASM_BINARY};
 use hex_literal::hex;
 use inner_runtime::{money::Coin, OuterConstraintChecker as InnerConstraintChecker};
 use tuxedo_parachain_core::tuxedo_core::{
@@ -10,7 +10,7 @@ use tuxedo_parachain_core::tuxedo_core::{
 };
 
 /// Helper type for the ChainSpec.
-pub type RuntimeGenesisConfig = TuxedoGenesisConfig<OuterVerifier, OuterConstraintChecker>;
+pub type RuntimeGenesisConfig = TuxedoGenesisConfig<OuterVerifier, ParachainConstraintChecker>;
 
 const SHAWN_PUB_KEY_BYTES: [u8; 32] =
     hex!("d2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67");
@@ -39,7 +39,7 @@ pub fn development_genesis_config() -> RuntimeGenesisConfig {
 
     // The inherents are computed using the appropriate method, and placed before the user transactions.
     // Ideally this will get better upstream eventually.
-    let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
+    let mut genesis_transactions = ParachainConstraintChecker::genesis_transactions();
     genesis_transactions.extend(user_genesis_transactions);
 
     RuntimeGenesisConfig::new(

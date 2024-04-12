@@ -12,35 +12,26 @@ pub mod genesis;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_consensus_grandpa::AuthorityId as GrandpaId;
-
 use sp_api::impl_runtime_apis;
+use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::OpaqueMetadata;
 use sp_inherents::InherentData;
 use sp_runtime::{
     create_runtime_str,
-    traits::{BlakeTwo256, Block as BlockT},
+    traits::Block as BlockT,
     transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
     ApplyExtrinsicResult,
 };
 use sp_std::prelude::*;
-
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-
-use tuxedo_core::{
-    tuxedo_constraint_checker, types::Transaction as TuxedoTransaction, InherentAdapter,
-};
+use tuxedo_core::{tuxedo_constraint_checker, types::Block as TuxedoBlock, InherentAdapter};
 use tuxedo_parachain_core::tuxedo_core;
 
-// We use the same aggregate verifier from the inner_runtime.
-// The verifier does not contain anything parachain specific.
-use inner_runtime::OuterVerifier;
-
-// Reuse all the same opaque types from the inner runtime.
-pub use inner_runtime::opaque;
+// We use the same aggregate verifier and opaque types from the inner_runtime.
+// They do not contain anything parachain specific.
+pub use inner_runtime::{opaque, OuterConstraintChecker as InnerConstraintChecker, OuterVerifier};
 
 /// This runtime version.
 #[sp_version::runtime_version]
@@ -64,46 +55,14 @@ pub fn native_version() -> NativeVersion {
     }
 }
 
-pub type Transaction = TuxedoTransaction<OuterVerifier, OuterConstraintChecker>;
-pub type BlockNumber = u32;
-pub type Header = sp_runtime::generic::Header<BlockNumber, BlakeTwo256>;
-pub type Block = sp_runtime::generic::Block<Header, Transaction>;
-pub type Executive = tuxedo_core::Executive<Block, OuterVerifier, OuterConstraintChecker>;
-pub type Output = tuxedo_core::types::Output<OuterVerifier>;
-
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
 
-impl parachain_piece::ParachainPieceConfig for Runtime {
-    // Use the para ID 2_000 which is the first available in the rococo-local runtime.
-    // This is the default value, so this could be omitted, but explicit is better.
-    const PARA_ID: u32 = 2_000;
+// This creates an enum `ParachainConstraintChecker` that implements `ParachainConstraintChecker`
+tuxedo_parachain_core::parachainify!(OuterVerifier, InnerConstraintChecker, 2000);
 
-    type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
-}
-
-/// The Outer / Aggregate Constraint Checker for the Parachain runtime.
-///
-/// It is comprized of two individual chekers:
-///   First, the parachain inherent piece
-///   Second, the constraint checker from the normal Tuxedo Template Runtime.
-///
-/// That second checker, the normal tuxedo template runtime, is itself an aggregate
-/// constraint checker aggregated from idividual pieces such as money, amoeba, and others.
-/// Therefore, this crate shows:
-///   Generally, how to perform recursive aggregation of constraint checkers.
-///   Specifically, how to elegantly transform a sovereign runtime into a parachain runtime by wrapping.
-#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
-#[tuxedo_constraint_checker(OuterVerifier)]
-pub enum OuterConstraintChecker {
-    /// All other calls are delegated to the normal Tuxedo Template Runtime.
-    Inner(inner_runtime::OuterConstraintChecker),
-
-    // TODO This one is last for now so that I can write a hacky algorithm to scrape
-    // the inherent data and assume it is last.
-    /// Set some parachain related information via an inherent extrinsic.
-    ParachainInfo(InherentAdapter<parachain_piece::SetParachainInfo<Runtime>>),
-}
+pub type Block = TuxedoBlock<OuterVerifier, ParachainConstraintChecker>;
+pub type Executive = tuxedo_core::Executive<OuterVerifier, ParachainConstraintChecker>;
 
 /// The main struct in this module.
 #[derive(Encode, Decode, PartialEq, Eq, Clone, TypeInfo)]
@@ -135,36 +94,6 @@ impl Runtime {
         ]
         .iter()
         .map(|hex| AuraId::from_slice(hex.as_ref()).expect("Valid Aura authority hex was provided"))
-        .collect()
-    }
-
-    ///Grandpa Authority IDs - All equally weighted
-    fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-        use hex_literal::hex;
-        use sp_application_crypto::ByteArray;
-
-        [
-            // Alice
-            hex!("88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee"),
-            // Bob
-            // hex!("d17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69"),
-            // Charlie
-            // hex!("439660b36c6c03afafca027b910b4fecf99801834c62a5e6006f27d978de234f"),
-            // Dave
-            // hex!("5e639b43e0052c47447dac87d6fd2b6ec50bdd4d0f614e4299c665249bbd09d9"),
-            // Eve
-            // hex!("1dfe3e22cc0d45c70779c1095f7489a8ef3cf52d62fbd8c2fa38c9f1723502b5"),
-            // Ferdie
-            // hex!("568cb4a574c6d178feb39c27dfc8b3f789e5f5423e19c71633c748b9acf086b5"),
-        ]
-        .iter()
-        .map(|hex| {
-            (
-                GrandpaId::from_slice(hex.as_ref())
-                    .expect("Valid Grandpa authority hex was provided"),
-                1,
-            )
-        })
         .collect()
     }
 }
@@ -254,33 +183,6 @@ impl_runtime_apis! {
         }
     }
 
-    impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
-        fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-            Self::grandpa_authorities()
-        }
-
-        fn current_set_id() -> sp_consensus_grandpa::SetId {
-            0u64
-        }
-
-        fn submit_report_equivocation_unsigned_extrinsic(
-            _equivocation_proof: sp_consensus_grandpa::EquivocationProof<
-                <Block as BlockT>::Hash,
-                sp_runtime::traits::NumberFor<Block>,
-            >,
-            _key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
-        ) -> Option<()> {
-            None
-        }
-
-        fn generate_key_ownership_proof(
-            _set_id: sp_consensus_grandpa::SetId,
-            _authority_id: sp_consensus_grandpa::AuthorityId,
-        ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
-            None
-        }
-    }
-
     impl cumulus_primitives_core::CollectCollationInfo<Block> for Runtime {
         fn collect_collation_info(header: &<Block as BlockT>::Header) -> cumulus_primitives_core::CollationInfo {
             use tuxedo_parachain_core::ParachainExecutiveExtension;
@@ -288,6 +190,3 @@ impl_runtime_apis! {
         }
     }
 }
-
-// Register the `validate_block` function that Polkadot validators will call to verify this parachain block.
-tuxedo_parachain_core::register_validate_block!(Block, OuterVerifier, OuterConstraintChecker);

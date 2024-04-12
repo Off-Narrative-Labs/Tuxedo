@@ -14016,7 +14016,7 @@ dependencies = [
  "sp-trie",
  "trie-db",
  "tuxedo-core",
- "tuxedo-register-validate-block",
+ "tuxedo-parachainify",
 ]
 
 [[package]]
@@ -14035,7 +14035,6 @@ dependencies = [
  "sp-application-crypto",
  "sp-block-builder",
  "sp-consensus-aura",
- "sp-consensus-grandpa",
  "sp-core",
  "sp-debug-derive",
  "sp-inherents",
@@ -14053,7 +14052,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tuxedo-register-validate-block"
+name = "tuxedo-parachainify"
 version = "0.1.0"
 dependencies = [
  "proc-macro-crate 1.3.1",

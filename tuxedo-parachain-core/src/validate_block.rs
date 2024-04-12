@@ -2,7 +2,7 @@
 
 use super::{
     trie_cache, GetRelayParentNumberStorage, MemoryOptimizedValidationParams,
-    ParachainInherentDataUtxo, RelayParentNumberStorage,
+    ParachainConstraintChecker, ParachainInherentDataUtxo, RelayParentNumberStorage,
 };
 use cumulus_primitives_core::{
     relay_chain::Hash as RHash, ParachainBlockData, PersistedValidationData,
@@ -11,10 +11,12 @@ use cumulus_primitives_parachain_inherent::ParachainInherentData;
 use polkadot_parachain_primitives::primitives::{
     HeadData, RelayChainBlockNumber, ValidationResult,
 };
-use tuxedo_core::{types::Transaction, ConstraintChecker, Executive, Verifier};
+use tuxedo_core::{
+    types::{Block, Header, Transaction},
+    ConstraintChecker, Executive, Verifier,
+};
 
 use parity_scale_codec::Encode;
-use scale_info::TypeInfo;
 use sp_core::storage::{ChildInfo, StateVersion};
 use sp_externalities::{set_and_run_with_externalities, Externalities};
 use sp_io::KillStorageResult;
@@ -61,7 +63,7 @@ fn with_externalities<F: FnOnce(&mut dyn Externalities) -> R, R>(f: F) -> R {
 /// ensuring that the final storage root matches the storage root in the header of the block. In the
 /// end we return back the [`ValidationResult`] with all the required information for the validator.
 #[doc(hidden)]
-pub fn validate_block<B, V, C>(
+pub fn validate_block<V, C>(
     MemoryOptimizedValidationParams {
         block_data,
         parent_head,
@@ -70,32 +72,46 @@ pub fn validate_block<B, V, C>(
     }: MemoryOptimizedValidationParams,
 ) -> ValidationResult
 where
-    B: BlockT<Extrinsic = Transaction<V, C>>,
-    B::Header: HeaderT<Number = u32>, // Tuxedo always uses u32 for block number.
+    // Kind of feels like I'm repeating all the requirements that
+    // should have been taken care of by the type aliases.
+    V: Verifier,
+    C: ParachainConstraintChecker,
+    Block<V, C>: BlockT<Extrinsic = Transaction<V, C>, Hash = sp_core::H256>,
     Transaction<V, C>: Extrinsic,
-    V: TypeInfo + Verifier + 'static,
-    C: TypeInfo + ConstraintChecker + 'static, // + Into<SetParachainInfo<V>>,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
     // Step 1: Decode block data
-    let block_data = parity_scale_codec::decode_from_bytes::<ParachainBlockData<B>>(block_data)
-        .expect("Invalid parachain block data");
+    let block_data =
+        parity_scale_codec::decode_from_bytes::<ParachainBlockData<Block<V, C>>>(block_data)
+            .expect("Invalid parachain block data");
 
     // Step 2: Security Checks
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ Step 2");
-    let parent_header = parity_scale_codec::decode_from_bytes::<B::Header>(parent_head.clone())
+    let parent_header = parity_scale_codec::decode_from_bytes::<Header>(parent_head.clone())
         .expect("Invalid parent head");
 
     let (header, extrinsics, storage_proof) = block_data.deconstruct();
 
-    let block = B::new(header, extrinsics);
+    let block = Block::<V, C>::new(header, extrinsics);
     assert!(
         parent_header.hash() == *block.header().parent_hash(),
         "Invalid parent hash"
     );
 
-    let inherent_data = extract_parachain_inherent_data(&block);
+    let inherent_data: ParachainInherentData = block
+        .extrinsics()
+        .iter()
+        .take_while(|e| !e.is_signed().unwrap_or(true))
+        .find(|e| e.checker.is_parachain())
+        .expect("There should be at least one beginning-of-block inherent extrinsic which is the parachain inherent.")
+        .outputs
+        .get(0)
+        .expect("Parachain inherent should have exactly one output.")
+        .payload
+        .extract::<ParachainInherentDataUtxo>()
+        .expect("All valid parachain info transactions have this typed output. This is verified by the constraint checker.")
+        .into();
 
     validate_validation_data(
         &inherent_data.validation_data,
@@ -192,15 +208,15 @@ where
     // 	}
     // });
 
-    run_with_externalities::<B, _, _>(&backend, || {
+    run_with_externalities::<Block<V, C>, _, _>(&backend, || {
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ In the run_with_externalities closure");
         let head_data = HeadData(block.header().encode());
 
-        Executive::<B, V, C>::execute_block(block);
+        Executive::<V, C>::execute_block(block);
 
         log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️ returned from execute block");
 
-        // TODO Once we support XCM, we will need to gather some messaging state stuff here
+        // In order to support XCM, we will need to gather some messaging state stuff here
         // Seems like we could call the existing collect_collation_info api to get this information here
         // instead of FRAME's approach of tightly coupling to pallet parachain system.
         // That would mean less duplicated code as well as a more flexible validate block macro.
@@ -217,61 +233,6 @@ where
             hrmp_watermark,
         }
     })
-}
-
-/// Extract the [`ParachainInherentData`] from a parachain block.
-/// The data has to be extracted from the extrinsics themselves.
-/// I want the runtime to expose a method to do this, and I also want it to
-/// be nice and flexible by searching for the right transactions.
-/// For now I have a hacky implementation that assumes the parachain inherent is last
-fn extract_parachain_inherent_data<B, V, C>(block: &B) -> ParachainInherentData
-where
-    B: BlockT<Extrinsic = Transaction<V, C>>,
-    // Consider an alternative way to express the bounds here:
-    // Transaction<V, C>: Extrinsic
-    V: TypeInfo + Verifier + 'static,
-    C: TypeInfo + ConstraintChecker + 'static,
-{
-    // The commented stuff is Basti's algo.
-    // It is nicer than my hack because it searches the transactions,
-    // But it is still not good enough because it lived right here in this file as
-    // opposed to with the runtime.
-    // FIXME https://github.com/Off-Narrative-Labs/Tuxedo/issues/146
-
-    // One idea from github.com/Off-Narrative-Labs/Tuxedo/pull/130#discussion_r1408250978
-    // is to find the inehrent based o nthe dynamic type of the output.
-    // This is a reason to keep dynamic typing which is discussed in
-    // https://github.com/Off-Narrative-Labs/Tuxedo/issues/153
-
-    // block
-    // 	.extrinsics()
-    // 	.iter()
-    // 	// Inherents are at the front of the block and are unsigned.
-    // 	//
-    // 	// If `is_signed` is returning `None`, we keep it safe and assume that it is "signed".
-    // 	// We are searching for unsigned transactions anyway.
-    // 	.take_while(|e| !e.is_signed().unwrap_or(true))
-    // 	.filter_map(|e| e.call().is_sub_type())
-    // 	.find_map(|c| match c {
-    // 		crate::Call::set_validation_data { data: validation_data } => Some(validation_data),
-    // 		_ => None,
-    // 	})
-    // 	.expect("Could not find `set_validation_data` inherent")
-
-    block
-        .extrinsics()
-        .iter()
-        .take_while(|&e| !e.is_signed().unwrap_or(true))
-        .collect::<Vec<_>>()
-        .last()
-        .expect("There should be at least one inherent extrinsic which is the parachain inherent.")
-        .outputs
-        .get(0)
-        .expect("Parachain inherent should be first and should have exactly one output.")
-        .payload
-        .extract::<ParachainInherentDataUtxo>()
-        .expect("Should decode to proper type based on the position in the block.")
-        .into()
 }
 
 /// Validate the given [`PersistedValidationData`] against the [`MemoryOptimizedValidationParams`].

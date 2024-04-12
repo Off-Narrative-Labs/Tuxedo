@@ -3,9 +3,9 @@ use crate::{
     cli::{Cli, Subcommand},
     service,
 };
-use node_template_runtime::opaque::Block as OpaqueBlock;
 use sc_cli::SubstrateCli;
 use sc_service::PartialComponents;
+use tuxedo_core::types::OpaqueBlock;
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {

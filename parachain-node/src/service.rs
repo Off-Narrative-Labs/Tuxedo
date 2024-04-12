@@ -1,14 +1,9 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
-// std
-use std::{sync::Arc, time::Duration};
-
 use cumulus_client_cli::CollatorOptions;
-// Local Runtime Types
-use parachain_template_runtime::{
-    opaque::{Block, Hash},
-    RuntimeApi,
-};
+use parachain_template_runtime::RuntimeApi;
+use std::{sync::Arc, time::Duration};
+use tuxedo_core::types::{OpaqueBlock as Block, OpaqueHash as Hash};
 
 // Cumulus Imports
 use cumulus_client_collator::service::CollatorService;
