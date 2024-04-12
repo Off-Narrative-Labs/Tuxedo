@@ -58,6 +58,7 @@ use cumulus_primitives_parachain_inherent::ParachainInherentData;
 use tuxedo_core::{
     dynamic_typing::UtxoData,
     support_macros::{CloneNoBound, DebugNoBound},
+    ConstraintChecker,
 };
 
 /// A transient storage key that will hold the block number of the relay chain parent
@@ -162,6 +163,6 @@ impl From<ParachainInherentData> for ParachainInherentDataUtxo {
 /// A way for the relay chain validators to determine whether a particular parachain
 /// extrinsic is the parachain inherent and whether the parachain inherent data can
 /// be extracted from it.
-pub trait ParachainConstraintChecker {
+pub trait ParachainConstraintChecker: ConstraintChecker {
     fn is_parachain(&self) -> bool;
 }

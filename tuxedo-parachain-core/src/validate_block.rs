@@ -75,12 +75,9 @@ where
     // Kind of feels like I'm repeating all the requirements that
     // should have been taken care of by the type aliases.
     V: Verifier,
-    C: ConstraintChecker + ParachainConstraintChecker,
+    C: ParachainConstraintChecker,
     Block<V, C>: BlockT<Extrinsic = Transaction<V, C>, Hash = sp_core::H256>,
     Transaction<V, C>: Extrinsic,
-
-    // Why does this one have to be explicit?
-    ParachainBlockData<Block<V, C>>: parity_scale_codec::Decode,
 {
     sp_runtime::runtime_logger::RuntimeLogger::init();
     log::info!(target: "tuxvb", "🕵️🕵️🕵️🕵️Entering validate_block implementation");
