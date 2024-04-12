@@ -39,6 +39,11 @@ impl Sr25519Signature {
 
 impl Verifier for Sr25519Signature {
     fn verify(&self, simplified_tx: &[u8], redeemer: &[u8]) -> bool {
+
+        log::warn!(target: crate::LOG_TARGET, "About to check a verifier!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        log::warn!(target: crate::LOG_TARGET, "Redeemer length is {:?}", redeemer.len());
+        log::warn!(target: crate::LOG_TARGET, "{:?}", redeemer);
+
         let sig = match Signature::try_from(redeemer) {
             Ok(s) => s,
             Err(_) => return false,
