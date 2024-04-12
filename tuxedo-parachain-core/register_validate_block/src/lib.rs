@@ -119,8 +119,6 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
         #[derive(PartialEq, Eq, Clone)]
         pub struct RuntimeParachainConfig;
         impl parachain_piece::ParachainPieceConfig for RuntimeParachainConfig {
-            // Use the para ID 2_000 which is the first available in the rococo-local runtime.
-            // This is the default value, so this could be omitted, but explicit is better.
             const PARA_ID: u32 = #para_id;
 
             type SetRelayParentNumberStorage = tuxedo_parachain_core::RelayParentNumberStorage;
@@ -129,14 +127,11 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
         /// The Outer / Aggregate Constraint Checker for the Parachain runtime.
         ///
         /// It is comprized of two individual checkers:
-        ///   First, the parachain inherent piece
-        ///   Second, the constraint checker from the normal Tuxedo Template Runtime.
+        ///   First, the constraint checker from the normal Tuxedo Template Runtime.
+        ///   Second, the parachain inherent piece
         ///
-        /// That second checker, the normal tuxedo template runtime, is itself an aggregate
+        /// That first constituent checker, the normal tuxedo template runtime, is itself an aggregate
         /// constraint checker aggregated from individual pieces such as money, amoeba, and others.
-        /// Therefore, this crate shows:
-        ///   Generally, how to perform recursive aggregation of constraint checkers.
-        ///   Specifically, how to elegantly transform a sovereign runtime into a parachain runtime by wrapping.
         #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
         #[tuxedo_constraint_checker]
         pub enum ParachainConstraintChecker {
@@ -152,14 +147,12 @@ pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::To
         impl #crate_::ParachainConstraintChecker for ParachainConstraintChecker {
 
             fn is_parachain(&self) -> bool {
-                // TODO does this still match as expected when self is a reference?
                 matches!(self, Self::ParachainInfo(_))
             }
         }
     };
 
     // The final output is the `ParachainConstraintChecker` plus the `validate_block` function.
-
     quote::quote! {
         #validate_block_func
 
