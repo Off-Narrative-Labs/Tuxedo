@@ -7,10 +7,10 @@
 //! are quite heavy to compile, and sovereign chains are able to completely avoid it.
 //!
 //! It's primary jobs are to
-//! * Manage transiet storage details for the parachain inherent, specifically the relay
+//! * Manage transient storage details for the parachain inherent, specifically the relay
 //!   parent block number.
 //! * Provide collation information to the client side collator service.
-//! * Implement the `validate_block` funtion required by relay chain validators.
+//! * Implement the `validate_block` function required by relay chain validators.
 //!   This task is achieved through the `register_validate_block!` macro.
 //!
 //! This code is inspired by, cumulus pallet parachain system
@@ -123,22 +123,23 @@ pub struct MemoryOptimizedValidationParams {
     pub relay_parent_storage_root: cumulus_primitives_core::relay_chain::Hash,
 }
 
-/// Register the `validate_block` function that is used by parachains to validate blocks on a
-/// validator.
+/// Prepares a Tuxedo runtime to be parachain compatible by doing two main tasks.
 ///
-/// Does *nothing* when `std` feature is enabled.
+/// 1. Wraps the provided constraint checker in another layer of aggregation including the parachain
+///    inherent piece
+/// 2. Registers the `validate_block` function that is used by parachains to validate blocks on a
+///    validator when building to wasm. This is skipped when building to std.
 ///
-/// Expects as parameters the Block type, the OuterVerifier, and the OuterConstraintChecker.
-pub use tuxedo_register_validate_block::register_validate_block;
+/// Expects as parameters a Verifier, a non-yet-parachain-ready ConstraintChecker, and a ParaId.
+pub use tuxedo_parachainify::parachainify;
 
 // Having to do this wrapping is one more reason to abandon this UtxoData trait,
 // and go for a more strongly typed aggregate type approach.
 // Tracking issue: https://github.com/Off-Narrative-Labs/Tuxedo/issues/153
 /// A wrapper type around Cumulus's ParachainInherentData type that can be stored.
 #[derive(Encode, Decode, DebugNoBound, CloneNoBound, scale_info::TypeInfo)]
-
 /// A wrapper type around Cumulus's ParachainInherentData type.
-/// This type is convertable Into and From the inner type.
+/// This type is convertible Into and From the inner type.
 /// This is necessary so that we can implement the `UtxoData` trait.
 pub struct ParachainInherentDataUtxo(ParachainInherentData);
 

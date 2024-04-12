@@ -58,9 +58,8 @@ pub fn native_version() -> NativeVersion {
 /// The Aura slot duration. When things are working well, this will also be the block time.
 const BLOCK_TIME: u64 = 3000;
 
-//TODO Maybe rename the macro to eg tuxedo_parachain_runtime!.
-// This creates an enum `ParachainConstraintChecker`
-tuxedo_parachain_core::register_validate_block!(OuterVerifier, InnerConstraintChecker, 2000);
+// This creates an enum `ParachainConstraintChecker` that implements `ParachainConstraintChecker`
+tuxedo_parachain_core::parachainify!(OuterVerifier, InnerConstraintChecker, 2000);
 
 pub type Block = TuxedoBlock<OuterVerifier, ParachainConstraintChecker>;
 pub type Executive = tuxedo_core::Executive<OuterVerifier, ParachainConstraintChecker>;

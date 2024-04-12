@@ -5,7 +5,7 @@
 
 [relaychain]
 default_image = "docker.io/parity/polkadot:latest"
-default_command = "polkadot"
+default_command = "../polkadot-sdk/target/release/polkadot"
 default_args = [ "-lparachain=debug" ]
 
 chain = "rococo-local"
@@ -27,12 +27,12 @@ id = 2000
   [[parachains.collators]]
   name = "alice"
   image = "ghcr.io/off-narrative-labs/tuxedo-parachain:latest"
-  command = "parachain-template-node"
+  command = "./target/debug/parachain-template-node"
   args = ["--alice"]
 
   [[parachains.collators]]
   name = "tuxedo-full-node"
   image = "ghcr.io/off-narrative-labs/tuxedo-parachain:latest"
-  command = "parachain-template-node"
+  command = "./target/debug/parachain-template-node"
   # This makes this node a full node instead of a collator (despite the schema name)
   validator = false

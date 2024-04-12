@@ -46,9 +46,8 @@ impl Parse for RegisterValidateBlockInput {
     }
 }
 
-//TODO rename the macro
 #[proc_macro]
-pub fn register_validate_block(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn parachainify(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     // Extract the paths to the parts from the runtime developer's input
     // I will likely need to revise or simplify the fields that are passed in.
     // I hope to only use the exposed runtime APIs here, not some custom trait impls. (if possible)
