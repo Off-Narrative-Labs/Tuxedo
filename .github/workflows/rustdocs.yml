@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix-doc-build
 
 # So github actions runner can publish the built docs to the gh-pages branch
 permissions:
