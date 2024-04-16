@@ -76,7 +76,7 @@ async fn main() -> anyhow::Result<()> {
         matches![v,
             OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey })
                 if crate::keystore::has_key(&keystore, owner_pubkey)
-        ] || matches![v, OuterVerifier::UpForGrabs(UpForGrabs)] // used for timestamp
+        ]
     };
 
     if !sled::Db::was_recovered(&db) {
