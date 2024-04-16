@@ -1,0 +1,14 @@
+[package]
+edition = "2021"
+name = "derive-no-bound"
+version = "0.1.0"
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { features = [ "extra-traits", "full" ], workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true

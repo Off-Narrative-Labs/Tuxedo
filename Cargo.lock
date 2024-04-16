@@ -2975,6 +2975,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-no-bound"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.39",
+]
+
+[[package]]
 name = "derive-syn-parse"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14242,6 +14251,7 @@ dependencies = [
  "aggregator",
  "array-bytes 6.2.0",
  "async-trait",
+ "derive-no-bound",
  "log",
  "parity-scale-codec",
  "parity-util-mem",

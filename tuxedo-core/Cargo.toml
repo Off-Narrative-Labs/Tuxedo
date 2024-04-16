@@ -16,6 +16,7 @@ serde = { features = [ "derive" ], workspace = true }
 
 # Macros in Tuxedo Core
 aggregator = { path = "aggregator" }
+derive-no-bound = { path = "no_bound" }
 
 # Substrate
 sp-api = { default_features = false, workspace = true }

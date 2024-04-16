@@ -8,6 +8,7 @@
 
 use crate::{
     constraint_checker::ConstraintChecker,
+    ensure,
     inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
     types::{DispatchResult, OutputRef, Transaction, UtxoError},
     utxo_set::TransparentUtxoSet,
@@ -20,7 +21,6 @@ use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{
-    ensure,
     traits::BlakeTwo256,
     transaction_validity::{
         InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError,

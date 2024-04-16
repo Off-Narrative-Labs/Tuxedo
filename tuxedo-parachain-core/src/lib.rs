@@ -55,8 +55,10 @@ pub use sp_std;
 pub use tuxedo_core;
 
 use cumulus_primitives_parachain_inherent::ParachainInherentData;
-use sp_runtime::{CloneNoBound, DebugNoBound};
-use tuxedo_core::dynamic_typing::UtxoData;
+use tuxedo_core::{
+    dynamic_typing::UtxoData,
+    support_macros::{CloneNoBound, DebugNoBound},
+};
 
 /// A transient storage key that will hold the block number of the relay chain parent
 /// that is associated with the current parachain block. This data enters the parachain
