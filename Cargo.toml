@@ -50,7 +50,7 @@ array-bytes = "6.0.0"
 # Wallet-only dependencies
 anyhow = "1.0.69"
 directories = "5.0.0"
-env_logger = "0.10.0"
+env_logger = "0.11.0"
 futures = "0.3"
 hex = "0.4.3"
 sled = "0.34.7"
@@ -127,7 +127,7 @@ sp-externalities = { branch = "tuxedo-v1.5.0", default_features = false, git = "
 sp-state-machine = { branch = "tuxedo-v1.5.0", default_features = false, git = "https://github.com/Off-Narrative-Labs/polkadot-sdk" }
 sp-tracing = { branch = "tuxedo-v1.5.0", default_features = false, git = "https://github.com/Off-Narrative-Labs/polkadot-sdk" }
 sp-trie = { branch = "tuxedo-v1.5.0", default_features = false, git = "https://github.com/Off-Narrative-Labs/polkadot-sdk" }
-trie-db = { version = "0.28.0", default-features = false }
+trie-db = { version = "0.29.0", default-features = false }
 
 # We need to depend on this explicitly so we can enable the "full-node" feature
 # See https://github.com/paritytech/polkadot-sdk/issues/2551 for more details
