@@ -29,7 +29,7 @@ use sp_runtime::{
         InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidity,
         TransactionValidityError, ValidTransaction,
     },
-    ApplyExtrinsicResult, StateVersion,
+    ApplyExtrinsicResult, ExtrinsicInclusionMode, StateVersion,
 };
 use sp_std::marker::PhantomData;
 use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
@@ -246,7 +246,7 @@ where
     // These next three methods are for the block authoring workflow.
     // Open the block, apply zero or more extrinsics, close the block
 
-    pub fn open_block(header: &Header) {
+    pub fn open_block(header: &Header) -> ExtrinsicInclusionMode {
         debug!(
             target: LOG_TARGET,
             "Entering initialize_block. header: {:?}", header
@@ -259,6 +259,9 @@ where
         // Also store the height persistently so it is available when
         // performing pool validations and other off-chain runtime calls.
         sp_io::storage::set(HEIGHT_KEY, &header.number().encode());
+
+        // Tuxedo blocks always allow user transactions.
+        ExtrinsicInclusionMode::AllExtrinsics
     }
 
     pub fn apply_extrinsic(extrinsic: Transaction<V, C>) -> ApplyExtrinsicResult {
