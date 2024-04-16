@@ -128,7 +128,7 @@ sp-externalities = { branch = "tuxedo-v1.6.0", default_features = false, git = "
 sp-state-machine = { branch = "tuxedo-v1.6.0", default_features = false, git = "https://github.com/Off-Narrative-Labs/polkadot-sdk" }
 sp-tracing = { branch = "tuxedo-v1.6.0", default_features = false, git = "https://github.com/Off-Narrative-Labs/polkadot-sdk" }
 sp-trie = { branch = "tuxedo-v1.6.0", default_features = false, git = "https://github.com/Off-Narrative-Labs/polkadot-sdk" }
-trie-db = { version = "0.29.0", default-features = false }
+trie-db = { version = "0.28.0", default-features = false }
 
 # We need to depend on this explicitly so we can enable the "full-node" feature
 # See https://github.com/paritytech/polkadot-sdk/issues/2551 for more details

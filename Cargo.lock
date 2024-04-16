@@ -2178,7 +2178,7 @@ dependencies = [
  "sp-trie",
  "sp-version",
  "staging-xcm",
- "trie-db 0.28.0",
+ "trie-db",
 ]
 
 [[package]]
@@ -11482,9 +11482,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.115"
+version = "1.0.116"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12dc5c46daa8e9fdf4f5e71b6cf9a53f2487da0e86e55808e2d35539666497dd"
+checksum = "3e17db7126d17feb94eb3fad46bf1a96b034e8aacbc2e775fe81505f8b0b2813"
 dependencies = [
  "itoa",
  "ryu",
@@ -12135,7 +12135,7 @@ dependencies = [
 [[package]]
 name = "sp-crypto-ec-utils"
 version = "0.10.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "ark-bls12-377",
  "ark-bls12-377-ext",
@@ -12174,7 +12174,7 @@ dependencies = [
 [[package]]
 name = "sp-debug-derive"
 version = "14.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -12195,7 +12195,7 @@ dependencies = [
 [[package]]
 name = "sp-externalities"
 version = "0.25.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "environmental",
  "parity-scale-codec",
@@ -12412,7 +12412,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime-interface"
 version = "24.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "bytes",
  "impl-trait-for-tuples",
@@ -12444,7 +12444,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime-interface-proc-macro"
 version = "17.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "Inflector",
  "expander 2.1.0",
@@ -12501,7 +12501,7 @@ dependencies = [
  "sp-trie",
  "thiserror",
  "tracing",
- "trie-db 0.28.0",
+ "trie-db",
 ]
 
 [[package]]
@@ -12536,7 +12536,7 @@ source = "git+https://github.com/off-narrative-labs/polkadot-sdk?branch=tuxedo-v
 [[package]]
 name = "sp-std"
 version = "14.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 
 [[package]]
 name = "sp-storage"
@@ -12554,7 +12554,7 @@ dependencies = [
 [[package]]
 name = "sp-storage"
 version = "19.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "impl-serde",
  "parity-scale-codec",
@@ -12591,7 +12591,7 @@ dependencies = [
 [[package]]
 name = "sp-tracing"
 version = "16.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "parity-scale-codec",
  "tracing",
@@ -12643,7 +12643,7 @@ dependencies = [
  "sp-std 8.0.0",
  "thiserror",
  "tracing",
- "trie-db 0.28.0",
+ "trie-db",
  "trie-root",
 ]
 
@@ -12691,7 +12691,7 @@ dependencies = [
 [[package]]
 name = "sp-wasm-interface"
 version = "20.0.0"
-source = "git+https://github.com/paritytech/polkadot-sdk#a8f4f4f00f8fc0da512a09e1450bf4cda954d70d"
+source = "git+https://github.com/paritytech/polkadot-sdk#753bf2d860e083b5da25fe4171c0e540ddad4888"
 dependencies = [
  "impl-trait-for-tuples",
  "log",
@@ -13012,7 +13012,7 @@ dependencies = [
  "sp-runtime",
  "sp-state-machine",
  "sp-trie",
- "trie-db 0.28.0",
+ "trie-db",
 ]
 
 [[package]]
@@ -13724,18 +13724,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "trie-db"
-version = "0.29.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65ed83be775d85ebb0e272914fff6462c39b3ddd6dc67b5c1c41271aad280c69"
-dependencies = [
- "hash-db",
- "log",
- "rustc-hex",
- "smallvec",
-]
-
-[[package]]
 name = "trie-root"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -13893,7 +13881,7 @@ dependencies = [
  "sp-std 8.0.0",
  "sp-tracing 10.0.0",
  "sp-trie",
- "trie-db 0.29.0",
+ "trie-db",
  "tuxedo-core",
  "tuxedo-parachainify",
 ]

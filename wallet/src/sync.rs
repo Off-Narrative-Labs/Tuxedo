@@ -280,16 +280,13 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool, C: ConstraintChecker>(
     let tx = Transaction::<OuterVerifier, C>::decode(&mut &encoded_extrinsic[..])?;
 
     // Insert all new outputs
-    for (index, output) in tx
-        .outputs
-        .iter()
-        .filter(|o| filter(&o.verifier))
-        .enumerate()
-    {
+    for (index, output) in tx.outputs.iter().enumerate() {
         // For now the wallet only supports simple coins and timestamp
         match output.payload.type_id {
             Coin::<0>::TYPE_ID => {
-                crate::money::apply_transaction(db, tx_hash, index as u32, output)?;
+                if filter(&output.verifier) {
+                    crate::money::apply_transaction(db, tx_hash, index as u32, output)?;
+                }
             }
             Timestamp::TYPE_ID => {
                 crate::timestamp::apply_transaction(db, output)?;
