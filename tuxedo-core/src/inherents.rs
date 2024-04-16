@@ -118,7 +118,6 @@ pub trait InherentHooks: SimpleConstraintChecker + Sized {
     );
 
     /// Return the genesis transactions that are required for this inherent.
-    #[cfg(feature = "std")]
     fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         Vec::new()
     }
@@ -234,7 +233,6 @@ impl<C: SimpleConstraintChecker + InherentHooks + 'static> ConstraintChecker
         )
     }
 
-    #[cfg(feature = "std")]
     fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         <C as InherentHooks>::genesis_transactions()
             .into_iter()

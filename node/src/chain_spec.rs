@@ -5,7 +5,7 @@ use sc_service::ChainType;
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
+pub type ChainSpec = sc_service::GenericChainSpec<()>;
 
 // /// Generate a crypto pair from seed.
 // pub fn get_from_seed<TPublic: Public>(seed: &str) -> <TPublic::Pair as Pair>::Public {
@@ -30,47 +30,25 @@ pub type ChainSpec = sc_service::GenericChainSpec<RuntimeGenesisConfig>;
 // }
 
 pub fn development_config() -> Result<ChainSpec, String> {
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Development",
-        // ID
-        "dev",
-        ChainType::Development,
-        // TuxedoGenesisConfig
-        development_genesis_config,
-        // Bootnodes
-        vec![],
-        // Telemetry
+    Ok(ChainSpec::builder(
+        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
         None,
-        // Protocol ID
-        None,
-        None,
-        // Properties
-        None,
-        // Extensions
-        None,
-    ))
+    )
+    .with_name("Development")
+    .with_id("dev")
+    .with_chain_type(ChainType::Development)
+    .with_genesis_config_patch(development_genesis_config())
+    .build())
 }
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Local Testnet",
-        // ID
-        "local_testnet",
-        ChainType::Local,
-        // TuxedoGenesisConfig
-        development_genesis_config,
-        // Bootnodes
-        vec![],
-        // Telemetry
+    Ok(ChainSpec::builder(
+        WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?,
         None,
-        // Protocol ID
-        None,
-        // Properties
-        None,
-        None,
-        // Extensions
-        None,
-    ))
+    )
+    .with_name("Local Testnet")
+    .with_id("local_testnet")
+    .with_chain_type(ChainType::Local)
+    .with_genesis_config_patch(development_genesis_config())
+    .build())
 }

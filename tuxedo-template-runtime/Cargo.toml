@@ -12,11 +12,13 @@ parity-scale-codec = { features = [ "derive" ], workspace = true }
 parity-util-mem = { optional = true, workspace = true }
 scale-info = { features = [ "derive", "serde" ], workspace = true }
 serde = { features = [ "derive" ], workspace = true }
+serde_json = { features = [ "alloc" ], default-features = false, workspace = true }
 
 sp-api = { default_features = false, workspace = true }
 sp-block-builder = { default_features = false, workspace = true }
 sp-core = { features = [ "serde" ], default_features = false, workspace = true }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
+sp-genesis-builder = { default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }
 sp-io = { features = [ "with-tracing" ], default_features = false, workspace = true }
 sp-runtime = { features = [ "serde" ], default_features = false, workspace = true }
@@ -25,13 +27,13 @@ sp-std = { default_features = false, workspace = true }
 sp-storage = { default_features = false, workspace = true }
 sp-timestamp = { default_features = false, workspace = true }
 sp-transaction-pool = { default_features = false, workspace = true }
-sp-version = { default_features = false, workspace = true }
+sp-version = { features = [ "serde" ], default_features = false, workspace = true }
 
 # These were added for Aura / Grandpa API support
 hex-literal = { workspace = true }
 sp-application-crypto = { default_features = false, workspace = true }
-sp-consensus-aura = { default_features = false, workspace = true }
-sp-consensus-grandpa = { default_features = false, workspace = true }
+sp-consensus-aura = { features = [ "serde" ], default_features = false, workspace = true }
+sp-consensus-grandpa = { features = [ "serde" ], default_features = false, workspace = true }
 
 # Tuxedo Core and Pieces
 amoeba = { default-features = false, path = "../wardrobe/amoeba" }
@@ -67,6 +69,7 @@ std = [
 	"parity-util-mem",
 	"sp-storage/std",
 	"sp-consensus-aura/std",
+	"sp-genesis-builder/std",
 	"sp-application-crypto/std",
 	"sp-consensus-grandpa/std",
 	"tuxedo-core/std",

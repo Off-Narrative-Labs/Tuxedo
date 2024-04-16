@@ -9,7 +9,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-#[cfg(feature = "std")]
 pub mod genesis;
 
 use parity_scale_codec::{Decode, Encode};
@@ -34,6 +33,7 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
 use tuxedo_core::{
+    genesis::TuxedoGenesisConfigBuilder,
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
@@ -334,6 +334,19 @@ impl_runtime_apis! {
             _authority_id: sp_consensus_grandpa::AuthorityId,
         ) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
             None
+        }
+    }
+
+    impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
+        fn create_default_config() -> Vec<u8> {
+            serde_json::to_vec(&genesis::development_genesis_transactions())
+                .expect("Development genesis transactions are valid.")
+        }
+
+        fn build_config(config: Vec<u8>) -> sp_genesis_builder::Result {
+            let genesis_transactions = serde_json::from_slice::<Vec<Transaction>>(config.as_slice())
+                .map_err(|_| "The input JSON is not a valid list of Transactions.")?;
+            TuxedoGenesisConfigBuilder::build(genesis_transactions)
         }
     }
 }

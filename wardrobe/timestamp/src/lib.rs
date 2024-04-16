@@ -195,7 +195,8 @@ impl<T: TimestampConfig + 'static> SimpleConstraintChecker for SetTimestamp<T> {
 
         // Compare the new timestamp to the previous timestamp
         ensure!(
-            new_timestamp.time >= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
+            old_timestamp.block == 0 // first block hack
+                || new_timestamp.time >= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
             Self::Error::TimestampTooOld
         );
 
@@ -295,20 +296,12 @@ impl<T: TimestampConfig + 'static> InherentHooks for SetTimestamp<T> {
         }
     }
 
-    #[cfg(feature = "std")]
     fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
-        use std::time::{Duration, SystemTime};
-        let time = SystemTime::UNIX_EPOCH
-            .elapsed()
-            .expect("Time went backwards!")
-            .saturating_sub(Duration::from_millis(T::MINIMUM_TIME_INTERVAL))
-            .as_millis() as u64;
-
         vec![Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: vec![Output {
-                payload: Timestamp::new(time, 0).into(),
+                payload: Timestamp::new(0, 0).into(),
                 verifier: V::new_unspendable().expect(
                     "Must be able to create unspendable verifier to use timestamp inherent.",
                 ),

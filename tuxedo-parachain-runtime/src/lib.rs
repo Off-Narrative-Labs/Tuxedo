@@ -6,7 +6,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-#[cfg(feature = "std")]
 pub mod genesis;
 
 use parity_scale_codec::{Decode, Encode};
@@ -26,7 +25,10 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-use tuxedo_core::{tuxedo_constraint_checker, types::Block as TuxedoBlock, InherentAdapter};
+use tuxedo_core::{
+    genesis::TuxedoGenesisConfigBuilder, tuxedo_constraint_checker, types::Block as TuxedoBlock,
+    types::Transaction as TuxedoTransaction, InherentAdapter,
+};
 use tuxedo_parachain_core::tuxedo_core;
 
 // We use the same aggregate verifier and opaque types from the inner_runtime.
@@ -61,6 +63,7 @@ const BLOCK_TIME: u64 = 3000;
 // This creates an enum `ParachainConstraintChecker` that implements `ParachainConstraintChecker`
 tuxedo_parachain_core::parachainify!(OuterVerifier, InnerConstraintChecker, 2000);
 
+pub type Transaction = TuxedoTransaction<OuterVerifier, ParachainConstraintChecker>;
 pub type Block = TuxedoBlock<OuterVerifier, ParachainConstraintChecker>;
 pub type Executive = tuxedo_core::Executive<OuterVerifier, ParachainConstraintChecker>;
 
@@ -180,6 +183,21 @@ impl_runtime_apis! {
 
         fn authorities() -> Vec<AuraId> {
             Self::aura_authorities()
+        }
+    }
+
+    //TODO This was copied directly from the sovereign runtime while resolving the update.
+    // Make sure it still makes sense here.
+    impl sp_genesis_builder::GenesisBuilder<Block> for Runtime {
+        fn create_default_config() -> Vec<u8> {
+            serde_json::to_vec(&genesis::development_genesis_transactions())
+                .expect("Development genesis transactions are valid.")
+        }
+
+        fn build_config(config: Vec<u8>) -> sp_genesis_builder::Result {
+            let genesis_transactions = serde_json::from_slice::<Vec<Transaction>>(config.as_slice())
+                .map_err(|_| "The input JSON is not a valid list of Transactions.")?;
+            TuxedoGenesisConfigBuilder::build(genesis_transactions)
         }
     }
 
