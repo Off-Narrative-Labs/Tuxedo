@@ -25,6 +25,10 @@ where
         // The transactions are stored under a special key.
         sp_io::storage::set(EXTRINSIC_KEY, &genesis_transactions.encode());
 
+        //TODO This was added in during merge conflicts. Make sure inherents are working even in real parachains.
+        // Initialize the stored block number to 0
+        sp_io::storage::set(HEIGHT_KEY.to_vec(), 0u32.encode());
+
         let mut finished_with_opening_inherents = false;
 
         for tx in genesis_transactions.into_iter() {

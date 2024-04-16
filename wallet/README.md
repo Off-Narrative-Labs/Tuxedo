@@ -218,6 +218,27 @@ Balance Summary
 total      : 80
 ```
 
+It is possible to create new coins using the wallet. Let's explore how to do it.
+
+### Minting coins
+
+We can optionally pass the amount and public key of the owner as arguments to mint_coins.
+If optional arguments are not passed below are the default values:
+Amount is `100` and Public key of owner is Shawn key.
+
+```sh
+$ tuxedo-template-wallet mint-coins \
+ --owner 0xdeba7f5d5088cda3e32ccaf479056dd934d87fa8129987ca6db57c122bd73341 \
+ --amount 200 \
+
+[2024-01-18T14:22:19Z INFO  tuxedo_template_wallet] Number of blocks in the db: 6
+[2024-01-18T14:22:19Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 14
+[2024-01-18T14:22:19Z INFO  tuxedo_template_wallet::money] Node's response to mint-coin transaction: Ok("0xaff830b7755fee67c288afe18dfa6eabffe06286005b0fd6cb8e57b246c08df6")
+Created "f76373909591d85f796c36ed4b265e46efabdf5b5c493b94246d590823cc42a500000000" worth 200. owned by 0xdeba…3341
+```
+It is possible to verify a newly minted coin exists in both chain storage and the local database using verify-coin command.
+
+
 ### Manually Selecting Inputs
 
 So far, we have let the wallet select which inputs to spend on our behalf.

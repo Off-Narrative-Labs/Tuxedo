@@ -50,6 +50,8 @@ pub enum ConstraintCheckerError {
     BadlyTypedInput,
     /// An output data has the wrong type.
     BadlyTypedOutput,
+    /// The Runtime Upgrade piece does not allow any evictions at all.
+    NoEvictionsAllowed,
 
     // Now we get on to the actual upgrade-specific errors
     /// The consumed input does not match the current wasm. This should never happen
@@ -77,9 +79,16 @@ impl SimpleConstraintChecker for RuntimeUpgrade {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::NoEvictionsAllowed
+        );
+
         // Make sure there is a single input that matches the hash of the previous runtime logic
         ensure!(
             input_data.len() == 1,

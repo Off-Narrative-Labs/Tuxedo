@@ -8,12 +8,16 @@
 
 use crate::{
     constraint_checker::ConstraintChecker,
+    dynamic_typing::DynamicallyTypedData,
     ensure,
-    inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
-    types::{DispatchResult, OutputRef, Transaction, UtxoError},
+    inherents::PARENT_INHERENT_IDENTIFIER,
+    types::{
+        Block, BlockNumber, DispatchResult, Header, OutputRef, RedemptionStrategy, Transaction,
+        UtxoError,
+    },
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
-    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
+    EXTRINSIC_KEY, HEADER_KEY, HEIGHT_KEY, LOG_TARGET,
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
@@ -21,7 +25,7 @@ use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{
-    traits::BlakeTwo256,
+    traits::{BlakeTwo256, Extrinsic},
     transaction_validity::{
         InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError,
         ValidTransaction,
@@ -33,10 +37,14 @@ use sp_std::{collections::btree_set::BTreeSet, vec::Vec};
 
 /// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
-pub struct Executive<B, V, C>(PhantomData<(B, V, C)>);
+pub struct Executive<V, C>(PhantomData<(V, C)>);
 
-impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker<V>>
-    Executive<B, V, C>
+impl<V, C> Executive<V, C>
+where
+    V: Verifier,
+    C: ConstraintChecker,
+    Block<V, C>: BlockT<Extrinsic = Transaction<V, C>, Hash = sp_core::H256>,
+    Transaction<V, C>: Extrinsic,
 {
     /// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
@@ -64,36 +72,46 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // This will be passed to the verifiers
         let mut stripped = transaction.clone();
         for input in stripped.inputs.iter_mut() {
-            input.redeemer = Vec::new();
+            input.redeemer = Default::default();
         }
         let stripped_encoded = stripped.encode();
 
         // Check that the verifiers of all inputs are satisfied
-        // Keep a Vec of the input utxos for passing to the constraint checker
+        // Keep a Vec of the input data for passing to the constraint checker
         // Keep track of any missing inputs for use in the tagged transaction pool
-        let mut input_utxos = Vec::new();
+        let mut input_data = Vec::new();
+        let mut evicted_input_data = Vec::new();
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
-                ensure!(
-                    input_utxo
-                        .verifier
-                        .verify(&stripped_encoded, &input.redeemer),
-                    UtxoError::VerifierError
-                );
-                input_utxos.push(input_utxo);
+                match input.redeemer {
+                    RedemptionStrategy::Redemption(ref redeemer) => {
+                        let redeemer = V::Redeemer::decode(&mut &redeemer[..])
+                            .map_err(|_| UtxoError::VerifierError)?;
+                        ensure!(
+                            input_utxo.verifier.verify(
+                                &stripped_encoded,
+                                Self::block_height(),
+                                &redeemer
+                            ),
+                            UtxoError::VerifierError
+                        );
+                        input_data.push(input_utxo.payload);
+                    }
+                    RedemptionStrategy::Eviction => evicted_input_data.push(input_utxo.payload),
+                }
             } else {
                 missing_inputs.push(input.output_ref.clone().encode());
             }
         }
 
-        // Make a Vec of the peek utxos for passing to the constraint checker
+        // Make a Vec of the peek data for passing to the constraint checker
         // Keep track of any missing peeks for use in the tagged transaction pool
         // Use the same vec as previously to keep track of missing peeks
-        let mut peek_utxos = Vec::new();
+        let mut peek_data = Vec::new();
         for output_ref in transaction.peeks.iter() {
             if let Some(peek_utxo) = TransparentUtxoSet::<V>::peek_utxo(output_ref) {
-                peek_utxos.push(peek_utxo);
+                peek_data.push(peek_utxo.payload);
             } else {
                 missing_inputs.push(output_ref.encode());
             }
@@ -146,10 +164,17 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             });
         }
 
+        // Extract the payload data from each output
+        let output_data: Vec<DynamicallyTypedData> = transaction
+            .outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
         // Call the constraint checker
         transaction
             .checker
-            .check(&input_utxos, &peek_utxos, &transaction.outputs)
+            .check(&input_data, &evicted_input_data, &peek_data, &output_data)
             .map_err(UtxoError::ConstraintCheckerError)?;
 
         // Return the valid transaction
@@ -213,20 +238,16 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     }
 
     /// A helper function that allows tuxedo runtimes to read the current block height
-    pub fn block_height() -> <<B as BlockT>::Header as HeaderT>::Number
-    where
-        B::Header: HeaderT,
-    {
-        *sp_io::storage::get(HEADER_KEY)
-            .and_then(|d| B::Header::decode(&mut &*d).ok())
-            .expect("A header is always stored at the beginning of the block")
-            .number()
+    pub fn block_height() -> BlockNumber {
+        sp_io::storage::get(HEIGHT_KEY)
+            .and_then(|d| BlockNumber::decode(&mut &*d).ok())
+            .expect("A height is stored at the beginning of block one and never cleared.")
     }
 
     // These next three methods are for the block authoring workflow.
     // Open the block, apply zero or more extrinsics, close the block
 
-    pub fn open_block(header: &<B as BlockT>::Header) {
+    pub fn open_block(header: &Header) {
         debug!(
             target: LOG_TARGET,
             "Entering initialize_block. header: {:?}", header
@@ -235,9 +256,13 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // Store the transient partial header for updating at the end of the block.
         // This will be removed from storage before the end of the block.
         sp_io::storage::set(HEADER_KEY, &header.encode());
+
+        // Also store the height persistently so it is available when
+        // performing pool validations and other off-chain runtime calls.
+        sp_io::storage::set(HEIGHT_KEY, &header.number().encode());
     }
 
-    pub fn apply_extrinsic(extrinsic: <B as BlockT>::Extrinsic) -> ApplyExtrinsicResult {
+    pub fn apply_extrinsic(extrinsic: Transaction<V, C>) -> ApplyExtrinsicResult {
         debug!(
             target: LOG_TARGET,
             "Entering apply_extrinsic: {:?}", extrinsic
@@ -258,9 +283,9 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         Ok(Ok(()))
     }
 
-    pub fn close_block() -> <B as BlockT>::Header {
+    pub fn close_block() -> Header {
         let mut header = sp_io::storage::get(HEADER_KEY)
-            .and_then(|d| <B as BlockT>::Header::decode(&mut &*d).ok())
+            .and_then(|d| Header::decode(&mut &*d).ok())
             .expect("We initialized with header, it never got mutated, qed");
 
         // the header itself contains the state root, so it cannot be inside the state (circular
@@ -270,16 +295,13 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         let extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
             .and_then(|d| <Vec<Vec<u8>>>::decode(&mut &*d).ok())
             .unwrap_or_default();
-        let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
-            extrinsics,
-            StateVersion::V0,
-        );
+        let extrinsics_root =
+            <Header as HeaderT>::Hashing::ordered_trie_root(extrinsics, StateVersion::V0);
         sp_io::storage::clear(EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
 
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
-        let state_root =
-            <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
+        let state_root = <Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
         header.set_state_root(state_root);
 
         debug!(target: LOG_TARGET, "finalizing block {:?}", header);
@@ -288,7 +310,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 
     // This one is for the Core api. It is used to import blocks authored by foreign nodes.
 
-    pub fn execute_block(block: B) {
+    pub fn execute_block(block: Block<V, C>) {
         debug!(
             target: LOG_TARGET,
             "Entering execute_block. block: {:?}", block
@@ -298,6 +320,10 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
         sp_io::storage::set(HEADER_KEY, &block.header().encode());
+
+        // Also store the height persistently so it is available when
+        // performing pool validations and other off-chain runtime calls.
+        sp_io::storage::set(HEIGHT_KEY, &block.header().number().encode());
 
         // Tuxedo requires that inherents are at the beginning (and soon end) of the
         // block and not scattered throughout. We use this flag to enforce that.
@@ -329,26 +355,12 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 
         // Check state root
         let raw_state_root = &sp_io::storage::root(StateVersion::V1)[..];
-        let state_root =
-            <<B as BlockT>::Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
+        let state_root = <Header as HeaderT>::Hash::decode(&mut &raw_state_root[..]).unwrap();
         assert_eq!(
             *block.header().state_root(),
             state_root,
             "state root mismatch"
         );
-
-        // Print state for quick debugging
-        // let mut key = vec![];
-        // while let Some(next) = sp_io::storage::next_key(&key) {
-        //     let val = sp_io::storage::get(&next).unwrap().to_vec();
-        //     log::trace!(
-        //         target: LOG_TARGET,
-        //         "{} <=> {}",
-        //         HexDisplay::from(&next),
-        //         HexDisplay::from(&val)
-        //     );
-        //     key = next;
-        // }
 
         // Check extrinsics root.
         let extrinsics = block
@@ -356,10 +368,8 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             .iter()
             .map(|x| x.encode())
             .collect::<Vec<_>>();
-        let extrinsics_root = <<B as BlockT>::Header as HeaderT>::Hashing::ordered_trie_root(
-            extrinsics,
-            StateVersion::V0,
-        );
+        let extrinsics_root =
+            <Header as HeaderT>::Hashing::ordered_trie_root(extrinsics, StateVersion::V0);
         assert_eq!(
             *block.header().extrinsics_root(),
             extrinsics_root,
@@ -371,8 +381,8 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 
     pub fn validate_transaction(
         source: TransactionSource,
-        tx: <B as BlockT>::Extrinsic,
-        block_hash: <B as BlockT>::Hash,
+        tx: Transaction<V, C>,
+        block_hash: <Block<V, C> as BlockT>::Hash,
     ) -> TransactionValidity {
         debug!(
             target: LOG_TARGET,
@@ -408,14 +418,14 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
     }
 
     // The next two are for the standard beginning-of-block inherent extrinsics.
-    pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<<B as BlockT>::Extrinsic> {
+    pub fn inherent_extrinsics(data: sp_inherents::InherentData) -> Vec<Transaction<V, C>> {
         debug!(
             target: LOG_TARGET,
             "Entering `inherent_extrinsics`."
         );
 
-        // Extract the complete parent block from the inheret data
-        let parent: B = data
+        // Extract the complete parent block from the inherent data
+        let parent: Block<V, C> = data
             .get_data(&PARENT_INHERENT_IDENTIFIER)
             .expect("Parent block inherent data should be able to decode.")
             .expect("Parent block should be present among authoring inherent data.");
@@ -425,7 +435,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         // We also annotate each transaction with its original hash for purposes of constructing output refs later.
         // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
         // and we need an original universal transaction id.
-        let previous_blocks_inherents: Vec<(<B as BlockT>::Extrinsic, H256)> = parent
+        let previous_blocks_inherents: Vec<(Transaction<V, C>, H256)> = parent
             .extrinsics()
             .iter()
             .cloned()
@@ -442,10 +452,13 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         );
 
         // Call into constraint checker's own inherent hooks to create the actual transactions
-        C::InherentHooks::create_inherents(&data, previous_blocks_inherents)
+        C::create_inherents(&data, previous_blocks_inherents)
     }
 
-    pub fn check_inherents(block: B, data: InherentData) -> sp_inherents::CheckInherentsResult {
+    pub fn check_inherents(
+        block: Block<V, C>,
+        data: InherentData,
+    ) -> sp_inherents::CheckInherentsResult {
         debug!(
             target: LOG_TARGET,
             "Entering `check_inherents`"
@@ -465,7 +478,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
             .take_while(|tx| tx.checker.is_inherent())
             .collect();
 
-        C::InherentHooks::check_inherents(&data, inherents, &mut result);
+        C::check_inherents::<V>(&data, inherents, &mut result);
 
         result
     }
@@ -475,7 +488,7 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
 mod tests {
     use sp_core::H256;
     use sp_io::TestExternalities;
-    use sp_runtime::transaction_validity::ValidTransactionBuilder;
+    use sp_runtime::{generic::Header, transaction_validity::ValidTransactionBuilder};
 
     use crate::{
         constraint_checker::testing::TestConstraintChecker,
@@ -489,7 +502,7 @@ mod tests {
     type TestTransaction = Transaction<TestVerifier, TestConstraintChecker>;
     pub type TestHeader = sp_runtime::generic::Header<u32, BlakeTwo256>;
     pub type TestBlock = sp_runtime::generic::Block<TestHeader, TestTransaction>;
-    pub type TestExecutive = Executive<TestBlock, TestVerifier, TestConstraintChecker>;
+    pub type TestExecutive = Executive<TestVerifier, TestConstraintChecker>;
 
     /// Construct a mock OutputRef from a transaction number and index in that transaction.
     ///
@@ -619,10 +632,18 @@ mod tests {
                 ext.insert(output_ref.encode(), output.encode());
             }
 
-            // Write the pre-header
-            if let Some(pre_header) = self.pre_header {
-                ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
-            }
+            // Write a pre-header. If none was supplied, create a use a default one.
+            let pre_header = self.pre_header.unwrap_or(Header {
+                parent_hash: Default::default(),
+                number: 0,
+                state_root: H256::zero(),
+                extrinsics_root: H256::zero(),
+                digest: Default::default(),
+            });
+            ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
+
+            // Write a block height.
+            ext.insert(HEIGHT_KEY.to_vec(), pre_header.number.encode());
 
             // Write the noted extrinsics
             ext.insert(EXTRINSIC_KEY.to_vec(), self.noted_extrinsics.encode());
@@ -652,7 +673,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: RedemptionStrategy::Redemption(Vec::new()),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -718,7 +739,7 @@ mod tests {
             let output_ref = mock_output_ref(0, 0);
             let input = Input {
                 output_ref: output_ref.clone(),
-                redeemer: Vec::new(),
+                redeemer: Default::default(),
             };
 
             let tx = TestTransactionBuilder::default()
@@ -764,7 +785,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -812,7 +833,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -882,7 +903,7 @@ mod tests {
             let output_ref = mock_output_ref(0, 0);
             let input = Input {
                 output_ref: output_ref.clone(),
-                redeemer: Vec::new(),
+                redeemer: Default::default(),
             };
 
             let tx = TestTransactionBuilder::default()
@@ -920,7 +941,7 @@ mod tests {
             .execute_with(|| {
                 let input = Input {
                     output_ref: output_ref.clone(),
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 let tx = TestTransactionBuilder::default()
@@ -1065,7 +1086,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
@@ -1087,7 +1108,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca",
@@ -1110,7 +1131,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
@@ -1154,7 +1175,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: H256::zero(),
                     digest: Default::default(),
@@ -1174,7 +1195,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c",
@@ -1196,7 +1217,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9",
@@ -1224,7 +1245,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984",
@@ -1252,7 +1273,7 @@ mod tests {
                     parent_hash: H256::zero(),
                     number: 6,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        "858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071",
+                        "cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9",
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         "0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f",

@@ -2,14 +2,14 @@
 //! but without a backing relay chain. This allows developers to quickly and easily spin up parachain
 //! nodes using the --dev flag, for example. It can also be used in integration tests.
 
-use parachain_template_runtime::{self, opaque::Block, RuntimeApi};
+use parachain_template_runtime::{self, RuntimeApi};
 use sc_client_api::BlockBackend;
 use sc_consensus_manual_seal::consensus::aura::AuraConsensusDataProvider;
 pub use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use std::{sync::Arc, time::Duration};
-use tuxedo_core::genesis::TuxedoGenesisBlockBuilder;
+use tuxedo_core::{genesis::TuxedoGenesisBlockBuilder, types::OpaqueBlock as Block};
 
 use cumulus_primitives_parachain_inherent::MockValidationDataInherentDataProvider;
 

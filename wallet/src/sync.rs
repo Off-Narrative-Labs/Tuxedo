@@ -18,14 +18,19 @@ use anyhow::anyhow;
 use parity_scale_codec::{Decode, Encode};
 use sled::Db;
 use sp_core::H256;
-use sp_runtime::traits::{BlakeTwo256, Hash};
+use sp_runtime::{
+    traits::{BlakeTwo256, Hash},
+    OpaqueExtrinsic,
+};
 use tuxedo_core::{
-    types::{Input, OutputRef},
-    verifier::Sr25519Signature,
+    dynamic_typing::UtxoData,
+    types::Transaction,
+    types::{Input, OpaqueBlock, OutputRef},
+    ConstraintChecker,
 };
 
 use jsonrpsee::http_client::HttpClient;
-use runtime::{money::Coin, Block, OuterVerifier, Transaction};
+use runtime::{money::Coin, timestamp::Timestamp, Block, OuterVerifier};
 
 /// The identifier for the blocks tree in the db.
 const BLOCKS: &str = "blocks";
@@ -46,9 +51,11 @@ const SPENT: &str = "spent";
 pub(crate) fn open_db(
     db_path: PathBuf,
     expected_genesis_hash: H256,
-    expected_genesis_block: Block,
+    expected_genesis_block: OpaqueBlock,
 ) -> anyhow::Result<Db> {
     //TODO figure out why this assertion fails.
+    // Possibly this https://substrate.stackexchange.com/questions/7357/
+    // But also possibly something else now that I switched to opaque block
     //assert_eq!(BlakeTwo256::hash_of(&expected_genesis_block.encode()), expected_genesis_hash, "expected block hash does not match expected block");
 
     let db = sled::open(db_path)?;
@@ -88,10 +95,23 @@ pub(crate) fn open_db(
     Ok(db)
 }
 
+pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
+    parachain: bool,
+    db: &Db,
+    client: &HttpClient,
+    filter: &F,
+) -> anyhow::Result<()> {
+    if parachain {
+        synchronize_helper::<F, crate::ParachainConstraintChecker>(db, client, filter).await
+    } else {
+        synchronize_helper::<F, crate::OuterConstraintChecker>(db, client, filter).await
+    }
+}
+
 /// Synchronize the local database to the database of the running node.
 /// The wallet entirely trusts the data the node feeds it. In the bigger
 /// picture, that means run your own (light) node.
-pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
+pub(crate) async fn synchronize_helper<F: Fn(&OuterVerifier) -> bool, C: ConstraintChecker>(
     db: &Db,
     client: &HttpClient,
     filter: &F,
@@ -113,7 +133,7 @@ pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
     while Some(wallet_hash) != node_hash {
         log::debug!("Divergence at height {height}. Node reports block: {node_hash:?}. Reverting wallet block: {wallet_hash:?}.");
 
-        unapply_highest_block(db).await?;
+        unapply_highest_block::<C>(db).await?;
 
         // Update for the next iteration
         height -= 1;
@@ -138,7 +158,7 @@ pub(crate) async fn synchronize<F: Fn(&OuterVerifier) -> bool>(
             .expect("Node should be able to return a block whose hash it already returned");
 
         // Apply the new block
-        apply_block(db, block, hash, filter).await?;
+        apply_block::<F, C>(db, block, hash, filter).await?;
 
         height += 1;
 
@@ -222,9 +242,9 @@ pub(crate) fn get_block(db: &Db, hash: H256) -> anyhow::Result<Option<Block>> {
 }
 
 /// Apply a block to the local database
-pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
+pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool, C: ConstraintChecker>(
     db: &Db,
-    b: Block,
+    b: OpaqueBlock,
     block_hash: H256,
     filter: &F,
 ) -> anyhow::Result<()> {
@@ -239,7 +259,7 @@ pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
 
     // Iterate through each transaction
     for tx in b.extrinsics {
-        apply_transaction(db, tx, filter).await?;
+        apply_transaction::<F, C>(db, tx, filter).await?;
     }
 
     Ok(())
@@ -247,13 +267,17 @@ pub(crate) async fn apply_block<F: Fn(&OuterVerifier) -> bool>(
 
 /// Apply a single transaction to the local database
 /// The owner-specific tables are mappings from output_refs to coin amounts
-async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
+async fn apply_transaction<F: Fn(&OuterVerifier) -> bool, C: ConstraintChecker>(
     db: &Db,
-    tx: Transaction,
+    opaque_tx: OpaqueExtrinsic,
     filter: &F,
 ) -> anyhow::Result<()> {
-    let tx_hash = BlakeTwo256::hash_of(&tx.encode());
+    let encoded_extrinsic = opaque_tx.encode();
+    let tx_hash = BlakeTwo256::hash_of(&encoded_extrinsic);
     log::debug!("syncing transaction {tx_hash:?}");
+
+    // Now get a structured transaction
+    let tx = Transaction::<OuterVerifier, C>::decode(&mut &encoded_extrinsic[..])?;
 
     // Insert all new outputs
     for (index, output) in tx
@@ -262,23 +286,15 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
         .filter(|o| filter(&o.verifier))
         .enumerate()
     {
-        // For now the wallet only supports simple coins, so skip anything else
-        let amount = match output.payload.extract::<Coin<0>>() {
-            Ok(Coin(amount)) => amount,
-            Err(_) => continue,
-        };
-
-        let output_ref = OutputRef {
-            tx_hash,
-            index: index as u32,
-        };
-
-        match output.verifier {
-            OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
-                // Add it to the global unspent_outputs table
-                add_unspent_output(db, &output_ref, &owner_pubkey, &amount)?;
+        // For now the wallet only supports simple coins and timestamp
+        match output.payload.type_id {
+            Coin::<0>::TYPE_ID => {
+                crate::money::apply_transaction(db, tx_hash, index as u32, output)?;
             }
-            _ => return Err(anyhow!("{:?}", ())),
+            Timestamp::TYPE_ID => {
+                crate::timestamp::apply_transaction(db, output)?;
+            }
+            _ => continue,
         }
     }
 
@@ -292,7 +308,7 @@ async fn apply_transaction<F: Fn(&OuterVerifier) -> bool>(
 }
 
 /// Add a new output to the database updating all tables.
-fn add_unspent_output(
+pub(crate) fn add_unspent_output(
     db: &Db,
     output_ref: &OutputRef,
     owner_pubkey: &H256,
@@ -344,7 +360,10 @@ fn unspend_output(db: &Db, output_ref: &OutputRef) -> anyhow::Result<()> {
 
 /// Run a transaction backwards against a database. Mark all of the Inputs
 /// as unspent, and drop all of the outputs.
-fn unapply_transaction(db: &Db, tx: &Transaction) -> anyhow::Result<()> {
+fn unapply_transaction<C: ConstraintChecker>(db: &Db, tx: &OpaqueExtrinsic) -> anyhow::Result<()> {
+    // We need to decode the opaque extrinsics. So we do a scale round-trip.
+    let tx = Transaction::<OuterVerifier, C>::decode(&mut &tx.encode()[..])?;
+
     // Loop through the inputs moving each from spent to unspent
     for Input { output_ref, .. } in &tx.inputs {
         unspend_output(db, output_ref)?;
@@ -365,7 +384,7 @@ fn unapply_transaction(db: &Db, tx: &Transaction) -> anyhow::Result<()> {
 }
 
 /// Unapply the best block that the wallet currently knows about
-pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
+pub(crate) async fn unapply_highest_block<C: ConstraintChecker>(db: &Db) -> anyhow::Result<()> {
     let wallet_blocks_tree = db.open_tree(BLOCKS)?;
     let wallet_block_hashes_tree = db.open_tree(BLOCK_HASHES)?;
 
@@ -387,14 +406,14 @@ pub(crate) async fn unapply_highest_block(db: &Db) -> anyhow::Result<Block> {
         ));
     };
 
-    let block = Block::decode(&mut &ivec[..])?;
+    let block = OpaqueBlock::decode(&mut &ivec[..])?;
 
     // Loop through the transactions in reverse order calling unapply
     for tx in block.extrinsics.iter().rev() {
-        unapply_transaction(db, tx)?;
+        unapply_transaction::<C>(db, tx)?;
     }
 
-    Ok(block)
+    Ok(())
 }
 
 /// Get the block height that the wallet is currently synced to

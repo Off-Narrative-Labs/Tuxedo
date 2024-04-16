@@ -10,6 +10,9 @@ use tuxedo_core::types::OutputRef;
 
 use crate::{h256_from_string, keystore::SHAWN_PUB_KEY, output_ref_from_string, DEFAULT_ENDPOINT};
 
+/// The default number of coins to be minted.
+pub const DEFAULT_MINT_VALUE: &str = "100";
+
 /// The wallet's main CLI struct
 #[derive(Debug, Parser)]
 #[command(about, version)]
@@ -18,9 +21,9 @@ pub struct Cli {
     /// RPC endpoint of the node that this wallet will connect to.
     pub endpoint: String,
 
-    #[arg(long, short)]
+    #[arg(long, short('d'))]
     /// Path where the wallet data is stored. Default value is platform specific.
-    pub path: Option<PathBuf>,
+    pub base_path: Option<PathBuf>,
 
     #[arg(long, verbatim_doc_comment)]
     /// Skip the initial sync that the wallet typically performs with the node.
@@ -37,6 +40,10 @@ pub struct Cli {
     /// The keystore will contain the development key Shawn.
     pub dev: bool,
 
+    /// Use the Parachain template encoding instead of the regular node template encoding.
+    #[arg(long, short, verbatim_doc_comment)]
+    pub parachain: bool,
+
     #[command(subcommand)]
     pub command: Option<Command>,
 }
@@ -46,6 +53,12 @@ pub struct Cli {
 pub enum Command {
     /// Demonstrate creating an amoeba and performing mitosis on it.
     AmoebaDemo,
+
+    /// Mint coins , optionally amount and publicKey of owner can be passed
+    /// if amount is not passed , 100 coins are minted
+    /// If publickKey of owner is not passed , then by default SHAWN_PUB_KEY is used.
+    #[command(verbatim_doc_comment)]
+    MintCoins(MintCoinArgs),
 
     /// Verify that a particular coin exists.
     /// Show its value and owner from both chain storage and the local database.
@@ -98,6 +111,22 @@ pub enum Command {
 
     /// Show the complete list of UTXOs known to the wallet.
     ShowAllOutputs,
+
+    /// Show the latest on-chain timestamp.
+    ShowTimestamp,
+}
+
+#[derive(Debug, Args)]
+pub struct MintCoinArgs {
+    /// Pass the amount to be minted.
+    #[arg(long, short, verbatim_doc_comment, action = Append,default_value = DEFAULT_MINT_VALUE)]
+    pub amount: u128,
+
+    // https://docs.rs/clap/latest/clap/_derive/_cookbook/typed_derive/index.html
+    // shows how to specify a custom parsing function
+    /// Hex encoded address (sr25519 pubkey) of the owner.
+    #[arg(long, short, verbatim_doc_comment, value_parser = h256_from_string, default_value = SHAWN_PUB_KEY)]
+    pub owner: H256,
 }
 
 #[derive(Debug, Args)]

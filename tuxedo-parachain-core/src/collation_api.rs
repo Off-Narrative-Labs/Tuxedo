@@ -4,19 +4,18 @@
 
 use cumulus_primitives_core::{relay_chain::HeadData, CollationInfo};
 use parity_scale_codec::Encode;
-use sp_api::BlockT;
 use sp_std::vec::Vec;
-use tuxedo_core::Executive;
+use tuxedo_core::{types::Header, Executive};
 
 use crate::{GetRelayParentNumberStorage, RelayParentNumberStorage};
 
 /// An extension trait that allows us to implement more methods on tuxedo-core's executive.
-pub trait ParachainExecutiveExtension<Header> {
+pub trait ParachainExecutiveExtension {
     fn collect_collation_info(header: &Header) -> cumulus_primitives_core::CollationInfo;
 }
 
-impl<B: BlockT, V, C> ParachainExecutiveExtension<B::Header> for Executive<B, V, C> {
-    fn collect_collation_info(header: &B::Header) -> cumulus_primitives_core::CollationInfo {
+impl<V, C> ParachainExecutiveExtension for Executive<V, C> {
+    fn collect_collation_info(header: &Header) -> cumulus_primitives_core::CollationInfo {
         // The implementation here is simple. Most of the fields are related to xcm and parachain runtime upgrades,
         // neither or which are supported in the PoC, so they are left blank.
 

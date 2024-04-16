@@ -1,7 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 use crate::rpc;
-use node_template_runtime::{self, opaque::Block, RuntimeApi};
+use node_template_runtime::{self, RuntimeApi};
 use sc_client_api::BlockBackend;
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_consensus_grandpa::SharedVoterState;
@@ -11,7 +11,7 @@ use sc_telemetry::{Telemetry, TelemetryWorker};
 use sc_transaction_pool_api::OffchainTransactionPoolFactory;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use std::{sync::Arc, time::Duration};
-use tuxedo_core::genesis::TuxedoGenesisBlockBuilder;
+use tuxedo_core::{genesis::TuxedoGenesisBlockBuilder, types::OpaqueBlock as Block};
 
 // Our native executor instance.
 pub struct ExecutorDispatch;

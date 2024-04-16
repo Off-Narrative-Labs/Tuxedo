@@ -5,13 +5,14 @@ pub use super::WASM_BINARY;
 use super::{
     kitties::{KittyData, Parent},
     money::Coin,
-    OuterConstraintCheckerInherentHooks, Transaction,
+    Transaction,
+    OuterConstraintChecker, OuterVerifier, WASM_BINARY,
 };
 use hex_literal::hex;
 use sp_std::{vec, vec::Vec};
 use tuxedo_core::{
-    inherents::InherentInternal,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
+    ConstraintChecker,
 };
 
 const SHAWN_PUB_KEY_BYTES: [u8; 32] =
@@ -26,7 +27,7 @@ pub fn development_genesis_transactions() -> Vec<Transaction> {
     let signatories = vec![SHAWN_PUB_KEY_BYTES.into(), ANDREW_PUB_KEY_BYTES.into()];
 
     // The inherents are computed using the appropriate method, and placed before the extrinsics.
-    let mut genesis_transactions = OuterConstraintCheckerInherentHooks::genesis_transactions();
+    let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
 
     genesis_transactions.extend([
         // Money Transactions
@@ -68,6 +69,36 @@ mod tests {
     const ANDREW_PHRASE: &str =
         "monkey happy total rib lumber scrap guide photo country online rose diet";
 
+    fn default_runtime_genesis_config() -> RuntimeGenesisConfig {
+        let keystore = MemoryKeystore::new();
+
+        let shawn_pub_key_bytes = keystore
+            .sr25519_generate_new(SR25519, Some(SHAWN_PHRASE))
+            .unwrap()
+            .0;
+
+        let andrew_pub_key_bytes = keystore
+            .sr25519_generate_new(SR25519, Some(ANDREW_PHRASE))
+            .unwrap()
+            .0;
+
+        let signatories = vec![shawn_pub_key_bytes.into(), andrew_pub_key_bytes.into()];
+
+        let mut genesis_transactions = OuterConstraintChecker::genesis_transactions();
+        genesis_transactions.extend([
+            // Money Transactions
+            Coin::<0>::mint(100, Sr25519Signature::new(shawn_pub_key_bytes)),
+            Coin::<0>::mint(100, ThresholdMultiSignature::new(1, signatories)),
+        ]);
+
+        RuntimeGenesisConfig::new(
+            WASM_BINARY
+                .expect("Runtime WASM binary must exist.")
+                .to_vec(),
+            genesis_transactions,
+        )
+    }
+
     fn new_test_ext() -> sp_io::TestExternalities {
         let keystore = MemoryKeystore::new();
         let mut ext = sp_io::TestExternalities::new_empty();
@@ -99,14 +130,15 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len =
+                OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
 
             let tx = development_genesis_transactions()
                 .get(inherents_len)
                 .unwrap()
                 .clone();
 
-            assert_eq!(tx.outputs.get(0), Some(&genesis_utxo));
+            assert_eq!(tx.outputs.first(), Some(&genesis_utxo));
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {
@@ -143,14 +175,15 @@ mod tests {
                 },
             };
 
-            let inherents_len = OuterConstraintCheckerInherentHooks::genesis_transactions().len();
+            let inherents_len =
+                OuterConstraintChecker::genesis_transactions::<OuterVerifier>().len();
 
             let tx = development_genesis_transactions()
                 .get(1 + inherents_len)
                 .unwrap()
                 .clone();
 
-            assert_eq!(tx.outputs.get(0), Some(&genesis_multi_sig_utxo));
+            assert_eq!(tx.outputs.first(), Some(&genesis_multi_sig_utxo));
 
             let tx_hash = BlakeTwo256::hash_of(&tx.encode());
             let output_ref = OutputRef {

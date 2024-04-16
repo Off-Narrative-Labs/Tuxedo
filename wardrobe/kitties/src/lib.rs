@@ -173,7 +173,7 @@ impl KittyData {
     where
         V: Verifier,
         OV: Verifier + From<V>,
-        OC: tuxedo_core::ConstraintChecker<OV> + From<FreeKittyConstraintChecker>,
+        OC: tuxedo_core::ConstraintChecker + From<FreeKittyConstraintChecker>,
     {
         Transaction {
             inputs: vec![],
@@ -225,6 +225,8 @@ pub enum ConstraintCheckerError {
     /// Dynamic typing issue.
     /// This error doesn't discriminate between badly typed inputs and outputs.
     BadlyTyped,
+    /// The Kitties piece does not allow any evictions at all.
+    NoEvictionsAllowed,
     /// Needed when spending for breeding.
     MinimumSpendAndBreedNotMet,
     /// Need two parents to breed.
@@ -507,9 +509,16 @@ impl SimpleConstraintChecker for FreeKittyConstraintChecker {
     fn check(
         &self,
         input_data: &[DynamicallyTypedData],
+        evicted_input_data: &[DynamicallyTypedData],
         _peeks: &[DynamicallyTypedData],
         output_data: &[DynamicallyTypedData],
     ) -> Result<TransactionPriority, Self::Error> {
+        // Can't evict anything
+        ensure!(
+            evicted_input_data.is_empty(),
+            ConstraintCheckerError::NoEvictionsAllowed
+        );
+
         // Input must be a Mom and a Dad
         ensure!(input_data.len() == 2, Self::Error::TwoParentsDoNotExist);
 

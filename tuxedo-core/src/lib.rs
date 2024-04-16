@@ -20,6 +20,7 @@ pub mod verifier;
 pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
+pub use inherents::{InherentAdapter, InherentHooks};
 pub use verifier::Verifier;
 
 /// A Tuxedo-specific target for diagnostic node log messages
@@ -27,7 +28,11 @@ const LOG_TARGET: &str = "tuxedo-core";
 
 /// A transient storage key that will hold the partial header while a block is being built.
 /// This key is cleared before the end of the block.
-const HEADER_KEY: &[u8] = b"header"; // 686561646572
+const HEADER_KEY: &[u8] = b"header";
+
+/// A storage key that will store the block height during and after execution.
+/// This allows the block number to be available in the runtime even during off-chain api calls.
+const HEIGHT_KEY: &[u8] = b"height";
 
 /// A transient storage key that will hold the list of extrinsics that have been applied so far.
 /// This key is cleared before the end of the block.

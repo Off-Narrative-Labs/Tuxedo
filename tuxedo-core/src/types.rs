@@ -5,8 +5,22 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_runtime::traits::Extrinsic;
+use sp_runtime::traits::{BlakeTwo256, Extrinsic};
 use sp_std::vec::Vec;
+
+// All Tuxedo chains use the same BlakeTwo256 hash.
+pub type Hash = BlakeTwo256;
+/// Opaque block hash type.
+pub type OpaqueHash = <Hash as sp_api::HashT>::Output;
+/// All Tuxedo chains use the same u32 BlockNumber.
+pub type BlockNumber = u32;
+/// Because all tuxedo chains use the same Blocknumber and Hash types,
+/// they also use the same concrete header type.
+pub type Header = sp_runtime::generic::Header<BlockNumber, Hash>;
+/// An alias for a Tuxedo block with all the common parts filled in.
+pub type Block<V, C> = sp_runtime::generic::Block<Header, Transaction<V, C>>;
+/// Opaque block type. It has a Standard Tuxedo header, and opaque transactions.
+pub type OpaqueBlock = sp_runtime::generic::Block<Header, sp_runtime::OpaqueExtrinsic>;
 
 /// A reference to a output that is expected to exist in the state.
 #[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
@@ -99,15 +113,15 @@ impl<V: Decode, C: Decode> Decode for Transaction<V, C> {
     }
 }
 
-// We must implement this Extrinsic trait to use our Transaction type as the Block's Transaction type
-// See https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
+// We must implement this Extrinsic trait to use our Transaction type as the Block's associated Extrinsic type.
+// See https://paritytech.github.io/polkadot-sdk/master/sp_runtime/traits/trait.Block.html#associatedtype.Extrinsic
 //
 // This trait's design has a preference for transactions that will have a single signature over the
-// entire block, so it is not very useful for us. We still need to implement it to satisfy the bound,
+// entire transaction, so it is not very useful for us. We still need to implement it to satisfy the bound,
 // so we do a minimal implementation.
 impl<V, C> Extrinsic for Transaction<V, C>
 where
-    C: TypeInfo + ConstraintChecker<V> + 'static,
+    C: TypeInfo + ConstraintChecker + 'static,
     V: TypeInfo + Verifier + 'static,
 {
     type Call = Self;
@@ -143,8 +157,28 @@ where
 pub struct Input {
     /// a reference to the output being consumed
     pub output_ref: OutputRef,
-    // Eg the signature
-    pub redeemer: Vec<u8>,
+    /// A means of showing that this input data can be used.
+    /// It is most often a proof such as a signature, but could also be a forceful eviction.
+    pub redeemer: RedemptionStrategy,
+}
+
+//TODO Consider making this enum generic over the redeemer type so there is not an additional decoding necessary.
+// This would percolate up though. For example input would also have to be generic over the redeemer type.
+// IDK if it is appropriate to be making so many types non-opaque??
+/// An input can be consumed in two way. It can be redeemed normally (probably with some signature, or proof) or it
+/// can be evicted. This enum is isomorphic to `Option<Vec<u8>>` but has more meaningful names.
+#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+pub enum RedemptionStrategy {
+    /// The input is being consumed in the normal way with a signature or other proof provided by the spender.
+    Redemption(Vec<u8>),
+    /// The input is being forcefully evicted without satisfying its Verifier.
+    Eviction,
+}
+
+impl Default for RedemptionStrategy {
+    fn default() -> Self {
+        Self::Redemption(Vec::new())
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -164,7 +198,7 @@ pub enum UtxoError<ConstraintCheckerError> {
 }
 
 /// The Result of dispatching a UTXO transaction.
-pub type DispatchResult<VerifierError> = Result<(), UtxoError<VerifierError>>;
+pub type DispatchResult<ConstraintCheckerError> = Result<(), UtxoError<ConstraintCheckerError>>;
 
 /// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
 /// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.

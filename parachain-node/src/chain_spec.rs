@@ -58,7 +58,7 @@ pub fn development_config() -> ChainSpec {
         WASM_BINARY.expect("Development wasm not available"),
         Extensions {
             relay_chain: "rococo-local".into(), // You MUST set this to the correct network!
-            // CAUTION: This value is dupliocated in the runtime code. The value here must match, or...
+            // CAUTION: This value is duplicated in the runtime code. The value here must match, or...
             // This duplication is also present in the upstream template, but will hopefully be fixed as soon as SDK 1.4.0
             // github.com/paritytech/polkadot-sdk/blob/838a534d/cumulus/parachain-template/node/src/chain_spec.rs#L76-L109
             para_id: 2000,

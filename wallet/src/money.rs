@@ -1,25 +1,98 @@
 //! Wallet features related to spending money and checking balances.
 
-use crate::{cli::SpendArgs, rpc::fetch_storage, sync};
+use crate::{cli::MintCoinArgs, cli::SpendArgs, rpc::fetch_storage, sync};
 
 use anyhow::anyhow;
 use jsonrpsee::{core::client::ClientT, http_client::HttpClient, rpc_params};
 use parity_scale_codec::Encode;
 use runtime::{
     money::{Coin, MoneyConstraintChecker},
-    OuterConstraintChecker, OuterVerifier, Transaction,
+    OuterConstraintChecker, OuterVerifier, OuterVerifierRedeemer,
 };
 use sc_keystore::LocalKeystore;
 use sled::Db;
 use sp_core::sr25519::Public;
 use sp_runtime::traits::{BlakeTwo256, Hash};
 use tuxedo_core::{
-    types::{Input, Output, OutputRef},
+    types::{Input, Output, OutputRef, RedemptionStrategy, Transaction},
     verifier::Sr25519Signature,
+    ConstraintChecker,
 };
+
+/// Create and send a transaction that mints the coins on the network
+pub async fn mint_coins(
+    parachain: bool,
+    client: &HttpClient,
+    args: MintCoinArgs,
+) -> anyhow::Result<()> {
+    if parachain {
+        mint_coins_helper::<crate::ParachainConstraintChecker>(client, args).await
+    } else {
+        mint_coins_helper::<crate::OuterConstraintChecker>(client, args).await
+    }
+}
+
+pub async fn mint_coins_helper<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
+    client: &HttpClient,
+    args: MintCoinArgs,
+) -> anyhow::Result<()> {
+    log::debug!("The args are:: {:?}", args);
+
+    let transaction: tuxedo_core::types::Transaction<OuterVerifier, Checker> = Transaction {
+        inputs: Vec::new(),
+        peeks: Vec::new(),
+        outputs: vec![(
+            Coin::<0>::new(args.amount),
+            OuterVerifier::Sr25519Signature(Sr25519Signature {
+                owner_pubkey: args.owner,
+            }),
+        )
+            .into()],
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Mint).into(),
+    };
+
+    let encoded_tx = hex::encode(transaction.encode());
+    let params = rpc_params![encoded_tx];
+    let _spawn_response: Result<String, _> = client.request("author_submitExtrinsic", params).await;
+
+    log::info!(
+        "Node's response to mint-coin transaction: {:?}",
+        _spawn_response
+    );
+
+    let minted_coin_ref = OutputRef {
+        tx_hash: <BlakeTwo256 as Hash>::hash_of(&transaction.encode()),
+        index: 0,
+    };
+    let output = &transaction.outputs[0];
+    let amount = output.payload.extract::<Coin<0>>()?.0;
+    print!(
+        "Minted {:?} worth {amount}. ",
+        hex::encode(minted_coin_ref.encode())
+    );
+    crate::pretty_print_verifier(&output.verifier);
+
+    Ok(())
+}
 
 /// Create and send a transaction that spends coins on the network
 pub async fn spend_coins(
+    parachain: bool,
+    db: &Db,
+    client: &HttpClient,
+    keystore: &LocalKeystore,
+    args: SpendArgs,
+) -> anyhow::Result<()> {
+    // Depending how the parachain and metadata support shapes up, it may make sense to have a
+    // macro that writes all of these helpers and ifs.
+    if parachain {
+        spend_coins_helper::<crate::ParachainConstraintChecker>(db, client, keystore, args).await
+    } else {
+        spend_coins_helper::<crate::OuterConstraintChecker>(db, client, keystore, args).await
+    }
+}
+
+pub async fn spend_coins_helper<Checker: ConstraintChecker + From<OuterConstraintChecker>>(
     db: &Db,
     client: &HttpClient,
     keystore: &LocalKeystore,
@@ -28,11 +101,11 @@ pub async fn spend_coins(
     log::debug!("The args are:: {:?}", args);
 
     // Construct a template Transaction to push coins into later
-    let mut transaction = Transaction {
+    let mut transaction: Transaction<OuterVerifier, Checker> = Transaction {
         inputs: Vec::new(),
         peeks: Vec::new(),
         outputs: Vec::new(),
-        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend),
+        checker: OuterConstraintChecker::Money(MoneyConstraintChecker::Spend).into(),
     };
 
     // Construct each output and then push to the transactions
@@ -79,7 +152,7 @@ pub async fn spend_coins(
         get_coin_from_storage(output_ref, client).await?;
         transaction.inputs.push(Input {
             output_ref: output_ref.clone(),
-            redeemer: vec![], // We will sign the total transaction so this should be empty
+            redeemer: Default::default(), // We will sign the total transaction so this should be empty
         });
     }
 
@@ -95,15 +168,22 @@ pub async fn spend_coins(
         let redeemer = match utxo.verifier {
             OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
                 let public = Public::from_h256(owner_pubkey);
-                crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?
+                let signature =
+                    crate::keystore::sign_with(keystore, &public, &stripped_encoded_transaction)?;
+                OuterVerifierRedeemer::Sr25519Signature(signature)
             }
-            OuterVerifier::UpForGrabs(_) => Vec::new(),
+            OuterVerifier::UpForGrabs(_) => OuterVerifierRedeemer::UpForGrabs(()),
             OuterVerifier::ThresholdMultiSignature(_) => todo!(),
         };
 
         // insert the proof
-        input.redeemer = redeemer;
+        let encoded_redeemer = redeemer.encode();
+        log::debug!("encoded redeemer is: {:?}", encoded_redeemer);
+
+        input.redeemer = RedemptionStrategy::Redemption(encoded_redeemer);
     }
+
+    log::debug!("signed transactions is: {:#?}", transaction);
 
     // Send the transaction
     let genesis_spend_hex = hex::encode(transaction.encode());
@@ -144,4 +224,22 @@ pub async fn get_coin_from_storage(
     let coin_in_storage: Coin<0> = utxo.payload.extract()?;
 
     Ok((coin_in_storage, utxo.verifier))
+}
+
+/// Apply a transaction to the local database, storing the new coins.
+pub(crate) fn apply_transaction(
+    db: &Db,
+    tx_hash: <BlakeTwo256 as Hash>::Output,
+    index: u32,
+    output: &Output<OuterVerifier>,
+) -> anyhow::Result<()> {
+    let amount = output.payload.extract::<Coin<0>>()?.0;
+    let output_ref = OutputRef { tx_hash, index };
+    match output.verifier {
+        OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey }) => {
+            // Add it to the global unspent_outputs table
+            crate::sync::add_unspent_output(db, &output_ref, &owner_pubkey, &amount)
+        }
+        _ => Err(anyhow!("{:?}", ())),
+    }
 }
