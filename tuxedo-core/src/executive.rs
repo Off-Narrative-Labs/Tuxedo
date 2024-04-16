@@ -21,14 +21,13 @@ use crate::{
 };
 use log::debug;
 use parity_scale_codec::{Decode, Encode};
-use sp_api::{BlockT, HashT, HeaderT, TransactionValidity};
 use sp_core::H256;
 use sp_inherents::{CheckInherentsResult, InherentData};
 use sp_runtime::{
-    traits::{BlakeTwo256, Extrinsic},
+    traits::{BlakeTwo256, Block as BlockT, Extrinsic, Hash as HashT, Header as HeaderT},
     transaction_validity::{
-        InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError,
-        ValidTransaction,
+        InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidity,
+        TransactionValidityError, ValidTransaction,
     },
     ApplyExtrinsicResult, StateVersion,
 };
