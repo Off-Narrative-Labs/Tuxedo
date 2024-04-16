@@ -363,8 +363,8 @@
         <span class="macro">matches!</span>[v,
             OuterVerifier::Sr25519Signature(Sr25519Signature { owner_pubkey })
                 <span class="kw">if </span><span class="kw">crate</span>::keystore::has_key(<span class="kw-2">&amp;</span>keystore, owner_pubkey)
-        ] || <span class="macro">matches!</span>[v, OuterVerifier::UpForGrabs(UpForGrabs)] <span class="comment">// used for timestamp
-    </span>};
+        ]
+    };
 
     <span class="kw">if </span>!sled::Db::was_recovered(<span class="kw-2">&amp;</span>db) {
         <span class="comment">// This is a new instance, so we need to apply the genesis block to the database.

@@ -472,9 +472,6 @@
 <a href="#472" id="472">472</a>
 <a href="#473" id="473">473</a>
 <a href="#474" id="474">474</a>
-<a href="#475" id="475">475</a>
-<a href="#476" id="476">476</a>
-<a href="#477" id="477">477</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module is responsible for maintaining the wallet's local database of blocks
 //! and owned UTXOs to the canonical database reported by the node.
 //!
@@ -757,16 +754,13 @@
     </span><span class="kw">let </span>tx = Transaction::&lt;OuterVerifier, C&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>encoded_extrinsic[..])<span class="question-mark">?</span>;
 
     <span class="comment">// Insert all new outputs
-    </span><span class="kw">for </span>(index, output) <span class="kw">in </span>tx
-        .outputs
-        .iter()
-        .filter(|o| filter(<span class="kw-2">&amp;</span>o.verifier))
-        .enumerate()
-    {
+    </span><span class="kw">for </span>(index, output) <span class="kw">in </span>tx.outputs.iter().enumerate() {
         <span class="comment">// For now the wallet only supports simple coins and timestamp
         </span><span class="kw">match </span>output.payload.type_id {
             Coin::&lt;<span class="number">0</span>&gt;::TYPE_ID =&gt; {
-                <span class="kw">crate</span>::money::apply_transaction(db, tx_hash, index <span class="kw">as </span>u32, output)<span class="question-mark">?</span>;
+                <span class="kw">if </span>filter(<span class="kw-2">&amp;</span>output.verifier) {
+                    <span class="kw">crate</span>::money::apply_transaction(db, tx_hash, index <span class="kw">as </span>u32, output)<span class="question-mark">?</span>;
+                }
             }
             Timestamp::TYPE_ID =&gt; {
                 <span class="kw">crate</span>::timestamp::apply_transaction(db, output)<span class="question-mark">?</span>;
