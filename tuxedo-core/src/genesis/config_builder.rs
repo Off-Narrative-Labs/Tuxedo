@@ -6,7 +6,7 @@ use crate::{
     ConstraintChecker, Verifier, EXTRINSIC_KEY, HEIGHT_KEY,
 };
 use parity_scale_codec::Encode;
-use sp_api::HashT;
+use sp_runtime::traits::Hash as HashT;
 use sp_std::vec::Vec;
 
 pub struct TuxedoGenesisConfigBuilder<V, C>(sp_std::marker::PhantomData<(V, C)>);

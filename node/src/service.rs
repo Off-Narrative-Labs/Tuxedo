@@ -88,6 +88,7 @@ pub fn new_partial(
             executor,
             backend,
             genesis_block_builder,
+            false,
         )?;
     let client = Arc::new(client);
 
@@ -118,8 +119,8 @@ pub fn new_partial(
 
     let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
 
-    let import_queue =
-        sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _>(ImportQueueParams {
+    let import_queue = sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _>(
+        ImportQueueParams {
             block_import: grandpa_block_import.clone(),
             justification_import: Some(Box::new(grandpa_block_import.clone())),
             client: client.clone(),
@@ -127,10 +128,10 @@ pub fn new_partial(
                 let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
                 let slot =
-					sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
-						*timestamp,
-						slot_duration,
-					);
+                    sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
+                        *timestamp,
+                        slot_duration,
+                    );
 
                 Ok((slot, timestamp))
             },
@@ -139,7 +140,8 @@ pub fn new_partial(
             check_for_equivocation: Default::default(),
             telemetry: telemetry.as_ref().map(|x| x.handle()),
             compatibility_mode: Default::default(),
-        })?;
+        },
+    )?;
 
     Ok(sc_service::PartialComponents {
         client,
@@ -177,9 +179,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         &config.chain_spec,
     );
 
-    net_config.add_notification_protocol(sc_consensus_grandpa::grandpa_peers_set_config(
-        grandpa_protocol_name.clone(),
-    ));
+    let (grandpa_protocol_config, grandpa_notification_service) =
+        sc_consensus_grandpa::grandpa_peers_set_config(grandpa_protocol_name.clone());
+    net_config.add_notification_protocol(grandpa_protocol_config);
 
     let warp_sync = Arc::new(sc_consensus_grandpa::warp_proof::NetworkProvider::new(
         backend.clone(),
@@ -324,6 +326,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             link: grandpa_link,
             network,
             sync: Arc::new(sync_service),
+            notification_service: grandpa_notification_service,
             voting_rule: sc_consensus_grandpa::VotingRulesBuilder::default().build(),
             prometheus_registry,
             shared_voter_state: SharedVoterState::empty(),

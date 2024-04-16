@@ -19,7 +19,6 @@ aggregator = { path = "aggregator" }
 derive-no-bound = { path = "no_bound" }
 
 # Substrate
-sp-api = { default_features = false, workspace = true }
 sp-core = { default_features = false, workspace = true }
 sp-debug-derive = { features = [ "force-debug" ], default_features = false, workspace = true }
 sp-inherents = { default_features = false, workspace = true }
@@ -47,7 +46,6 @@ std = [
 	"sp-core/std",
 	"sp-std/std",
 	"serde/std",
-	"sp-api/std",
 	"sp-genesis-builder/std",
 	"sp-inherents/std",
 	"sp-io/std",

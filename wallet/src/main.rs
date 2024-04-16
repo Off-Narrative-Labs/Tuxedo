@@ -12,7 +12,6 @@ mod amoeba;
 mod cli;
 mod keystore;
 mod money;
-mod output_filter;
 mod parachain;
 mod rpc;
 mod sync;

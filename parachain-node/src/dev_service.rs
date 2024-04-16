@@ -8,6 +8,7 @@ use sc_consensus_manual_seal::consensus::aura::AuraConsensusDataProvider;
 pub use sc_executor::NativeElseWasmExecutor;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
+use sp_runtime::traits::Header as _;
 use std::{sync::Arc, time::Duration};
 use tuxedo_core::{genesis::TuxedoGenesisBlockBuilder, types::OpaqueBlock as Block};
 
@@ -75,6 +76,7 @@ pub fn new_partial(
             executor,
             backend,
             genesis_block_builder,
+            false,
         )?;
     let client = Arc::new(client);
 
@@ -196,10 +198,8 @@ pub fn new_dev(config: Configuration) -> Result<TaskManager, ServiceError> {
                             .block;
 
                         let mocked_parachain = {
-                            use sp_api::{BlockT, HeaderT};
-
                             MockValidationDataInherentDataProvider {
-                                current_para_block: parent_block.header().number() + 1,
+                                current_para_block: parent_block.header.number() + 1,
                                 relay_offset: 1000,
                                 relay_blocks_per_para_block: 2,
                                 para_blocks_per_relay_epoch: 10,
@@ -207,6 +207,7 @@ pub fn new_dev(config: Configuration) -> Result<TaskManager, ServiceError> {
                                 xcm_config: Default::default(),
                                 raw_downward_messages: Default::default(),
                                 raw_horizontal_messages: Default::default(),
+                                additional_key_values: None,
                             }
                         };
 

@@ -13,7 +13,7 @@ use polkadot_parachain_primitives::primitives::{
 };
 use tuxedo_core::{
     types::{Block, Header, Transaction},
-    ConstraintChecker, Executive, Verifier,
+    Executive, Verifier,
 };
 
 use parity_scale_codec::Encode;

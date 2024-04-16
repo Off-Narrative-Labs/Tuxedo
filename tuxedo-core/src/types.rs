@@ -5,13 +5,13 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_runtime::traits::{BlakeTwo256, Extrinsic};
+use sp_runtime::traits::{BlakeTwo256, Extrinsic, Hash as HashT};
 use sp_std::vec::Vec;
 
 // All Tuxedo chains use the same BlakeTwo256 hash.
 pub type Hash = BlakeTwo256;
 /// Opaque block hash type.
-pub type OpaqueHash = <Hash as sp_api::HashT>::Output;
+pub type OpaqueHash = <Hash as HashT>::Output;
 /// All Tuxedo chains use the same u32 BlockNumber.
 pub type BlockNumber = u32;
 /// Because all tuxedo chains use the same Blocknumber and Hash types,
