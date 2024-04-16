@@ -15,6 +15,6 @@ var srcIndex = new Map(JSON.parse('[\
 ["tuxedo_parachain_runtime",["",[],["genesis.rs","lib.rs"]]],\
 ["tuxedo_parachainify",["",[],["lib.rs"]]],\
 ["tuxedo_template_runtime",["",[],["genesis.rs","lib.rs"]]],\
-["tuxedo_template_wallet",["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","parachain.rs","rpc.rs","sync.rs","timestamp.rs"]]]\
+["tuxedo_template_wallet",["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","parachain.rs","rpc.rs","sync.rs","timestamp.rs"]]]\
 ]'));
 createSrcSidebar();

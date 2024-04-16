@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ENDPOINT"],"fn":["default_data_path","h256_from_string","main","output_ref_from_string","pretty_print_verifier","strip_0x_prefix","temp_dir"],"mod":["amoeba","cli","keystore","money","output_filter","parachain","rpc","sync","timestamp"]};
+window.SIDEBAR_ITEMS = {"constant":["DEFAULT_ENDPOINT"],"fn":["default_data_path","h256_from_string","main","output_ref_from_string","pretty_print_verifier","strip_0x_prefix","temp_dir"],"mod":["amoeba","cli","keystore","money","parachain","rpc","sync","timestamp"]};

@@ -1,1 +1,0 @@
-searchState.loadedDescShard("aggregator", 0, "Automatically implements <code>From</code> for each type in an …\nThis macro treats the supplied enum as an aggregate …\nThis macro treats the supplied enum as an aggregate …")
