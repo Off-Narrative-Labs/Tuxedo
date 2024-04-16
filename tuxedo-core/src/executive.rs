@@ -158,7 +158,7 @@ where
                 requires: missing_inputs,
                 provides,
                 priority: 0,
-                longevity: TransactionLongevity::max_value(),
+                longevity: TransactionLongevity::MAX,
                 propagate: true,
             });
         }
@@ -181,7 +181,7 @@ where
             requires: Vec::new(),
             provides,
             priority: 0,
-            longevity: TransactionLongevity::max_value(),
+            longevity: TransactionLongevity::MAX,
             propagate: true,
         })
     }
