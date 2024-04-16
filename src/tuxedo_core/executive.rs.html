@@ -1292,6 +1292,9 @@
 <a href="#1290" id="1290">1290</a>
 <a href="#1291" id="1291">1291</a>
 <a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1323,7 +1326,7 @@
         InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidity,
         TransactionValidityError, ValidTransaction,
     },
-    ApplyExtrinsicResult, StateVersion,
+    ApplyExtrinsicResult, ExtrinsicInclusionMode, StateVersion,
 };
 <span class="kw">use </span>sp_std::marker::PhantomData;
 <span class="kw">use </span>sp_std::{collections::btree_set::BTreeSet, vec::Vec};
@@ -1540,7 +1543,7 @@
     <span class="comment">// These next three methods are for the block authoring workflow.
     // Open the block, apply zero or more extrinsics, close the block
 
-    </span><span class="kw">pub fn </span>open_block(header: <span class="kw-2">&amp;</span>Header) {
+    </span><span class="kw">pub fn </span>open_block(header: <span class="kw-2">&amp;</span>Header) -&gt; ExtrinsicInclusionMode {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">"Entering initialize_block. header: {:?}"</span>, header
@@ -1553,6 +1556,9 @@
         <span class="comment">// Also store the height persistently so it is available when
         // performing pool validations and other off-chain runtime calls.
         </span>sp_io::storage::set(HEIGHT_KEY, <span class="kw-2">&amp;</span>header.number().encode());
+
+        <span class="comment">// Tuxedo blocks always allow user transactions.
+        </span>ExtrinsicInclusionMode::AllExtrinsics
     }
 
     <span class="kw">pub fn </span>apply_extrinsic(extrinsic: Transaction&lt;V, C&gt;) -&gt; ApplyExtrinsicResult {

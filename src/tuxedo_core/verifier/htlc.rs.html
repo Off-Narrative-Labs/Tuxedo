@@ -546,7 +546,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span>sp_core::{sr25519::Pair, Pair <span class="kw">as _</span>};
+    <span class="kw">use </span>sp_core::{sr25519::Pair, ByteArray, Pair <span class="kw">as _</span>};
 
     <span class="kw">fn </span>bad_sig() -&gt; Signature {
         Signature::from_slice(

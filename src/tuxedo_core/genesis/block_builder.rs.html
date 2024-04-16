@@ -92,6 +92,8 @@
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Custom GenesisBlockBuilder for Tuxedo, to allow extrinsics to be added to the genesis block.
 
 </span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
@@ -100,7 +102,7 @@
 <span class="kw">use </span>sc_executor::RuntimeVersionOf;
 <span class="kw">use </span>sp_core::traits::CodeExecutor;
 <span class="kw">use </span>sp_runtime::{
-    traits::{Block <span class="kw">as </span>BlockT, Hash <span class="kw">as </span>HashT, Header <span class="kw">as </span>HeaderT, Zero},
+    traits::{Block <span class="kw">as </span>BlockT, Hash <span class="kw">as </span>HashT, HashingFor, Header <span class="kw">as </span>HeaderT, Zero},
     BuildStorage,
 };
 <span class="kw">use </span>std::sync::Arc;
@@ -152,8 +154,10 @@
             .build_storage()
             .map_err(sp_blockchain::Error::Storage)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>state_version =
-            sc_chain_spec::resolve_state_version_from_wasm(<span class="kw-2">&amp;</span>genesis_storage, <span class="kw-2">&amp;</span><span class="self">self</span>.executor)<span class="question-mark">?</span>;
+        <span class="kw">let </span>state_version = sc_chain_spec::resolve_state_version_from_wasm::&lt;<span class="kw">_</span>, HashingFor&lt;Block&gt;&gt;(
+            <span class="kw-2">&amp;</span>genesis_storage,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.executor,
+        )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>extrinsics = <span class="kw">match </span>genesis_storage.top.remove(<span class="kw">crate</span>::EXTRINSIC_KEY) {
             <span class="prelude-val">Some</span>(v) =&gt; &lt;Vec&lt;&lt;Block <span class="kw">as </span>BlockT&gt;::Extrinsic&gt;&gt;::decode(<span class="kw-2">&amp;mut &amp;</span>v[..]).unwrap_or_default(),
