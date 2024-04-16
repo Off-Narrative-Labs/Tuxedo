@@ -296,13 +296,15 @@ impl<T: TimestampConfig + 'static> InherentHooks for SetTimestamp<T> {
         }
     }
 
-    fn genesis_transactions() -> Vec<Transaction<V, Self>> {
+    fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>> {
         vec![Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: vec![Output {
                 payload: Timestamp::new(0, 0).into(),
-                verifier: UpForGrabs.into(),
+                verifier: V::new_unspendable().expect(
+                    "Must be able to create unspendable verifier to use timestamp inherent.",
+                ),
             }],
             checker: Self::default(),
         }]

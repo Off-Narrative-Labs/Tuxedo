@@ -3,7 +3,7 @@
 use crate::{
     ensure,
     types::{OutputRef, Transaction},
-    ConstraintChecker, Verifier, EXTRINSIC_KEY,
+    ConstraintChecker, Verifier, EXTRINSIC_KEY, HEIGHT_KEY,
 };
 use parity_scale_codec::Encode;
 use sp_api::HashT;
@@ -14,7 +14,7 @@ pub struct TuxedoGenesisConfigBuilder<V, C>(sp_std::marker::PhantomData<(V, C)>)
 impl<V, C> TuxedoGenesisConfigBuilder<V, C>
 where
     V: Verifier,
-    C: ConstraintChecker<V>,
+    C: ConstraintChecker,
     Transaction<V, C>: Encode,
 {
     /// This function expects a list of transactions to be included in the genesis block,
@@ -27,7 +27,7 @@ where
 
         //TODO This was added in during merge conflicts. Make sure inherents are working even in real parachains.
         // Initialize the stored block number to 0
-        sp_io::storage::set(HEIGHT_KEY.to_vec(), 0u32.encode());
+        sp_io::storage::set(HEIGHT_KEY, &0u32.encode());
 
         let mut finished_with_opening_inherents = false;
 

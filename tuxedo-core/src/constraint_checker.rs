@@ -33,7 +33,6 @@ use sp_std::{fmt::Debug, vec::Vec};
 use crate::{dynamic_typing::DynamicallyTypedData, types::Transaction, Verifier};
 use parity_scale_codec::{Decode, Encode};
 use sp_runtime::transaction_validity::TransactionPriority;
-use sp_std::{fmt::Debug, vec::Vec};
 
 /// A particular constraint checker that a transaction can choose to be checked by.
 /// Checks whether the input and output data from a transaction meets the codified constraints.
