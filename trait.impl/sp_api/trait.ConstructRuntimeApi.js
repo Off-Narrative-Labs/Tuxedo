@@ -1,3 +1,4 @@
 (function() {var implementors = {
+"tuxedo_parachain_runtime":[["impl&lt;Block: BlockT, C&gt; ConstructRuntimeApi&lt;Block, C&gt; for <a class=\"struct\" href=\"tuxedo_parachain_runtime/struct.RuntimeApi.html\" title=\"struct tuxedo_parachain_runtime::RuntimeApi\">RuntimeApi</a><div class=\"where\">where\n    C: CallApiAt&lt;Block&gt; + 'static,</div>"]],
 "tuxedo_template_runtime":[["impl&lt;Block: BlockT, C&gt; ConstructRuntimeApi&lt;Block, C&gt; for <a class=\"struct\" href=\"tuxedo_template_runtime/struct.RuntimeApi.html\" title=\"struct tuxedo_template_runtime::RuntimeApi\">RuntimeApi</a><div class=\"where\">where\n    C: CallApiAt&lt;Block&gt; + 'static,</div>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

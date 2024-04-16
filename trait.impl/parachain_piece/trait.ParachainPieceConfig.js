@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"tuxedo_template_runtime":[["impl <a class=\"trait\" href=\"parachain_piece/trait.ParachainPieceConfig.html\" title=\"trait parachain_piece::ParachainPieceConfig\">ParachainPieceConfig</a> for <a class=\"struct\" href=\"tuxedo_template_runtime/struct.Runtime.html\" title=\"struct tuxedo_template_runtime::Runtime\">Runtime</a>"]]
+"tuxedo_parachain_runtime":[["impl <a class=\"trait\" href=\"parachain_piece/trait.ParachainPieceConfig.html\" title=\"trait parachain_piece::ParachainPieceConfig\">ParachainPieceConfig</a> for <a class=\"struct\" href=\"tuxedo_parachain_runtime/struct.RuntimeParachainConfig.html\" title=\"struct tuxedo_parachain_runtime::RuntimeParachainConfig\">RuntimeParachainConfig</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

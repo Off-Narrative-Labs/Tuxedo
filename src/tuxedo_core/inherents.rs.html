@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/inherents.rs`."><title>inherents.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (b11fbfbf3 2024-02-03)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/inherents.rs`."><title>inherents.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c208a72533b4dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (ccfcd950b 2024-04-15)" data-channel="nightly" data-search-js="search-ffac13a0df2b1870.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c97aec732c613ca4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -240,6 +238,8 @@
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
 <a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! APIs and utilities for working with Substrate's Inherents in Tuxedo based chains.
 //!
 //! # Substrate inherents
@@ -272,15 +272,16 @@
 //! that update environmental data), needs to include this foundational previous block inherent data provider
 //! so that the Tuxedo executive can scrape it to find the output references of the previous inherent transactions.
 
-</span><span class="kw">use </span>parity_scale_codec::Encode;
+</span><span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>scale_info::TypeInfo;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>sp_core::H256;
 <span class="kw">use </span>sp_inherents::{
     CheckInherentsResult, InherentData, InherentIdentifier, IsFatalError, MakeFatalError,
 };
 <span class="kw">use </span>sp_std::{vec, vec::Vec};
 
-<span class="kw">use crate</span>::{types::Transaction, ConstraintChecker, Verifier};
+<span class="kw">use crate</span>::{types::Transaction, ConstraintChecker, SimpleConstraintChecker, Verifier};
 
 <span class="doccomment">/// An inherent identifier for the Tuxedo parent block inherent
 </span><span class="kw">pub const </span>PARENT_INHERENT_IDENTIFIER: InherentIdentifier = <span class="kw-2">*</span><span class="string">b"prnt_blk"</span>;
@@ -336,93 +337,115 @@
 /// understand exactly how Substrate's block authoring and Tuxedo's piece aggregation works
 /// (which you probably don't) you can directly implement the `InherentInternal` trait
 /// which is more powerful (and dangerous).
-</span><span class="kw">pub trait </span>TuxedoInherent&lt;V, C: ConstraintChecker&lt;V&gt;&gt;: Sized {
+</span><span class="kw">pub trait </span>InherentHooks: SimpleConstraintChecker + Sized {
     <span class="kw">type </span>Error: Encode + IsFatalError;
 
     <span class="kw">const </span>INHERENT_IDENTIFIER: InherentIdentifier;
 
     <span class="doccomment">/// Create the inherent extrinsic to insert into a block that is being authored locally.
     /// The inherent data is supplied by the authoring node.
-    </span><span class="kw">fn </span>create_inherent(
+    </span><span class="kw">fn </span>create_inherent&lt;V: Verifier&gt;(
         authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        previous_inherent: (Transaction&lt;V, C&gt;, H256),
-    ) -&gt; Transaction&lt;V, C&gt;;
+        previous_inherent: (Transaction&lt;V, <span class="self">Self</span>&gt;, H256),
+    ) -&gt; Transaction&lt;V, <span class="self">Self</span>&gt;;
 
     <span class="doccomment">/// Perform off-chain pre-execution checks on the inherent.
     /// The inherent data is supplied by the importing node.
     /// The inherent data available here is not guaranteed to be the
     /// same as what is available at authoring time.
-    </span><span class="kw">fn </span>check_inherent(
+    </span><span class="kw">fn </span>check_inherent&lt;V&gt;(
         importing_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        inherent: Transaction&lt;V, C&gt;,
+        inherent: Transaction&lt;V, <span class="self">Self</span>&gt;,
         results: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
     );
 
     <span class="doccomment">/// Return the genesis transactions that are required for this inherent.
-    </span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
+    </span><span class="kw">fn </span>genesis_transactions&lt;V: Verifier&gt;() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
         Vec::new()
     }
 }
 
-<span class="doccomment">/// Almost identical to TuxedoInherent, but allows returning multiple extrinsics
-/// (as aggregate runtimes  will need to) and removes the requirement that the generic
-/// outer constraint checker be buildable from `Self` so we can implement it for ().
+<span class="doccomment">/// An adapter type to declare, at the runtime level, that Tuxedo pieces provide custom inherent hooks.
 ///
-/// If you are trying to implement some complex inherent logic that requires the interaction of
-/// multiple inherents, or features a variable number of inherents in each block, you might be
-/// able to express it by implementing this trait, but such designs are probably too complicated.
-/// Think long and hard before implementing this trait directly.
-</span><span class="kw">pub trait </span>InherentInternal&lt;V, C: ConstraintChecker&lt;V&gt;&gt;: Sized {
-    <span class="doccomment">/// Create the inherent extrinsic to insert into a block that is being authored locally.
-    /// The inherent data is supplied by the authoring node.
-    </span><span class="kw">fn </span>create_inherents(
-        authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        previous_inherents: Vec&lt;(Transaction&lt;V, C&gt;, H256)&gt;,
-    ) -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt;;
+/// This adapter type satisfies the executive's expectations by implementing both `ConstraintChecker`.
+/// The inherent logic checks to be sure that exactly one inherent is present before plumbing through to
+/// the underlying `TuxedoInherent` implementation.
+///
+/// This type should encode exactly like the inner type.
+</span><span class="attr">#[derive(
+    Serialize, Deserialize, Eq, PartialEq, Debug, Decode, Default, Encode, TypeInfo, Clone, Copy,
+)]
+</span><span class="kw">pub struct </span>InherentAdapter&lt;C&gt;(C);
 
-    <span class="doccomment">/// Perform off-chain pre-execution checks on the inherents.
-    /// The inherent data is supplied by the importing node.
-    /// The inherent data available here is not guaranteed to be the
-    /// same as what is available at authoring time.
-    </span><span class="kw">fn </span>check_inherents(
-        importing_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        inherents: Vec&lt;Transaction&lt;V, C&gt;&gt;,
-        results: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
-    );
-
-    <span class="doccomment">/// Return the genesis transactions that are required for the inherents.
-    </span><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt;;
+<span class="doccomment">/// Helper to transform an entire transaction by wrapping the constraint checker.
+</span><span class="kw">fn </span>wrap_transaction&lt;V, C&gt;(unwrapped: Transaction&lt;V, C&gt;) -&gt; Transaction&lt;V, InherentAdapter&lt;C&gt;&gt; {
+    Transaction {
+        inputs: unwrapped.inputs,
+        peeks: unwrapped.peeks,
+        outputs: unwrapped.outputs,
+        checker: InherentAdapter(unwrapped.checker),
+    }
 }
 
-<span class="doccomment">/// An adapter to transform structured Tuxedo inherents into the more general and powerful
-/// InherentInternal trait.
-</span><span class="attr">#[derive(Debug, Default, TypeInfo, Clone, Copy)]
-</span><span class="kw">pub struct </span>TuxedoInherentAdapter&lt;T&gt;(T);
+<span class="comment">// I wonder if this should be a deref impl instead?
+</span><span class="doccomment">/// Helper to transform an entire transaction by unwrapping the constraint checker.
+</span><span class="kw">fn </span>unwrap_transaction&lt;V, C&gt;(wrapped: Transaction&lt;V, InherentAdapter&lt;C&gt;&gt;) -&gt; Transaction&lt;V, C&gt; {
+    Transaction {
+        inputs: wrapped.inputs,
+        peeks: wrapped.peeks,
+        outputs: wrapped.outputs,
+        checker: wrapped.checker.<span class="number">0</span>,
+    }
+}
 
-<span class="kw">impl</span>&lt;V: Verifier, C: ConstraintChecker&lt;V&gt;, T: TuxedoInherent&lt;V, C&gt; + <span class="lifetime">'static</span>&gt; InherentInternal&lt;V, C&gt;
-    <span class="kw">for </span>TuxedoInherentAdapter&lt;T&gt;
+<span class="kw">impl</span>&lt;C: SimpleConstraintChecker + InherentHooks + <span class="lifetime">'static</span>&gt; ConstraintChecker
+    <span class="kw">for </span>InherentAdapter&lt;C&gt;
 {
-    <span class="kw">fn </span>create_inherents(
+    <span class="kw">type </span>Error = &lt;C <span class="kw">as </span>SimpleConstraintChecker&gt;::Error;
+
+    <span class="kw">fn </span>check(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        input_data: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData],
+        evicted_input_data: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData],
+        peek_data: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData],
+        output_data: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::dynamic_typing::DynamicallyTypedData],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;sp_runtime::transaction_validity::TransactionPriority, <span class="self">Self</span>::Error&gt; {
+        SimpleConstraintChecker::check(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>,
+            input_data,
+            evicted_input_data,
+            peek_data,
+            output_data,
+        )
+    }
+
+    <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="bool-val">true
+    </span>}
+
+    <span class="kw">fn </span>create_inherents&lt;V: Verifier&gt;(
         authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        previous_inherents: Vec&lt;(Transaction&lt;V, C&gt;, H256)&gt;,
-    ) -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
+        previous_inherents: Vec&lt;(Transaction&lt;V, <span class="self">Self</span>&gt;, H256)&gt;,
+    ) -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
         <span class="kw">if </span>previous_inherents.len() &gt; <span class="number">1 </span>{
             <span class="macro">panic!</span>(<span class="string">"Authoring a leaf inherent constraint checker, but multiple previous inherents were supplied."</span>)
         }
 
-        <span class="kw">let </span>previous_inherent = previous_inherents.first().cloned();
-
-        <span class="macro">vec!</span>[&lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::create_inherent(
+        <span class="kw">let </span>(previous_inherent, hash) = previous_inherents
+            .first()
+            .cloned()
+            .expect(<span class="string">"Previous inherent exists."</span>);
+        <span class="kw">let </span>current_inherent = wrap_transaction(&lt;C <span class="kw">as </span>InherentHooks&gt;::create_inherent(
             authoring_inherent_data,
-            previous_inherent.expect(<span class="string">"Previous inherent exists."</span>),
-        )]
+            (unwrap_transaction(previous_inherent), hash),
+        ));
+
+        <span class="macro">vec!</span>[current_inherent]
     }
 
-    <span class="kw">fn </span>check_inherents(
+    <span class="kw">fn </span>check_inherents&lt;V: Clone&gt;(
         importing_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-        inherents: Vec&lt;Transaction&lt;V, C&gt;&gt;,
+        inherents: Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt;,
         results: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
     ) {
         <span class="kw">if </span>inherents.is_empty() {
@@ -443,41 +466,20 @@
         }
         <span class="kw">let </span>inherent = inherents
             .first()
-            .expect(<span class="string">"Previous inherent exists."</span>)
-            .clone();
-        &lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::check_inherent(importing_inherent_data, inherent, results)
+            .cloned()
+            .expect(<span class="string">"Previous inherent exists."</span>);
+        &lt;C <span class="kw">as </span>InherentHooks&gt;::check_inherent(
+            importing_inherent_data,
+            unwrap_transaction(inherent),
+            results,
+        )
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
-        &lt;T <span class="kw">as </span>TuxedoInherent&lt;V, C&gt;&gt;::genesis_transactions()
-    }
-}
-
-<span class="kw">impl</span>&lt;V, C: ConstraintChecker&lt;V&gt;&gt; InherentInternal&lt;V, C&gt; <span class="kw">for </span>() {
-    <span class="kw">fn </span>create_inherents(
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span>InherentData,
-        <span class="kw">_</span>: Vec&lt;(Transaction&lt;V, C&gt;, H256)&gt;,
-    ) -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
-        Vec::new()
-    }
-
-    <span class="kw">fn </span>check_inherents(
-        <span class="kw">_</span>: <span class="kw-2">&amp;</span>InherentData,
-        inherents: Vec&lt;Transaction&lt;V, C&gt;&gt;,
-        <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
-    ) {
-        <span class="comment">// Inherents should always be empty for this stub implementation. Not just in valid blocks, but as an invariant.
-        // The way we determined which inherents got here is by matching on the constraint checker.
-        </span><span class="macro">assert!</span>(
-            inherents.is_empty(),
-            <span class="string">"inherent extrinsic was passed to check inherents stub implementation."
-        </span>)
-    }
-
-    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
-        Vec::new()
+    <span class="kw">fn </span>genesis_transactions&lt;V: Verifier&gt;() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
+        &lt;C <span class="kw">as </span>InherentHooks&gt;::genesis_transactions()
+            .into_iter()
+            .map(|gtx| wrap_transaction(gtx))
+            .collect()
     }
 }
 </code></pre></div></section></main></body></html>

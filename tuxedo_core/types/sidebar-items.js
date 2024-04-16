@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["UtxoError"],"struct":["Input","Output","OutputRef","Transaction"],"type":["DispatchResult"]};
+window.SIDEBAR_ITEMS = {"enum":["RedemptionStrategy","UtxoError"],"struct":["Input","Output","OutputRef","Transaction"],"type":["Block","BlockNumber","DispatchResult","Hash","Header","OpaqueBlock","OpaqueHash"]};

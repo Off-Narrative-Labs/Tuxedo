@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (b11fbfbf3 2024-02-03)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/executive.rs`."><title>executive.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c208a72533b4dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (ccfcd950b 2024-04-15)" data-channel="nightly" data-search-js="search-ffac13a0df2b1870.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c97aec732c613ca4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1272,6 +1270,27 @@
 <a href="#1270" id="1270">1270</a>
 <a href="#1271" id="1271">1271</a>
 <a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1282,12 +1301,16 @@
 
 </span><span class="kw">use crate</span>::{
     constraint_checker::ConstraintChecker,
+    dynamic_typing::DynamicallyTypedData,
     ensure,
-    inherents::{InherentInternal, PARENT_INHERENT_IDENTIFIER},
-    types::{DispatchResult, OutputRef, Transaction, UtxoError},
+    inherents::PARENT_INHERENT_IDENTIFIER,
+    types::{
+        Block, BlockNumber, DispatchResult, Header, OutputRef, RedemptionStrategy, Transaction,
+        UtxoError,
+    },
     utxo_set::TransparentUtxoSet,
     verifier::Verifier,
-    EXTRINSIC_KEY, HEADER_KEY, LOG_TARGET,
+    EXTRINSIC_KEY, HEADER_KEY, HEIGHT_KEY, LOG_TARGET,
 };
 <span class="kw">use </span>log::debug;
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
@@ -1295,7 +1318,7 @@
 <span class="kw">use </span>sp_core::H256;
 <span class="kw">use </span>sp_inherents::{CheckInherentsResult, InherentData};
 <span class="kw">use </span>sp_runtime::{
-    traits::BlakeTwo256,
+    traits::{BlakeTwo256, Extrinsic},
     transaction_validity::{
         InvalidTransaction, TransactionLongevity, TransactionSource, TransactionValidityError,
         ValidTransaction,
@@ -1307,10 +1330,14 @@
 
 <span class="doccomment">/// The executive. Each runtime is encouraged to make a type alias called `Executive` that fills
 /// in the proper generic types.
-</span><span class="kw">pub struct </span>Executive&lt;B, V, C&gt;(PhantomData&lt;(B, V, C)&gt;);
+</span><span class="kw">pub struct </span>Executive&lt;V, C&gt;(PhantomData&lt;(V, C)&gt;);
 
-<span class="kw">impl</span>&lt;B: BlockT&lt;Extrinsic = Transaction&lt;V, C&gt;&gt;, V: Verifier, C: ConstraintChecker&lt;V&gt;&gt;
-    Executive&lt;B, V, C&gt;
+<span class="kw">impl</span>&lt;V, C&gt; Executive&lt;V, C&gt;
+<span class="kw">where
+    </span>V: Verifier,
+    C: ConstraintChecker,
+    Block&lt;V, C&gt;: BlockT&lt;Extrinsic = Transaction&lt;V, C&gt;, Hash = sp_core::H256&gt;,
+    Transaction&lt;V, C&gt;: Extrinsic,
 {
     <span class="doccomment">/// Does pool-style validation of a tuxedo transaction.
     /// Does not commit anything to storage.
@@ -1338,36 +1365,46 @@
         // This will be passed to the verifiers
         </span><span class="kw">let </span><span class="kw-2">mut </span>stripped = transaction.clone();
         <span class="kw">for </span>input <span class="kw">in </span>stripped.inputs.iter_mut() {
-            input.redeemer = Vec::new();
+            input.redeemer = Default::default();
         }
         <span class="kw">let </span>stripped_encoded = stripped.encode();
 
         <span class="comment">// Check that the verifiers of all inputs are satisfied
-        // Keep a Vec of the input utxos for passing to the constraint checker
+        // Keep a Vec of the input data for passing to the constraint checker
         // Keep track of any missing inputs for use in the tagged transaction pool
-        </span><span class="kw">let </span><span class="kw-2">mut </span>input_utxos = Vec::new();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>input_data = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>evicted_input_data = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>missing_inputs = Vec::new();
         <span class="kw">for </span>input <span class="kw">in </span>transaction.inputs.iter() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(input_utxo) = TransparentUtxoSet::&lt;V&gt;::peek_utxo(<span class="kw-2">&amp;</span>input.output_ref) {
-                <span class="macro">ensure!</span>(
-                    input_utxo
-                        .verifier
-                        .verify(<span class="kw-2">&amp;</span>stripped_encoded, <span class="kw-2">&amp;</span>input.redeemer),
-                    UtxoError::VerifierError
-                );
-                input_utxos.push(input_utxo);
+                <span class="kw">match </span>input.redeemer {
+                    RedemptionStrategy::Redemption(<span class="kw-2">ref </span>redeemer) =&gt; {
+                        <span class="kw">let </span>redeemer = V::Redeemer::decode(<span class="kw-2">&amp;mut &amp;</span>redeemer[..])
+                            .map_err(|<span class="kw">_</span>| UtxoError::VerifierError)<span class="question-mark">?</span>;
+                        <span class="macro">ensure!</span>(
+                            input_utxo.verifier.verify(
+                                <span class="kw-2">&amp;</span>stripped_encoded,
+                                <span class="self">Self</span>::block_height(),
+                                <span class="kw-2">&amp;</span>redeemer
+                            ),
+                            UtxoError::VerifierError
+                        );
+                        input_data.push(input_utxo.payload);
+                    }
+                    RedemptionStrategy::Eviction =&gt; evicted_input_data.push(input_utxo.payload),
+                }
             } <span class="kw">else </span>{
                 missing_inputs.push(input.output_ref.clone().encode());
             }
         }
 
-        <span class="comment">// Make a Vec of the peek utxos for passing to the constraint checker
+        <span class="comment">// Make a Vec of the peek data for passing to the constraint checker
         // Keep track of any missing peeks for use in the tagged transaction pool
         // Use the same vec as previously to keep track of missing peeks
-        </span><span class="kw">let </span><span class="kw-2">mut </span>peek_utxos = Vec::new();
+        </span><span class="kw">let </span><span class="kw-2">mut </span>peek_data = Vec::new();
         <span class="kw">for </span>output_ref <span class="kw">in </span>transaction.peeks.iter() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(peek_utxo) = TransparentUtxoSet::&lt;V&gt;::peek_utxo(output_ref) {
-                peek_utxos.push(peek_utxo);
+                peek_data.push(peek_utxo.payload);
             } <span class="kw">else </span>{
                 missing_inputs.push(output_ref.encode());
             }
@@ -1420,10 +1457,17 @@
             });
         }
 
+        <span class="comment">// Extract the payload data from each output
+        </span><span class="kw">let </span>output_data: Vec&lt;DynamicallyTypedData&gt; = transaction
+            .outputs
+            .iter()
+            .map(|o| o.payload.clone())
+            .collect();
+
         <span class="comment">// Call the constraint checker
         </span>transaction
             .checker
-            .check(<span class="kw-2">&amp;</span>input_utxos, <span class="kw-2">&amp;</span>peek_utxos, <span class="kw-2">&amp;</span>transaction.outputs)
+            .check(<span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>evicted_input_data, <span class="kw-2">&amp;</span>peek_data, <span class="kw-2">&amp;</span>output_data)
             .map_err(UtxoError::ConstraintCheckerError)<span class="question-mark">?</span>;
 
         <span class="comment">// Return the valid transaction
@@ -1487,20 +1531,16 @@
     }
 
     <span class="doccomment">/// A helper function that allows tuxedo runtimes to read the current block height
-    </span><span class="kw">pub fn </span>block_height() -&gt; &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Number
-    <span class="kw">where
-        </span>B::Header: HeaderT,
-    {
-        <span class="kw-2">*</span>sp_io::storage::get(HEADER_KEY)
-            .and_then(|d| B::Header::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
-            .expect(<span class="string">"A header is always stored at the beginning of the block"</span>)
-            .number()
+    </span><span class="kw">pub fn </span>block_height() -&gt; BlockNumber {
+        sp_io::storage::get(HEIGHT_KEY)
+            .and_then(|d| BlockNumber::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
+            .expect(<span class="string">"A height is stored at the beginning of block one and never cleared."</span>)
     }
 
     <span class="comment">// These next three methods are for the block authoring workflow.
     // Open the block, apply zero or more extrinsics, close the block
 
-    </span><span class="kw">pub fn </span>open_block(header: <span class="kw-2">&amp;</span>&lt;B <span class="kw">as </span>BlockT&gt;::Header) {
+    </span><span class="kw">pub fn </span>open_block(header: <span class="kw-2">&amp;</span>Header) {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">"Entering initialize_block. header: {:?}"</span>, header
@@ -1509,9 +1549,13 @@
         <span class="comment">// Store the transient partial header for updating at the end of the block.
         // This will be removed from storage before the end of the block.
         </span>sp_io::storage::set(HEADER_KEY, <span class="kw-2">&amp;</span>header.encode());
+
+        <span class="comment">// Also store the height persistently so it is available when
+        // performing pool validations and other off-chain runtime calls.
+        </span>sp_io::storage::set(HEIGHT_KEY, <span class="kw-2">&amp;</span>header.number().encode());
     }
 
-    <span class="kw">pub fn </span>apply_extrinsic(extrinsic: &lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic) -&gt; ApplyExtrinsicResult {
+    <span class="kw">pub fn </span>apply_extrinsic(extrinsic: Transaction&lt;V, C&gt;) -&gt; ApplyExtrinsicResult {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">"Entering apply_extrinsic: {:?}"</span>, extrinsic
@@ -1532,9 +1576,9 @@
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
     }
 
-    <span class="kw">pub fn </span>close_block() -&gt; &lt;B <span class="kw">as </span>BlockT&gt;::Header {
+    <span class="kw">pub fn </span>close_block() -&gt; Header {
         <span class="kw">let </span><span class="kw-2">mut </span>header = sp_io::storage::get(HEADER_KEY)
-            .and_then(|d| &lt;B <span class="kw">as </span>BlockT&gt;::Header::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
+            .and_then(|d| Header::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
             .expect(<span class="string">"We initialized with header, it never got mutated, qed"</span>);
 
         <span class="comment">// the header itself contains the state root, so it cannot be inside the state (circular
@@ -1544,16 +1588,13 @@
         <span class="kw">let </span>extrinsics = sp_io::storage::get(EXTRINSIC_KEY)
             .and_then(|d| &lt;Vec&lt;Vec&lt;u8&gt;&gt;&gt;::decode(<span class="kw-2">&amp;mut &amp;*</span>d).ok())
             .unwrap_or_default();
-        <span class="kw">let </span>extrinsics_root = &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hashing::ordered_trie_root(
-            extrinsics,
-            StateVersion::V0,
-        );
+        <span class="kw">let </span>extrinsics_root =
+            &lt;Header <span class="kw">as </span>HeaderT&gt;::Hashing::ordered_trie_root(extrinsics, StateVersion::V0);
         sp_io::storage::clear(EXTRINSIC_KEY);
         header.set_extrinsics_root(extrinsics_root);
 
         <span class="kw">let </span>raw_state_root = <span class="kw-2">&amp;</span>sp_io::storage::root(StateVersion::V1)[..];
-        <span class="kw">let </span>state_root =
-            &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hash::decode(<span class="kw-2">&amp;mut &amp;</span>raw_state_root[..]).unwrap();
+        <span class="kw">let </span>state_root = &lt;Header <span class="kw">as </span>HeaderT&gt;::Hash::decode(<span class="kw-2">&amp;mut &amp;</span>raw_state_root[..]).unwrap();
         header.set_state_root(state_root);
 
         <span class="macro">debug!</span>(target: LOG_TARGET, <span class="string">"finalizing block {:?}"</span>, header);
@@ -1562,7 +1603,7 @@
 
     <span class="comment">// This one is for the Core api. It is used to import blocks authored by foreign nodes.
 
-    </span><span class="kw">pub fn </span>execute_block(block: B) {
+    </span><span class="kw">pub fn </span>execute_block(block: Block&lt;V, C&gt;) {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">"Entering execute_block. block: {:?}"</span>, block
@@ -1572,6 +1613,10 @@
         // info, such as the block height, available to individual pieces. This will
         // be cleared before the end of the block
         </span>sp_io::storage::set(HEADER_KEY, <span class="kw-2">&amp;</span>block.header().encode());
+
+        <span class="comment">// Also store the height persistently so it is available when
+        // performing pool validations and other off-chain runtime calls.
+        </span>sp_io::storage::set(HEIGHT_KEY, <span class="kw-2">&amp;</span>block.header().number().encode());
 
         <span class="comment">// Tuxedo requires that inherents are at the beginning (and soon end) of the
         // block and not scattered throughout. We use this flag to enforce that.
@@ -1603,37 +1648,21 @@
 
         <span class="comment">// Check state root
         </span><span class="kw">let </span>raw_state_root = <span class="kw-2">&amp;</span>sp_io::storage::root(StateVersion::V1)[..];
-        <span class="kw">let </span>state_root =
-            &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hash::decode(<span class="kw-2">&amp;mut &amp;</span>raw_state_root[..]).unwrap();
+        <span class="kw">let </span>state_root = &lt;Header <span class="kw">as </span>HeaderT&gt;::Hash::decode(<span class="kw-2">&amp;mut &amp;</span>raw_state_root[..]).unwrap();
         <span class="macro">assert_eq!</span>(
             <span class="kw-2">*</span>block.header().state_root(),
             state_root,
             <span class="string">"state root mismatch"
         </span>);
 
-        <span class="comment">// Print state for quick debugging
-        // let mut key = vec![];
-        // while let Some(next) = sp_io::storage::next_key(&amp;key) {
-        //     let val = sp_io::storage::get(&amp;next).unwrap().to_vec();
-        //     log::trace!(
-        //         target: LOG_TARGET,
-        //         "{} &lt;=&gt; {}",
-        //         HexDisplay::from(&amp;next),
-        //         HexDisplay::from(&amp;val)
-        //     );
-        //     key = next;
-        // }
-
-        // Check extrinsics root.
+        <span class="comment">// Check extrinsics root.
         </span><span class="kw">let </span>extrinsics = block
             .extrinsics()
             .iter()
             .map(|x| x.encode())
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-        <span class="kw">let </span>extrinsics_root = &lt;&lt;B <span class="kw">as </span>BlockT&gt;::Header <span class="kw">as </span>HeaderT&gt;::Hashing::ordered_trie_root(
-            extrinsics,
-            StateVersion::V0,
-        );
+        <span class="kw">let </span>extrinsics_root =
+            &lt;Header <span class="kw">as </span>HeaderT&gt;::Hashing::ordered_trie_root(extrinsics, StateVersion::V0);
         <span class="macro">assert_eq!</span>(
             <span class="kw-2">*</span>block.header().extrinsics_root(),
             extrinsics_root,
@@ -1645,8 +1674,8 @@
 
     </span><span class="kw">pub fn </span>validate_transaction(
         source: TransactionSource,
-        tx: &lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic,
-        block_hash: &lt;B <span class="kw">as </span>BlockT&gt;::Hash,
+        tx: Transaction&lt;V, C&gt;,
+        block_hash: &lt;Block&lt;V, C&gt; <span class="kw">as </span>BlockT&gt;::Hash,
     ) -&gt; TransactionValidity {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
@@ -1682,14 +1711,14 @@
     }
 
     <span class="comment">// The next two are for the standard beginning-of-block inherent extrinsics.
-    </span><span class="kw">pub fn </span>inherent_extrinsics(data: sp_inherents::InherentData) -&gt; Vec&lt;&lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic&gt; {
+    </span><span class="kw">pub fn </span>inherent_extrinsics(data: sp_inherents::InherentData) -&gt; Vec&lt;Transaction&lt;V, C&gt;&gt; {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">"Entering `inherent_extrinsics`."
         </span>);
 
-        <span class="comment">// Extract the complete parent block from the inheret data
-        </span><span class="kw">let </span>parent: B = data
+        <span class="comment">// Extract the complete parent block from the inherent data
+        </span><span class="kw">let </span>parent: Block&lt;V, C&gt; = data
             .get_data(<span class="kw-2">&amp;</span>PARENT_INHERENT_IDENTIFIER)
             .expect(<span class="string">"Parent block inherent data should be able to decode."</span>)
             .expect(<span class="string">"Parent block should be present among authoring inherent data."</span>);
@@ -1699,7 +1728,7 @@
         // We also annotate each transaction with its original hash for purposes of constructing output refs later.
         // This is necessary because the transaction hash changes as we unwrap layers of aggregation,
         // and we need an original universal transaction id.
-        </span><span class="kw">let </span>previous_blocks_inherents: Vec&lt;(&lt;B <span class="kw">as </span>BlockT&gt;::Extrinsic, H256)&gt; = parent
+        </span><span class="kw">let </span>previous_blocks_inherents: Vec&lt;(Transaction&lt;V, C&gt;, H256)&gt; = parent
             .extrinsics()
             .iter()
             .cloned()
@@ -1716,10 +1745,13 @@
         );
 
         <span class="comment">// Call into constraint checker's own inherent hooks to create the actual transactions
-        </span>C::InherentHooks::create_inherents(<span class="kw-2">&amp;</span>data, previous_blocks_inherents)
+        </span>C::create_inherents(<span class="kw-2">&amp;</span>data, previous_blocks_inherents)
     }
 
-    <span class="kw">pub fn </span>check_inherents(block: B, data: InherentData) -&gt; sp_inherents::CheckInherentsResult {
+    <span class="kw">pub fn </span>check_inherents(
+        block: Block&lt;V, C&gt;,
+        data: InherentData,
+    ) -&gt; sp_inherents::CheckInherentsResult {
         <span class="macro">debug!</span>(
             target: LOG_TARGET,
             <span class="string">"Entering `check_inherents`"
@@ -1739,7 +1771,7 @@
             .take_while(|tx| tx.checker.is_inherent())
             .collect();
 
-        C::InherentHooks::check_inherents(<span class="kw-2">&amp;</span>data, inherents, <span class="kw-2">&amp;mut </span>result);
+        C::check_inherents::&lt;V&gt;(<span class="kw-2">&amp;</span>data, inherents, <span class="kw-2">&amp;mut </span>result);
 
         result
     }
@@ -1749,7 +1781,7 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>sp_core::H256;
     <span class="kw">use </span>sp_io::TestExternalities;
-    <span class="kw">use </span>sp_runtime::transaction_validity::ValidTransactionBuilder;
+    <span class="kw">use </span>sp_runtime::{generic::Header, transaction_validity::ValidTransactionBuilder};
 
     <span class="kw">use crate</span>::{
         constraint_checker::testing::TestConstraintChecker,
@@ -1763,7 +1795,7 @@
     <span class="kw">type </span>TestTransaction = Transaction&lt;TestVerifier, TestConstraintChecker&gt;;
     <span class="kw">pub type </span>TestHeader = sp_runtime::generic::Header&lt;u32, BlakeTwo256&gt;;
     <span class="kw">pub type </span>TestBlock = sp_runtime::generic::Block&lt;TestHeader, TestTransaction&gt;;
-    <span class="kw">pub type </span>TestExecutive = Executive&lt;TestBlock, TestVerifier, TestConstraintChecker&gt;;
+    <span class="kw">pub type </span>TestExecutive = Executive&lt;TestVerifier, TestConstraintChecker&gt;;
 
     <span class="doccomment">/// Construct a mock OutputRef from a transaction number and index in that transaction.
     ///
@@ -1893,10 +1925,18 @@
                 ext.insert(output_ref.encode(), output.encode());
             }
 
-            <span class="comment">// Write the pre-header
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(pre_header) = <span class="self">self</span>.pre_header {
-                ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
-            }
+            <span class="comment">// Write a pre-header. If none was supplied, create a use a default one.
+            </span><span class="kw">let </span>pre_header = <span class="self">self</span>.pre_header.unwrap_or(Header {
+                parent_hash: Default::default(),
+                number: <span class="number">0</span>,
+                state_root: H256::zero(),
+                extrinsics_root: H256::zero(),
+                digest: Default::default(),
+            });
+            ext.insert(HEADER_KEY.to_vec(), pre_header.encode());
+
+            <span class="comment">// Write a block height.
+            </span>ext.insert(HEIGHT_KEY.to_vec(), pre_header.number.encode());
 
             <span class="comment">// Write the noted extrinsics
             </span>ext.insert(EXTRINSIC_KEY.to_vec(), <span class="self">self</span>.noted_extrinsics.encode());
@@ -1926,7 +1966,7 @@
             .execute_with(|| {
                 <span class="kw">let </span>input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: RedemptionStrategy::Redemption(Vec::new()),
                 };
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
@@ -1992,7 +2032,7 @@
             <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
             <span class="kw">let </span>input = Input {
                 output_ref: output_ref.clone(),
-                redeemer: Vec::new(),
+                redeemer: Default::default(),
             };
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
@@ -2038,7 +2078,7 @@
             .execute_with(|| {
                 <span class="kw">let </span>input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
@@ -2086,7 +2126,7 @@
             .execute_with(|| {
                 <span class="kw">let </span>input = Input {
                     output_ref,
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
@@ -2156,7 +2196,7 @@
             <span class="kw">let </span>output_ref = mock_output_ref(<span class="number">0</span>, <span class="number">0</span>);
             <span class="kw">let </span>input = Input {
                 output_ref: output_ref.clone(),
-                redeemer: Vec::new(),
+                redeemer: Default::default(),
             };
 
             <span class="kw">let </span>tx = TestTransactionBuilder::default()
@@ -2194,7 +2234,7 @@
             .execute_with(|| {
                 <span class="kw">let </span>input = Input {
                     output_ref: output_ref.clone(),
-                    redeemer: Vec::new(),
+                    redeemer: Default::default(),
                 };
 
                 <span class="kw">let </span>tx = TestTransactionBuilder::default()
@@ -2339,7 +2379,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"</span>,
@@ -2361,7 +2401,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"d609af1c51521f5891054014cf667619067a93f4bca518b398f5a39aeb270cca"</span>,
@@ -2384,7 +2424,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314"</span>,
@@ -2428,7 +2468,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: H256::zero(),
                     digest: Default::default(),
@@ -2448,7 +2488,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"799fc6d36f68fc83ae3408de607006e02836181e91701aa3a8021960b1f3507c"</span>,
@@ -2470,7 +2510,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"bf3e98799022bee8f0a55659af5f498717736ae012d2aff6274cdb7c2b0d78e9"</span>,
@@ -2498,7 +2538,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"df64890515cd8ef5a8e736248394f7c72a1df197bd400a4e31affcaf6e051984"</span>,
@@ -2526,7 +2566,7 @@
                     parent_hash: H256::zero(),
                     number: <span class="number">6</span>,
                     state_root: array_bytes::hex_n_into_unchecked(
-                        <span class="string">"858174d563f845dbb4959ea64816bd8409e48cc7e65db8aa455bc98d61d24071"</span>,
+                        <span class="string">"cc2d78f5977b6e9e16f4417f60cbd7edaad0c39a6a7cd21281e847da7dd210b9"</span>,
                     ),
                     extrinsics_root: array_bytes::hex_n_into_unchecked(
                         <span class="string">"0x36601deae36de127b974e8498e118e348a50aa4aa94bc5713e29c56e0d37e44f"</span>,

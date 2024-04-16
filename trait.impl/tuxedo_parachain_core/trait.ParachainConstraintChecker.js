@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"tuxedo_parachain_runtime":[["impl <a class=\"trait\" href=\"tuxedo_parachain_core/trait.ParachainConstraintChecker.html\" title=\"trait tuxedo_parachain_core::ParachainConstraintChecker\">ParachainConstraintChecker</a> for <a class=\"enum\" href=\"tuxedo_parachain_runtime/enum.ParachainConstraintChecker.html\" title=\"enum tuxedo_parachain_runtime::ParachainConstraintChecker\">ParachainConstraintChecker</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

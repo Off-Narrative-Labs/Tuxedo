@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ParachainError"],"struct":["SetParachainInfo"],"trait":["ParachainPieceConfig"]};
+window.SIDEBAR_ITEMS = {"enum":["ParachainError"],"struct":["ParachainInherentData","SetParachainInfo"],"trait":["ParachainPieceConfig"]};

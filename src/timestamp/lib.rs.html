@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wardrobe/timestamp/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="timestamp" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (b11fbfbf3 2024-02-03)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../timestamp/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wardrobe/timestamp/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c208a72533b4dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="timestamp" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (ccfcd950b 2024-04-15)" data-channel="nightly" data-search-js="search-ffac13a0df2b1870.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c97aec732c613ca4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../timestamp/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -383,23 +381,13 @@
 <a href="#381" id="381">381</a>
 <a href="#382" id="382">382</a>
 <a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Allow block authors to include a timestamp via an inherent transaction.
 //!
 //! This is roughly analogous to FRAME's pallet timestamp. It relies on the same client-side inherent data provider,
-//! as well as Tuxedo's own previous block inehrent data provider.
+//! as well as Tuxedo's own previous block inherent data provider.
 //!
 //! In each block, the block author must include a single `SetTimestamp` transaction that peeks at the
 //! Timestamp UTXO that was created in the previous block, and creates a new one with an updated timestamp.
-//!
-//! This piece currently features a prominent hack which will need to be cleaned up in due course.
-//! It abuses the UpForGrabs verifier. This should be replaced with an Unspendable verifier and an eviction workflow.
 
 </span><span class="attr">#![cfg_attr(not(feature = <span class="string">"std"</span>), no_std)]
 
@@ -416,11 +404,10 @@
 <span class="kw">use </span>tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
-    inherents::{TuxedoInherent, TuxedoInherentAdapter},
+    inherents::InherentHooks,
     support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     types::{Output, OutputRef, Transaction},
-    verifier::UpForGrabs,
-    ConstraintChecker, SimpleConstraintChecker, Verifier,
+    SimpleConstraintChecker, Verifier,
 };
 
 <span class="attr">#[cfg(test)]
@@ -511,6 +498,8 @@
     <span class="doccomment">/// You may not clean up old timestamps until they are at least the CLEANUP_AGE older than another
     /// noted timestamp on-chain.
     </span>DontBeSoHasty,
+    <span class="doccomment">/// When cleaning up old timestamps, you must evict them. You may not use normal inputs.
+    </span>CleanupEvictionsOnly,
 }
 
 <span class="doccomment">/// A constraint checker for the simple act of setting a new best timetamp.
@@ -539,33 +528,34 @@
 #[scale_info(skip_type_params(T))]
 </span><span class="kw">pub struct </span>SetTimestamp&lt;T&gt;(PhantomData&lt;T&gt;);
 
-<span class="kw">impl</span>&lt;T: TimestampConfig + <span class="lifetime">'static</span>, V: Verifier + From&lt;UpForGrabs&gt;&gt; ConstraintChecker&lt;V&gt;
-    <span class="kw">for </span>SetTimestamp&lt;T&gt;
-{
+<span class="kw">impl</span>&lt;T: TimestampConfig + <span class="lifetime">'static</span>&gt; SimpleConstraintChecker <span class="kw">for </span>SetTimestamp&lt;T&gt; {
     <span class="kw">type </span>Error = TimestampError;
-    <span class="kw">type </span>InherentHooks = TuxedoInherentAdapter&lt;<span class="self">Self</span>&gt;;
 
     <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        input_data: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;V&gt;],
-        peek_data: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;V&gt;],
-        output_data: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;V&gt;],
+        input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        evicted_input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        peek_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
         <span class="macro">log::debug!</span>(
             target: LOG_TARGET,
             <span class="string">"🕰️🖴 Checking constraints for SetTimestamp."
         </span>);
 
-        <span class="comment">// Make sure there are no inputs. Setting a new timestamp does not consume anything.
+        <span class="comment">// Make sure there are no inputs or evictions. Setting a new timestamp does not consume anything.
         </span><span class="macro">ensure!</span>(
             input_data.is_empty(),
+            <span class="self">Self</span>::Error::InputsWhileSettingTimestamp
+        );
+        <span class="macro">ensure!</span>(
+            evicted_input_data.is_empty(),
             <span class="self">Self</span>::Error::InputsWhileSettingTimestamp
         );
 
         <span class="comment">// Make sure the only output is a new best timestamp
         </span><span class="macro">ensure!</span>(!output_data.is_empty(), <span class="self">Self</span>::Error::MissingNewTimestamp);
         <span class="kw">let </span>new_timestamp = output_data[<span class="number">0</span>]
-            .payload
             .extract::&lt;Timestamp&gt;()
             .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::Error::BadlyTyped)<span class="question-mark">?</span>;
         <span class="macro">ensure!</span>(
@@ -583,13 +573,13 @@
         // We don't expect any additional peeks typically, but they are harmless.
         </span><span class="macro">ensure!</span>(!peek_data.is_empty(), <span class="self">Self</span>::Error::MissingPreviousTimestamp);
         <span class="kw">let </span>old_timestamp = peek_data[<span class="number">0</span>]
-            .payload
             .extract::&lt;Timestamp&gt;()
             .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::Error::BadlyTyped)<span class="question-mark">?</span>;
 
         <span class="comment">// Compare the new timestamp to the previous timestamp
         </span><span class="macro">ensure!</span>(
-            new_timestamp.time &gt;= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
+            old_timestamp.block == <span class="number">0 </span><span class="comment">// first block hack
+                </span>|| new_timestamp.time &gt;= old_timestamp.time + T::MINIMUM_TIME_INTERVAL,
             <span class="self">Self</span>::Error::TimestampTooOld
         );
 
@@ -601,19 +591,13 @@
 
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
-
-    <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="bool-val">true
-    </span>}
 }
 
-<span class="kw">impl</span>&lt;V: Verifier + From&lt;UpForGrabs&gt;, T: TimestampConfig + <span class="lifetime">'static</span>&gt; TuxedoInherent&lt;V, <span class="self">Self</span>&gt;
-    <span class="kw">for </span>SetTimestamp&lt;T&gt;
-{
+<span class="kw">impl</span>&lt;T: TimestampConfig + <span class="lifetime">'static</span>&gt; InherentHooks <span class="kw">for </span>SetTimestamp&lt;T&gt; {
     <span class="kw">type </span>Error = sp_timestamp::InherentError;
     <span class="kw">const </span>INHERENT_IDENTIFIER: sp_inherents::InherentIdentifier = sp_timestamp::INHERENT_IDENTIFIER;
 
-    <span class="kw">fn </span>create_inherent(
+    <span class="kw">fn </span>create_inherent&lt;V: Verifier&gt;(
         authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
         previous_inherent: (Transaction&lt;V, <span class="self">Self</span>&gt;, H256),
     ) -&gt; tuxedo_core::types::Transaction&lt;V, <span class="self">Self</span>&gt; {
@@ -641,7 +625,8 @@
 
         <span class="kw">let </span>new_output = Output {
             payload: new_timestamp.into(),
-            verifier: UpForGrabs.into(),
+            verifier: V::new_unspendable()
+                .expect(<span class="string">"Must be able to create unspendable verifier to use timestamp inherent."</span>),
         };
 
         Transaction {
@@ -652,7 +637,7 @@
         }
     }
 
-    <span class="kw">fn </span>check_inherent(
+    <span class="kw">fn </span>check_inherent&lt;V&gt;(
         importing_inherent_data: <span class="kw-2">&amp;</span>InherentData,
         inherent: Transaction&lt;V, <span class="self">Self</span>&gt;,
         result: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
@@ -694,21 +679,15 @@
         }
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-    </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
-        <span class="kw">use </span>std::time::{Duration, SystemTime};
-        <span class="kw">let </span>time = SystemTime::UNIX_EPOCH
-            .elapsed()
-            .expect(<span class="string">"Time went backwards!"</span>)
-            .saturating_sub(Duration::from_millis(T::MINIMUM_TIME_INTERVAL))
-            .as_millis() <span class="kw">as </span>u64;
-
+    <span class="kw">fn </span>genesis_transactions&lt;V: Verifier&gt;() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
         <span class="macro">vec!</span>[Transaction {
             inputs: Vec::new(),
             peeks: Vec::new(),
             outputs: <span class="macro">vec!</span>[Output {
-                payload: Timestamp::new(time, <span class="number">0</span>).into(),
-                verifier: UpForGrabs.into(),
+                payload: Timestamp::new(<span class="number">0</span>, <span class="number">0</span>).into(),
+                verifier: V::new_unspendable().expect(
+                    <span class="string">"Must be able to create unspendable verifier to use timestamp inherent."</span>,
+                ),
             }],
             checker: <span class="self">Self</span>::default(),
         }]
@@ -741,9 +720,14 @@
     <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        evicted_input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         peek_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
+        <span class="comment">// Make sure there are no normal inputs. Timestamps are unspendable,
+        // so they must be evicted.
+        </span><span class="macro">ensure!</span>(input_data.is_empty(), <span class="self">Self</span>::Error::CleanupEvictionsOnly);
+
         <span class="comment">// Make sure there at least one peek that is the new reference time.
         // We don't expect any additional peeks typically, but as above, they are harmless.
         </span><span class="macro">ensure!</span>(
@@ -760,10 +744,10 @@
             <span class="self">Self</span>::Error::CleanupCannotCreateState
         );
 
-        <span class="comment">// Make sure each input is old enough to be cleaned up
+        <span class="comment">// Make sure each eviction is old enough to be cleaned up
         // in terms of both time and block height.
-        </span><span class="kw">for </span>input_datum <span class="kw">in </span>input_data {
-            <span class="kw">let </span>old_timestamp = input_datum
+        </span><span class="kw">for </span>eviction_datum <span class="kw">in </span>evicted_input_data {
+            <span class="kw">let </span>old_timestamp = eviction_datum
                 .extract::&lt;Timestamp&gt;()
                 .map_err(|<span class="kw">_</span>| <span class="self">Self</span>::Error::BadlyTyped)<span class="question-mark">?</span>;
 

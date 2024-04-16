@@ -10,10 +10,11 @@ var srcIndex = new Map(JSON.parse('[\
 ["poe",["",[],["lib.rs"]]],\
 ["runtime_upgrade",["",[],["lib.rs"]]],\
 ["timestamp",["",[],["lib.rs"]]],\
-["tuxedo_core",["",[],["constraint_checker.rs","dynamic_typing.rs","executive.rs","genesis.rs","inherents.rs","lib.rs","support_macros.rs","traits.rs","types.rs","utxo_set.rs","verifier.rs"]]],\
+["tuxedo_core",["",[["genesis",[],["block_builder.rs","config_builder.rs","mod.rs"]],["verifier",[],["htlc.rs","multi_signature.rs","simple_signature.rs"]]],["constraint_checker.rs","dynamic_typing.rs","executive.rs","inherents.rs","lib.rs","support_macros.rs","traits.rs","types.rs","utxo_set.rs","verifier.rs"]]],\
 ["tuxedo_parachain_core",["",[],["collation_api.rs","lib.rs","relay_state_snapshot.rs"]]],\
-["tuxedo_register_validate_block",["",[],["lib.rs"]]],\
+["tuxedo_parachain_runtime",["",[],["genesis.rs","lib.rs"]]],\
+["tuxedo_parachainify",["",[],["lib.rs"]]],\
 ["tuxedo_template_runtime",["",[],["genesis.rs","lib.rs"]]],\
-["tuxedo_template_wallet",["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","rpc.rs","sync.rs","timestamp.rs"]]]\
+["tuxedo_template_wallet",["",[],["amoeba.rs","cli.rs","keystore.rs","main.rs","money.rs","output_filter.rs","parachain.rs","rpc.rs","sync.rs","timestamp.rs"]]]\
 ]'));
 createSrcSidebar();

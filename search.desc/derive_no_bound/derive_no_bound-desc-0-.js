@@ -1,0 +1,1 @@
+searchState.loadedDescShard("derive_no_bound", 0, "Macros to derive common traits without bounds\nDerive <code>Clone</code> but do not bound any generic. Docs are at …\nDerive <code>Debug</code> but do not bound any generics. Docs are at …\nderive <code>Default</code> but do no bound any generic. Docs are at …")

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MockRelayParentNumberStorage","RelayParentNumberStorage"],"macro":["register_validate_block"],"struct":["ParachainInherentDataUtxo"],"trait":["GetRelayParentNumberStorage","ParachainExecutiveExtension","SetRelayParentNumberStorage"]};
+window.SIDEBAR_ITEMS = {"enum":["MockRelayParentNumberStorage","RelayParentNumberStorage"],"macro":["parachainify"],"struct":["ParachainInherentDataUtxo"],"trait":["GetRelayParentNumberStorage","ParachainConstraintChecker","ParachainExecutiveExtension","SetRelayParentNumberStorage"]};

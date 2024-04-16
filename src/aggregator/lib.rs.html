@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/aggregator/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="aggregator" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (b11fbfbf3 2024-02-03)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../aggregator/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/aggregator/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c208a72533b4dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="aggregator" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (ccfcd950b 2024-04-15)" data-channel="nightly" data-search-js="search-ffac13a0df2b1870.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c97aec732c613ca4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../aggregator/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -295,7 +293,68 @@
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>proc_macro::TokenStream;
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>convert_case::{Case, Casing};
+<span class="kw">use </span>proc_macro::TokenStream;
 <span class="kw">use </span>quote::quote;
 <span class="kw">use </span>syn::{parse_macro_input, Ident, ItemEnum};
 
@@ -333,7 +392,7 @@
     <span class="kw">let </span>inner_types = variant_type_pairs.map(|(_v, t)| t);
     <span class="kw">let </span>inner_types2 = inner_types.clone();
 
-    <span class="kw">let </span>output = <span class="macro">quote! </span>{
+    <span class="kw">let </span>output = <span class="macro">quote!</span> {
         <span class="comment">// First keep the original code in tact
         </span>#original_code
 
@@ -370,23 +429,107 @@
 </span><span class="kw">pub fn </span>tuxedo_verifier(<span class="kw">_</span>: TokenStream, body: TokenStream) -&gt; TokenStream {
     <span class="kw">let </span>ast = <span class="macro">parse_macro_input!</span>(body <span class="kw">as </span>ItemEnum);
     <span class="kw">let </span>original_code = ast.clone();
+    <span class="kw">let </span>vis = ast.vis;
 
     <span class="kw">let </span>outer_type = ast.ident;
-    <span class="kw">let </span>variants = ast.variants.into_iter().map(|v| v.ident);
+    <span class="kw">let </span>variant_type_pairs = ast.variants.iter().map(|variant| {
+        <span class="comment">// Make sure there is only a single field, and if not, give a helpful error
+        </span><span class="macro">assert!</span>(
+            variant.fields.len() == <span class="number">1</span>,
+            <span class="string">"Each variant must have a single unnamed field"
+        </span>);
+        (
+            variant.ident.clone(),
+            variant
+                .fields
+                .iter()
+                .next()
+                .expect(<span class="string">"exactly one field per variant"</span>)
+                .ty
+                .clone(),
+        )
+    });
+    <span class="kw">let </span>variants = variant_type_pairs.clone().map(|(v, _t)| v);
+    <span class="kw">let </span>inner_types = variant_type_pairs.map(|(_v, t)| t);
 
-    <span class="kw">let </span>output = <span class="macro">quote! </span>{
+    <span class="comment">// Set up the name of the new associated type.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>redeemer_type_name = outer_type.to_string();
+    redeemer_type_name.push_str(<span class="string">"Redeemer"</span>);
+    <span class="kw">let </span>redeemer_type = Ident::new(<span class="kw-2">&amp;</span>redeemer_type_name, outer_type.span());
+    <span class="kw">let </span>type_for_new_unspendable = inner_types
+        .clone()
+        .next()
+        .expect(<span class="string">"At least one verifier variant expected."</span>);
+
+    <span class="comment">// TODO there must be a better way to do this, right?
+    </span><span class="kw">let </span>inner_types2 = inner_types.clone();
+    <span class="kw">let </span>variants2 = variants.clone();
+    <span class="kw">let </span>variants3 = variants.clone();
+    <span class="kw">let </span>variant_for_new_unspendable = variants
+        .clone()
+        .next()
+        .expect(<span class="string">"At least one verifier variant expected."</span>);
+
+    <span class="kw">let </span>as_variants = variants.clone().map(|v| {
+        <span class="kw">let </span>s = <span class="macro">format!</span>(<span class="string">"as_{}"</span>, v);
+        <span class="kw">let </span>s = s.to_case(Case::Snake);
+        Ident::new(<span class="kw-2">&amp;</span>s, v.span())
+    });
+    <span class="kw">let </span>as_variants2 = as_variants.clone();
+
+    <span class="kw">let </span>output = <span class="macro">quote!</span> {
 
         <span class="comment">// Preserve the original enum, and write the From impls
         </span><span class="attr">#[tuxedo_core::aggregate]
         </span>#original_code
 
+        <span class="doccomment">/// This type is generated by the `#[tuxedo_verifier]` macro.
+        /// It is a combined redeemer type for the redeemers of each individual verifier.
+        ///
+        /// This type is accessible downstream as `&lt;OuterVerifier as Verifier&gt;::Redeemer`
+        </span><span class="attr">#[derive(Debug, Encode, Decode)]
+        </span>#vis <span class="kw">enum </span>#redeemer_type {
+            #(
+                #variants(&lt;#inner_types <span class="kw">as </span>tuxedo_core::Verifier&gt;::Redeemer),
+            )*
+        }
+
+        <span class="comment">// Put a bunch of methods like `.as_variant1()` on the aggregate redeemer type
+        // These are necessary when unwrapping the onion.
+        // Might be that we should have a helper macro for this as well
+        </span><span class="kw">impl </span>#redeemer_type {
+            #(
+                <span class="kw">pub fn </span>#as_variants(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;#inner_types2 <span class="kw">as </span>tuxedo_core::Verifier&gt;::Redeemer&gt; {
+                    <span class="kw">match </span><span class="self">self </span>{
+                        <span class="self">Self</span>::#variants2(inner) =&gt; <span class="prelude-val">Some</span>(inner),
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                    }
+                }
+            )*
+        }
+
         <span class="kw">impl </span>tuxedo_core::Verifier <span class="kw">for </span>#outer_type {
-            <span class="kw">fn </span>verify(<span class="kw-2">&amp;</span><span class="self">self</span>, simplified_tx: <span class="kw-2">&amp;</span>[u8], redeemer: <span class="kw-2">&amp;</span>[u8]) -&gt; bool {
+
+            <span class="kw">type </span>Redeemer = #redeemer_type;
+
+            <span class="kw">fn </span>verify(<span class="kw-2">&amp;</span><span class="self">self</span>, simplified_tx: <span class="kw-2">&amp;</span>[u8], block_number: u32, redeemer: <span class="kw-2">&amp;</span><span class="self">Self</span>::Redeemer) -&gt; bool {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(
-                        <span class="self">Self</span>::#variants(inner) =&gt; inner.verify(simplified_tx, redeemer),
+                        <span class="self">Self</span>::#variants3(inner) =&gt; inner.verify(
+                            simplified_tx,
+                            block_number,
+                            redeemer.#as_variants2().expect(<span class="string">"redeemer variant exists because the macro constructed that type."</span>)
+                        ),
                     )*
                 }
+            }
+
+            <span class="comment">// The aggregation macro assumes that the first variant is able to produce a new unspendable instance.
+            // In the future this could be made nicer (but maybe not worth the complexity) by allowing an additional
+            // annotation to the one that can be used as unspendable eg `#[unspendable]`
+            // If this ever becomes a challenge just add an explicit `Unspendable` variant first.
+            </span><span class="kw">fn </span>new_unspendable() -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                #type_for_new_unspendable::new_unspendable().map(|inner| <span class="self">Self</span>::#variant_for_new_unspendable(inner))
             }
         }
     };
@@ -401,9 +544,8 @@
 /// just like this original enum. however, the contained values in the error enum are of the corresponding types
 /// for the inner constraint checker.
 </span><span class="attr">#[proc_macro_attribute]
-</span><span class="kw">pub fn </span>tuxedo_constraint_checker(attrs: TokenStream, body: TokenStream) -&gt; TokenStream {
+</span><span class="kw">pub fn </span>tuxedo_constraint_checker(_attrs: TokenStream, body: TokenStream) -&gt; TokenStream {
     <span class="kw">let </span>ast = <span class="macro">parse_macro_input!</span>(body <span class="kw">as </span>ItemEnum);
-    <span class="kw">let </span>verifier = <span class="macro">parse_macro_input!</span>(attrs <span class="kw">as </span>Ident);
     <span class="kw">let </span>original_code = ast.clone();
 
     <span class="kw">let </span>outer_type = ast.ident;
@@ -432,25 +574,18 @@
     error_type_name.push_str(<span class="string">"Error"</span>);
     <span class="kw">let </span>error_type = Ident::new(<span class="kw-2">&amp;</span>error_type_name, outer_type.span());
 
-    <span class="kw">let </span><span class="kw-2">mut </span>inherent_hooks_name = outer_type.to_string();
-    inherent_hooks_name.push_str(<span class="string">"InherentHooks"</span>);
-    <span class="kw">let </span>inherent_hooks = Ident::new(<span class="kw-2">&amp;</span>inherent_hooks_name, outer_type.span());
-
     <span class="kw">let </span>vis = ast.vis;
 
     <span class="comment">// TODO there must be a better way to do this, right?
     </span><span class="kw">let </span>inner_types2 = inner_types.clone();
     <span class="kw">let </span>inner_types3 = inner_types.clone();
     <span class="kw">let </span>inner_types4 = inner_types.clone();
-    <span class="kw">let </span>inner_types6 = inner_types.clone();
-    <span class="kw">let </span>inner_types7 = inner_types.clone();
     <span class="kw">let </span>variants2 = variants.clone();
     <span class="kw">let </span>variants3 = variants.clone();
     <span class="kw">let </span>variants4 = variants.clone();
     <span class="kw">let </span>variants5 = variants.clone();
-    <span class="kw">let </span>variants6 = variants.clone();
 
-    <span class="kw">let </span>output = <span class="macro">quote! </span>{
+    <span class="kw">let </span>output = <span class="macro">quote!</span> {
         <span class="comment">// Preserve the original enum, and write the From impls
         </span><span class="attr">#[tuxedo_core::aggregate]
         </span>#original_code
@@ -463,27 +598,40 @@
         </span><span class="attr">#[derive(Debug)]
         </span>#vis <span class="kw">enum </span>#error_type {
             #(
-                #variants(&lt;#inner_types <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::Error),
+                #variants(&lt;#inner_types <span class="kw">as </span>tuxedo_core::ConstraintChecker&gt;::Error),
             )*
         }
 
-        <span class="doccomment">/// This type is generated by the `#[tuxedo_constraint_checker]` macro.
-        /// It is a combined set of inherent hooks for the inherent hooks of each individual checker.
-        ///
-        /// This type is accessible downstream as `&lt;OuterConstraintChecker as ConstraintChecker&gt;::InherentHooks`
-        </span><span class="attr">#[derive(Debug, scale_info::TypeInfo)]
-        </span>#vis <span class="kw">enum </span>#inherent_hooks {
-            #(
-                #variants2(&lt;#inner_types2 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::InherentHooks),
-            )*
-        }
+        <span class="kw">impl </span>tuxedo_core::ConstraintChecker <span class="kw">for </span>#outer_type {
+            <span class="kw">type </span>Error = #error_type;
 
-        <span class="kw">impl </span>tuxedo_core::inherents::InherentInternal&lt;#verifier, #outer_type&gt; <span class="kw">for </span>#inherent_hooks {
+            <span class="kw">fn </span>check (
+                <span class="kw-2">&amp;</span><span class="self">self</span>,
+                inputs: <span class="kw-2">&amp;</span>[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+                evicted_inputs: <span class="kw-2">&amp;</span>[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+                peeks: <span class="kw-2">&amp;</span>[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+                outputs: <span class="kw-2">&amp;</span>[tuxedo_core::dynamic_typing::DynamicallyTypedData],
+            ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
+                <span class="kw">match </span><span class="self">self </span>{
+                    #(
+                        <span class="self">Self</span>::#variants5(inner) =&gt; inner.check(inputs, evicted_inputs, peeks, outputs).map_err(|e| <span class="self">Self</span>::Error::#variants5(e)),
+                    )*
+                }
+            }
 
-            <span class="kw">fn </span>create_inherents(
+            <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+                <span class="kw">match </span><span class="self">self </span>{
+                    #(
+                        <span class="self">Self</span>::#variants2(inner) =&gt; inner.is_inherent(),
+                    )*
+                }
+
+            }
+
+            <span class="kw">fn </span>create_inherents&lt;V: tuxedo_core::Verifier&gt;(
                 authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
-                previous_inherents: Vec&lt;(tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;, sp_core::H256)&gt;,
-            ) -&gt; Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;&gt;  {
+                previous_inherents: Vec&lt;(tuxedo_core::types::Transaction&lt;V, #outer_type&gt;, sp_core::H256)&gt;,
+            ) -&gt; Vec&lt;tuxedo_core::types::Transaction&lt;V, #outer_type&gt;&gt;  {
 
                 <span class="kw">let </span><span class="kw-2">mut </span>all_inherents = Vec::new();
 
@@ -500,7 +648,7 @@
                             })
                             .collect();
 
-                        <span class="kw">let </span>inherents = &lt;#inner_types3 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::InherentHooks::create_inherents(authoring_inherent_data, previous_inherents)
+                        <span class="kw">let </span>inherents = &lt;#inner_types3 <span class="kw">as </span>tuxedo_core::ConstraintChecker&gt;::create_inherents(authoring_inherent_data, previous_inherents)
                             .iter()
                             .map(|tx| tx.transform::&lt;#outer_type&gt;())
                             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -512,13 +660,13 @@
                 </span>all_inherents
             }
 
-            <span class="kw">fn </span>check_inherents(
+            <span class="kw">fn </span>check_inherents&lt;V: tuxedo_core::Verifier&gt;(
                 importing_inherent_data: <span class="kw-2">&amp;</span>sp_inherents::InherentData,
-                inherents: Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;&gt;,
+                inherents: Vec&lt;tuxedo_core::types::Transaction&lt;V, #outer_type&gt;&gt;,
                 result: <span class="kw-2">&amp;mut </span>sp_inherents::CheckInherentsResult,
             ) {
                 #(
-                    <span class="kw">let </span>relevant_inherents: Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #inner_types4&gt;&gt; = inherents
+                    <span class="kw">let </span>relevant_inherents: Vec&lt;tuxedo_core::types::Transaction&lt;V, #inner_types4&gt;&gt; = inherents
                         .iter()
                         .filter_map(|tx| {
                             <span class="kw">match </span>tx.checker {
@@ -528,7 +676,7 @@
                         })
                         .collect();
 
-                    &lt;#inner_types4 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::InherentHooks::check_inherents(importing_inherent_data, relevant_inherents, result);
+                    &lt;#inner_types4 <span class="kw">as </span>tuxedo_core::ConstraintChecker&gt;::check_inherents(importing_inherent_data, relevant_inherents, result);
 
                     <span class="comment">// According to https://paritytech.github.io/polkadot-sdk/master/sp_inherents/struct.CheckInherentsResult.html
                     // "When a fatal error occurs, all other errors are removed and the implementation needs to abort checking inherents."
@@ -538,13 +686,12 @@
                 )*
             }
 
-            <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-            </span><span class="kw">fn </span>genesis_transactions() -&gt; Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>all_transactions: Vec&lt;tuxedo_core::types::Transaction&lt;#verifier, #outer_type&gt;&gt; = Vec::new();
+            <span class="kw">fn </span>genesis_transactions&lt;V: tuxedo_core::Verifier&gt;() -&gt; Vec&lt;tuxedo_core::types::Transaction&lt;V, #outer_type&gt;&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>all_transactions: Vec&lt;tuxedo_core::types::Transaction&lt;V, #outer_type&gt;&gt; = Vec::new();
 
                 #(
                     <span class="kw">let </span>transactions =
-                        &lt;&lt;#inner_types6 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::InherentHooks <span class="kw">as </span>tuxedo_core::inherents::InherentInternal&lt;#verifier, #inner_types6&gt;&gt;::genesis_transactions();
+                        &lt;#inner_types2 <span class="kw">as </span>tuxedo_core::ConstraintChecker&gt;::genesis_transactions();
                     all_transactions.extend(
                         transactions
                             .into_iter()
@@ -554,35 +701,6 @@
                 )*
 
                 all_transactions
-            }
-
-        }
-
-        <span class="kw">impl </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt; <span class="kw">for </span>#outer_type {
-            <span class="kw">type </span>Error = #error_type;
-
-            <span class="kw">type </span>InherentHooks = #inherent_hooks;
-
-            <span class="kw">fn </span>check (
-                <span class="kw-2">&amp;</span><span class="self">self</span>,
-                inputs: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;#verifier&gt;],
-                peeks: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;#verifier&gt;],
-                outputs: <span class="kw-2">&amp;</span>[tuxedo_core::types::Output&lt;#verifier&gt;],
-            ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
-                <span class="kw">match </span><span class="self">self </span>{
-                    #(
-                        <span class="self">Self</span>::#variants5(inner) =&gt; inner.check(inputs, peeks, outputs).map_err(|e| <span class="self">Self</span>::Error::#variants5(e)),
-                    )*
-                }
-            }
-
-            <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-                <span class="kw">match </span><span class="self">self </span>{
-                    #(
-                        <span class="self">Self</span>::#variants6(inner) =&gt; &lt;#inner_types7 <span class="kw">as </span>tuxedo_core::ConstraintChecker&lt;#verifier&gt;&gt;::is_inherent(inner),
-                    )*
-                }
-
             }
 
         }

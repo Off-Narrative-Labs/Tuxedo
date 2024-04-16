@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/types.rs`."><title>types.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (b11fbfbf3 2024-02-03)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/types.rs`."><title>types.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c208a72533b4dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (ccfcd950b 2024-04-15)" data-channel="nightly" data-search-js="search-ffac13a0df2b1870.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c97aec732c613ca4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -257,6 +255,40 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
 </span><span class="kw">use crate</span>::{dynamic_typing::DynamicallyTypedData, ConstraintChecker, Verifier};
@@ -264,8 +296,22 @@
 <span class="kw">use </span>scale_info::TypeInfo;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>sp_core::H256;
-<span class="kw">use </span>sp_runtime::traits::Extrinsic;
+<span class="kw">use </span>sp_runtime::traits::{BlakeTwo256, Extrinsic};
 <span class="kw">use </span>sp_std::vec::Vec;
+
+<span class="comment">// All Tuxedo chains use the same BlakeTwo256 hash.
+</span><span class="kw">pub type </span>Hash = BlakeTwo256;
+<span class="doccomment">/// Opaque block hash type.
+</span><span class="kw">pub type </span>OpaqueHash = &lt;Hash <span class="kw">as </span>sp_api::HashT&gt;::Output;
+<span class="doccomment">/// All Tuxedo chains use the same u32 BlockNumber.
+</span><span class="kw">pub type </span>BlockNumber = u32;
+<span class="doccomment">/// Because all tuxedo chains use the same Blocknumber and Hash types,
+/// they also use the same concrete header type.
+</span><span class="kw">pub type </span>Header = sp_runtime::generic::Header&lt;BlockNumber, Hash&gt;;
+<span class="doccomment">/// An alias for a Tuxedo block with all the common parts filled in.
+</span><span class="kw">pub type </span>Block&lt;V, C&gt; = sp_runtime::generic::Block&lt;Header, Transaction&lt;V, C&gt;&gt;;
+<span class="doccomment">/// Opaque block type. It has a Standard Tuxedo header, and opaque transactions.
+</span><span class="kw">pub type </span>OpaqueBlock = sp_runtime::generic::Block&lt;Header, sp_runtime::OpaqueExtrinsic&gt;;
 
 <span class="doccomment">/// A reference to a output that is expected to exist in the state.
 </span><span class="attr">#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
@@ -366,7 +412,7 @@
 // so we do a minimal implementation.
 </span><span class="kw">impl</span>&lt;V, C&gt; Extrinsic <span class="kw">for </span>Transaction&lt;V, C&gt;
 <span class="kw">where
-    </span>C: TypeInfo + ConstraintChecker&lt;V&gt; + <span class="lifetime">'static</span>,
+    </span>C: TypeInfo + ConstraintChecker + <span class="lifetime">'static</span>,
     V: TypeInfo + Verifier + <span class="lifetime">'static</span>,
 {
     <span class="kw">type </span>Call = <span class="self">Self</span>;
@@ -402,8 +448,28 @@
 </span><span class="kw">pub struct </span>Input {
     <span class="doccomment">/// a reference to the output being consumed
     </span><span class="kw">pub </span>output_ref: OutputRef,
-    <span class="comment">// Eg the signature
-    </span><span class="kw">pub </span>redeemer: Vec&lt;u8&gt;,
+    <span class="doccomment">/// A means of showing that this input data can be used.
+    /// It is most often a proof such as a signature, but could also be a forceful eviction.
+    </span><span class="kw">pub </span>redeemer: RedemptionStrategy,
+}
+
+<span class="comment">//TODO Consider making this enum generic over the redeemer type so there is not an additional decoding necessary.
+// This would percolate up though. For example input would also have to be generic over the redeemer type.
+// IDK if it is appropriate to be making so many types non-opaque??
+</span><span class="doccomment">/// An input can be consumed in two way. It can be redeemed normally (probably with some signature, or proof) or it
+/// can be evicted. This enum is isomorphic to `Option&lt;Vec&lt;u8&gt;&gt;` but has more meaningful names.
+</span><span class="attr">#[derive(Serialize, Deserialize, Encode, Decode, Debug, PartialEq, Eq, Clone, TypeInfo)]
+</span><span class="kw">pub enum </span>RedemptionStrategy {
+    <span class="doccomment">/// The input is being consumed in the normal way with a signature or other proof provided by the spender.
+    </span>Redemption(Vec&lt;u8&gt;),
+    <span class="doccomment">/// The input is being forcefully evicted without satisfying its Verifier.
+    </span>Eviction,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>RedemptionStrategy {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Redemption(Vec::new())
+    }
 }
 
 <span class="attr">#[derive(Debug, PartialEq, Eq)]
@@ -423,7 +489,7 @@
 }
 
 <span class="doccomment">/// The Result of dispatching a UTXO transaction.
-</span><span class="kw">pub type </span>DispatchResult&lt;VerifierError&gt; = <span class="prelude-ty">Result</span>&lt;(), UtxoError&lt;VerifierError&gt;&gt;;
+</span><span class="kw">pub type </span>DispatchResult&lt;ConstraintCheckerError&gt; = <span class="prelude-ty">Result</span>&lt;(), UtxoError&lt;ConstraintCheckerError&gt;&gt;;
 
 <span class="doccomment">/// An opaque piece of Transaction output data. This is how the data appears at the Runtime level. After
 /// the verifier is checked, strongly typed data will be extracted and passed to the constraint checker.

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["apply_transaction","get_coin_from_storage","mint_coins","spend_coins"]};
+window.SIDEBAR_ITEMS = {"fn":["apply_transaction","get_coin_from_storage","mint_coins","mint_coins_helper","spend_coins","spend_coins_helper"]};

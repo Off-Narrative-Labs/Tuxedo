@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["TuxedoGenesisBlockBuilder","TuxedoGenesisConfig"]};
+window.SIDEBAR_ITEMS = {"struct":["TuxedoGenesisBlockBuilder","TuxedoGenesisConfigBuilder"]};

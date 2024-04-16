@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/constraint_checker.rs`."><title>constraint_checker.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0-nightly (b11fbfbf3 2024-02-03)" data-channel="nightly" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `tuxedo-core/src/constraint_checker.rs`."><title>constraint_checker.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-2c208a72533b4dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="tuxedo_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0-nightly (ccfcd950b 2024-04-15)" data-channel="nightly" data-search-js="search-ffac13a0df2b1870.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c97aec732c613ca4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../tuxedo_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -158,18 +156,120 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A constraint checker is a piece of logic that determines whether a transaction as a whole is valid
 //! and should be committed. Most tuxedo pieces will provide one or more constraint checkers.
-//! Constraint Checkers do not typically calculate the correct final state, but rather determine whether the
+//! Constraint Checkers do not calculate the correct final state, but rather determine whether the
 //! proposed final state (as specified by the output set) meets the necessary constraints.
+//!
+//! Constraint Checkers can be used to codify the laws of a monetary system, a chemistry or physics simulation,
+//! NFT kitties, public elections and much more.
+//!
+//! The primary way for developers to write a constraint checker is with the `SimpleConstraintChecker`
+//! trait. It provides a method called `check` which determines whether the relationship between the inputs
+//! and outputs (and peeks) is valid. For example making sure no extra money was created, or making sure the chemical
+//! reaction balances.
+//!
+//! ## Inherents
+//!
+//! If you need to tap in to [Substrate's inherent system](https://docs.substrate.io/learn/transaction-types/#inherent-transactions)
+//! you may choose to also implement the `InherentHooks` trait for the same type that implements `SimpleConstraintChecker`.
+//! When installing a constraint checker in your runtime, make sure to wrap it with the `InherentAdapter` type.
+//! See the `inherents` module for more details.
+//!
+//! ## Constraint Checker Internals
+//!
+//! One of Tuxedo's killer features is its ability to aggregating pieces recursively.
+//! To achieve this we have to consider that many intermediate layers in the aggregation tree
+//! will have multiple inherent types. For this reason, we provide a much more flexible interface
+//! that the aggregation macro can use called `ConstraintChecker`. Do not implement `ConstraintChecker`
+//! directly.
 
-</span><span class="kw">use </span>sp_std::{fmt::Debug, vec::Vec};
+</span><span class="kw">use </span>sp_core::H256;
+<span class="kw">use </span>sp_inherents::{CheckInherentsResult, InherentData};
+<span class="kw">use </span>sp_std::{fmt::Debug, vec::Vec};
 
-<span class="kw">use crate</span>::{dynamic_typing::DynamicallyTypedData, inherents::InherentInternal, types::Output};
+<span class="kw">use crate</span>::{dynamic_typing::DynamicallyTypedData, types::Transaction, Verifier};
 <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
 <span class="kw">use </span>sp_runtime::transaction_validity::TransactionPriority;
 
-<span class="doccomment">/// A simplified constraint checker that a transaction can choose to call.
+<span class="doccomment">/// A particular constraint checker that a transaction can choose to be checked by.
 /// Checks whether the input and output data from a transaction meets the codified constraints.
 ///
 /// Additional transient information may be passed to the constraint checker by including it in the fields
@@ -179,90 +279,123 @@
     <span class="doccomment">/// The error type that this constraint checker may return
     </span><span class="kw">type </span>Error: Debug;
 
-    <span class="doccomment">/// The actual check validation logic
+    <span class="doccomment">/// The on chain logic that makes the final check for whether a transaction is valid.
     </span><span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        evicted_input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         peek_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt;;
 }
 
-<span class="doccomment">/// A single constraint checker that a transaction can choose to call. Checks whether the input
-/// and output data from a transaction meets the codified constraints.
+<span class="doccomment">/// The raw and fully powerful `ConstraintChecker` interface used by the
+/// Tuxedo Executive.
 ///
-/// This full ConstraintChecker should only be implemented if the piece logic cannot be expressed with
-/// the SimpleConstraintChecker. For example, if you need to enforce the verifier is a particular type
-/// or contains a certain value. Another reason would be if you need to implement an inherent.
+/// You should never manually manually implement this trait.
+/// If you are:
+/// * Working on a simple non-inherent constraint checker -&gt; Use the `SimpleConstraintChecker` trait instead
+///   and rely on its blanket implementation.
+/// * Working on an inherent constraint checker -&gt; Implement `SimpleConstraintChecker` and `InherentHooks` and use the
+/// `InherentAdapter` wrapper type.
+/// * Considering an aggregate constraint checker that is part inherent, part not -&gt; let the macro handle it for you.
 ///
-/// Additional transient information may be passed to the constraint checker by including it in the fields
-/// of the constraint checker struct itself. Information passed in this way does not come from state, nor
-/// is it stored in state.
-</span><span class="kw">pub trait </span>ConstraintChecker&lt;V&gt;: Debug + Encode + Decode + Clone {
+/// If you are trying to implement some complex inherent logic that requires the interaction of
+/// multiple inherents, or features a variable number of inherents in each block, you might be
+/// able to express it by implementing this trait, but such designs are probably too complicated.
+/// Think long and hard before implementing this trait directly.
+</span><span class="kw">pub trait </span>ConstraintChecker: Debug + Encode + Decode + Clone {
     <span class="doccomment">/// The error type that this constraint checker may return
     </span><span class="kw">type </span>Error: Debug;
 
-    <span class="doccomment">/// Optional Associated Inherent processing logic. If this transaction type is not an inherent, use ().
-    /// If it is an inherent, use Self, and implement the TuxedoInherent trait.
-    </span><span class="kw">type </span>InherentHooks: InherentInternal&lt;V, <span class="self">Self</span>&gt;;
-
-    <span class="doccomment">/// The actual check validation logic
+    <span class="doccomment">/// The on chain logic that makes the final check for whether a transaction is valid.
     </span><span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        inputs: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
-        peeks: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
-        outputs: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
+        input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        evicted_input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        peek_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt;;
 
     <span class="doccomment">/// Tells whether this extrinsic is an inherent or not.
     /// If you return true here, you must provide the correct inherent hooks above.
     </span><span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+
+    <span class="doccomment">/// Create the inherent extrinsics to insert into a block that is being authored locally.
+    /// The inherent data is supplied by the authoring node.
+    </span><span class="kw">fn </span>create_inherents&lt;V: Verifier&gt;(
+        authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
+        previous_inherents: Vec&lt;(Transaction&lt;V, <span class="self">Self</span>&gt;, H256)&gt;,
+    ) -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt;;
+
+    <span class="doccomment">/// Perform off-chain pre-execution checks on the inherents.
+    /// The inherent data is supplied by the importing node.
+    /// The inherent data available here is not necessarily the
+    /// same as what is available at authoring time.
+    </span><span class="kw">fn </span>check_inherents&lt;V: Verifier&gt;(
+        importing_inherent_data: <span class="kw-2">&amp;</span>InherentData,
+        inherents: Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt;,
+        results: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
+    );
+
+    <span class="doccomment">/// Return the genesis transactions that are required for the inherents.
+    </span><span class="kw">fn </span>genesis_transactions&lt;V: Verifier&gt;() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt;;
 }
 
-<span class="comment">// This blanket implementation makes it so that any type that chooses to
-// implement the Simple trait also implements the more Powerful trait.
-// This way the executive can always just call the more Powerful trait.
-</span><span class="kw">impl</span>&lt;T: SimpleConstraintChecker, V&gt; ConstraintChecker&lt;V&gt; <span class="kw">for </span>T {
+<span class="comment">// We automatically supply every single simple constraint checker with a dummy set
+// of inherent hooks. This allows "normal" non-inherent constraint checkers to satisfy the
+// executive's expected interfaces without the piece author worrying about inherents.
+</span><span class="kw">impl</span>&lt;T: SimpleConstraintChecker&gt; ConstraintChecker <span class="kw">for </span>T {
     <span class="comment">// Use the same error type used in the simple implementation.
     </span><span class="kw">type </span>Error = &lt;T <span class="kw">as </span>SimpleConstraintChecker&gt;::Error;
 
-    <span class="kw">type </span>InherentHooks = ();
-
     <span class="kw">fn </span>check(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        inputs: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
-        peeks: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
-        outputs: <span class="kw-2">&amp;</span>[Output&lt;V&gt;],
+        input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        evicted_input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        peek_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+        output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, <span class="self">Self</span>::Error&gt; {
-        <span class="comment">// Extract the input data
-        </span><span class="kw">let </span>input_data: Vec&lt;DynamicallyTypedData&gt; =
-            inputs.iter().map(|o| o.payload.clone()).collect();
-
-        <span class="comment">// Extract the peek data
-        </span><span class="kw">let </span>peek_data: Vec&lt;DynamicallyTypedData&gt; =
-            peeks.iter().map(|o| o.payload.clone()).collect();
-
-        <span class="comment">// Extract the output data
-        </span><span class="kw">let </span>output_data: Vec&lt;DynamicallyTypedData&gt; =
-            outputs.iter().map(|o| o.payload.clone()).collect();
-
-        <span class="comment">// Call the simple constraint checker
-        </span>SimpleConstraintChecker::check(<span class="self">self</span>, <span class="kw-2">&amp;</span>input_data, <span class="kw-2">&amp;</span>peek_data, <span class="kw-2">&amp;</span>output_data)
+        SimpleConstraintChecker::check(<span class="self">self</span>, input_data, evicted_input_data, peek_data, output_data)
     }
 
     <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">false
     </span>}
+
+    <span class="kw">fn </span>create_inherents&lt;V&gt;(
+        _authoring_inherent_data: <span class="kw-2">&amp;</span>InherentData,
+        _previous_inherents: Vec&lt;(Transaction&lt;V, <span class="self">Self</span>&gt;, H256)&gt;,
+    ) -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
+        Vec::new()
+    }
+
+    <span class="kw">fn </span>check_inherents&lt;V&gt;(
+        <span class="kw">_</span>: <span class="kw-2">&amp;</span>InherentData,
+        inherents: Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt;,
+        <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>CheckInherentsResult,
+    ) {
+        <span class="comment">// Inherents should always be empty for this stub implementation. Not just in valid blocks, but as an invariant.
+        // The way we determined which inherents got here is by matching on the constraint checker.
+        </span><span class="macro">assert!</span>(
+            inherents.is_empty(),
+            <span class="string">"inherent extrinsic was passed to check inherents stub implementation."
+        </span>)
+    }
+
+    <span class="kw">fn </span>genesis_transactions&lt;V&gt;() -&gt; Vec&lt;Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
+        Vec::new()
+    }
 }
 
 <span class="doccomment">/// Utilities for writing constraint-checker-related unit tests
 </span><span class="attr">#[cfg(test)]
 </span><span class="kw">pub mod </span>testing {
+    <span class="kw">use </span>parity_scale_codec::{Decode, Encode};
     <span class="kw">use </span>scale_info::TypeInfo;
     <span class="kw">use </span>serde::{Deserialize, Serialize};
 
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{types::Output, verifier::TestVerifier};
+    <span class="kw">use super</span>::{ConstraintChecker, DynamicallyTypedData, TransactionPriority};
 
     <span class="doccomment">/// A testing checker that passes (with zero priority) or not depending on
     /// the boolean value enclosed.
@@ -274,15 +407,15 @@
         </span><span class="kw">pub </span>inherent: bool,
     }
 
-    <span class="kw">impl </span>ConstraintChecker&lt;TestVerifier&gt; <span class="kw">for </span>TestConstraintChecker {
+    <span class="kw">impl </span>ConstraintChecker <span class="kw">for </span>TestConstraintChecker {
         <span class="kw">type </span>Error = ();
-        <span class="kw">type </span>InherentHooks = ();
 
         <span class="kw">fn </span>check(
             <span class="kw-2">&amp;</span><span class="self">self</span>,
-            _input_data: <span class="kw-2">&amp;</span>[Output&lt;TestVerifier&gt;],
-            _peek_data: <span class="kw-2">&amp;</span>[Output&lt;TestVerifier&gt;],
-            _output_data: <span class="kw-2">&amp;</span>[Output&lt;TestVerifier&gt;],
+            _input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+            _evicted_input_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+            _peek_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
+            _output_data: <span class="kw-2">&amp;</span>[DynamicallyTypedData],
         ) -&gt; <span class="prelude-ty">Result</span>&lt;TransactionPriority, ()&gt; {
             <span class="kw">if </span><span class="self">self</span>.checks {
                 <span class="prelude-val">Ok</span>(<span class="number">0</span>)
@@ -294,6 +427,25 @@
         <span class="kw">fn </span>is_inherent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
             <span class="self">self</span>.inherent
         }
+
+        <span class="kw">fn </span>create_inherents&lt;V: <span class="kw">crate</span>::Verifier&gt;(
+            <span class="kw">_</span>: <span class="kw-2">&amp;</span>sp_inherents::InherentData,
+            <span class="kw">_</span>: Vec&lt;(<span class="kw">crate</span>::types::Transaction&lt;V, <span class="self">Self</span>&gt;, sp_core::H256)&gt;,
+        ) -&gt; Vec&lt;<span class="kw">crate</span>::types::Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
+            <span class="macro">unimplemented!</span>()
+        }
+
+        <span class="kw">fn </span>check_inherents&lt;V: <span class="kw">crate</span>::Verifier&gt;(
+            <span class="kw">_</span>: <span class="kw-2">&amp;</span>sp_inherents::InherentData,
+            <span class="kw">_</span>: Vec&lt;<span class="kw">crate</span>::types::Transaction&lt;V, <span class="self">Self</span>&gt;&gt;,
+            <span class="kw">_</span>: <span class="kw-2">&amp;mut </span>sp_inherents::CheckInherentsResult,
+        ) {
+            <span class="macro">unimplemented!</span>()
+        }
+
+        <span class="kw">fn </span>genesis_transactions&lt;V: <span class="kw">crate</span>::Verifier&gt;() -&gt; Vec&lt;<span class="kw">crate</span>::types::Transaction&lt;V, <span class="self">Self</span>&gt;&gt; {
+            <span class="macro">unimplemented!</span>()
+        }
     }
 
     <span class="attr">#[test]
@@ -302,7 +454,7 @@
             checks: <span class="bool-val">true</span>,
             inherent: <span class="bool-val">false</span>,
         }
-        .check(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
+        .check(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
         <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Ok</span>(<span class="number">0</span>));
     }
 
@@ -312,7 +464,7 @@
             checks: <span class="bool-val">false</span>,
             inherent: <span class="bool-val">false</span>,
         }
-        .check(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
+        .check(<span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span>[]);
         <span class="macro">assert_eq!</span>(result, <span class="prelude-val">Err</span>(()));
     }
 }
