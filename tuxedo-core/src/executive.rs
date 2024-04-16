@@ -74,6 +74,10 @@ impl<B: BlockT<Extrinsic = Transaction<V, C>>, V: Verifier, C: ConstraintChecker
         let mut input_utxos = Vec::new();
         let mut missing_inputs = Vec::new();
         for input in transaction.inputs.iter() {
+            log::warn!(target: LOG_TARGET, "In executive, about to check a verifier.");
+            log::warn!(target: crate::LOG_TARGET, "Redeemer length is {:?}", input.redeemer.len());
+            log::warn!(target: crate::LOG_TARGET, "{:?}", input.redeemer);
+
             if let Some(input_utxo) = TransparentUtxoSet::<V>::peek_utxo(&input.output_ref) {
                 ensure!(
                     input_utxo
