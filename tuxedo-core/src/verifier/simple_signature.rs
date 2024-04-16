@@ -85,7 +85,7 @@ impl Verifier for P2PKH {
 #[cfg(test)]
 mod test {
     use super::*;
-    use sp_core::{crypto::Pair as _, sr25519::Pair};
+    use sp_core::{crypto::Pair as _, sr25519::Pair, ByteArray};
 
     fn bad_sig() -> Signature {
         Signature::from_slice(
