@@ -104,7 +104,6 @@ pub trait ConstraintChecker: Debug + Encode + Decode + Clone {
     );
 
     /// Return the genesis transactions that are required for the inherents.
-    #[cfg(feature = "std")]
     fn genesis_transactions<V: Verifier>() -> Vec<Transaction<V, Self>>;
 }
 
@@ -149,7 +148,6 @@ impl<T: SimpleConstraintChecker> ConstraintChecker for T {
         )
     }
 
-    #[cfg(feature = "std")]
     fn genesis_transactions<V>() -> Vec<Transaction<V, Self>> {
         Vec::new()
     }

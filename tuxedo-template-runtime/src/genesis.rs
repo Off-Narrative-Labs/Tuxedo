@@ -5,7 +5,7 @@ pub use super::WASM_BINARY;
 use super::{
     kitties::{KittyData, Parent},
     money::Coin,
-    OuterConstraintChecker, OuterVerifier, Transaction,
+    OuterConstraintChecker, Transaction,
 };
 use hex_literal::hex;
 use sp_std::{vec, vec::Vec};

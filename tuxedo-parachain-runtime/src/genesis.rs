@@ -1,6 +1,9 @@
 //! Helper module to build a genesis configuration for the template runtime.
 
-use super::{OuterVerifier, ParachainConstraintChecker, Transaction, WASM_BINARY};
+#[cfg(feature = "std")]
+pub use super::WASM_BINARY;
+
+use super::{ParachainConstraintChecker, Transaction};
 use hex_literal::hex;
 use inner_runtime::{money::Coin, OuterConstraintChecker as InnerConstraintChecker};
 use tuxedo_parachain_core::tuxedo_core::{
