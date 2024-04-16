@@ -5,8 +5,8 @@ pub use super::WASM_BINARY;
 
 use super::{ParachainConstraintChecker, Transaction};
 use hex_literal::hex;
-use sp_std::{vec, vec::Vec};
 use inner_runtime::{money::Coin, OuterConstraintChecker as InnerConstraintChecker};
+use sp_std::{vec, vec::Vec};
 use tuxedo_parachain_core::tuxedo_core::{
     verifier::{Sr25519Signature, ThresholdMultiSignature},
     ConstraintChecker,
