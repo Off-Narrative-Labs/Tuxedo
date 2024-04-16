@@ -6,7 +6,7 @@ use sc_client_api::backend::{Backend, BlockImportOperation};
 use sc_executor::RuntimeVersionOf;
 use sp_core::traits::CodeExecutor;
 use sp_runtime::{
-    traits::{Block as BlockT, Hash as HashT, Header as HeaderT, Zero},
+    traits::{Block as BlockT, Hash as HashT, HashingFor, Header as HeaderT, Zero},
     BuildStorage,
 };
 use std::sync::Arc;
@@ -58,8 +58,10 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
             .build_storage()
             .map_err(sp_blockchain::Error::Storage)?;
 
-        let state_version =
-            sc_chain_spec::resolve_state_version_from_wasm(&genesis_storage, &self.executor)?;
+        let state_version = sc_chain_spec::resolve_state_version_from_wasm::<_, HashingFor<B>>(
+            &genesis_storage,
+            &self.executor,
+        )?;
 
         let extrinsics = match genesis_storage.top.remove(crate::EXTRINSIC_KEY) {
             Some(v) => <Vec<<Block as BlockT>::Extrinsic>>::decode(&mut &v[..]).unwrap_or_default(),
