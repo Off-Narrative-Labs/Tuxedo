@@ -12,7 +12,7 @@ use sp_runtime::traits::Header as _;
 use std::{sync::Arc, time::Duration};
 use tuxedo_core::{genesis::TuxedoGenesisBlockBuilder, types::OpaqueBlock as Block};
 
-use cumulus_primitives_parachain_inherent::MockValidationDataInherentDataProvider;
+use cumulus_client_parachain_inherent::MockValidationDataInherentDataProvider;
 
 // Our native executor instance.
 pub struct ExecutorDispatch;

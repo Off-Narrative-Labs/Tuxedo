@@ -56,9 +56,9 @@ cumulus-client-collator = { workspace = true }
 cumulus-client-consensus-aura = { workspace = true }
 cumulus-client-consensus-common = { workspace = true }
 cumulus-client-consensus-proposer = { workspace = true }
+cumulus-client-parachain-inherent = { workspace = true }
 cumulus-client-service = { workspace = true }
 cumulus-primitives-core = { workspace = true }
-cumulus-primitives-parachain-inherent = { workspace = true }
 cumulus-relay-chain-interface = { workspace = true }
 polkadot-cli = { features = [ "rococo-native" ], default-features = false, workspace = true }
 polkadot-primitives = { workspace = true }
