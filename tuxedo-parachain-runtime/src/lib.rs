@@ -26,7 +26,10 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-use tuxedo_core::{tuxedo_constraint_checker, types::Block as TuxedoBlock, InherentAdapter};
+use tuxedo_core::{
+    genesis::TuxedoGenesisConfigBuilder, tuxedo_constraint_checker, types::Block as TuxedoBlock,
+    types::Transaction as TuxedoTransaction, InherentAdapter,
+};
 use tuxedo_parachain_core::tuxedo_core;
 
 // We use the same aggregate verifier and opaque types from the inner_runtime.
@@ -61,6 +64,7 @@ const BLOCK_TIME: u64 = 3000;
 // This creates an enum `ParachainConstraintChecker` that implements `ParachainConstraintChecker`
 tuxedo_parachain_core::parachainify!(OuterVerifier, InnerConstraintChecker, 2000);
 
+pub type Transaction = TuxedoTransaction<OuterVerifier, ParachainConstraintChecker>;
 pub type Block = TuxedoBlock<OuterVerifier, ParachainConstraintChecker>;
 pub type Executive = tuxedo_core::Executive<OuterVerifier, ParachainConstraintChecker>;
 
