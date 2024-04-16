@@ -58,7 +58,7 @@ impl<'a, Block: BlockT, B: Backend<Block>, E: RuntimeVersionOf + CodeExecutor>
             .build_storage()
             .map_err(sp_blockchain::Error::Storage)?;
 
-        let state_version = sc_chain_spec::resolve_state_version_from_wasm::<_, HashingFor<B>>(
+        let state_version = sc_chain_spec::resolve_state_version_from_wasm::<_, HashingFor<Block>>(
             &genesis_storage,
             &self.executor,
         )?;
