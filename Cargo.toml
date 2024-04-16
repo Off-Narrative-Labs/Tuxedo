@@ -112,6 +112,7 @@ cumulus-client-collator = { branch = "tuxedo-v1.6.0", git = "https://github.com/
 cumulus-client-consensus-aura = { branch = "tuxedo-v1.6.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-common = { branch = "tuxedo-v1.6.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-consensus-proposer = { branch = "tuxedo-v1.6.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
+cumulus-client-parachain-inherent = { branch = "tuxedo-v1.6.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-client-service = { branch = "tuxedo-v1.6.0", git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-primitives-core = { branch = "tuxedo-v1.6.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
 cumulus-primitives-parachain-inherent = { branch = "tuxedo-v1.6.0", default_features = false, git = "https://github.com/off-narrative-labs/polkadot-sdk" }
