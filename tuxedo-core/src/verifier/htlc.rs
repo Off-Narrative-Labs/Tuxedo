@@ -152,7 +152,7 @@ impl Verifier for HashTimeLockContract {
 #[cfg(test)]
 mod test {
     use super::*;
-    use sp_core::{sr25519::Pair, Pair as _};
+    use sp_core::{sr25519::Pair, ByteArray, Pair as _};
 
     fn bad_sig() -> Signature {
         Signature::from_slice(
