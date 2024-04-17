@@ -321,7 +321,7 @@
         {
             <span class="kw">let </span>set: BTreeMap&lt;u8, Signature&gt; = sigs
                 .iter()
-                .map(|sig_and_index| (sig_and_index.index, sig_and_index.signature.clone()))
+                .map(|sig_and_index| (sig_and_index.index, sig_and_index.signature))
                 .collect();
 
             <span class="kw">if </span>set.len() &lt; sigs.len() {
