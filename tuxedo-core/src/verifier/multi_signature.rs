@@ -75,7 +75,7 @@ impl Verifier for ThresholdMultiSignature {
         {
             let set: BTreeMap<u8, Signature> = sigs
                 .iter()
-                .map(|sig_and_index| (sig_and_index.index, sig_and_index.signature.clone()))
+                .map(|sig_and_index| (sig_and_index.index, sig_and_index.signature))
                 .collect();
 
             if set.len() < sigs.len() {
