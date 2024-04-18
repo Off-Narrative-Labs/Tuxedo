@@ -29,7 +29,7 @@ use tuxedo_core::{
     genesis::TuxedoGenesisConfigBuilder, tuxedo_constraint_checker, types::Block as TuxedoBlock,
     types::Transaction as TuxedoTransaction, InherentAdapter,
 };
-use tuxedo_parachain_core::tuxedo_core;
+use tuxedo_parachain_core::tuxedo_core::{self, TuxedoMetadata};
 
 // We use the same aggregate verifier and opaque types from the inner_runtime.
 // They do not contain anything parachain specific.
@@ -149,10 +149,10 @@ impl_runtime_apis! {
         }
     }
 
-    // Tuxedo does not yet support metadata
+    // Tuxedo metadata is pretty trivial atm
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            OpaqueMetadata::new(Default::default())
+            OpaqueMetadata::new(TuxedoMetadata::new_parachain().encode())
         }
 
         fn metadata_at_version(_version: u32) -> Option<OpaqueMetadata> {
