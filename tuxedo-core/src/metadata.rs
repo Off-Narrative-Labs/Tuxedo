@@ -1,3 +1,8 @@
+//!
+//! 
+
+use parity_scale_codec::{Decode, Encode};
+#[derive(Debug, Encode, Decode)]
 pub struct TuxedoMetadata {
     /// Placeholder for the scale info type registry that will hopefully eventually go here.
     _registry: (),
