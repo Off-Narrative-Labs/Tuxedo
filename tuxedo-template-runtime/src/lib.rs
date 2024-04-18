@@ -37,8 +37,7 @@ use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
-    InherentAdapter,
-    TuxedoMetadata,
+    InherentAdapter, TuxedoMetadata,
 };
 
 pub use amoeba;
