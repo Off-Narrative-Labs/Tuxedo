@@ -40,10 +40,6 @@ pub struct Cli {
     /// The keystore will contain the development key Shawn.
     pub dev: bool,
 
-    /// Use the Parachain template encoding instead of the regular node template encoding.
-    #[arg(long, short, verbatim_doc_comment)]
-    pub parachain: bool,
-
     #[command(subcommand)]
     pub command: Option<Command>,
 }
