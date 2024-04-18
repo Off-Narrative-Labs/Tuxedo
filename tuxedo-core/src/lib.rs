@@ -11,6 +11,7 @@ mod executive;
 pub mod constraint_checker;
 pub mod genesis;
 pub mod inherents;
+pub mod metadata;
 pub mod support_macros;
 pub mod traits;
 pub mod types;
@@ -21,6 +22,7 @@ pub use aggregator::{aggregate, tuxedo_constraint_checker, tuxedo_verifier};
 pub use constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 pub use executive::Executive;
 pub use inherents::{InherentAdapter, InherentHooks};
+pub use metadata::TuxedoMetadata;
 pub use verifier::Verifier;
 
 /// A Tuxedo-specific target for diagnostic node log messages
