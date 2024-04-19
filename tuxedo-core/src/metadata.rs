@@ -1,5 +1,5 @@
-//!
-//!
+//! A simple type to use as metadata. For now the metadata just communicates whether we
+//! are dealing with a parachain or not.
 
 use parity_scale_codec::{Decode, Encode};
 #[derive(Debug, Encode, Decode)]
@@ -23,6 +23,7 @@ impl TuxedoMetadata {
     }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TuxedoMetadata {
     fn default() -> Self {
         Self {
