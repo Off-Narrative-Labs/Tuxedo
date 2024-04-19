@@ -28,7 +28,7 @@ use sp_std::fmt::Debug;
 use tuxedo_core::{
     dynamic_typing::{DynamicallyTypedData, UtxoData},
     ensure,
-    support_macros::{CloneNoBound, DebugNoBound},
+    support_macros::{CloneNoBound, DebugNoBound, DefaultNoBound},
     SimpleConstraintChecker,
 };
 
@@ -86,7 +86,16 @@ pub trait PoeConfig {
 /// It also allows the creation of zero claims, although such a transaction is useless and is simply a
 /// waste of caller fees.
 #[derive(
-    Serialize, Deserialize, Encode, Decode, DebugNoBound, CloneNoBound, PartialEq, Eq, TypeInfo,
+    Serialize,
+    Deserialize,
+    Encode,
+    Decode,
+    DebugNoBound,
+    DefaultNoBound,
+    CloneNoBound,
+    PartialEq,
+    Eq,
+    TypeInfo,
 )]
 pub struct PoeClaim<T>(PhantomData<T>);
 
