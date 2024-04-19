@@ -106,13 +106,64 @@ fn claim_with_eviction_fails() {
     )
 }
 
-// Revert
+// Revoke
 
-// happy path
-// extra inputs (check if it is allowed)
-// missing input
-// no evictions
-// no outputs
+#[test]
+fn revoke_works_with_zero_claims() {
+    assert_eq!(PoeRevoke.check(&[], &[], &[], &[]), Ok(0))
+}
+
+#[test]
+fn revoke_works_with_one_claim() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(PoeRevoke.check(&[claim.into()], &[], &[], &[]), Ok(0))
+}
+#[test]
+fn revoke_works_with_two_claims() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let claim2 = ClaimData {
+        claim: H256::repeat_byte(2),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeRevoke.check(&[claim.into(), claim2.into()], &[], &[], &[]),
+        Ok(0)
+    )
+}
+
+#[test]
+fn revoke_with_eviction_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeRevoke.check(&[claim.into()], &[Bogus.into()], &[], &[]),
+        Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
+
+#[test]
+fn revoke_with_outputs_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeRevoke.check(&[claim.into()], &[], &[], &[Bogus.into()]),
+        Err(ConstraintCheckerError::WrongNumberOutputs)
+    )
+}
 
 // Challenge
 // missing winner
