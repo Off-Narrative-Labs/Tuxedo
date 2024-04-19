@@ -129,9 +129,6 @@ impl<T: PoeConfig> SimpleConstraintChecker for PoeClaim<T> {
                 .extract::<ClaimData>()
                 .map_err(|_| ConstraintCheckerError::BadlyTypedOutput)?;
             ensure!(
-                //TODO we're grabbing the block height function directly from
-                // the runtime level. This needs to be made available through some
-                // kind of config.
                 output.effective_height >= T::block_height(),
                 ConstraintCheckerError::EffectiveHeightInPast
             );
