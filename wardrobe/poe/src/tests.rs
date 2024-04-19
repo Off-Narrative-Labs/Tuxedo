@@ -30,6 +30,32 @@ fn claim_works() {
     )
 }
 
+#[test]
+fn claim_exact_current_block_height_works() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 2,
+    };
+
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[], &[], &[claim.into()]),
+        Ok(0)
+    )
+}
+
+#[test]
+fn claim_old_block_height_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 1,
+    };
+
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[], &[], &[claim.into()]),
+        Err(ConstraintCheckerError::EffectiveHeightInPast)
+    )
+}
+
 // wrong block height
 // input fails
 // eviction fails
