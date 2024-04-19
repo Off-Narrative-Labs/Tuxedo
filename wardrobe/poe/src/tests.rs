@@ -165,7 +165,173 @@ fn revoke_with_outputs_fails() {
     )
 }
 
-// Challenge
-// missing winner
-// no inputs
-// no outputs
+// Dispute
+
+#[test]
+fn dispute_with_zero_losers_works() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(PoeDispute.check(&[], &[], &[claim.into()], &[]), Ok(0))
+}
+
+#[test]
+fn dispute_with_one_loser_works() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let lose_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 11,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[lose_claim.into()], &[win_claim.into()], &[]),
+        Ok(0)
+    )
+}
+
+#[test]
+fn dispute_with_two_losers_works() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let lose_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 11,
+    };
+    let lose_claim2 = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 12,
+    };
+
+    assert_eq!(
+        PoeDispute.check(
+            &[],
+            &[lose_claim.into(), lose_claim2.into()],
+            &[win_claim.into()],
+            &[]
+        ),
+        Ok(0)
+    )
+}
+
+#[test]
+fn dispute_with_loser_older_than_winner_fails() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let lose_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 9,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[lose_claim.into()], &[win_claim.into()], &[]),
+        Err(ConstraintCheckerError::IncorrectDisputeWinner)
+    )
+}
+
+#[test]
+fn dispute_with_loser_same_age_as_winner_fails() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let lose_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[lose_claim.into()], &[win_claim.into()], &[]),
+        Err(ConstraintCheckerError::IncorrectDisputeWinner)
+    )
+}
+
+#[test]
+fn dispute_with_mismatched_claims_fails() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let lose_claim = ClaimData {
+        claim: H256::repeat_byte(2),
+        effective_height: 11,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[lose_claim.into()], &[win_claim.into()], &[]),
+        Err(ConstraintCheckerError::DisputingMismatchedClaims)
+    )
+}
+
+#[test]
+fn dispute_with_input_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[Bogus.into()], &[claim.into()], &[], &[]),
+        Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
+
+#[test]
+fn dispute_with_no_winner_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[claim.into()], &[], &[]),
+        Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
+
+#[test]
+fn dispute_with_multiple_winners_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let claim2 = ClaimData {
+        claim: H256::repeat_byte(2),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[claim.into(), claim2.into()], &[], &[]),
+        Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
+
+#[test]
+fn dispute_with_output_fails() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let lose_claim = ClaimData {
+        claim: H256::repeat_byte(2),
+        effective_height: 11,
+    };
+
+    assert_eq!(
+        PoeDispute.check(
+            &[],
+            &[lose_claim.into()],
+            &[win_claim.into()],
+            &[Bogus.into()]
+        ),
+        Err(ConstraintCheckerError::WrongNumberOutputs)
+    )
+}
