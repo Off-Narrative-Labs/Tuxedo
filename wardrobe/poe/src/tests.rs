@@ -18,7 +18,15 @@ impl PoeConfig for AlwaysBlockTwo {
 // Claim
 
 #[test]
-fn claim_works() {
+fn claim_works_with_zero_claims() {
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[], &[], &[]),
+        Ok(0)
+    )
+}
+
+#[test]
+fn claim_works_with_one_claim() {
     let claim = ClaimData {
         claim: H256::repeat_byte(1),
         effective_height: 10,
@@ -26,6 +34,22 @@ fn claim_works() {
 
     assert_eq!(
         PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[], &[], &[claim.into()]),
+        Ok(0)
+    )
+}
+
+#[test]
+fn claim_works_with_two_claims() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+    let claim2 = ClaimData {
+        claim: H256::repeat_byte(2),
+        effective_height: 10,
+    };
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[], &[], &[claim.into(), claim2.into()]),
         Ok(0)
     )
 }
@@ -56,11 +80,31 @@ fn claim_old_block_height_fails() {
     )
 }
 
-// wrong block height
-// input fails
-// eviction fails
-// no output fails
-// extra output fails (or check docs, maybe this is allowed)
+#[test]
+fn claim_with_input_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[Bogus.into()], &[], &[], &[claim.into()]),
+        Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
+
+#[test]
+fn claim_with_eviction_fails() {
+    let claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[Bogus.into()], &[], &[claim.into()]),
+        Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
 
 // Revert
 
