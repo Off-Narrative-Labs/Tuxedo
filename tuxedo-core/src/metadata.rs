@@ -2,7 +2,7 @@
 //! are dealing with a parachain or not.
 
 use parity_scale_codec::{Decode, Encode};
-#[derive(Debug, Encode, Decode)]
+#[derive(Default, Debug, Encode, Decode)]
 pub struct TuxedoMetadata {
     /// Placeholder for the scale info type registry that will hopefully eventually go here.
     _registry: (),
@@ -20,15 +20,5 @@ impl TuxedoMetadata {
 
     pub fn is_parachain(&self) -> bool {
         self.parachain
-    }
-}
-
-#[allow(clippy::derivable_impls)]
-impl Default for TuxedoMetadata {
-    fn default() -> Self {
-        Self {
-            _registry: (),
-            parachain: false,
-        }
     }
 }
