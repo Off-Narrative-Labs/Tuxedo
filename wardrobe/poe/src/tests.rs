@@ -106,6 +106,14 @@ fn claim_with_eviction_fails() {
     )
 }
 
+#[test]
+fn claim_with_bogus_output_fails() {
+    assert_eq!(
+        PoeClaim::<AlwaysBlockTwo>::default().check(&[], &[], &[], &[Bogus.into()]),
+        Err(ConstraintCheckerError::BadlyTypedOutput)
+    )
+}
+
 // Revoke
 
 #[test]
@@ -136,6 +144,14 @@ fn revoke_works_with_two_claims() {
     assert_eq!(
         PoeRevoke.check(&[claim.into(), claim2.into()], &[], &[], &[]),
         Ok(0)
+    )
+}
+
+#[test]
+fn revoke_works_with_bogus_input_fails() {
+    assert_eq!(
+        PoeRevoke.check(&[Bogus.into()], &[], &[], &[]),
+        Err(ConstraintCheckerError::BadlyTypedInput)
     )
 }
 
@@ -221,6 +237,19 @@ fn dispute_with_two_losers_works() {
 }
 
 #[test]
+fn dispute_with_bogus_loser_fails() {
+    let win_claim = ClaimData {
+        claim: H256::repeat_byte(1),
+        effective_height: 10,
+    };
+
+    assert_eq!(
+        PoeDispute.check(&[], &[Bogus.into()], &[win_claim.into()], &[]),
+        Err(ConstraintCheckerError::BadlyTypedInput)
+    )
+}
+
+#[test]
 fn dispute_with_loser_older_than_winner_fails() {
     let win_claim = ClaimData {
         claim: H256::repeat_byte(1),
@@ -279,7 +308,7 @@ fn dispute_with_input_fails() {
     };
 
     assert_eq!(
-        PoeDispute.check(&[Bogus.into()], &[claim.into()], &[], &[]),
+        PoeDispute.check(&[Bogus.into()], &[], &[claim.into()], &[]),
         Err(ConstraintCheckerError::WrongNumberInputs)
     )
 }
@@ -311,6 +340,14 @@ fn dispute_with_multiple_winners_fails() {
     assert_eq!(
         PoeDispute.check(&[], &[claim.into(), claim2.into()], &[], &[]),
         Err(ConstraintCheckerError::WrongNumberInputs)
+    )
+}
+
+#[test]
+fn dispute_with_bogus_winner_fails() {
+    assert_eq!(
+        PoeDispute.check(&[], &[], &[Bogus.into()], &[]),
+        Err(ConstraintCheckerError::BadlyTypedInput)
     )
 }
 
