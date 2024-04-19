@@ -49,6 +49,21 @@ fn creation_with_inputs_fails() {
 }
 
 #[test]
+fn creation_with_evictions_fails() {
+    let example = AmoebaDetails {
+        generation: 0,
+        four_bytes: *b"test",
+    };
+    let evicted_input_data = vec![example.clone().into()];
+    let output_data = vec![example.into()];
+
+    assert_eq!(
+        AmoebaCreation.check(&[], &evicted_input_data, &[], &output_data),
+        Err(ConstraintCheckerError::NoEvictionsAllowed),
+    );
+}
+
+#[test]
 fn creation_with_badly_typed_output_fails() {
     let input_data = Vec::new();
     let output_data = vec![Bogus.into()];
@@ -109,7 +124,31 @@ fn mitosis_valid_transaction_works() {
 }
 
 #[test]
-fn mitosis_wrong_generation() {
+fn mitosis_with_evictions_fails() {
+    let mother = AmoebaDetails {
+        generation: 1,
+        four_bytes: *b"test",
+    };
+    let d1 = AmoebaDetails {
+        generation: 2,
+        four_bytes: *b"test",
+    };
+    let d2 = AmoebaDetails {
+        generation: 2,
+        four_bytes: *b"test",
+    };
+    let input_data = vec![mother.clone().into()];
+    let evicted_input_data = vec![mother.into()];
+    let output_data = vec![d1.into(), d2.into()];
+
+    assert_eq!(
+        AmoebaMitosis.check(&input_data, &evicted_input_data, &[], &output_data),
+        Err(ConstraintCheckerError::NoEvictionsAllowed)
+    );
+}
+
+#[test]
+fn mitosis_wrong_generation_first_daughter() {
     let mother = AmoebaDetails {
         generation: 1,
         four_bytes: *b"test",
@@ -120,6 +159,29 @@ fn mitosis_wrong_generation() {
     };
     let d2 = AmoebaDetails {
         generation: 2,
+        four_bytes: *b"test",
+    };
+    let input_data = vec![mother.into()];
+    let output_data = vec![d1.into(), d2.into()];
+
+    assert_eq!(
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
+        Err(ConstraintCheckerError::WrongGeneration),
+    );
+}
+
+#[test]
+fn mitosis_wrong_generation_second_daughter() {
+    let mother = AmoebaDetails {
+        generation: 1,
+        four_bytes: *b"test",
+    };
+    let d1 = AmoebaDetails {
+        generation: 2,
+        four_bytes: *b"test",
+    };
+    let d2 = AmoebaDetails {
+        generation: 3, // This daughter has the wrong generation
         four_bytes: *b"test",
     };
     let input_data = vec![mother.into()];
@@ -171,7 +233,27 @@ fn mitosis_no_input() {
 }
 
 #[test]
-fn mitosis_badly_typed_output() {
+fn mitosis_badly_typed_first_daughter() {
+    let mother = AmoebaDetails {
+        generation: 1,
+        four_bytes: *b"test",
+    };
+    let d1 = Bogus;
+    let d2 = AmoebaDetails {
+        generation: 2,
+        four_bytes: *b"test",
+    };
+    let input_data = vec![mother.into()];
+    let output_data = vec![d1.into(), d2.into()];
+
+    assert_eq!(
+        AmoebaMitosis.check(&input_data, &[], &[], &output_data),
+        Err(ConstraintCheckerError::BadlyTypedOutput),
+    );
+}
+
+#[test]
+fn mitosis_badly_typed_second_daughter() {
     let mother = AmoebaDetails {
         generation: 1,
         four_bytes: *b"test",
@@ -261,6 +343,26 @@ fn death_no_input() {
     assert_eq!(
         AmoebaDeath.check(&input_data, &[], &[], &output_data),
         Err(ConstraintCheckerError::NoVictim),
+    );
+}
+
+#[test]
+fn death_eviction_not_allowed() {
+    let a1 = AmoebaDetails {
+        generation: 1,
+        four_bytes: *b"test",
+    };
+    let a2 = AmoebaDetails {
+        generation: 4,
+        four_bytes: *b"test",
+    };
+    let input_data = vec![a1.into()];
+    let evicted_input_data = vec![a2.into()];
+    let output_data = vec![];
+
+    assert_eq!(
+        AmoebaDeath.check(&input_data, &evicted_input_data, &[], &output_data),
+        Err(ConstraintCheckerError::NoEvictionsAllowed),
     );
 }
 
