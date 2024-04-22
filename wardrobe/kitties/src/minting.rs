@@ -85,7 +85,7 @@ impl SimpleConstraintChecker for MintKitty {
             .map_err(|_| KittyMintingError::BadlyTyped)?;
 
         ensure!(
-            output_data.len() > 0,
+            !output_data.is_empty(),
             KittyMintingError::UniversalCreatorNotUpdatedCorrectly
         );
         let output_creator = output_data[0]
