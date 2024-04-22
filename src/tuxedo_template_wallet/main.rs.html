@@ -286,6 +286,11 @@
 <a href="#284" id="284">284</a>
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A simple CLI wallet. For now it is a toy just to start testing things out.
 
 </span><span class="kw">use </span>clap::Parser;
@@ -341,6 +346,9 @@
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
     </span><span class="kw">let </span>client = HttpClientBuilder::default().build(cli.endpoint)<span class="question-mark">?</span>;
 
+    <span class="comment">// Fetch the metadata and determine whether we are dealing with a parachain.
+    </span><span class="kw">let </span>metadata = rpc::node_get_metadata(<span class="kw-2">&amp;</span>client).<span class="kw">await</span><span class="question-mark">?</span>;
+
     <span class="comment">// Read node's genesis block.
     </span><span class="kw">let </span>node_genesis_hash = rpc::node_get_block_hash(<span class="number">0</span>, <span class="kw-2">&amp;</span>client)
         .<span class="kw">await</span><span class="question-mark">?
@@ -368,7 +376,7 @@
 
     <span class="kw">if </span>!sled::Db::was_recovered(<span class="kw-2">&amp;</span>db) {
         <span class="comment">// This is a new instance, so we need to apply the genesis block to the database.
-        </span><span class="kw">if </span>cli.parachain {
+        </span><span class="kw">if </span>metadata.is_parachain() {
             sync::apply_block::&lt;<span class="kw">_</span>, ParachainConstraintChecker&gt;(
                 <span class="kw-2">&amp;</span>db,
                 node_genesis_block,
@@ -391,7 +399,7 @@
     </span><span class="kw">if </span>cli.no_sync {
         <span class="macro">log::warn!</span>(<span class="string">"Skipping sync with node. Using previously synced information."</span>)
     } <span class="kw">else </span>{
-        sync::synchronize(cli.parachain, <span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore_filter).<span class="kw">await</span><span class="question-mark">?</span>;
+        sync::synchronize(metadata.is_parachain(), <span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore_filter).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="macro">log::info!</span>(
             <span class="string">"Wallet database synchronized with node to height {:?}"</span>,
@@ -401,9 +409,11 @@
 
     <span class="comment">// Dispatch to proper subcommand
     </span><span class="kw">match </span>cli.command {
-        <span class="prelude-val">Some</span>(Command::AmoebaDemo) =&gt; amoeba::amoeba_demo(cli.parachain, <span class="kw-2">&amp;</span>client).<span class="kw">await</span>,
+        <span class="prelude-val">Some</span>(Command::AmoebaDemo) =&gt; amoeba::amoeba_demo(metadata.is_parachain(), <span class="kw-2">&amp;</span>client).<span class="kw">await</span>,
         <span class="comment">// Command::MultiSigDemo =&gt; multi_sig::multi_sig_demo(&amp;client).await,
-        </span><span class="prelude-val">Some</span>(Command::MintCoins(args)) =&gt; money::mint_coins(cli.parachain, <span class="kw-2">&amp;</span>client, args).<span class="kw">await</span>,
+        </span><span class="prelude-val">Some</span>(Command::MintCoins(args)) =&gt; {
+            money::mint_coins(metadata.is_parachain(), <span class="kw-2">&amp;</span>client, args).<span class="kw">await
+        </span>}
         <span class="prelude-val">Some</span>(Command::VerifyCoin { output_ref }) =&gt; {
             <span class="macro">println!</span>(<span class="string">"Details of coin {}:"</span>, hex::encode(output_ref.encode()));
 
@@ -426,7 +436,7 @@
             <span class="prelude-val">Ok</span>(())
         }
         <span class="prelude-val">Some</span>(Command::SpendCoins(args)) =&gt; {
-            money::spend_coins(cli.parachain, <span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore, args).<span class="kw">await
+            money::spend_coins(metadata.is_parachain(), <span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>client, <span class="kw-2">&amp;</span>keystore, args).<span class="kw">await
         </span>}
         <span class="prelude-val">Some</span>(Command::InsertKey { seed }) =&gt; <span class="kw">crate</span>::keystore::insert_key(<span class="kw-2">&amp;</span>keystore, <span class="kw-2">&amp;</span>seed),
         <span class="prelude-val">Some</span>(Command::GenerateKey { password }) =&gt; {

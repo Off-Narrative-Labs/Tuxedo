@@ -151,10 +151,6 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Tuxedo Template Wallet's Command Line Interface.
 //!
 //! Built with clap's derive macros.
@@ -196,10 +192,6 @@
     </span><span class="doccomment">/// Specify a development wallet instance, using a temporary directory (like --tmp).
     /// The keystore will contain the development key Shawn.
     </span><span class="kw">pub </span>dev: bool,
-
-    <span class="doccomment">/// Use the Parachain template encoding instead of the regular node template encoding.
-    </span><span class="attr">#[arg(long, short, verbatim_doc_comment)]
-    </span><span class="kw">pub </span>parachain: bool,
 
     <span class="attr">#[command(subcommand)]
     </span><span class="kw">pub </span>command: <span class="prelude-ty">Option</span>&lt;Command&gt;,

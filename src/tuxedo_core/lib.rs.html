@@ -39,6 +39,8 @@
 <a href="#37" id="37">37</a>
 <a href="#38" id="38">38</a>
 <a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
+<a href="#41" id="41">41</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This crate is the core of the Tuxedo runtime framework.
 //!
 //! All Tuxedo runtimes will use this machinery and plug in their specific
@@ -52,6 +54,7 @@
 <span class="kw">pub mod </span>constraint_checker;
 <span class="kw">pub mod </span>genesis;
 <span class="kw">pub mod </span>inherents;
+<span class="kw">pub mod </span>metadata;
 <span class="kw">pub mod </span>support_macros;
 <span class="kw">pub mod </span>traits;
 <span class="kw">pub mod </span>types;
@@ -62,6 +65,7 @@
 <span class="kw">pub use </span>constraint_checker::{ConstraintChecker, SimpleConstraintChecker};
 <span class="kw">pub use </span>executive::Executive;
 <span class="kw">pub use </span>inherents::{InherentAdapter, InherentHooks};
+<span class="kw">pub use </span>metadata::TuxedoMetadata;
 <span class="kw">pub use </span>verifier::Verifier;
 
 <span class="doccomment">/// A Tuxedo-specific target for diagnostic node log messages

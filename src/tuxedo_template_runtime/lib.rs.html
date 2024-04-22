@@ -391,7 +391,7 @@
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction <span class="kw">as </span>TuxedoTransaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
-    InherentAdapter,
+    InherentAdapter, TuxedoMetadata,
 };
 
 <span class="kw">pub use </span>amoeba;
@@ -627,10 +627,10 @@
         }
     }
 
-    <span class="comment">// Tuxedo does not yet support metadata
+    <span class="comment">// Tuxedo metadata is pretty trivial atm
     </span><span class="kw">impl </span>sp_api::Metadata&lt;Block&gt; <span class="kw">for </span>Runtime {
         <span class="kw">fn </span>metadata() -&gt; OpaqueMetadata {
-            OpaqueMetadata::new(Default::default())
+            OpaqueMetadata::new(TuxedoMetadata::default().encode())
         }
 
         <span class="kw">fn </span>metadata_at_version(_version: u32) -&gt; <span class="prelude-ty">Option</span>&lt;OpaqueMetadata&gt; {
