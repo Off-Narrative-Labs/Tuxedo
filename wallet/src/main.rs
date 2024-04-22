@@ -53,6 +53,9 @@ async fn main() -> anyhow::Result<()> {
     // https://github.com/paritytech/jsonrpsee/blob/master/examples/examples/http.rs
     let client = HttpClientBuilder::default().build(cli.endpoint)?;
 
+    // Fetch the metadata and determine whether we are dealing with a parachain.
+    let metadata = rpc::node_get_metadata(&client).await?;
+
     // Read node's genesis block.
     let node_genesis_hash = rpc::node_get_block_hash(0, &client)
         .await?
@@ -80,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
 
     if !sled::Db::was_recovered(&db) {
         // This is a new instance, so we need to apply the genesis block to the database.
-        if cli.parachain {
+        if metadata.is_parachain() {
             sync::apply_block::<_, ParachainConstraintChecker>(
                 &db,
                 node_genesis_block,
@@ -103,7 +106,7 @@ async fn main() -> anyhow::Result<()> {
     if cli.no_sync {
         log::warn!("Skipping sync with node. Using previously synced information.")
     } else {
-        sync::synchronize(cli.parachain, &db, &client, &keystore_filter).await?;
+        sync::synchronize(metadata.is_parachain(), &db, &client, &keystore_filter).await?;
 
         log::info!(
             "Wallet database synchronized with node to height {:?}",
@@ -113,9 +116,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Dispatch to proper subcommand
     match cli.command {
-        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(cli.parachain, &client).await,
+        Some(Command::AmoebaDemo) => amoeba::amoeba_demo(metadata.is_parachain(), &client).await,
         // Command::MultiSigDemo => multi_sig::multi_sig_demo(&client).await,
-        Some(Command::MintCoins(args)) => money::mint_coins(cli.parachain, &client, args).await,
+        Some(Command::MintCoins(args)) => {
+            money::mint_coins(metadata.is_parachain(), &client, args).await
+        }
         Some(Command::VerifyCoin { output_ref }) => {
             println!("Details of coin {}:", hex::encode(output_ref.encode()));
 
@@ -138,7 +143,7 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Some(Command::SpendCoins(args)) => {
-            money::spend_coins(cli.parachain, &db, &client, &keystore, args).await
+            money::spend_coins(metadata.is_parachain(), &db, &client, &keystore, args).await
         }
         Some(Command::InsertKey { seed }) => crate::keystore::insert_key(&keystore, &seed),
         Some(Command::GenerateKey { password }) => {

@@ -8,8 +8,24 @@ use parity_scale_codec::{Decode, Encode};
 use sp_core::H256;
 use tuxedo_core::{
     types::{OpaqueBlock, Output, OutputRef},
-    Verifier,
+    TuxedoMetadata, Verifier,
 };
+
+/// Get the node's metadata
+pub async fn node_get_metadata(client: &HttpClient) -> anyhow::Result<TuxedoMetadata> {
+    // Don't provide a block height to use the best height.
+    let params = rpc_params![Option::<u32>::None];
+    let rpc_response: Option<String> = client.request("state_getMetadata", params).await?;
+    let metadata = metadata_from_string(&rpc_response.expect("metadata should be available."))?;
+    Ok(metadata)
+}
+
+/// Parse a string into a Tuxedo Metadata
+pub(crate) fn metadata_from_string(s: &str) -> anyhow::Result<TuxedoMetadata> {
+    let s = strip_0x_prefix(s);
+    let bytes = hex::decode(s)?;
+    Ok(TuxedoMetadata::decode(&mut &bytes[..])?)
+}
 
 /// Typed helper to get the Node's block hash at a particular height
 pub async fn node_get_block_hash(height: u32, client: &HttpClient) -> anyhow::Result<Option<H256>> {

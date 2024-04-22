@@ -37,7 +37,7 @@ use tuxedo_core::{
     tuxedo_constraint_checker, tuxedo_verifier,
     types::Transaction as TuxedoTransaction,
     verifier::{Sr25519Signature, ThresholdMultiSignature, UpForGrabs},
-    InherentAdapter,
+    InherentAdapter, TuxedoMetadata,
 };
 
 pub use amoeba;
@@ -273,10 +273,10 @@ impl_runtime_apis! {
         }
     }
 
-    // Tuxedo does not yet support metadata
+    // Tuxedo metadata is pretty trivial atm
     impl sp_api::Metadata<Block> for Runtime {
         fn metadata() -> OpaqueMetadata {
-            OpaqueMetadata::new(Default::default())
+            OpaqueMetadata::new(TuxedoMetadata::default().encode())
         }
 
         fn metadata_at_version(_version: u32) -> Option<OpaqueMetadata> {
