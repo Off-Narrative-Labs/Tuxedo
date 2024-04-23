@@ -1295,6 +1295,9 @@
 <a href="#1293" id="1293">1293</a>
 <a href="#1294" id="1294">1294</a>
 <a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! # Executive Module
 //!
 //! The executive is the main orchestrator for the entire runtime.
@@ -1575,9 +1578,15 @@
         extrinsics.push(extrinsic.encode());
         sp_io::storage::set(EXTRINSIC_KEY, <span class="kw-2">&amp;</span>extrinsics.encode());
 
-        <span class="comment">// Now actually
-        </span><span class="self">Self</span>::apply_tuxedo_transaction(extrinsic)
-            .map_err(|<span class="kw">_</span>| TransactionValidityError::Invalid(InvalidTransaction::Custom(<span class="number">0</span>)))<span class="question-mark">?</span>;
+        <span class="comment">// Now actually apply the extrinsic
+        </span><span class="self">Self</span>::apply_tuxedo_transaction(extrinsic).map_err(|e| {
+            <span class="macro">log::warn!</span>(
+                target: LOG_TARGET,
+                <span class="string">"Tuxedo Transaction did not apply successfully: {:?}"</span>,
+                e,
+            );
+            TransactionValidityError::Invalid(e.into())
+        })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
     }
@@ -1698,16 +1707,13 @@
         </span><span class="kw">let </span>r = <span class="kw">if </span>tx.checker.is_inherent() {
             <span class="prelude-val">Err</span>(TransactionValidityError::Invalid(InvalidTransaction::Call))
         } <span class="kw">else </span>{
-            <span class="comment">// TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
-            // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-            // For now, I just make them all custom zero, and log the error variant
-            </span><span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).map_err(|e| {
+            <span class="self">Self</span>::validate_tuxedo_transaction(<span class="kw-2">&amp;</span>tx).map_err(|e| {
                 <span class="macro">log::warn!</span>(
                     target: LOG_TARGET,
                     <span class="string">"Tuxedo Transaction did not validate (in the pool): {:?}"</span>,
                     e,
                 );
-                TransactionValidityError::Invalid(InvalidTransaction::Custom(<span class="number">0</span>))
+                TransactionValidityError::Invalid(e.into())
             })
         };
 

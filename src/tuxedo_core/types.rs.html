@@ -291,6 +291,23 @@
 <a href="#289" id="289">289</a>
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The common types that will be used across a Tuxedo runtime, and not specific to any one piece
 
 </span><span class="kw">use crate</span>::{dynamic_typing::DynamicallyTypedData, ConstraintChecker, Verifier};
@@ -298,7 +315,10 @@
 <span class="kw">use </span>scale_info::TypeInfo;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>sp_core::H256;
-<span class="kw">use </span>sp_runtime::traits::{BlakeTwo256, Extrinsic, Hash <span class="kw">as </span>HashT};
+<span class="kw">use </span>sp_runtime::{
+    traits::{BlakeTwo256, Extrinsic, Hash <span class="kw">as </span>HashT},
+    transaction_validity::InvalidTransaction,
+};
 <span class="kw">use </span>sp_std::vec::Vec;
 
 <span class="comment">// All Tuxedo chains use the same BlakeTwo256 hash.
@@ -488,6 +508,20 @@
     </span>VerifierError,
     <span class="doccomment">/// One or more of the inputs required by this transaction is not present in the UTXO set
     </span>MissingInput,
+}
+
+<span class="comment">// Substrate requires this supposedly reusable error type, but it is actually tied pretty tightly
+// to the accounts model and some specific FRAME signed extensions. We map it the best we can.
+</span><span class="kw">impl</span>&lt;ConstraintCheckerError&gt; From&lt;UtxoError&lt;ConstraintCheckerError&gt;&gt; <span class="kw">for </span>InvalidTransaction {
+    <span class="kw">fn </span>from(utxo_error: UtxoError&lt;ConstraintCheckerError&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>utxo_error {
+            UtxoError::DuplicateInput =&gt; InvalidTransaction::Custom(<span class="number">255</span>),
+            UtxoError::PreExistingOutput =&gt; InvalidTransaction::Custom(<span class="number">254</span>),
+            UtxoError::ConstraintCheckerError(<span class="kw">_</span>) =&gt; InvalidTransaction::Custom(<span class="number">0</span>),
+            UtxoError::VerifierError =&gt; InvalidTransaction::BadProof,
+            UtxoError::MissingInput =&gt; InvalidTransaction::Future,
+        }
+    }
 }
 
 <span class="doccomment">/// The Result of dispatching a UTXO transaction.
