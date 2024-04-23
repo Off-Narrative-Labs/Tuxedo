@@ -5,7 +5,10 @@ use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use serde::{Deserialize, Serialize};
 use sp_core::H256;
-use sp_runtime::traits::{BlakeTwo256, Extrinsic, Hash as HashT};
+use sp_runtime::{
+    traits::{BlakeTwo256, Extrinsic, Hash as HashT},
+    transaction_validity::InvalidTransaction,
+};
 use sp_std::vec::Vec;
 
 // All Tuxedo chains use the same BlakeTwo256 hash.
@@ -195,6 +198,20 @@ pub enum UtxoError<ConstraintCheckerError> {
     VerifierError,
     /// One or more of the inputs required by this transaction is not present in the UTXO set
     MissingInput,
+}
+
+// Substrate requires this supposedly reusable error type, but it is actually tied pretty tightly
+// to the accounts model and some specific FRAME signed extensions. We map it the best we can.
+impl<ConstraintCheckerError> From<UtxoError<ConstraintCheckerError>> for InvalidTransaction {
+    fn from(utxo_error: UtxoError<ConstraintCheckerError>) -> Self {
+        match utxo_error {
+            UtxoError::DuplicateInput => InvalidTransaction::Custom(255),
+            UtxoError::PreExistingOutput => InvalidTransaction::Custom(254),
+            UtxoError::ConstraintCheckerError(_) => InvalidTransaction::Custom(0),
+            UtxoError::VerifierError => InvalidTransaction::BadProof,
+            UtxoError::MissingInput => InvalidTransaction::Future,
+        }
+    }
 }
 
 /// The Result of dispatching a UTXO transaction.

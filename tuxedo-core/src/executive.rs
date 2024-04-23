@@ -278,9 +278,15 @@ where
         extrinsics.push(extrinsic.encode());
         sp_io::storage::set(EXTRINSIC_KEY, &extrinsics.encode());
 
-        // Now actually
-        Self::apply_tuxedo_transaction(extrinsic)
-            .map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(0)))?;
+        // Now actually apply the extrinsic
+        Self::apply_tuxedo_transaction(extrinsic).map_err(|e| {
+            log::warn!(
+                target: LOG_TARGET,
+                "Tuxedo Transaction did not apply successfully: {:?}",
+                e,
+            );
+            TransactionValidityError::Invalid(e.into())
+        })?;
 
         Ok(Ok(()))
     }
@@ -401,16 +407,13 @@ where
         let r = if tx.checker.is_inherent() {
             Err(TransactionValidityError::Invalid(InvalidTransaction::Call))
         } else {
-            // TODO, we need a good way to map our UtxoError into the supposedly generic InvalidTransaction
-            // https://paritytech.github.io/substrate/master/sp_runtime/transaction_validity/enum.InvalidTransaction.html
-            // For now, I just make them all custom zero, and log the error variant
             Self::validate_tuxedo_transaction(&tx).map_err(|e| {
                 log::warn!(
                     target: LOG_TARGET,
                     "Tuxedo Transaction did not validate (in the pool): {:?}",
                     e,
                 );
-                TransactionValidityError::Invalid(InvalidTransaction::Custom(0))
+                TransactionValidityError::Invalid(e.into())
             })
         };
 
