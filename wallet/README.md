@@ -100,75 +100,16 @@ $ tuxedo-template-wallet show-balance
 [2023-04-11T18:07:52Z INFO  tuxedo_template_wallet] Number of blocks in the db: 52
 [2023-04-11T18:07:52Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 55
 Balance Summary
-0xd2bf…df67: 100
 --------------------
-total      : 100
+total      : 0
+
 ```
 The wallet begins by syncing the blockchain state, as usual.
-Then it shows us that it knows about this `0xd2bf...` account.
-This is the test account, or the "SHAWN" account.
-The wallet already contains these keys so you can start learning quickly.
-And it seems this account has some money.
-Let's look further.
+Then it tells us that we don't have any addresses or coins yet.
 
-### Exploring the Genesis Coin
+### Generating Addresses and Keys
 
-The chain begins with a single coin in storage.
-We can confirm that the node and the wallet are familiar with the genesis coin using the `verify-coin` subcommand.
-
-```sh
-$ tuxedo-template-wallet verify-coin 000000000000000000000000000000000000000000000000000000000000000000000000
-
-[2023-04-11T17:50:04Z INFO  tuxedo_template_wallet] Number of blocks in the db: 55
-[2023-04-11T17:50:04Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 80
-Details of coin 000000000000000000000000000000000000000000000000000000000000000000000000:
-Found in storage.  Value: 100, owned by 0xd2bf…df67
-Found in local db. Value: 100, owned by 0xd2bf…df67
-```
-
-After syncing, it tells us the status of the coin that we are asking about.
-That number with all the `0`s is called an `OutputRef` and it is a unique way to refer to a utxo.
-The wallet tells us that the coin is found in the chain's storage and in the wallet's own local db.
-Both sources agree that the coin exists, is worth 100, and is owned by Shawn.
-
-Let's "split" this coin by creating a transaction that spends it and creates two new coins worth 40 and 50, burning the remaining 10.
-
-```sh
-$ tuxedo-template-wallet spend-coins \
-  --output-amount 40 \
-  --output-amount 50
-
-[2023-04-11T17:58:00Z INFO  tuxedo_template_wallet] Number of blocks in the db: 80
-[2023-04-11T17:58:00Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 87
-[2023-04-11T17:58:00Z INFO  tuxedo_template_wallet] Node's response to spend transaction: Ok("0xad0de5922a27fab1a3ce116868ada789677c80a0e70018bd32464b2e737d3546")
-
-Created "9b3b0d17ad5f7784e840c40089d4d0aa0de990c5c620d49a0729c3a45afa35bf00000000" worth 40. owned by 0xd2bf…df67
-Created "9b3b0d17ad5f7784e840c40089d4d0aa0de990c5c620d49a0729c3a45afa35bf01000000" worth 50. owned by 0xd2bf…df67
-```
-
-Our command told the wallet to create a transaction that spends some coins (in this case the genesis coin) and creates two new coins with the given amounts, burning the remaining 10.
-It also tells us the `OutputRef`s of the new coins created.
-
-A balance check reveals that our balance has decreased by the 10 burnt tokes as expected.
-
-```sh
-$ tuxedo-template-wallet show-balance
-
-[2023-04-11T18:52:26Z INFO  tuxedo_template_wallet] Number of blocks in the db: 87
-[2023-04-11T18:52:26Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 95
-
-Balance Summary
-0xd2bf…df67: 90
---------------------
-total      : 90
-
-```
-
-In this case we didn't specify a recipient of the new outputs, so the same default address was used. Next let's explore using some other keys.
-
-### Using Your Own Keys
-
-Of course we can use other keys than the example Shawn key.
+To start, let's create and address.
 The wallet supports generating our own keys, or inserting pre-existing keys.
 To follow this guide as closely as possible, you should insert the same key we generated.
 
@@ -185,16 +126,124 @@ $ tuxedo-template-wallet insert-key "decide city tattoo arrest jeans split main 
   The generated public key is f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b (5HamRMAa...)
 ```
 
-With our new keys in the keystore, let's send some coins from Shawn to our own key.
+```sh
+$ tuxedo-template-wallet show-balance
+
+[2023-04-11T18:54:42Z INFO  tuxedo_template_wallet] Number of blocks in the db: 99
+[2023-04-11T18:54:42Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 101
+
+Balance Summary
+0xf41a…e06b: 0
+--------------------
+total      : 0
+```
+
+So now we have an address, but we still don't have any coins.
+
+### Exploring the Test Account and Genesis Coin
+
+The chain begins with a single coin worth 100 units owned by a test account.
+The wallet software knows about the test account and is able to access it using the `--dev` flag.
+
+Let's confirm this by showing the balance again.
 
 ```sh
-$ tuxedo-template-wallet spend-coins \
+$ tuxedo-template-wallet --dev show-balance
+
+[2024-05-16T14:25:32Z INFO  tuxedo_template_wallet::sync] Initializing fresh sync from genesis 0xe709c08c291e68de1126c7eba54465a599318b1ea4030dfa5b552d3f6c42b5d3
+[2024-05-16T14:25:32Z INFO  tuxedo_template_wallet] Number of blocks in the db: 0
+[2024-05-16T14:25:32Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 144
+
+Balance Summary
+0xd2bf…df67: 100
+--------------------
+total      : 100
+```
+
+The first thing to notice is that the wallet synced all the way from block 0.
+A `--dev` wallet will always perform a complete resync into a new temporary directory when it is started up.
+This facilitates easy testing during development without having to manually purge wallet state, and also explains why our previously-generated address no longer shows up.
+This flag mirror's the node's own `--dev flag`.
+
+The second thing to notice is that the wallet already knows about the test account.
+And the final thing is that we do indeed have some coins worth a total of 100 units.
+
+Let's see the details about which coins we own.
+
+```sh
+$ tuxedo-template-wallet --dev show-all-outputs
+
+[2024-05-16T14:26:22Z INFO  tuxedo_template_wallet::sync] Initializing fresh sync from genesis 0xe709c08c291e68de1126c7eba54465a599318b1ea4030dfa5b552d3f6c42b5d3
+[2024-05-16T14:26:22Z INFO  tuxedo_template_wallet] Number of blocks in the db: 0
+[2024-05-16T14:26:22Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 152
+
+###### Unspent outputs ###########
+50cd896f64b101540e68c57fe644c8c9ef5dbf0aa6ece24839812e16014abe9700000000: owner 0xd2bf4b844dfefd6772a8843e669f943408966a977e3ae2af1dd78e0f55f4df67, amount 100
+```
+
+We can confirm that the node and the wallet are familiar with the genesis coin using the `verify-coin` subcommand.
+
+```sh
+$ tuxedo-template-wallet --dev verify-coin 50cd896f64b101540e68c57fe644c8c9ef5dbf0aa6ece24839812e16014abe9700000000
+
+[2024-05-16T14:27:43Z INFO  tuxedo_template_wallet::sync] Initializing fresh sync from genesis 0xe709c08c291e68de1126c7eba54465a599318b1ea4030dfa5b552d3f6c42b5d3
+[2024-05-16T14:27:43Z INFO  tuxedo_template_wallet] Number of blocks in the db: 0
+[2024-05-16T14:27:43Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 166
+
+Details of coin 50cd896f64b101540e68c57fe644c8c9ef5dbf0aa6ece24839812e16014abe9700000000:
+Found in storage.  Value: 100, owned by 0xd2bf…df67
+Found in local db. Value: 100, owned by 0xd2bf…df67
+```
+
+After syncing, it tells us the status of the coin that we are asking about.
+That number ending with the `0`s is called an `OutputRef` and it is a unique way to refer to a utxo.
+The wallet tells us that the coin is found in the chain's storage and in the wallet's own local db.
+Both sources agree that the coin exists, is worth 100, and is owned by the test account.
+
+Let's "split" this coin by creating a transaction that spends it and creates two new coins worth 40 and 50, burning the remaining 10.
+
+```sh
+$ tuxedo-template-wallet --dev spend-coins \
+  --output-amount 40 \
+  --output-amount 50
+
+[2023-04-11T17:58:00Z INFO  tuxedo_template_wallet] Number of blocks in the db: 0
+[2023-04-11T17:58:00Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 167
+[2023-04-11T17:58:00Z INFO  tuxedo_template_wallet] Node's response to spend transaction: Ok("0xad0de5922a27fab1a3ce116868ada789677c80a0e70018bd32464b2e737d3546")
+
+Created "9b3b0d17ad5f7784e840c40089d4d0aa0de990c5c620d49a0729c3a45afa35bf00000000" worth 40. owned by 0xd2bf…df67
+Created "9b3b0d17ad5f7784e840c40089d4d0aa0de990c5c620d49a0729c3a45afa35bf01000000" worth 50. owned by 0xd2bf…df67
+```
+
+Our command told the wallet to create a transaction that spends some coins (in this case the genesis coin) and creates two new coins with the given amounts, burning the remaining 10.
+It also tells us the `OutputRef`s of the new coins created.
+
+A balance check reveals that our balance has decreased by the 10 burnt tokes as expected.
+
+```sh
+$ tuxedo-template-wallet --dev show-balance
+
+[2023-04-11T18:52:26Z INFO  tuxedo_template_wallet] Number of blocks in the db: 0
+[2023-04-11T18:52:26Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 170
+
+Balance Summary
+0xd2bf…df67: 90
+--------------------
+total      : 90
+
+```
+
+In this case we didn't specify a recipient of the new outputs, so the same default address was used.
+Now let's explore sending to our own address from the previous step.
+
+```sh
+$ tuxedo-template-wallet --dev spend-coins \
  --recipient f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b \
  --output-amount 20 \
  --output-amount 10
 
-[2023-04-11T18:53:46Z INFO  tuxedo_template_wallet] Number of blocks in the db: 95
-[2023-04-11T18:53:46Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 99
+[2023-04-11T18:53:46Z INFO  tuxedo_template_wallet] Number of blocks in the db: 0
+[2023-04-11T18:53:46Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 171
 [2023-04-11T18:53:46Z INFO  tuxedo_template_wallet::money] Node's response to spend transaction: Ok("0x7b8466f6c418637958f8090304dbdd7f115c27abf787b8f034a41d522bdf2baf")
 
 Created "90695702dabcca93d2c5f84a45b07bf59626ddb49a9b5255e202777127a3323d00000000" worth 20. owned by 0xf41a…e06b
@@ -203,40 +252,27 @@ Created "90695702dabcca93d2c5f84a45b07bf59626ddb49a9b5255e202777127a3323d0100000
 
 This command will consume one of the existing coins, and create two new ones owned by our key.
 Our new coins will be worth 20 and 10 tokens.
-Let's check the balance summary to confirm.
 
-```sh
-$ tuxedo-template-wallet show-balance
-
-[2023-04-11T18:54:42Z INFO  tuxedo_template_wallet] Number of blocks in the db: 99
-[2023-04-11T18:54:42Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 101
-
-Balance Summary
-0xd2bf…df67: 50
-0xf41a…e06b: 30
---------------------
-total      : 80
-```
-
-It is possible to create new coins using the wallet. Let's explore how to do it.
+As an exercise, check the test account's balance, and then return to your wallet, and check your own balance.
+From now on we will use our own wallet, but you may find the dev wallet very useful when developing.
 
 ### Minting coins
 
-We can optionally pass the amount and public key of the owner as arguments to mint_coins.
-If optional arguments are not passed below are the default values:
-Amount is `100` and Public key of owner is Shawn key.
+Another option for getting some coins would have been minting them.
+Although minting will usually not be available in production chains, it is useful when developing and the wallet supports it.
+By default we mint a coin of value 100 to the test account, but we can optionally pass the amount and public key of the owner as arguments.
 
 ```sh
 $ tuxedo-template-wallet mint-coins \
- --owner 0xdeba7f5d5088cda3e32ccaf479056dd934d87fa8129987ca6db57c122bd73341 \
- --amount 200 \
+ --owner f41a866782d45a4d2d8a623a097c62aee6955a9e580985e3910ba49eded9e06b \
+ --amount 200
 
 [2024-01-18T14:22:19Z INFO  tuxedo_template_wallet] Number of blocks in the db: 6
 [2024-01-18T14:22:19Z INFO  tuxedo_template_wallet] Wallet database synchronized with node to height 14
 [2024-01-18T14:22:19Z INFO  tuxedo_template_wallet::money] Node's response to mint-coin transaction: Ok("0xaff830b7755fee67c288afe18dfa6eabffe06286005b0fd6cb8e57b246c08df6")
 Created "f76373909591d85f796c36ed4b265e46efabdf5b5c493b94246d590823cc42a500000000" worth 200. owned by 0xdeba…3341
 ```
-It is possible to verify a newly minted coin exists in both chain storage and the local database using verify-coin command.
+It is possible to verify a newly minted coin exists in both chain storage and the local database using `verify-coin` command.
 
 
 ### Manually Selecting Inputs
