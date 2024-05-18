@@ -146,7 +146,7 @@ docker run --network host ghcr.io/off-narrative-labs/tuxedo-parachain:main --dev
 docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet:main --help
 
 # Use the PoC wallet to confirm that a 100 token genesis utxo is present
-docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet:main show-balance
+docker run --network host ghcr.io/off-narrative-labs/tuxedo-wallet:main --dev show-balance
 
 Balance Summary
 0xd2bf…df67: 100
