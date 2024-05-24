@@ -14,6 +14,7 @@ members = [
 	"tuxedo-parachain-runtime",
 	"wallet",
 	"wardrobe/amoeba",
+	"wardrobe/kahoot",
 	"wardrobe/money",
 	"wardrobe/parachain",
 	"wardrobe/poe",
