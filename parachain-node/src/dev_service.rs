@@ -223,15 +223,8 @@ pub fn new_dev(config: Configuration) -> Result<TaskManager, ServiceError> {
     }
 
     let rpc_builder = {
-        let client = client.clone();
-        let transaction_pool = transaction_pool.clone();
-
-        Box::new(move |deny_unsafe, _| {
-            let deps = crate::rpc::FullDeps {
-                client: client.clone(),
-                pool: transaction_pool.clone(),
-                deny_unsafe,
-            };
+        Box::new(move |_deny_unsafe, _| {
+            let deps = crate::rpc::FullDeps {};
 
             crate::rpc::create_full(deps).map_err(Into::into)
         })
