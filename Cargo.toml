@@ -19,6 +19,7 @@ members = [
 	"wardrobe/poe",
 	"wardrobe/timestamp",
 	"wardrobe/kitties",
+	"wardrobe/nft-royalties",
 	"wardrobe/runtime_upgrade",
 ]
 resolver = "2"
