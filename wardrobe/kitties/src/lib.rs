@@ -33,6 +33,8 @@ use tuxedo_core::{
     SimpleConstraintChecker, Verifier,
 };
 
+mod minting;
+
 #[cfg(test)]
 mod tests;
 
