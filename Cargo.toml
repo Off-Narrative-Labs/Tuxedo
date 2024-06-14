@@ -17,6 +17,7 @@ members = [
 	"wardrobe/money",
 	"wardrobe/parachain",
 	"wardrobe/poe",
+	"wardrobe/unforgeable-access-tokens",
 	"wardrobe/timestamp",
 	"wardrobe/kitties",
 	"wardrobe/runtime_upgrade",

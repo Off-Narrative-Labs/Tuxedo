@@ -14356,6 +14356,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "unforgeable-access-tokens"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "tuxedo-core",
+]
+
+[[package]]
 name = "unicode-bidi"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
